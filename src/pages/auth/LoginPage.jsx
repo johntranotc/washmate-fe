@@ -7,6 +7,9 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -35,6 +38,10 @@ function LoginPage() {
     return true;
   };
 
+  const handleForgotPassword = () => {
+    alert("Tính năng quên mật khẩu đang được phát triển.");
+  };
+
   const handleLogin = (e) => {
     e.preventDefault();
 
@@ -43,13 +50,13 @@ function LoginPage() {
     setLoading(true);
 
     setTimeout(() => {
-      console.log({
-        email,
-        password,
-      });
-
-      localStorage.setItem("token", "mock-token");
-      localStorage.setItem("userEmail", email);
+      if (rememberMe) {
+        localStorage.setItem("token", "mock-token");
+        localStorage.setItem("userEmail", email);
+      } else {
+        sessionStorage.setItem("token", "mock-token");
+        sessionStorage.setItem("userEmail", email);
+      }
 
       setLoading(false);
       navigate("/customer");
@@ -72,7 +79,7 @@ function LoginPage() {
         )}
 
         <form onSubmit={handleLogin}>
-          <div className="mb-4">
+          <div className="mb-4 text-left">
             <label className="block mb-2 font-medium text-slate-700">
               Email
             </label>
@@ -86,18 +93,47 @@ function LoginPage() {
             />
           </div>
 
-          <div className="mb-6">
+          <div className="mb-4 text-left">
             <label className="block mb-2 font-medium text-slate-700">
               Password
             </label>
 
-            <input
-              type="password"
-              placeholder="Nhập mật khẩu"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-slate-800"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Nhập mật khẩu"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 pr-14 outline-none focus:ring-2 focus:ring-slate-800"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 hover:text-slate-800"
+              >
+                {showPassword ? "Ẩn" : "Hiện"}
+              </button>
+            </div>
+          </div>
+
+          <div className="mb-6 flex items-center justify-between">
+            <label className="flex items-center gap-2 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              Ghi nhớ đăng nhập
+            </label>
+
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Quên mật khẩu?
+            </button>
           </div>
 
           <button
