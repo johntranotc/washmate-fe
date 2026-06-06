@@ -10,7 +10,10 @@ import BookingDetailPage from "../pages/customer/BookingDetailPage";
 import PaymentPage from "../pages/customer/PaymentPage";
 import InvoicePage from "../pages/customer/InvoicePage";
 import LoyaltyPage from "../pages/customer/LoyaltyPage";
-
+import AuthLayout from "../layouts/AuthLayout";
+import CustomerLayout from "../layouts/CustomerLayout";
+import StaffLayout from "../layouts/StaffLayout";
+import AdminLayout from "../layouts/AdminLayout";
 import StaffBookingSearchPage from "../pages/staff/StaffBookingSearchPage";
 import StaffWorkflowPage from "../pages/staff/StaffWorkflowPage";
 
@@ -20,38 +23,46 @@ function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LoginPage />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Route>
 
-        <Route path="/customer" element={<CustomerHomePage />} />
-        <Route path="/customer/vehicles" element={<VehiclePage />} />
-        <Route
-          path="/customer/bookings/create"
-          element={<BookingCreatePage />}
-        />
-        <Route
-          path="/customer/bookings/:bookingId"
-          element={<BookingDetailPage />}
-        />
-        <Route
-          path="/customer/bookings/:bookingId/payment"
-          element={<PaymentPage />}
-        />
-        <Route
-          path="/customer/bookings/:bookingId/invoice"
-          element={<InvoicePage />}
-        />
-        <Route path="/customer/loyalty" element={<LoyaltyPage />} />
+        <Route element={<CustomerLayout />}>
+          <Route path="/customer" element={<CustomerHomePage />} />
+          <Route path="/customer/vehicles" element={<VehiclePage />} />
+          <Route
+            path="/customer/bookings/create"
+            element={<BookingCreatePage />}
+          />
+          <Route
+            path="/customer/bookings/:bookingId"
+            element={<BookingDetailPage />}
+          />
+          <Route
+            path="/customer/bookings/:bookingId/payment"
+            element={<PaymentPage />}
+          />
+          <Route
+            path="/customer/bookings/:bookingId/invoice"
+            element={<InvoicePage />}
+          />
+          <Route path="/customer/loyalty" element={<LoyaltyPage />} />
+        </Route>
 
-        <Route path="/staff/bookings" element={<StaffBookingSearchPage />} />
-        <Route
-          path="/staff/bookings/:bookingId/workflow"
-          element={<StaffWorkflowPage />}
-        />
+        <Route element={<StaffLayout />}>
+          <Route path="/staff/bookings" element={<StaffBookingSearchPage />} />
+          <Route
+            path="/staff/bookings/:bookingId/workflow"
+            element={<StaffWorkflowPage />}
+          />
+        </Route>
 
-        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route element={<AdminLayout />}>
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        </Route>
 
         <Route path="*" element={<div>404 - Không tìm thấy trang</div>} />
       </Routes>
