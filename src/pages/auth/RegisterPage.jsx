@@ -29,8 +29,18 @@ function RegisterPage() {
       return false;
     }
 
+    if (!email.trim()) {
+      setError("Vui lòng nhập email.");
+      return false;
+    }
+
     if (!email.includes("@")) {
       setError("Email không hợp lệ.");
+      return false;
+    }
+
+    if (!password.trim()) {
+      setError("Vui lòng nhập mật khẩu.");
       return false;
     }
 
@@ -64,9 +74,7 @@ function RegisterPage() {
       });
 
       setLoading(false);
-
       alert("Đăng ký thành công!");
-
       navigate("/login");
     }, 1000);
   };
@@ -81,67 +89,77 @@ function RegisterPage() {
         <p className="text-center text-slate-500 mb-6">Tạo tài khoản mới</p>
 
         {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-lg">
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
             {error}
           </div>
         )}
 
         <form onSubmit={handleRegister}>
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Họ và tên</label>
+          <div className="mb-4 text-left">
+            <label className="block mb-2 font-medium text-slate-700">
+              Họ và tên
+            </label>
 
             <input
               type="text"
               placeholder="Nhập họ tên"
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-800"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Số điện thoại</label>
+          <div className="mb-4 text-left">
+            <label className="block mb-2 font-medium text-slate-700">
+              Số điện thoại
+            </label>
 
             <input
               type="text"
               placeholder="Nhập số điện thoại"
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-800"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Email</label>
+          <div className="mb-4 text-left">
+            <label className="block mb-2 font-medium text-slate-700">
+              Email
+            </label>
 
             <input
               type="email"
               placeholder="Nhập email"
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-800"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Mật khẩu</label>
+          <div className="mb-4 text-left">
+            <label className="block mb-2 font-medium text-slate-700">
+              Mật khẩu
+            </label>
 
             <input
               type="password"
               placeholder="Nhập mật khẩu"
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-800"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
-          <div className="mb-6">
-            <label className="block mb-2 font-medium">Xác nhận mật khẩu</label>
+          <div className="mb-6 text-left">
+            <label className="block mb-2 font-medium text-slate-700">
+              Xác nhận mật khẩu
+            </label>
 
             <input
               type="password"
               placeholder="Nhập lại mật khẩu"
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-800"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
@@ -150,13 +168,13 @@ function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-slate-900 text-white py-2 rounded-lg hover:bg-slate-800 disabled:bg-slate-400"
+            className="w-full rounded-lg bg-slate-900 py-2 text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
             {loading ? "Đang đăng ký..." : "Đăng ký"}
           </button>
         </form>
 
-        <p className="text-center mt-4 text-sm">
+        <p className="mt-4 text-center text-sm text-slate-500">
           Đã có tài khoản?{" "}
           <Link to="/login" className="text-blue-600 hover:underline">
             Đăng nhập
