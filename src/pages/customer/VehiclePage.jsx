@@ -1,38 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const initialVehicles = [
-  {
-    vehicleId: 1,
-    licensePlate: "51A-12345",
-    brand: "Toyota",
-    model: "Vios",
-    color: "Trắng",
-    status: "ACTIVE",
-    totalBookings: 8,
-    lastServiceDate: "2026-05-20",
-  },
-  {
-    vehicleId: 2,
-    licensePlate: "51B-67890",
-    brand: "Kia",
-    model: "K3",
-    color: "Đen",
-    status: "ACTIVE",
-    totalBookings: 3,
-    lastServiceDate: "2026-04-18",
-  },
-  {
-    vehicleId: 3,
-    licensePlate: "59C-88888",
-    brand: "Honda",
-    model: "City",
-    color: "Xám",
-    status: "INACTIVE",
-    totalBookings: 1,
-    lastServiceDate: "2026-03-02",
-  },
-];
+import { vehicleApi } from "../../api/vehicleApi";
 
 function getStatusLabel(status) {
   const labels = {
@@ -64,7 +32,7 @@ function StatusBadge({ status }) {
 function VehiclePage() {
   const navigate = useNavigate();
 
-  const [vehicles, setVehicles] = useState(initialVehicles);
+  const [vehicles, setVehicles] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -75,18 +43,45 @@ function VehiclePage() {
     color: "",
   });
 
+  const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  async function fetchVehicles() {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const data = await vehicleApi.getMyVehicles();
+
+      setVehicles(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(error.message || "Không thể tải danh sách phương tiện.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
 
   const filteredVehicles = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
 
     return vehicles.filter((vehicle) => {
+      const licensePlate = vehicle.licensePlate || "";
+      const brand = vehicle.brand || "";
+      const model = vehicle.model || "";
+      const color = vehicle.color || "";
+
       const matchesKeyword =
         !normalizedKeyword ||
-        vehicle.licensePlate.toLowerCase().includes(normalizedKeyword) ||
-        vehicle.brand.toLowerCase().includes(normalizedKeyword) ||
-        vehicle.model.toLowerCase().includes(normalizedKeyword) ||
-        vehicle.color.toLowerCase().includes(normalizedKeyword);
+        licensePlate.toLowerCase().includes(normalizedKeyword) ||
+        brand.toLowerCase().includes(normalizedKeyword) ||
+        model.toLowerCase().includes(normalizedKeyword) ||
+        color.toLowerCase().includes(normalizedKeyword);
 
       const matchesStatus =
         statusFilter === "ALL" || vehicle.status === statusFilter;
@@ -112,7 +107,7 @@ function VehiclePage() {
     }));
   }
 
-  function handleAddVehicle(event) {
+  async function handleAddVehicle(event) {
     event.preventDefault();
 
     const licensePlate = formData.licensePlate.trim().toUpperCase();
@@ -120,60 +115,113 @@ function VehiclePage() {
     const model = formData.model.trim();
     const color = formData.color.trim();
 
+    setSuccessMessage("");
+    setErrorMessage("");
+
     if (!licensePlate || !brand || !model) {
-      setSuccessMessage("Vui lòng nhập biển số, hãng xe và dòng xe.");
+      setErrorMessage("Vui lòng nhập biển số, hãng xe và dòng xe.");
       return;
     }
 
     const isDuplicate = vehicles.some(
       (vehicle) =>
-        vehicle.licensePlate.toLowerCase() === licensePlate.toLowerCase() &&
+        vehicle.licensePlate?.toLowerCase() === licensePlate.toLowerCase() &&
         vehicle.status === "ACTIVE",
     );
 
     if (isDuplicate) {
-      setSuccessMessage("Biển số này đã tồn tại trong danh sách xe ACTIVE.");
+      setErrorMessage("Biển số này đã tồn tại trong danh sách xe ACTIVE.");
       return;
     }
 
-    const newVehicle = {
-      vehicleId: Date.now(),
-      licensePlate,
-      brand,
-      model,
-      color: color || "Chưa cập nhật",
-      status: "ACTIVE",
-      totalBookings: 0,
-      lastServiceDate: "Chưa có",
-    };
+    try {
+      await vehicleApi.createVehicle({
+        licensePlate,
+        brand,
+        model,
+        color: color || "Chưa cập nhật",
+      });
 
-    setVehicles((current) => [newVehicle, ...current]);
-    setFormData({
-      licensePlate: "",
-      brand: "",
-      model: "",
-      color: "",
-    });
-    setSuccessMessage("Đã thêm phương tiện mock thành công.");
+      await fetchVehicles();
+
+      setFormData({
+        licensePlate: "",
+        brand: "",
+        model: "",
+        color: "",
+      });
+
+      setSuccessMessage("Đã thêm phương tiện thành công.");
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(error.message || "Không thể thêm phương tiện.");
+    }
   }
 
-  function handleToggleStatus(vehicleId) {
-    setVehicles((current) =>
-      current.map((vehicle) => {
-        if (vehicle.vehicleId !== vehicleId) {
-          return vehicle;
-        }
+  async function handleToggleStatus(vehicle) {
+    const vehicleId = vehicle.vehicleId || vehicle.id;
+    const newStatus = vehicle.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
 
-        return {
-          ...vehicle,
-          status: vehicle.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-        };
-      }),
+    try {
+      setSuccessMessage("");
+      setErrorMessage("");
+
+      await vehicleApi.updateVehicle(vehicleId, {
+        ...vehicle,
+        status: newStatus,
+      });
+
+      await fetchVehicles();
+
+      setSuccessMessage(
+        newStatus === "ACTIVE"
+          ? "Đã kích hoạt lại phương tiện."
+          : "Đã tạm ngưng phương tiện.",
+      );
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(error.message || "Không thể cập nhật trạng thái xe.");
+    }
+  }
+
+  async function handleDeleteVehicle(vehicle) {
+    const vehicleId = vehicle.vehicleId || vehicle.id;
+
+    const confirmed = window.confirm(
+      `Bạn có chắc muốn xóa xe ${vehicle.licensePlate}?`,
     );
+
+    if (!confirmed) return;
+
+    try {
+      setSuccessMessage("");
+      setErrorMessage("");
+
+      await vehicleApi.deleteVehicle(vehicleId);
+      await fetchVehicles();
+
+      setSuccessMessage("Đã xóa phương tiện thành công.");
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(error.message || "Không thể xóa phương tiện.");
+    }
   }
 
   function goToCreateBooking() {
     navigate("/customer/bookings/create");
+  }
+
+  if (loading) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <p className="text-lg font-semibold text-slate-900">
+          Đang tải danh sách phương tiện...
+        </p>
+        <p className="mt-2 text-sm text-slate-500">
+          Vui lòng chờ trong giây lát.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -191,6 +239,18 @@ function VehiclePage() {
         <strong>Quy tắc nghiệp vụ:</strong> Booking chỉ được tạo bằng vehicle
         thuộc đúng customer hiện tại và vehicle phải ở trạng thái ACTIVE.
       </div>
+
+      {successMessage && (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-center text-sm text-green-700">
+          {successMessage}
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-700">
+          {errorMessage}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -271,10 +331,11 @@ function VehiclePage() {
               <div className="divide-y divide-slate-200">
                 {filteredVehicles.map((vehicle) => {
                   const canUseForBooking = vehicle.status === "ACTIVE";
+                  const vehicleId = vehicle.vehicleId || vehicle.id;
 
                   return (
                     <div
-                      key={vehicle.vehicleId}
+                      key={vehicleId}
                       className="grid grid-cols-1 gap-4 p-5 lg:grid-cols-[1.2fr_1fr_1fr_auto]"
                     >
                       <div>
@@ -289,14 +350,14 @@ function VehiclePage() {
                           {vehicle.brand} {vehicle.model}
                         </p>
                         <p className="text-sm text-slate-500">
-                          Màu xe: {vehicle.color}
+                          Màu xe: {vehicle.color || "Chưa cập nhật"}
                         </p>
                       </div>
 
                       <div>
                         <p className="text-sm text-slate-500">Tổng booking</p>
                         <p className="mt-1 text-2xl font-bold text-slate-900">
-                          {vehicle.totalBookings}
+                          {vehicle.totalBookings || 0}
                         </p>
                       </div>
 
@@ -305,7 +366,7 @@ function VehiclePage() {
                           Lần rửa gần nhất
                         </p>
                         <p className="mt-1 font-bold text-slate-900">
-                          {vehicle.lastServiceDate}
+                          {vehicle.lastServiceDate || "Chưa có"}
                         </p>
                       </div>
 
@@ -321,12 +382,20 @@ function VehiclePage() {
 
                         <button
                           type="button"
-                          onClick={() => handleToggleStatus(vehicle.vehicleId)}
+                          onClick={() => handleToggleStatus(vehicle)}
                           className="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
                         >
                           {vehicle.status === "ACTIVE"
                             ? "Tạm ngưng"
                             : "Kích hoạt lại"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteVehicle(vehicle)}
+                          className="rounded-lg border border-red-300 px-4 py-2 font-semibold text-red-600 hover:bg-red-50"
+                        >
+                          Xóa xe
                         </button>
                       </div>
                     </div>
@@ -403,14 +472,8 @@ function VehiclePage() {
                 type="submit"
                 className="w-full rounded-lg bg-green-700 px-4 py-3 font-semibold text-white hover:bg-green-800"
               >
-                Thêm phương tiện mock
+                Thêm phương tiện
               </button>
-
-              {successMessage && (
-                <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-center text-sm text-blue-800">
-                  {successMessage}
-                </div>
-              )}
             </div>
           </form>
 
