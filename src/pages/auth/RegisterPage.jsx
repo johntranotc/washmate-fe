@@ -1,186 +1,47 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAppStore } from "../../state/AppStore";
 
 function RegisterPage() {
   const navigate = useNavigate();
-
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
+  const { actions } = useAppStore();
+  const [form, setForm] = useState({ fullName: "", phone: "", email: "", password: "" });
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const validateForm = () => {
-    if (!fullName.trim()) {
-      setError("Vui lòng nhập họ tên.");
-      return false;
+  function submit(event) {
+    event.preventDefault();
+    if (!form.fullName || !form.email.includes("@") || form.password.length < 6) {
+      setError("Vui lòng nhập đầy đủ thông tin. Mật khẩu phải có ít nhất 6 ký tự.");
+      return;
     }
+    actions.register(form);
+    navigate("/customer");
+  }
 
-    if (!phone.trim()) {
-      setError("Vui lòng nhập số điện thoại.");
-      return false;
-    }
-
-    if (phone.length < 10) {
-      setError("Số điện thoại không hợp lệ.");
-      return false;
-    }
-
-    if (!email.trim()) {
-      setError("Vui lòng nhập email.");
-      return false;
-    }
-
-    if (!email.includes("@")) {
-      setError("Email không hợp lệ.");
-      return false;
-    }
-
-    if (!password.trim()) {
-      setError("Vui lòng nhập mật khẩu.");
-      return false;
-    }
-
-    if (password.length < 6) {
-      setError("Mật khẩu phải từ 6 ký tự trở lên.");
-      return false;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp.");
-      return false;
-    }
-
-    setError("");
-    return true;
-  };
-
-  const handleRegister = (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
-    setLoading(true);
-
-    setTimeout(() => {
-      console.log({
-        fullName,
-        phone,
-        email,
-        password,
-      });
-
-      setLoading(false);
-      alert("Đăng ký thành công!");
-      navigate("/login");
-    }, 1000);
-  };
+  const fields = [
+    ["fullName", "Họ và tên", "text"],
+    ["phone", "Số điện thoại", "text"],
+    ["email", "Thư điện tử", "email"],
+    ["password", "Mật khẩu", "password"],
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
-      <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-slate-800 mb-2">
-          AutoWash Pro
-        </h1>
-
-        <p className="text-center text-slate-500 mb-6">Tạo tài khoản mới</p>
-
-        {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleRegister}>
-          <div className="mb-4 text-left">
-            <label className="block mb-2 font-medium text-slate-700">
-              Họ và tên
-            </label>
-
-            <input
-              type="text"
-              placeholder="Nhập họ tên"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-800"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-            />
-          </div>
-
-          <div className="mb-4 text-left">
-            <label className="block mb-2 font-medium text-slate-700">
-              Số điện thoại
-            </label>
-
-            <input
-              type="text"
-              placeholder="Nhập số điện thoại"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-800"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </div>
-
-          <div className="mb-4 text-left">
-            <label className="block mb-2 font-medium text-slate-700">
-              Email
-            </label>
-
-            <input
-              type="email"
-              placeholder="Nhập email"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-800"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="mb-4 text-left">
-            <label className="block mb-2 font-medium text-slate-700">
-              Mật khẩu
-            </label>
-
-            <input
-              type="password"
-              placeholder="Nhập mật khẩu"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-800"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <div className="mb-6 text-left">
-            <label className="block mb-2 font-medium text-slate-700">
-              Xác nhận mật khẩu
-            </label>
-
-            <input
-              type="password"
-              placeholder="Nhập lại mật khẩu"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-800"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-slate-900 py-2 text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-          >
-            {loading ? "Đang đăng ký..." : "Đăng ký"}
-          </button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-slate-500">
-          Đã có tài khoản?{" "}
-          <Link to="/login" className="text-blue-600 hover:underline">
-            Đăng nhập
-          </Link>
-        </p>
-      </div>
+    <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-7 shadow-xl shadow-blue-950/5">
+      <h1 className="text-2xl font-extrabold">Tạo tài khoản</h1>
+      <p className="mt-2 text-sm text-slate-500">Đăng ký tài khoản khách hàng AquaSmart.</p>
+      {error && <p className="mt-4 rounded-lg bg-rose-50 p-3 text-xs text-rose-700">{error}</p>}
+      <form onSubmit={submit} className="mt-6 space-y-3">
+        {fields.map(([key, label, type]) => (
+          <label key={key} className="block text-xs font-bold text-slate-600">
+            {label}
+            <input type={type} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
+          </label>
+        ))}
+        <button className="mt-2 h-11 w-full rounded-lg bg-blue-600 text-sm font-bold text-white">Đăng ký</button>
+      </form>
+      <p className="mt-5 text-center text-xs text-slate-500">
+        Đã có tài khoản? <Link to="/login" className="font-bold text-blue-600">Đăng nhập</Link>
+      </p>
     </div>
   );
 }

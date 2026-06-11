@@ -9,4 +9,7 @@ export const paymentApi = {
 
   markPaid: (paymentId, payload) =>
     axiosClient.post(`/payments/${paymentId}/mark-paid`, payload),
+  refund: (paymentId, payload) =>
+    axiosClient.post(`/payments/${paymentId}/refund`, payload),
+  cancel: (paymentId) => axiosClient.post(`/payments/${paymentId}/cancel`),
 };

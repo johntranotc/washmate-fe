@@ -1,58 +1,57 @@
+﻿import { Bell, CheckCheck } from "lucide-react";
+import { useAppStore } from "../../state/AppStore";
+
 function NotificationPage() {
-  const notifications = [
-    {
-      id: 1,
-      title: "Booking đã được xác nhận",
-      message: "Booking #BK001 đã được xác nhận.",
-      unread: true,
-    },
-    {
-      id: 2,
-      title: "Thanh toán thành công",
-      message: "Bạn đã thanh toán thành công 250.000đ.",
-      unread: false,
-    },
-    {
-      id: 3,
-      title: "Nhận 50 điểm Loyalty",
-      message: "Bạn vừa được cộng 50 điểm thưởng.",
-      unread: true,
-    },
-  ];
+  const { state, actions } = useAppStore();
+  const notifications = state.notifications.filter(
+    (item) => item.userId === state.session?.id,
+  );
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-800">Thông báo</h1>
-        <p className="text-slate-500 mt-2">
-          Cập nhật trạng thái booking và chương trình khuyến mãi.
-        </p>
-      </div>
+    <div className="space-y-5">
+      <header className="flex items-end justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold">Thông báo</h1>
+          <p className="mt-2 text-xs text-slate-500">
+            Cập nhật về đặt lịch, thanh toán, dịch vụ và điểm thưởng.
+          </p>
+        </div>
+        <button
+          onClick={() => actions.markAllNotificationsRead()}
+          className="flex items-center gap-2 text-xs font-bold text-blue-600"
+        >
+          <CheckCheck size={16} /> Đánh dấu tất cả đã đọc
+        </button>
+      </header>
 
-      <div className="space-y-3">
+      <section className="space-y-3">
         {notifications.map((item) => (
-          <div
+          <button
             key={item.id}
-            className={`bg-white border rounded-xl p-4 shadow-sm ${
-              item.unread ? "border-blue-300" : ""
+            onClick={() => actions.markNotificationRead(item.id)}
+            className={`flex w-full gap-4 rounded-xl border bg-white p-5 text-left ${
+              item.read ? "border-slate-200" : "border-blue-300 shadow-sm"
             }`}
           >
-            <div className="flex justify-between items-center">
-              <h3 className="font-semibold">{item.title}</h3>
-
-              {item.unread && (
-                <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
-                  Mới
-                </span>
-              )}
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-50 text-blue-600">
+              <Bell size={17} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold">{item.title}</h2>
+                {!item.read && <span className="h-2 w-2 rounded-full bg-blue-600" />}
+              </div>
+              <p className="mt-2 text-xs text-slate-500">{item.message}</p>
+              <time className="mt-3 block text-[9px] text-slate-400">
+                {new Date(item.createdAt).toLocaleString()}
+              </time>
             </div>
-
-            <p className="text-slate-600 mt-2">{item.message}</p>
-          </div>
+          </button>
         ))}
-      </div>
+      </section>
     </div>
   );
 }
 
 export default NotificationPage;
+

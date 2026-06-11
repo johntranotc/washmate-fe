@@ -1,382 +1,78 @@
-import { useNavigate } from "react-router-dom";
+﻿import { Check, Circle, Clock3 } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { useAppStore } from "../../state/AppStore";
 
-const mockBookingDetail = {
-  bookingId: 1,
-  bookingCode: "BK-0001",
+const steps = [
+  ["PENDING", "Đã tạo lịch"],
+  ["CONFIRMED", "Đã xác nhận thanh toán"],
+  ["CHECKED_IN", "Đã tiếp nhận xe"],
+  ["WASHING", "Đang thực hiện dịch vụ"],
+  ["COMPLETED", "Đã hoàn tất dịch vụ"],
+];
 
-  customerName: "Nguyễn Văn A",
-  phone: "0900000000",
-
-  garageName: "AutoWash Garage Thủ Đức",
-  garageAddress: "45 Võ Văn Ngân, Thủ Đức",
-
-  vehicle: "51A-12345 - Toyota Vios",
-  serviceName: "Premium Wash",
-  bookingDate: "2026-06-06",
-  slotTime: "09:00 - 09:30",
-
-  totalAmount: 120000,
-  discountAmount: 10000,
-  finalAmount: 110000,
-
-  bookingStatus: "CONFIRMED",
-  paymentStatus: "PAID",
-  invoiceStatus: "PAID",
-  serviceStatus: "WAITING_CHECK_IN",
-
-  createdAt: "06/06/2026 09:20",
-  confirmedAt: "06/06/2026 09:36",
-  checkinTime: null,
-  serviceStartTime: null,
-  completedTime: null,
-
-  paymentMethod: "CASH",
-  transactionCode: "TXN-1750000000000",
-  invoiceCode: "INV-0001",
+const statusLabels = {
+  PENDING: "Chờ thanh toán",
+  CONFIRMED: "Đã xác nhận",
+  CHECKED_IN: "Đã tiếp nhận",
+  WASHING: "Đang thực hiện",
+  COMPLETED: "Đã hoàn tất",
+  CANCELLED: "Đã hủy",
+  NO_SHOW: "Khách không đến",
 };
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(value);
-}
-
-function getStatusLabel(status) {
-  const labels = {
-    PENDING: "PENDING - Chờ xử lý",
-    CONFIRMED: "CONFIRMED - Đã xác nhận",
-    CHECKED_IN: "CHECKED_IN - Đã check-in",
-    WASHING: "WASHING - Đang rửa xe",
-    COMPLETED: "COMPLETED - Hoàn tất",
-    CANCELLED: "CANCELLED - Đã hủy",
-    NO_SHOW: "NO_SHOW - Không đến",
-
-    PAID: "PAID - Đã thanh toán",
-    NOT_ISSUED: "NOT_ISSUED - Chưa phát hành",
-    WAITING_CHECK_IN: "WAITING_CHECK_IN - Chờ check-in",
-  };
-
-  return labels[status] || status;
-}
-
-function getPaymentMethodLabel(method) {
-  const labels = {
-    CASH: "Tiền mặt",
-    BANK_TRANSFER: "Chuyển khoản",
-    CARD: "Thẻ ngân hàng",
-    MOMO: "MoMo",
-    VNPAY: "VNPay",
-  };
-
-  return labels[method] || method;
-}
-
-function StatusBadge({ status }) {
-  const statusClass =
-    status === "PAID" || status === "CONFIRMED" || status === "COMPLETED"
-      ? "bg-green-100 text-green-700 border-green-200"
-      : status === "CHECKED_IN" || status === "WASHING"
-        ? "bg-blue-100 text-blue-700 border-blue-200"
-        : status === "WAITING_CHECK_IN"
-          ? "bg-purple-100 text-purple-700 border-purple-200"
-          : status === "CANCELLED" || status === "NO_SHOW"
-            ? "bg-red-100 text-red-700 border-red-200"
-            : "bg-amber-100 text-amber-700 border-amber-200";
-
-  return (
-    <span
-      className={`rounded-full border px-3 py-1 text-xs font-bold ${statusClass}`}
-    >
-      {getStatusLabel(status)}
-    </span>
-  );
-}
-
-function TimelineItem({ title, time, active, description }) {
-  return (
-    <div className="flex gap-4">
-      <div className="flex flex-col items-center">
-        <div
-          className={`h-4 w-4 rounded-full border ${
-            active
-              ? "border-green-600 bg-green-600"
-              : "border-slate-300 bg-white"
-          }`}
-        />
-        <div className="h-full w-px bg-slate-200" />
-      </div>
-
-      <div className="pb-5">
-        <p className="font-bold text-slate-900">{title}</p>
-        <p className="mt-1 text-sm text-slate-500">{description}</p>
-        <p className="mt-1 text-xs font-medium text-slate-500">
-          {time || "Chưa ghi nhận"}
-        </p>
-      </div>
-    </div>
-  );
-}
+const paymentLabels = {
+  PENDING: "Chờ thanh toán",
+  PAID: "Đã thanh toán",
+  REFUNDED: "Đã hoàn tiền",
+};
 
 function BookingDetailPage() {
-  const navigate = useNavigate();
+  const { bookingId } = useParams();
+  const { state, actions } = useAppStore();
+  const booking = state.bookings.find((item) => item.id === Number(bookingId));
 
-  function goToPayment() {
-    navigate(`/customer/bookings/${mockBookingDetail.bookingId}/payment`);
-  }
-
-  function goToInvoice() {
-    navigate(`/customer/bookings/${mockBookingDetail.bookingId}/invoice`);
-  }
-
-  function goToStaffWorkflowDemo() {
-    navigate(`/staff/bookings/${mockBookingDetail.bookingId}/workflow`);
-  }
+  if (!booking) return <div className="rounded-xl bg-white p-8">Không tìm thấy lịch đặt.</div>;
+  const currentIndex = steps.findIndex(([status]) => status === booking.bookingStatus);
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-slate-900">Chi tiết đặt lịch</h1>
-        <p className="mt-2 text-slate-500">
-          Theo dõi trạng thái booking, thanh toán, hóa đơn và tiến trình rửa xe.
-        </p>
-      </div>
+    <div className="space-y-5">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div><p className="text-[9px] font-bold text-blue-600">CHI TIẾT ĐẶT LỊCH</p><h1 className="mt-2 text-2xl font-extrabold">{booking.code}</h1><p className="mt-2 text-xs text-slate-500">{booking.garageName}</p></div>
+        <span className="w-fit rounded-full bg-blue-50 px-3 py-2 text-[9px] font-bold text-blue-700">{statusLabels[booking.bookingStatus] || booking.bookingStatus}</span>
+      </header>
 
-      <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-center text-sm text-green-800">
-        <strong>Luồng hiện tại:</strong> Payment đã PAID nên Booking đã được
-        CONFIRMED. Bước tiếp theo là Staff check-in và xử lý dịch vụ.
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-start md:justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900">
-                  {mockBookingDetail.bookingCode}
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Mã đặt lịch của khách hàng
-                </p>
-              </div>
-
-              <div className="space-y-2 text-left md:text-right">
-                <p className="text-sm text-slate-500">Trạng thái đặt lịch</p>
-                <StatusBadge status={mockBookingDetail.bookingStatus} />
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Khách hàng</p>
-                <p className="mt-1 font-bold text-slate-900">
-                  {mockBookingDetail.customerName}
-                </p>
-                <p className="text-sm text-slate-500">
-                  {mockBookingDetail.phone}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Cửa hàng</p>
-                <p className="mt-1 font-bold text-slate-900">
-                  {mockBookingDetail.garageName}
-                </p>
-                <p className="text-sm text-slate-500">
-                  {mockBookingDetail.garageAddress}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Phương tiện</p>
-                <p className="mt-1 font-bold text-slate-900">
-                  {mockBookingDetail.vehicle}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Gói dịch vụ</p>
-                <p className="mt-1 font-bold text-slate-900">
-                  {mockBookingDetail.serviceName}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Ngày đặt lịch</p>
-                <p className="mt-1 font-bold text-slate-900">
-                  {mockBookingDetail.bookingDate}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Khung giờ</p>
-                <p className="mt-1 font-bold text-slate-900">
-                  {mockBookingDetail.slotTime}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-slate-900">
-              Tiến trình dịch vụ
-            </h2>
-
-            <div className="mt-6">
-              <TimelineItem
-                title="Tạo booking"
-                description="Khách hàng tạo booking ở trạng thái PENDING."
-                time={mockBookingDetail.createdAt}
-                active
-              />
-
-              <TimelineItem
-                title="Thanh toán thành công"
-                description="Payment chuyển sang PAID."
-                time={mockBookingDetail.confirmedAt}
-                active
-              />
-
-              <TimelineItem
-                title="Booking được xác nhận"
-                description="Booking chuyển từ PENDING sang CONFIRMED sau khi payment PAID."
-                time={mockBookingDetail.confirmedAt}
-                active
-              />
-
-              <TimelineItem
-                title="Check-in tại garage"
-                description="Staff chỉ được check-in khi booking CONFIRMED và payment PAID."
-                time={mockBookingDetail.checkinTime}
-                active={Boolean(mockBookingDetail.checkinTime)}
-              />
-
-              <TimelineItem
-                title="Bắt đầu rửa xe"
-                description="Staff chuyển trạng thái sang WASHING khi bắt đầu dịch vụ."
-                time={mockBookingDetail.serviceStartTime}
-                active={Boolean(mockBookingDetail.serviceStartTime)}
-              />
-
-              <TimelineItem
-                title="Hoàn tất dịch vụ"
-                description="Sau khi COMPLETED, hệ thống mới xét cộng điểm loyalty nếu payment PAID."
-                time={mockBookingDetail.completedTime}
-                active={Boolean(mockBookingDetail.completedTime)}
-              />
-            </div>
-          </div>
-        </div>
-
-        <aside className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-center text-xl font-bold text-slate-900">
-              Tổng quan trạng thái
-            </h2>
-
-            <div className="mt-5 space-y-3">
-              <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4">
-                <span className="text-sm font-medium text-slate-600">
-                  Đặt lịch
-                </span>
-                <StatusBadge status={mockBookingDetail.bookingStatus} />
-              </div>
-
-              <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4">
-                <span className="text-sm font-medium text-slate-600">
-                  Thanh toán
-                </span>
-                <StatusBadge status={mockBookingDetail.paymentStatus} />
-              </div>
-
-              <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4">
-                <span className="text-sm font-medium text-slate-600">
-                  Hóa đơn
-                </span>
-                <StatusBadge status={mockBookingDetail.invoiceStatus} />
-              </div>
-
-              <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4">
-                <span className="text-sm font-medium text-slate-600">
-                  Dịch vụ
-                </span>
-                <StatusBadge status={mockBookingDetail.serviceStatus} />
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-center text-xl font-bold text-slate-900">
-              Tóm tắt thanh toán
-            </h2>
-
-            <div className="mt-5 space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Tạm tính</span>
-                <span className="font-medium">
-                  {formatCurrency(mockBookingDetail.totalAmount)}
-                </span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-slate-500">Giảm giá</span>
-                <span className="font-medium text-green-600">
-                  -{formatCurrency(mockBookingDetail.discountAmount)}
-                </span>
-              </div>
-
-              <div className="border-t border-slate-200 pt-3">
-                <div className="flex justify-between text-lg font-bold text-slate-900">
-                  <span>Đã thanh toán</span>
-                  <span>{formatCurrency(mockBookingDetail.finalAmount)}</span>
+      <div className="grid gap-5 lg:grid-cols-[1fr_330px]">
+        <section className="rounded-xl border border-slate-200 bg-white p-6">
+          <h2 className="font-extrabold">Tiến trình dịch vụ</h2>
+          <div className="mt-6 space-y-0">
+            {steps.map(([status, label], index) => {
+              const done = currentIndex >= index || booking.bookingStatus === "COMPLETED";
+              return (
+                <div key={status} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <span className={`grid h-6 w-6 place-items-center rounded-full ${done ? "bg-blue-600 text-white" : "border border-slate-300 text-slate-300"}`}>{done ? <Check size={13} /> : <Circle size={10} />}</span>
+                    {index < steps.length - 1 && <span className={`h-12 w-0.5 ${done ? "bg-blue-300" : "bg-slate-200"}`} />}
+                  </div>
+                  <div><b className="text-xs">{label}</b><p className="mt-1 text-[9px] text-slate-400">{statusLabels[status]}</p></div>
                 </div>
-              </div>
-            </div>
-
-            <div className="mt-5 rounded-xl bg-slate-50 p-4 text-sm">
-              <p className="text-slate-500">Phương thức</p>
-              <p className="mt-1 font-bold text-slate-900">
-                {getPaymentMethodLabel(mockBookingDetail.paymentMethod)}
-              </p>
-
-              <p className="mt-3 text-slate-500">Mã giao dịch</p>
-              <p className="mt-1 font-bold text-slate-900">
-                {mockBookingDetail.transactionCode}
-              </p>
-            </div>
+              );
+            })}
           </div>
+        </section>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
-            <h2 className="text-xl font-bold text-slate-900">
-              Hành động tiếp theo
-            </h2>
-
-            <div className="mt-4 space-y-3">
-              <button
-                type="button"
-                onClick={goToInvoice}
-                className="w-full rounded-lg bg-slate-900 px-4 py-2 font-semibold text-white hover:bg-slate-800"
-              >
-                Xem hóa đơn
-              </button>
-
-              <button
-                type="button"
-                onClick={goToPayment}
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                Quay lại thanh toán
-              </button>
-
-              <button
-                type="button"
-                onClick={goToStaffWorkflowDemo}
-                className="w-full rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800"
-              >
-                Xem demo Staff Workflow
-              </button>
-            </div>
+        <aside className="space-y-4">
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <h2 className="font-extrabold">Tóm tắt</h2>
+            <dl className="mt-4 space-y-3 text-xs">
+              <div><dt className="text-slate-400">Phương tiện</dt><dd className="mt-1 font-bold">{booking.vehicle} · {booking.plate}</dd></div>
+              <div><dt className="text-slate-400">Dịch vụ</dt><dd className="mt-1 font-bold">{booking.serviceName}</dd></div>
+              <div><dt className="text-slate-400">Lịch hẹn</dt><dd className="mt-1 flex items-center gap-2 font-bold"><Clock3 size={13} /> {booking.bookingDate} · {booking.slotTime}</dd></div>
+              <div><dt className="text-slate-400">Thanh toán</dt><dd className="mt-1 font-bold">{paymentLabels[booking.paymentStatus] || booking.paymentStatus}</dd></div>
+            </dl>
           </div>
+          {booking.paymentStatus !== "PAID" && <Link to={`/customer/bookings/${booking.id}/payment`} className="block rounded-lg bg-blue-600 py-3 text-center text-xs font-bold text-white">Hoàn tất thanh toán</Link>}
+          {booking.invoiceStatus !== "NOT_ISSUED" && <Link to={`/customer/bookings/${booking.id}/invoice`} className="block rounded-lg border border-blue-200 bg-white py-3 text-center text-xs font-bold text-blue-700">Xem hóa đơn</Link>}
+          {["PENDING", "CONFIRMED"].includes(booking.bookingStatus) && <button onClick={() => actions.cancelBooking(booking.id)} className="w-full rounded-lg border border-rose-200 py-3 text-xs font-bold text-rose-600">Hủy lịch đặt</button>}
         </aside>
       </div>
     </div>
@@ -384,3 +80,4 @@ function BookingDetailPage() {
 }
 
 export default BookingDetailPage;
+

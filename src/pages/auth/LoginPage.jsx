@@ -1,157 +1,79 @@
+import { LockKeyhole, Mail } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAppStore } from "../../state/AppStore";
+
+const demoAccounts = [
+  ["Khách hàng", "customer@demo.com"],
+  ["Nhân viên", "staff@demo.com"],
+  ["Quản trị viên", "admin@demo.com"],
+];
+
+const homeByRole = {
+  CUSTOMER: "/customer",
+  STAFF: "/staff/queue",
+  ADMIN: "/admin/dashboard",
+};
 
 function LoginPage() {
   const navigate = useNavigate();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-
+  const location = useLocation();
+  const { actions } = useAppStore();
+  const [email, setEmail] = useState("customer@demo.com");
+  const [password, setPassword] = useState("123456");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const validateForm = () => {
-    if (!email.trim()) {
-      setError("Vui lòng nhập email.");
-      return false;
+  function handleSubmit(event) {
+    event.preventDefault();
+    if (!email.includes("@") || password.length < 6) {
+      setError("Vui lòng nhập email hợp lệ và mật khẩu có ít nhất 6 ký tự.");
+      return;
     }
-
-    if (!email.includes("@")) {
-      setError("Email không hợp lệ.");
-      return false;
-    }
-
-    if (!password.trim()) {
-      setError("Vui lòng nhập mật khẩu.");
-      return false;
-    }
-
-    if (password.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự.");
-      return false;
-    }
-
-    setError("");
-    return true;
-  };
-
-  const handleForgotPassword = () => {
-    alert("Tính năng quên mật khẩu đang được phát triển.");
-  };
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
-    setLoading(true);
-
-    setTimeout(() => {
-      if (rememberMe) {
-        localStorage.setItem("token", "mock-token");
-        localStorage.setItem("userEmail", email);
-      } else {
-        sessionStorage.setItem("token", "mock-token");
-        sessionStorage.setItem("userEmail", email);
-      }
-
-      setLoading(false);
-      navigate("/customer");
-    }, 800);
-  };
+    const user = actions.login(email);
+    navigate(location.state?.from || homeByRole[user.role], { replace: true });
+  }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
-      <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-slate-800 mb-2">
-          AutoWash Pro
-        </h1>
-
-        <p className="text-center text-slate-500 mb-6">Đăng nhập hệ thống</p>
-
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-600">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin}>
-          <div className="mb-4 text-left">
-            <label className="block mb-2 font-medium text-slate-700">
-              Email
-            </label>
-
-            <input
-              type="email"
-              placeholder="Nhập email"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-slate-800"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="mb-4 text-left">
-            <label className="block mb-2 font-medium text-slate-700">
-              Password
-            </label>
-
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Nhập mật khẩu"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 pr-14 outline-none focus:ring-2 focus:ring-slate-800"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 hover:text-slate-800"
-              >
-                {showPassword ? "Ẩn" : "Hiện"}
-              </button>
-            </div>
-          </div>
-
-          <div className="mb-6 flex items-center justify-between">
-            <label className="flex items-center gap-2 text-sm text-slate-600">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              Ghi nhớ đăng nhập
-            </label>
-
-            <button
-              type="button"
-              onClick={handleForgotPassword}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              Quên mật khẩu?
-            </button>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-slate-900 text-white py-2 rounded-lg hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed"
-          >
-            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-          </button>
-        </form>
-
-        <p className="text-center mt-4 text-sm text-slate-500">
-          Chưa có tài khoản?{" "}
-          <Link to="/register" className="text-blue-600 hover:underline">
-            Đăng ký
-          </Link>
+    <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-7 shadow-xl shadow-blue-950/5">
+      <h1 className="text-2xl font-extrabold">Chào mừng trở lại</h1>
+      <p className="mt-2 text-sm text-slate-500">
+        Đăng nhập để tiếp tục sử dụng hệ thống.
+      </p>
+      {error && <div className="mt-5 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">{error}</div>}
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <label className="block text-xs font-bold text-slate-600">
+          Thư điện tử
+          <span className="mt-2 flex h-11 items-center gap-2 rounded-lg border border-slate-200 px-3 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
+            <Mail size={16} className="text-slate-400" />
+            <input value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border-0 bg-transparent text-sm outline-none" />
+          </span>
+        </label>
+        <label className="block text-xs font-bold text-slate-600">
+          Mật khẩu
+          <span className="mt-2 flex h-11 items-center gap-2 rounded-lg border border-slate-200 px-3 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
+            <LockKeyhole size={16} className="text-slate-400" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border-0 bg-transparent text-sm outline-none" />
+          </span>
+        </label>
+        <button className="h-11 w-full rounded-lg bg-blue-600 text-sm font-bold text-white hover:bg-blue-700">
+          Đăng nhập
+        </button>
+      </form>
+      <div className="mt-6 border-t border-slate-100 pt-5">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          Tài khoản dùng thử
         </p>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {demoAccounts.map(([label, account]) => (
+            <button key={account} type="button" onClick={() => setEmail(account)} className="rounded-lg border border-blue-100 bg-blue-50 px-2 py-2 text-[10px] font-bold text-blue-700">
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
+      <p className="mt-5 text-center text-xs text-slate-500">
+        Chưa có tài khoản? <Link to="/register" className="font-bold text-blue-600">Đăng ký ngay</Link>
+      </p>
     </div>
   );
 }

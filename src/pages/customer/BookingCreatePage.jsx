@@ -1,71 +1,49 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowRight,
+  CalendarDays,
+  Car,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  MapPin,
+  Sparkles,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { garageApi } from "../../api/garageApi";
+import { useAppStore } from "../../state/AppStore";
 
-const mockVehicles = [
-  {
-    id: 1,
-    licensePlate: "51A-12345",
-    name: "Toyota Vios",
-    status: "ACTIVE",
-  },
-  {
-    id: 2,
-    licensePlate: "51B-67890",
-    name: "Honda City",
-    status: "ACTIVE",
-  },
+const vehicles = [
+  { id: 1, name: "BMW X5", plate: "51A-12345" },
+  { id: 2, name: "Toyota Vios", plate: "51B-67890" },
 ];
 
-const mockServices = [
-  {
-    id: 1,
-    name: "Basic Wash",
-    duration: 30,
-    price: 80000,
-    description: "Rửa ngoài cơ bản, phù hợp cho nhu cầu nhanh.",
-  },
-  {
-    id: 2,
-    name: "Premium Wash",
-    duration: 45,
-    price: 120000,
-    description: "Rửa ngoài, vệ sinh nội thất nhẹ và chăm sóc bề mặt.",
-  },
-  {
-    id: 3,
-    name: "Full Detailing",
-    duration: 90,
-    price: 250000,
-    description: "Gói chăm sóc xe chuyên sâu, thời lượng dài hơn.",
-  },
+const services = [
+  { id: 1, name: "Rửa xe cơ bản", price: 80000, duration: 30 },
+  { id: 2, name: "Rửa xe cao cấp", price: 120000, duration: 45 },
+  { id: 3, name: "Chăm sóc xe toàn diện", price: 250000, duration: 90 },
 ];
 
-const mockSlots = [
-  {
-    id: 1,
-    time: "08:00 - 08:30",
-    available: true,
-    capacityText: "Còn 3 chỗ",
-  },
-  {
-    id: 2,
-    time: "09:00 - 09:30",
-    available: true,
-    capacityText: "Còn 2 chỗ",
-  },
-  {
-    id: 3,
-    time: "10:00 - 10:30",
-    available: false,
-    capacityText: "Đã đầy",
-  },
-  {
-    id: 4,
-    time: "14:00 - 14:30",
-    available: true,
-    capacityText: "Còn 4 chỗ",
-  },
+const slots = [
+  { id: 1, time: "09:00", state: "CÒN CHỖ", note: "Còn 4/4 chỗ" },
+  { id: 2, time: "10:30", state: "SẮP ĐẦY", note: "Còn 1/4 chỗ" },
+  { id: 3, time: "12:00", state: "ĐÃ ĐẦY", note: "Còn 0/4 chỗ" },
+  { id: 4, time: "13:30", state: "CÒN CHỖ", note: "Còn 3/4 chỗ" },
+  { id: 5, time: "15:00", state: "CÒN CHỖ", note: "Còn 4/4 chỗ" },
+  { id: 6, time: "16:30", state: "CÒN CHỖ", note: "Còn 2/4 chỗ" },
+  { id: 7, time: "18:00", state: "CÒN CHỖ", note: "Còn 4/4 chỗ" },
+  { id: 8, time: "19:30", state: "CÒN CHỖ", note: "Còn 4/4 chỗ" },
+];
+
+const days = [
+  { label: "T2", day: 12 },
+  { label: "T3", day: 13 },
+  { label: "T4", day: 14 },
+  { label: "T5", day: 15 },
+  { label: "T6", day: 16 },
+  { label: "T7", day: 17 },
+  { label: "CN", day: 18 },
 ];
 
 function formatCurrency(value) {
@@ -75,492 +53,336 @@ function formatCurrency(value) {
   }).format(value);
 }
 
-function FieldLabel({ children, required = false }) {
-  return (
-    <label className="mb-2 block text-sm font-bold text-slate-700">
-      {children}
-      {required && <span className="ml-1 text-rose-500">*</span>}
-    </label>
-  );
-}
-
-function StepBadge({ number, title, active = false }) {
-  return (
-    <div
-      className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${
-        active
-          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-          : "border-slate-200 bg-white text-slate-500"
-      }`}
-    >
-      <span
-        className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${
-          active ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-500"
-        }`}
-      >
-        {number}
-      </span>
-      <span className="text-sm font-bold">{title}</span>
-    </div>
-  );
-}
-
-function InfoRow({ label, value, hint }) {
-  return (
-    <div className="rounded-2xl bg-slate-50 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-        {label}
-      </p>
-      <p className="mt-1 text-sm font-bold leading-6 text-slate-950">{value}</p>
-      {hint && <p className="mt-1 text-xs leading-5 text-slate-500">{hint}</p>}
-    </div>
-  );
-}
-
 function BookingCreatePage() {
   const navigate = useNavigate();
-
+  const { state, actions } = useAppStore();
   const [garages, setGarages] = useState([]);
   const [garageLoading, setGarageLoading] = useState(false);
   const [garageError, setGarageError] = useState("");
-
   const [garageId, setGarageId] = useState("");
-  const [vehicleId, setVehicleId] = useState("");
-  const [serviceId, setServiceId] = useState("");
-  const [bookingDate, setBookingDate] = useState("");
-  const [slotId, setSlotId] = useState("");
-  const [promotionCode, setPromotionCode] = useState("");
-  const [bookingNote, setBookingNote] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [vehicleId, setVehicleId] = useState("1");
+  const [serviceId, setServiceId] = useState("2");
+  const [selectedDay, setSelectedDay] = useState(14);
+  const [slotId, setSlotId] = useState(4);
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     async function fetchGarages() {
       try {
         setGarageLoading(true);
         setGarageError("");
-
         const data = await garageApi.getAll();
-        setGarages(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("GET GARAGES ERROR:", error);
-        setGarageError(
-          error?.message ||
-            "Không tải được danh sách garage. Vui lòng kiểm tra BE.",
+        const list = Array.isArray(data) && data.length ? data : state.garages.map(
+          (garage) => ({ ...garage, garageId: garage.id }),
         );
+        setGarages(list);
+        if (list[0]?.garageId) {
+          setGarageId(String(list[0].garageId));
+        }
+      } catch (error) {
+        const fallback = state.garages.map((garage) => ({
+          ...garage,
+          garageId: garage.id,
+        }));
+        setGarages(fallback);
+        setGarageId(String(fallback[0]?.garageId || ""));
+        setGarageError("Không thể kết nối máy chủ. Hệ thống đang dùng dữ liệu dùng thử cục bộ.");
       } finally {
         setGarageLoading(false);
       }
     }
 
     fetchGarages();
-  }, []);
+  }, [state.garages]);
 
   const selectedGarage = useMemo(
     () => garages.find((garage) => garage.garageId === Number(garageId)),
     [garages, garageId],
   );
-
-  const selectedVehicle = useMemo(
-    () => mockVehicles.find((vehicle) => vehicle.id === Number(vehicleId)),
-    [vehicleId],
+  const selectedVehicle = vehicles.find(
+    (vehicle) => vehicle.id === Number(vehicleId),
   );
-
-  const selectedService = useMemo(
-    () => mockServices.find((service) => service.id === Number(serviceId)),
-    [serviceId],
+  const selectedService = services.find(
+    (service) => service.id === Number(serviceId),
   );
+  const selectedSlot = slots.find((slot) => slot.id === slotId);
 
-  const selectedSlot = useMemo(
-    () => mockSlots.find((slot) => slot.id === Number(slotId)),
-    [slotId],
-  );
-
-  const discountAmount = promotionCode.trim() ? 10000 : 0;
-  const totalAmount = selectedService?.price || 0;
-  const finalAmount = Math.max(totalAmount - discountAmount, 0);
-
-  const canSubmit =
-    garageId &&
-    vehicleId &&
-    serviceId &&
-    bookingDate &&
-    slotId &&
-    selectedSlot?.available;
-
-  function handleSubmit(event) {
-    event.preventDefault();
-
-    if (!canSubmit) {
-      return;
+  function submitBooking() {
+    setSubmitError("");
+    try {
+      const booking = actions.createBooking({
+        garageId: Number(garageId),
+        garageName: selectedGarage?.name || "Trung tâm chăm sóc xe",
+        vehicleId: Number(vehicleId),
+        vehicle: selectedVehicle?.name,
+        plate: selectedVehicle?.plate,
+        serviceId: Number(serviceId),
+        serviceName: selectedService?.name,
+        bookingDate: `2026-10-${String(selectedDay).padStart(2, "0")}`,
+        slotTime: selectedSlot?.time,
+        amount: selectedService?.price || 0,
+        discount: 0,
+        finalAmount: selectedService?.price || 0,
+      });
+      navigate(`/customer/bookings/${booking.id}/payment`);
+    } catch (error) {
+      setSubmitError(error.message);
     }
-
-    setSubmitted(true);
-  }
-
-  function goToPaymentPage() {
-    navigate("/customer/bookings/1/payment");
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 pb-10">
-      <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-        <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-900 px-6 py-7 text-white md:px-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-                Advance Booking
-              </p>
-
-              <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">
-                Tạo đặt lịch rửa xe
-              </h1>
-
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
-                Khách hàng chọn garage, phương tiện, gói dịch vụ và slot.
-                Booking mới sẽ ở trạng thái PENDING và chỉ được CONFIRMED sau
-                khi Payment PAID.
-              </p>
-            </div>
-
-            <div className="rounded-3xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
-                Core rule
-              </p>
-              <p className="mt-1 text-sm font-bold leading-6">
-                Payment PAID → Booking CONFIRMED
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-3 bg-slate-50 p-4 md:grid-cols-4">
-          <StepBadge number="1" title="Chọn thông tin" active />
-          <StepBadge number="2" title="Tạo PENDING" active={submitted} />
-          <StepBadge number="3" title="Thanh toán" />
-          <StepBadge number="4" title="Xác nhận" />
-        </div>
-      </section>
-
-      <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5">
-        <p className="text-sm leading-6 text-amber-900">
-          <span className="font-black">Business Rule:</span> Không có Payment
-          PAID thì không có Booking CONFIRMED. Hiện tại Garage lấy từ API thật,
-          còn Vehicle / Service / Slot vẫn dùng mock cho tới khi BE bổ sung đủ
-          endpoint.
+    <div>
+      <header className="mb-6">
+        <p className="text-[10px] font-extrabold text-blue-600">ĐẶT LỊCH</p>
+        <h1 className="mt-2 text-2xl font-extrabold tracking-tight md:text-3xl">
+          Bước 3: Chọn ngày và giờ
+        </h1>
+        <p className="mt-2 text-[11px] text-slate-500">
+          Chọn khung giờ thuận tiện cho dịch vụ chăm sóc xe.
         </p>
-      </section>
+      </header>
 
       {garageError && (
-        <section className="rounded-3xl border border-rose-200 bg-rose-50 p-5">
-          <p className="text-sm font-bold text-rose-700">Lỗi tải garage</p>
-          <p className="mt-1 text-sm text-rose-600">{garageError}</p>
-        </section>
+        <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-700">
+          {garageError}
+        </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.45fr_0.8fr]">
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-7"
-        >
-          <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h2 className="text-2xl font-black tracking-tight text-slate-950">
-                Thông tin đặt lịch
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Điền đủ các trường bắt buộc để tạo booking mock.
-              </p>
-            </div>
-
-            <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-black uppercase tracking-wide text-slate-600">
-              Status: PENDING
-            </span>
-          </div>
-
-          <div className="space-y-5">
-            <div>
-              <FieldLabel required>Garage</FieldLabel>
-              <select
-                value={garageId}
-                onChange={(event) => {
-                  setGarageId(event.target.value);
-                  setSubmitted(false);
-                }}
-                disabled={garageLoading}
-                className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100"
-              >
-                <option value="">
-                  {garageLoading ? "Đang tải garage..." : "Chọn garage"}
-                </option>
-
-                {garages.map((garage) => (
-                  <option key={garage.garageId} value={garage.garageId}>
-                    {garage.name} - {garage.address}
+      <div className="grid gap-6 xl:grid-cols-[1fr_330px]">
+        <div className="space-y-5">
+          <section className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="grid gap-4 md:grid-cols-3">
+              <label className="text-[9px] font-bold uppercase text-slate-500">
+                Cơ sở
+                <select
+                  value={garageId}
+                  disabled={garageLoading}
+                  onChange={(event) => setGarageId(event.target.value)}
+                  className="mt-2 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500"
+                >
+                  <option value="">
+                    {garageLoading ? "Đang tải..." : "Chọn cơ sở"}
                   </option>
-                ))}
-              </select>
+                  {garages.map((garage) => (
+                    <option key={garage.garageId} value={garage.garageId}>
+                      {garage.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-              <p className="mt-2 text-xs text-slate-500">
-                Dữ liệu garage đang lấy từ BE: GET /api/v1/garages.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div>
-                <FieldLabel required>Vehicle</FieldLabel>
+              <label className="text-[9px] font-bold uppercase text-slate-500">
+                Phương tiện
                 <select
                   value={vehicleId}
-                  onChange={(event) => {
-                    setVehicleId(event.target.value);
-                    setSubmitted(false);
-                  }}
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  onChange={(event) => setVehicleId(event.target.value)}
+                  className="mt-2 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500"
                 >
-                  <option value="">Chọn xe</option>
-
-                  {mockVehicles.map((vehicle) => (
+                  {vehicles.map((vehicle) => (
                     <option key={vehicle.id} value={vehicle.id}>
-                      {vehicle.licensePlate} - {vehicle.name}
+                      {vehicle.name} · {vehicle.plate}
                     </option>
                   ))}
                 </select>
-              </div>
+              </label>
 
-              <div>
-                <FieldLabel required>Service Package</FieldLabel>
+              <label className="text-[9px] font-bold uppercase text-slate-500">
+                Gói dịch vụ
                 <select
                   value={serviceId}
-                  onChange={(event) => {
-                    setServiceId(event.target.value);
-                    setSubmitted(false);
-                  }}
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  onChange={(event) => setServiceId(event.target.value)}
+                  className="mt-2 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500"
                 >
-                  <option value="">Chọn gói rửa xe</option>
-
-                  {mockServices.map((service) => (
+                  {services.map((service) => (
                     <option key={service.id} value={service.id}>
-                      {service.name} - {formatCurrency(service.price)} -{" "}
-                      {service.duration} phút
+                      {service.name}
                     </option>
                   ))}
                 </select>
+              </label>
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-base font-extrabold text-slate-600">
+                <CalendarDays size={17} className="text-blue-600" /> Tháng 10
+                năm 2026
+              </h2>
+              <div className="flex gap-1">
+                <button className="rounded p-2 text-slate-500 hover:bg-slate-100">
+                  <ChevronLeft size={16} />
+                </button>
+                <button className="rounded p-2 text-slate-500 hover:bg-slate-100">
+                  <ChevronRight size={16} />
+                </button>
               </div>
             </div>
 
-            {selectedService && (
-              <div className="rounded-3xl border border-sky-100 bg-sky-50 p-4">
-                <p className="text-sm font-bold text-sky-900">
-                  {selectedService.name}
-                </p>
-                <p className="mt-1 text-sm leading-6 text-sky-700">
-                  {selectedService.description}
-                </p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div>
-                <FieldLabel required>Booking Date</FieldLabel>
-                <input
-                  type="date"
-                  value={bookingDate}
-                  onChange={(event) => {
-                    setBookingDate(event.target.value);
-                    setSubmitted(false);
+            <div className="mt-6 grid grid-cols-7 gap-2">
+              {days.map(({ label, day }) => (
+                <button
+                  key={day}
+                  onClick={() => {
+                    setSelectedDay(day);
                   }}
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-                />
-              </div>
-
-              <div>
-                <FieldLabel required>Time Slot</FieldLabel>
-                <select
-                  value={slotId}
-                  onChange={(event) => {
-                    setSlotId(event.target.value);
-                    setSubmitted(false);
-                  }}
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  className={`rounded-lg py-3 text-center transition ${
+                    selectedDay === day
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                      : "bg-slate-50 text-slate-600 hover:bg-blue-50"
+                  }`}
                 >
-                  <option value="">Chọn slot</option>
+                  <span className="block text-[7px] font-bold opacity-70">
+                    {label}
+                  </span>
+                  <strong className="mt-2 block text-xs">{day}</strong>
+                </button>
+              ))}
+            </div>
+          </section>
 
-                  {mockSlots.map((slot) => (
-                    <option
-                      key={slot.id}
-                      value={slot.id}
-                      disabled={!slot.available}
-                    >
-                      {slot.time} - {slot.capacityText}
-                    </option>
-                  ))}
-                </select>
+          <section className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-base font-extrabold">Khung giờ khả dụng</h2>
+              <div className="text-[8px] font-semibold text-slate-500">
+                <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-600" />
+                Còn chỗ
+                <span className="ml-4 mr-1 inline-block h-1.5 w-1.5 rounded-full bg-rose-500" />
+                Sắp đầy
               </div>
             </div>
 
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {slots.map((slot) => {
+                const selected = slot.id === slotId;
+                const full = slot.state === "ĐÃ ĐẦY";
+                return (
+                  <button
+                    key={slot.id}
+                    disabled={full}
+                    onClick={() => {
+                      setSlotId(slot.id);
+                    }}
+                    className={`min-h-20 rounded-lg border p-3 text-left transition ${
+                      selected
+                        ? "border-blue-600 bg-blue-600 text-white"
+                        : slot.state === "SẮP ĐẦY"
+                          ? "border-rose-200 bg-white"
+                          : "border-blue-200 bg-white hover:border-blue-500"
+                    } ${full ? "cursor-not-allowed opacity-40" : ""}`}
+                  >
+                    <strong className="block text-[11px]">{slot.time}</strong>
+                    <span
+                      className={`mt-2 block text-[8px] font-extrabold ${
+                        selected
+                          ? "text-white"
+                          : slot.state === "SẮP ĐẦY"
+                            ? "text-rose-600"
+                            : "text-blue-600"
+                      }`}
+                    >
+                      {selected ? "ĐÃ CHỌN" : slot.state}
+                    </span>
+                    <small
+                      className={`mt-1 block text-[7px] ${
+                        selected ? "text-blue-100" : "text-slate-400"
+                      }`}
+                    >
+                      {slot.note}
+                    </small>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+
+        <aside className="h-fit rounded-xl border-2 border-blue-300 bg-white p-5 shadow-lg shadow-slate-200/70">
+          <h2 className="text-lg font-extrabold">Tóm tắt đặt lịch</h2>
+
+          <div className="mt-5 flex gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-600">
+              <Car size={18} />
+            </span>
             <div>
-              <FieldLabel>Promotion Code</FieldLabel>
-              <input
-                value={promotionCode}
-                onChange={(event) => {
-                  setPromotionCode(event.target.value);
-                  setSubmitted(false);
-                }}
-                placeholder="Nhập mã nếu có, ví dụ: WASH10"
-                className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-              />
-              <p className="mt-2 text-xs text-slate-500">
-                Mock hiện tại: nhập bất kỳ mã nào sẽ giảm 10.000đ.
+              <span className="text-[8px] font-bold uppercase text-slate-400">
+                Phương tiện
+              </span>
+              <strong className="block text-xs">{selectedVehicle?.name}</strong>
+              <p className="mt-1 text-[9px] text-slate-500">
+                {selectedVehicle?.plate}
               </p>
             </div>
-
-            <div>
-              <FieldLabel>Booking Note</FieldLabel>
-              <textarea
-                value={bookingNote}
-                onChange={(event) => setBookingNote(event.target.value)}
-                rows="4"
-                placeholder="Ghi chú thêm cho garage nếu có"
-                className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className="h-13 w-full rounded-2xl bg-slate-950 px-5 py-4 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
-            >
-              Create Booking PENDING
-            </button>
           </div>
-        </form>
 
-        <aside className="space-y-5">
-          <div className="sticky top-6 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-400">
-                  Summary
-                </p>
-                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">
-                  Booking Preview
-                </h2>
-              </div>
+          <div className="mt-5 flex gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-600">
+              <Sparkles size={18} />
+            </span>
+            <div>
+              <span className="text-[8px] font-bold uppercase text-slate-400">
+                Gói dịch vụ
+              </span>
+              <strong className="block text-xs">
+                {selectedService?.name}
+              </strong>
+              <p className="mt-1 text-[9px] text-slate-500">
+                {selectedService?.duration} phút
+              </p>
+            </div>
+          </div>
 
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-black text-amber-700">
-                PENDING
+          <div className="mt-5 rounded-lg bg-slate-100 p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-[8px] font-bold uppercase text-slate-500">
+                Khung giờ đã chọn
+              </span>
+              <span className="text-[8px] font-extrabold uppercase text-blue-600">
+                Thay đổi
               </span>
             </div>
-
-            <div className="mt-6 space-y-3">
-              <InfoRow
-                label="Garage"
-                value={selectedGarage?.name || "Chưa chọn"}
-                hint={selectedGarage?.address}
-              />
-
-              <InfoRow
-                label="Vehicle"
-                value={
-                  selectedVehicle
-                    ? `${selectedVehicle.licensePlate} - ${selectedVehicle.name}`
-                    : "Chưa chọn"
-                }
-              />
-
-              <InfoRow
-                label="Service"
-                value={selectedService?.name || "Chưa chọn"}
-                hint={
-                  selectedService
-                    ? `${selectedService.duration} phút`
-                    : undefined
-                }
-              />
-
-              <InfoRow
-                label="Date & Slot"
-                value={
-                  bookingDate
-                    ? `${bookingDate}${selectedSlot ? ` • ${selectedSlot.time}` : ""}`
-                    : "Chưa chọn ngày"
-                }
-                hint={selectedSlot?.capacityText}
-              />
-            </div>
-
-            <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-5">
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between gap-4">
-                  <span className="text-slate-500">Total</span>
-                  <span className="font-bold text-slate-950">
-                    {formatCurrency(totalAmount)}
-                  </span>
-                </div>
-
-                <div className="flex justify-between gap-4">
-                  <span className="text-slate-500">Discount</span>
-                  <span className="font-bold text-emerald-600">
-                    -{formatCurrency(discountAmount)}
-                  </span>
-                </div>
-
-                <div className="border-t border-slate-200 pt-3">
-                  <div className="flex items-end justify-between gap-4">
-                    <span className="font-black text-slate-950">
-                      Final Amount
-                    </span>
-                    <span className="text-2xl font-black text-slate-950">
-                      {formatCurrency(finalAmount)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
-                <p className="text-xs font-semibold text-amber-700">Booking</p>
-                <p className="mt-1 font-black text-amber-800">PENDING</p>
-              </div>
-
-              <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
-                <p className="text-xs font-semibold text-amber-700">Payment</p>
-                <p className="mt-1 font-black text-amber-800">PENDING</p>
-              </div>
-            </div>
+            <p className="mt-3 flex items-center gap-2 text-[9px] text-slate-600">
+              <CalendarDays size={12} /> Ngày {selectedDay} tháng 10 năm 2026
+            </p>
+            <p className="mt-2 flex items-center gap-2 text-[9px] text-slate-600">
+              <Clock3 size={12} /> {selectedSlot?.time}
+            </p>
+            {selectedGarage && (
+              <p className="mt-2 flex items-center gap-2 text-[9px] text-slate-600">
+                <MapPin size={12} /> {selectedGarage.name}
+              </p>
+            )}
           </div>
+
+          <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-5">
+            <strong className="text-sm">Tổng cộng</strong>
+            <strong className="text-xl text-blue-600">
+              {formatCurrency(selectedService?.price || 0)}
+            </strong>
+          </div>
+
+          <button
+            type="button"
+            onClick={submitBooking}
+            className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-[11px] font-extrabold text-white hover:bg-blue-700"
+          >
+            Tiếp tục thanh toán <ArrowRight size={16} />
+          </button>
+          {submitError && (
+            <p className="mt-3 rounded-lg border border-rose-200 bg-rose-50 p-3 text-[9px] font-semibold text-rose-700">
+              {submitError}
+            </p>
+          )}
+          <p className="mt-4 text-center text-[7px] leading-4 text-slate-400">
+            Chưa thu tiền cho đến khi bạn xác nhận thanh toán. Bạn có thể hủy
+            miễn phí trước giờ hẹn tối đa 2 giờ.
+          </p>
+
         </aside>
       </div>
-
-      {submitted && (
-        <section className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">
-                Booking mock created
-              </p>
-              <h2 className="mt-2 text-2xl font-black text-emerald-950">
-                Booking đã được tạo ở trạng thái PENDING
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-emerald-800">
-                Tiếp theo cần chuyển sang trang Payment để mock thanh toán. Chỉ
-                sau khi Payment PAID thì Booking mới được CONFIRMED.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={goToPaymentPage}
-              className="rounded-2xl bg-emerald-700 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-emerald-800"
-            >
-              Go to Payment Page
-            </button>
-          </div>
-        </section>
-      )}
     </div>
   );
 }
 
 export default BookingCreatePage;
+

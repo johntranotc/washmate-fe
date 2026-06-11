@@ -1,347 +1,196 @@
-import {
-  CalendarCheck,
-  CircleDollarSign,
-  Car,
-  Users,
-  Droplets,
-  Clock,
+﻿import {
+  ArrowRight,
+  CalendarDays,
+  Check,
+  CircleAlert,
+  Info,
+  MapPin,
+  Plus,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
-const bookings = [
+const vehicles = [
   {
-    id: 1,
-    customer: "Nguyễn Văn An",
-    vehicle: "Toyota Vios",
-    packageName: "Tiêu chuẩn",
-    status: "WASHING",
-    payment: "PAID",
-    amount: 180000,
-    progress: 72,
+    name: "Tesla Model 3",
+    plate: "AQ-FLOW-01",
+    image:
+      "https://images.unsplash.com/photo-1617788131775-16a213582423?auto=format&fit=crop&w=700&q=85",
+    note: "Lần rửa gần nhất: 4 ngày trước",
+    primary: true,
   },
   {
-    id: 2,
-    customer: "Lê Thị Bình",
-    vehicle: "Honda CR-V",
-    packageName: "Cao cấp",
-    status: "CHECKED_IN",
-    payment: "PAID",
-    amount: 250000,
-    progress: 34,
+    name: "Porsche Cayenne",
+    plate: "K-SPORT-22",
+    image:
+      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=700&q=85",
+    note: "Lần rửa gần nhất: 12 ngày trước",
   },
   {
-    id: 3,
-    customer: "Phạm Quốc Cường",
-    vehicle: "Ford Ranger",
-    packageName: "Detailing",
-    status: "CONFIRMED",
-    payment: "PAID",
-    amount: 420000,
-    progress: 12,
-  },
-  {
-    id: 4,
-    customer: "Trần Minh Khoa",
-    vehicle: "Mazda 3",
-    packageName: "Tiêu chuẩn",
-    status: "COMPLETED",
-    payment: "PAID",
-    amount: 160000,
-    progress: 100,
+    name: "Range Rover",
+    plate: "LUX-V-09",
+    image:
+      "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=700&q=85",
+    note: "Cần chú ý",
+    alert: true,
   },
 ];
-
-const slotBoard = [
-  { time: "08:00", capacity: 4, reserved: 4 },
-  { time: "08:30", capacity: 4, reserved: 3 },
-  { time: "09:00", capacity: 4, reserved: 2 },
-  { time: "09:30", capacity: 4, reserved: 1 },
-  { time: "10:00", capacity: 4, reserved: 4 },
-  { time: "10:30", capacity: 4, reserved: 2 },
-  { time: "11:00", capacity: 4, reserved: 0 },
-  { time: "11:30", capacity: 4, reserved: 1 },
-];
-
-const revenueData = [
-  { day: "T2", value: 3200000 },
-  { day: "T3", value: 2800000 },
-  { day: "T4", value: 3600000 },
-  { day: "T5", value: 4100000 },
-  { day: "T6", value: 5200000 },
-  { day: "T7", value: 8000000 },
-  { day: "CN", value: 6900000 },
-];
-
-function formatVnd(value) {
-  return new Intl.NumberFormat("vi-VN").format(value) + " đ";
-}
-
-function StatCard({
-  label,
-  value,
-  delta,
-  hint,
-  icon: Icon,
-  deltaPositive = true,
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
-            {value}
-          </p>
-
-          {delta && (
-            <p
-              className={`mt-3 text-sm font-semibold ${
-                deltaPositive ? "text-emerald-600" : "text-red-600"
-              }`}
-            >
-              {delta}{" "}
-              {hint && (
-                <span className="font-normal text-slate-500">{hint}</span>
-              )}
-            </p>
-          )}
-        </div>
-
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-100 text-slate-900">
-          <Icon size={22} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Progress({ value }) {
-  return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-      <div
-        className="h-full rounded-full bg-blue-600"
-        style={{ width: `${value}%` }}
-      />
-    </div>
-  );
-}
-
-function Card({ children, className = "" }) {
-  return (
-    <div
-      className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
-
-function BookingStatusBadge({ status }) {
-  const labelMap = {
-    CONFIRMED: "Đã xác nhận",
-    CHECKED_IN: "Đã check-in",
-    WASHING: "Đang rửa",
-    COMPLETED: "Hoàn tất",
-  };
-
-  const colorMap = {
-    CONFIRMED: "bg-blue-50 text-blue-700 border-blue-200",
-    CHECKED_IN: "bg-cyan-50 text-cyan-700 border-cyan-200",
-    WASHING: "bg-indigo-50 text-indigo-700 border-indigo-200",
-    COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  };
-
-  return (
-    <span
-      className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-        colorMap[status] || "bg-slate-50 text-slate-700 border-slate-200"
-      }`}
-    >
-      {labelMap[status] || status}
-    </span>
-  );
-}
-
-function RevenueChart() {
-  const maxValue = Math.max(...revenueData.map((item) => item.value));
-
-  return (
-    <Card className="p-6">
-      <h2 className="text-xl font-bold text-slate-950">Doanh thu theo ngày</h2>
-      <p className="mt-1 text-sm text-slate-500">7 ngày gần nhất</p>
-
-      <div className="mt-6 flex h-72 items-end gap-4 border-b border-slate-200 px-4">
-        {revenueData.map((item) => {
-          const height = Math.round((item.value / maxValue) * 100);
-
-          return (
-            <div
-              key={item.day}
-              className="flex flex-1 flex-col items-center gap-2"
-            >
-              <div className="flex h-60 w-full items-end">
-                <div
-                  className="w-full rounded-t-lg bg-blue-600"
-                  style={{ height: `${height}%` }}
-                  title={formatVnd(item.value)}
-                />
-              </div>
-              <span className="text-xs font-semibold text-slate-500">
-                {item.day}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </Card>
-  );
-}
 
 function CustomerHomePage() {
-  const activeBookings = bookings.filter((booking) =>
-    ["CONFIRMED", "CHECKED_IN", "WASHING"].includes(booking.status),
-  );
-
-  const completedToday = bookings.filter(
-    (booking) => booking.status === "COMPLETED",
-  ).length;
-
-  const revenueToday = bookings
-    .filter((booking) => ["PAID", "ISSUED"].includes(booking.payment))
-    .reduce((sum, booking) => sum + booking.amount, 0);
-
-  const totalCapacity = slotBoard.reduce((sum, slot) => sum + slot.capacity, 0);
-  const totalReserved = slotBoard.reduce((sum, slot) => sum + slot.reserved, 0);
-  const occupancy = Math.round((totalReserved / totalCapacity) * 100);
-
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-          Tổng quan vận hành
-        </h1>
-        <p className="mt-2 text-slate-500">
-          Theo dõi đặt lịch, công suất, doanh thu và tiến độ phục vụ theo thời
-          gian thực.
-        </p>
-      </div>
+      <section className="relative overflow-hidden rounded-[22px] bg-[#071e32] px-7 py-9 text-white shadow-sm md:px-11 md:py-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(255,255,255,.16)_0_2px,transparent_3px),radial-gradient(circle_at_64%_76%,rgba(255,255,255,.12)_0_5px,transparent_6px)] opacity-70" />
+        <div className="absolute -bottom-32 right-16 h-64 w-96 rounded-full border-[45px] border-white/[0.025] bg-blue-500/10" />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Booking hôm nay"
-          value={bookings.length.toString()}
-          delta="+12%"
-          hint="so với hôm qua"
-          icon={CalendarCheck}
-        />
-        <StatCard
-          label="Doanh thu hôm nay"
-          value={formatVnd(revenueToday)}
-          delta="+8.4%"
-          hint="so với hôm qua"
-          icon={CircleDollarSign}
-        />
-        <StatCard
-          label="Đang phục vụ"
-          value={activeBookings.length.toString()}
-          delta={`${completedToday} đã hoàn tất`}
-          icon={Droplets}
-        />
-        <StatCard
-          label="Công suất khung giờ"
-          value={`${occupancy}%`}
-          delta="Giờ cao điểm 08:00 - 10:00"
-          deltaPositive={occupancy < 80}
-          icon={Users}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <RevenueChart />
-        </div>
-
-        <Card className="p-6">
-          <h2 className="text-xl font-bold text-slate-950">
-            Hàng đợi đang phục vụ
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Tiến độ vòng đời dịch vụ
-          </p>
-
-          <div className="mt-6 space-y-5">
-            {activeBookings.map((booking) => (
-              <div key={booking.id} className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-100 text-slate-900">
-                      <Car size={18} />
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-slate-950">
-                        {booking.customer}
-                      </p>
-                      <p className="truncate text-xs text-slate-500">
-                        {booking.vehicle} · {booking.packageName}
-                      </p>
-                    </div>
-                  </div>
-
-                  <BookingStatusBadge status={booking.status} />
-                </div>
-
-                <Progress value={booking.progress} />
-              </div>
-            ))}
+        <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-2xl">
+            <span className="inline-flex rounded-full bg-white px-3 py-1 text-[9px] font-extrabold text-blue-700">
+              THÀNH VIÊN VÀNG
+            </span>
+            <h1 className="mt-4 text-3xl font-extrabold tracking-[-0.04em] md:text-5xl">
+              Chào mừng trở lại, Alex!
+            </h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">
+              Sẵn sàng giúp chiếc xe của bạn sáng bóng trở lại? Lần rửa xe cao
+              cấp tiếp theo được <strong className="text-white">giảm 20%.</strong>
+            </p>
           </div>
-        </Card>
-      </div>
 
-      <Card className="p-6">
-        <h2 className="text-xl font-bold text-slate-950">
-          Công suất khung giờ hôm nay
-        </h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Số slot đã đặt trên tổng sức chứa mỗi khung giờ
-        </p>
-
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-          {slotBoard.map((slot) => {
-            const ratio = slot.reserved / slot.capacity;
-            const full = slot.reserved >= slot.capacity;
-
-            return (
-              <div
-                key={slot.time}
-                className="rounded-xl border border-slate-200 bg-white p-4"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-900">
-                    {slot.time}
-                  </span>
-                  <Clock size={15} className="text-slate-400" />
-                </div>
-
-                <div className="mt-3">
-                  <Progress value={ratio * 100} />
-                </div>
-
-                <p
-                  className={`mt-2 text-xs font-medium ${
-                    full ? "text-red-600" : "text-slate-500"
-                  }`}
-                >
-                  {full
-                    ? "Hết slot"
-                    : `${slot.capacity - slot.reserved} slot trống`}
-                </p>
-              </div>
-            );
-          })}
+          <Link
+            to="/customer/bookings/create"
+            className="flex min-h-20 min-w-48 items-center justify-between gap-5 rounded-2xl bg-blue-600 px-7 text-lg font-extrabold shadow-lg shadow-blue-950/20 transition hover:bg-blue-500"
+          >
+            Đặt lịch nhanh <ArrowRight size={20} />
+          </Link>
         </div>
-      </Card>
+      </section>
+
+      <section className="grid gap-5 lg:grid-cols-[320px_1fr]">
+        <article className="rounded-2xl border border-slate-200 bg-white p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-extrabold text-blue-700">
+              Tổng quan điểm thưởng
+            </h2>
+            <Info size={17} className="text-blue-600" />
+          </div>
+          <p className="mt-7 text-[10px] font-medium text-slate-500">
+            Điểm hiện có
+          </p>
+          <p className="mt-1 text-4xl font-bold tracking-tight">
+            1.250 <span className="text-xs text-slate-500">điểm</span>
+          </p>
+          <div className="mt-6 flex justify-between text-[9px] font-semibold">
+            <span className="text-slate-500">Hạng tiếp theo: Bạch kim</span>
+            <span className="text-blue-600">250 điểm nữa</span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-blue-100">
+            <div className="h-full w-4/5 rounded-full bg-blue-600" />
+          </div>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200 bg-white p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-extrabold">Lịch đặt đang hoạt động</h2>
+            <Link
+              to="/customer/bookings"
+              className="text-[10px] font-bold text-blue-600"
+            >
+              Xem tất cả
+            </Link>
+          </div>
+
+          <div className="mt-5 flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center">
+            <img
+              src={vehicles[0].image}
+              alt="Tesla Model 3"
+              className="h-20 w-full rounded-lg object-cover sm:w-28"
+            />
+            <div className="min-w-0 flex-1">
+              <h3 className="font-extrabold">Tesla Model 3</h3>
+              <p className="mt-2 flex items-center gap-2 text-[10px] text-slate-600">
+                <CalendarDays size={13} /> Hôm nay, 14:00
+              </p>
+              <p className="mt-2 flex items-center gap-2 text-[10px] text-slate-600">
+                <MapPin size={13} /> Downtown Hub
+              </p>
+            </div>
+            <div className="self-start text-right">
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-[9px] font-bold text-blue-700">
+                <Check size={11} /> Đã xác nhận
+              </span>
+              <p className="mt-2 text-[8px] text-slate-400">Có thể đổi lịch</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-extrabold">Phương tiện của tôi</h2>
+          <Link
+            to="/customer/vehicles"
+            className="flex items-center gap-1 text-[10px] font-bold text-blue-600"
+          >
+            <Plus size={14} /> Thêm phương tiện
+          </Link>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {vehicles.map((vehicle) => (
+            <article
+              key={vehicle.plate}
+              className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 transition hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              <div className="relative overflow-hidden rounded-xl">
+                {vehicle.primary && (
+                  <span className="absolute right-2 top-2 z-10 rounded bg-blue-600 px-2 py-1 text-[8px] font-extrabold text-white">
+                    PRIMARY
+                  </span>
+                )}
+                <img
+                  src={vehicle.image}
+                  alt={vehicle.name}
+                  className="h-32 w-full object-cover"
+                />
+              </div>
+              <h3 className="mt-4 text-base font-extrabold">{vehicle.name}</h3>
+              <p className="mt-1 text-[9px] text-slate-500">
+                Plate: {vehicle.plate}
+              </p>
+              <div
+                className={`mt-5 flex items-center justify-between text-[9px] font-semibold ${
+                  vehicle.alert ? "text-rose-600" : "text-slate-500"
+                }`}
+              >
+                {vehicle.note}
+                {vehicle.alert ? (
+                  <CircleAlert size={16} />
+                ) : (
+                  <span className="grid h-4 w-4 place-items-center rounded-full bg-blue-600 text-white">
+                    <Check size={10} />
+                  </span>
+                )}
+              </div>
+            </article>
+          ))}
+
+          <Link
+            to="/customer/vehicles"
+            className="flex min-h-64 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 px-7 text-center transition hover:border-blue-400 hover:bg-blue-50/40"
+          >
+            <span className="grid h-9 w-9 place-items-center rounded-full border-2 border-slate-900">
+              <Plus size={18} />
+            </span>
+            <strong className="mt-4 text-base">Thêm phương tiện</strong>
+            <span className="mt-2 text-[9px] leading-4 text-slate-500">
+              Đăng ký xe mới để đặt lịch nhanh chóng.
+            </span>
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
 
 export default CustomerHomePage;
+
