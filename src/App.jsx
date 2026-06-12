@@ -69,6 +69,53 @@ const cars = [
   ["BMW 5 Series", "30A - 123.45", "Sedan điều hành", "89", "Bảo trì"],
 ];
 
+const bookingHistory = [
+  {
+    id: "BK-2406-018",
+    car: "Tesla Model Y",
+    plate: "51H - 999.99",
+    service: "Rửa xe cao cấp + phủ bóng nhanh",
+    date: "11/06/2026",
+    time: "14:30",
+    station: "Trạm SparkleAI Quận 1",
+    price: "420.000đ",
+    status: "Sắp tới",
+  },
+  {
+    id: "BK-2406-012",
+    car: "Mercedes-Benz S-Class",
+    plate: "30A - 888.88",
+    service: "Rửa xe nhanh",
+    date: "09/06/2026",
+    time: "09:00",
+    station: "Trạm SparkleAI Thủ Đức",
+    price: "180.000đ",
+    status: "Hoàn tất",
+  },
+  {
+    id: "BK-2405-209",
+    car: "Porsche Taycan 4S",
+    plate: "30A - 888.88",
+    service: "Khử khuẩn ozone + vệ sinh nội thất",
+    date: "28/05/2026",
+    time: "16:00",
+    station: "Trạm SparkleAI Quận 7",
+    price: "650.000đ",
+    status: "Hoàn tất",
+  },
+  {
+    id: "BK-2405-144",
+    car: "Tesla Model Y",
+    plate: "51H - 999.99",
+    service: "Phủ Ceramic bảo vệ sơn",
+    date: "16/05/2026",
+    time: "10:00",
+    station: "Trạm SparkleAI Quận 3",
+    price: "1.200.000đ",
+    status: "Đã hủy",
+  },
+];
+
 function Pill({ children, blue }) {
   return <span className={blue ? "pill blue-pill" : "pill"}>{children}</span>;
 }
@@ -291,40 +338,353 @@ function Feature({ title, icon: Icon, text }) {
 }
 
 function Login({ setScreen }) {
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+
+  const [mode, setMode] = useState("login");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [loginForm, setLoginForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [registerForm, setRegisterForm] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const handleLoginChange = (e) => {
+    const { name, value } = e.target;
+    setLoginForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleRegisterChange = (e) => {
+    const { name, value } = e.target;
+    setRegisterForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setMessage("");
+
+    if (!loginForm.email.trim() || !loginForm.password.trim()) {
+      setMessage("Vui lòng nhập email và mật khẩu.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: loginForm.email.trim(),
+          password: loginForm.password,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        if (data?.message === "Invalid credentials") {
+          setMessage("Sai email hoặc mật khẩu. Vui lòng thử lại.");
+        } else if (data?.message === "Authentication required") {
+          setMessage(
+            "Lỗi xác thực: cấu hình API hoặc security của BE chưa đúng (Authentication required).",
+          );
+        } else {
+          setMessage(
+            data?.message ||
+              "Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản.",
+          );
+        }
+        return;
+      }
+
+      if (data?.accessToken) {
+        localStorage.setItem("accessToken", data.accessToken);
+      }
+
+      if (data?.refreshToken) {
+        localStorage.setItem("refreshToken", data.refreshToken);
+      }
+
+      const user = data?.user || data?.currentUser;
+
+      if (user) {
+        localStorage.setItem("currentUser", JSON.stringify(user));
+      }
+
+      setScreen("dashboard");
+    } catch (error) {
+      setMessage(
+        "Không thể kết nối tới máy chủ BE. Hãy kiểm tra BE đã chạy ở port 8080 chưa.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setMessage("");
+
+    if (
+      !registerForm.fullName.trim() ||
+      !registerForm.email.trim() ||
+      !registerForm.phone.trim() ||
+      !registerForm.password.trim()
+    ) {
+      setMessage("Vui lòng nhập đầy đủ thông tin đăng ký.");
+      return;
+    }
+
+    if (registerForm.password !== registerForm.confirmPassword) {
+      setMessage("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: registerForm.fullName.trim(),
+          email: registerForm.email.trim(),
+          phone: registerForm.phone.trim(),
+          password: registerForm.password,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setMessage(
+          data?.message || "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.",
+        );
+        return;
+      }
+
+      setMessage("Đăng ký thành công. Bạn có thể đăng nhập ngay.");
+      setMode("login");
+      setLoginForm({
+        email: registerForm.email,
+        password: "",
+      });
+    } catch (error) {
+      setMessage(
+        "Không thể kết nối tới máy chủ BE. Hãy kiểm tra BE đã chạy ở port 8080 chưa.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="login">
       <div className="glow green" />
       <div className="glow blue" />
+
       <section className="login-panel">
         <div className="logo">
           <Sparkles />
         </div>
+
         <h1>SparkleAI</h1>
         <p>Nâng tầm quản lý dịch vụ rửa xe bằng trí tuệ nhân tạo</p>
 
         <div className="login-card">
           <div className="tabs">
-            <button className="active">Đăng nhập</button>
-            <button>Đăng ký</button>
+            <button
+              type="button"
+              className={mode === "login" ? "active" : ""}
+              onClick={() => {
+                setMode("login");
+                setMessage("");
+              }}
+            >
+              Đăng nhập
+            </button>
+
+            <button
+              type="button"
+              className={mode === "register" ? "active" : ""}
+              onClick={() => {
+                setMode("register");
+                setMessage("");
+              }}
+            >
+              Đăng ký
+            </button>
           </div>
-          <label>Email hoặc số điện thoại</label>
-          <div className="field">
-            <Mail size={20} /> name@example.com
-          </div>
-          <label>
-            Mật khẩu <button>Quên mật khẩu?</button>
-          </label>
-          <div className="field">
-            <Lock size={20} /> ••••••••• <Eye size={20} />
-          </div>
-          <button
-            className="primary full"
-            onClick={() => setScreen("dashboard")}
-          >
-            Đăng nhập ngay
-          </button>
-          <div className="divider">Hoặc tiếp tục với</div>
-          <button className="google">Đăng nhập với Google</button>
+
+          {mode === "login" ? (
+            <form onSubmit={handleLogin}>
+              <label>Email hoặc số điện thoại</label>
+              <div className="field">
+                <Mail size={20} className="field-icon" />
+                <input
+                  type="text"
+                  name="email"
+                  value={loginForm.email}
+                  onChange={handleLoginChange}
+                  placeholder="name@example.com"
+                  autoComplete="email"
+                />
+              </div>
+
+              <label>
+                Mật khẩu
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMessage("Chức năng quên mật khẩu sẽ được bổ sung sau.")
+                  }
+                >
+                  Quên mật khẩu?
+                </button>
+              </label>
+
+              <div className="field">
+                <Lock size={20} className="field-icon" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={loginForm.password}
+                  onChange={handleLoginChange}
+                  placeholder="Nhập mật khẩu"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="eye-button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                >
+                  <Eye size={20} />
+                </button>
+              </div>
+
+              {message && <div className="form-message">{message}</div>}
+
+              <button className="primary full" type="submit" disabled={loading}>
+                {loading ? "Đang đăng nhập..." : "Đăng nhập ngay"}
+              </button>
+
+              <div className="divider">Hoặc tiếp tục với</div>
+
+              <button
+                type="button"
+                className="google"
+                onClick={() =>
+                  setMessage(
+                    "Đăng nhập Google chưa được tích hợp trong phạm vi hiện tại.",
+                  )
+                }
+              >
+                Đăng nhập với Google
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleRegister}>
+              <label>Họ và tên</label>
+              <div className="field">
+                <UserCircle size={20} className="field-icon" />
+                <input
+                  type="text"
+                  name="fullName"
+                  value={registerForm.fullName}
+                  onChange={handleRegisterChange}
+                  placeholder="Nguyễn Văn A"
+                  autoComplete="name"
+                />
+              </div>
+
+              <label>Email</label>
+              <div className="field">
+                <Mail size={20} className="field-icon" />
+                <input
+                  type="email"
+                  name="email"
+                  value={registerForm.email}
+                  onChange={handleRegisterChange}
+                  placeholder="name@example.com"
+                  autoComplete="email"
+                />
+              </div>
+
+              <label>Số điện thoại</label>
+              <div className="field">
+                <UserCircle size={20} className="field-icon" />
+                <input
+                  type="tel"
+                  name="phone"
+                  value={registerForm.phone}
+                  onChange={handleRegisterChange}
+                  placeholder="0912345678"
+                  autoComplete="tel"
+                />
+              </div>
+
+              <label>Mật khẩu</label>
+              <div className="field">
+                <Lock size={20} className="field-icon" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={registerForm.password}
+                  onChange={handleRegisterChange}
+                  placeholder="Nhập mật khẩu"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="eye-button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                >
+                  <Eye size={20} />
+                </button>
+              </div>
+
+              <label>Xác nhận mật khẩu</label>
+              <div className="field">
+                <Lock size={20} className="field-icon" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  value={registerForm.confirmPassword}
+                  onChange={handleRegisterChange}
+                  placeholder="Nhập lại mật khẩu"
+                  autoComplete="new-password"
+                />
+              </div>
+
+              {message && <div className="form-message">{message}</div>}
+
+              <button className="primary full" type="submit" disabled={loading}>
+                {loading ? "Đang đăng ký..." : "Tạo tài khoản"}
+              </button>
+            </form>
+          )}
         </div>
 
         <small>
@@ -335,7 +695,6 @@ function Login({ setScreen }) {
     </div>
   );
 }
-
 function Dashboard({ setScreen }) {
   return (
     <Shell active="dashboard" setScreen={setScreen}>
@@ -465,100 +824,212 @@ function Panel({ title, icon: Icon, children }) {
 
 function Booking({ setScreen }) {
   const [step, setStep] = useState(1);
+  const [historyFilter, setHistoryFilter] = useState("Tất cả");
+  const [selectedBooking, setSelectedBooking] = useState(bookingHistory[0]);
   const steps = ["Xe", "Dịch vụ", "Thời gian", "Xác nhận", "Theo dõi"];
+  const filteredHistory =
+    historyFilter === "Tất cả"
+      ? bookingHistory
+      : bookingHistory.filter((booking) => booking.status === historyFilter);
 
   return (
     <Shell active="booking" setScreen={setScreen} topbar>
-      <div className="stepper">
-        {steps.map((s, i) => (
-          <button
-            key={s}
-            className={step === i + 1 ? "active" : ""}
-            onClick={() => setStep(i + 1)}
-          >
-            <b>{i + 1}</b>
-            <span>{s}</span>
-          </button>
-        ))}
-      </div>
-
-      <section className="booking-page">
-        {step === 1 && (
-          <>
-            <h1>Chọn phương tiện của bạn</h1>
-            <p>Chọn xe bạn muốn làm sạch hôm nay từ gara SparkleAI.</p>
-            <div className="vehicle-row">
-              <Vehicle
-                name="Mercedes-Benz S-Class"
-                plate="30A - 888.88"
-                last="12 ngày trước"
-                onClick={() => setStep(2)}
-              />
-              <Vehicle
-                name="Tesla Model Y"
-                plate="51H - 999.99"
-                last="Hôm qua"
-                green
-                onClick={() => setStep(2)}
-              />
+      <div className="booking-layout">
+        <section className="booking-flow card">
+          <div className="booking-header">
+            <div>
+              <span className="eyebrow">Đặt lịch mới</span>
+              <h1>Hoàn tất lịch rửa xe trong vài bước</h1>
+              <p>
+                Chọn xe, dịch vụ và khung giờ phù hợp. Lịch hẹn sẽ xuất hiện
+                ngay trong lịch sử bên cạnh.
+              </p>
             </div>
-          </>
-        )}
+            <button className="ghost-button" onClick={() => setStep(1)}>
+              Làm lại
+            </button>
+          </div>
 
-        {step === 2 && (
-          <StepCard title="Chọn gói dịch vụ">
-            {[
-              "Rửa xe nhanh",
-              "Rửa xe cao cấp",
-              "Phủ Ceramic",
-              "Khử khuẩn ozone",
-            ].map((s) => (
-              <button className="choice" key={s} onClick={() => setStep(3)}>
-                {s}
-                <ArrowRight />
+          <div className="stepper">
+            {steps.map((s, i) => (
+              <button
+                key={s}
+                className={step === i + 1 ? "active" : ""}
+                onClick={() => setStep(i + 1)}
+              >
+                <b>{i + 1}</b>
+                <span>{s}</span>
               </button>
             ))}
-          </StepCard>
-        )}
+          </div>
 
-        {step === 3 && (
-          <StepCard title="Chọn thời gian">
-            {["08:30", "10:00", "14:30", "16:00"].map((s) => (
-              <button className="choice" key={s} onClick={() => setStep(4)}>
-                Hôm nay lúc {s}
-                <ArrowRight />
+          <div className="booking-page">
+            {step === 1 && (
+              <>
+                <h2>Chọn phương tiện</h2>
+                <p>Chọn xe bạn muốn làm sạch hôm nay từ gara SparkleAI.</p>
+                <div className="vehicle-row">
+                  <Vehicle
+                    name="Mercedes-Benz S-Class"
+                    plate="30A - 888.88"
+                    last="12 ngày trước"
+                    onClick={() => setStep(2)}
+                  />
+                  <Vehicle
+                    name="Tesla Model Y"
+                    plate="51H - 999.99"
+                    last="Hôm qua"
+                    green
+                    onClick={() => setStep(2)}
+                  />
+                </div>
+              </>
+            )}
+
+            {step === 2 && (
+              <StepCard title="Chọn gói dịch vụ">
+                {[
+                  "Rửa xe nhanh",
+                  "Rửa xe cao cấp",
+                  "Phủ Ceramic",
+                  "Khử khuẩn ozone",
+                ].map((s) => (
+                  <button className="choice" key={s} onClick={() => setStep(3)}>
+                    {s}
+                    <ArrowRight />
+                  </button>
+                ))}
+              </StepCard>
+            )}
+
+            {step === 3 && (
+              <StepCard title="Chọn thời gian">
+                {["08:30", "10:00", "14:30", "16:00"].map((s) => (
+                  <button className="choice" key={s} onClick={() => setStep(4)}>
+                    Hôm nay lúc {s}
+                    <ArrowRight />
+                  </button>
+                ))}
+              </StepCard>
+            )}
+
+            {step === 4 && (
+              <StepCard title="Xác nhận lịch hẹn">
+                <div className="confirm-list">
+                  <p>
+                    <Car size={18} /> Tesla Model Y · 51H - 999.99
+                  </p>
+                  <p>
+                    <Droplets size={18} /> Rửa xe cao cấp
+                  </p>
+                  <p>
+                    <Clock3 size={18} /> Hôm nay lúc 14:30
+                  </p>
+                </div>
+                <button className="primary" onClick={() => setStep(5)}>
+                  Xác nhận đặt lịch
+                </button>
+              </StepCard>
+            )}
+
+            {step === 5 && (
+              <StepCard title="Theo dõi lịch hẹn">
+                <div className="tracking-list">
+                  <p>
+                    <CheckCircle2 /> Lịch hẹn đã được xác nhận.
+                  </p>
+                  <p>
+                    <Clock3 /> Trạm đang chuẩn bị khu vực rửa xe.
+                  </p>
+                  <p>
+                    <Car /> Kỹ thuật viên sẽ nhận xe trong khoảng 10 phút.
+                  </p>
+                </div>
+                <button
+                  className="primary"
+                  onClick={() => setScreen("dashboard")}
+                >
+                  Về bảng điều khiển
+                </button>
+              </StepCard>
+            )}
+          </div>
+        </section>
+
+        <aside className="booking-history card">
+          <div className="history-head">
+            <div>
+              <span className="eyebrow">Theo dõi</span>
+              <h2>Lịch sử đặt lịch</h2>
+            </div>
+            <span className="history-count">{filteredHistory.length}</span>
+          </div>
+
+          <div className="history-filters">
+            {["Tất cả", "Sắp tới", "Hoàn tất", "Đã hủy"].map((filter) => (
+              <button
+                key={filter}
+                className={historyFilter === filter ? "active" : ""}
+                onClick={() => setHistoryFilter(filter)}
+              >
+                {filter}
               </button>
             ))}
-          </StepCard>
-        )}
+          </div>
 
-        {step === 4 && (
-          <StepCard title="Xác nhận lịch hẹn">
-            <p>Xe: Tesla Model Y</p>
-            <p>Dịch vụ: Rửa xe cao cấp</p>
-            <p>Thời gian: Hôm nay lúc 14:30</p>
-            <button className="primary" onClick={() => setStep(5)}>
-              Xác nhận đặt lịch
-            </button>
-          </StepCard>
-        )}
+          <div className="history-list">
+            {filteredHistory.map((booking) => (
+              <button
+                key={booking.id}
+                className={`history-item ${selectedBooking.id === booking.id ? "selected" : ""}`}
+                onClick={() => setSelectedBooking(booking)}
+              >
+                <div>
+                  <strong>{booking.car}</strong>
+                  <span>{booking.service}</span>
+                </div>
+                <StatusBadge status={booking.status} />
+                <small>
+                  {booking.date} · {booking.time}
+                </small>
+              </button>
+            ))}
+          </div>
 
-        {step === 5 && (
-          <StepCard title="Theo dõi lịch hẹn">
+          <div className="history-detail">
+            <div className="detail-top">
+              <strong>{selectedBooking.id}</strong>
+              <StatusBadge status={selectedBooking.status} />
+            </div>
             <p>
-              <CheckCircle2 /> Lịch hẹn đã được xác nhận.
+              <Car size={17} /> {selectedBooking.car} · {selectedBooking.plate}
             </p>
             <p>
-              <Clock3 /> Trạm đang chuẩn bị khu vực rửa xe.
+              <Droplets size={17} /> {selectedBooking.service}
             </p>
-            <button className="primary" onClick={() => setScreen("dashboard")}>
-              Về bảng điều khiển
-            </button>
-          </StepCard>
-        )}
-      </section>
+            <p>
+              <Clock3 size={17} /> {selectedBooking.date} lúc{" "}
+              {selectedBooking.time}
+            </p>
+            <p>
+              <WalletCards size={17} /> {selectedBooking.price}
+            </p>
+            <button className="outline-button">Xem chi tiết lịch hẹn</button>
+          </div>
+        </aside>
+      </div>
     </Shell>
   );
+}
+
+function StatusBadge({ status }) {
+  const className =
+    status === "Hoàn tất"
+      ? "done"
+      : status === "Đã hủy"
+        ? "cancel"
+        : "upcoming";
+  return <span className={`status-badge ${className}`}>{status}</span>;
 }
 
 function Vehicle({ name, plate, last, green, onClick }) {
