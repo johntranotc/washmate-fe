@@ -1299,6 +1299,47 @@ svg {
   height: 56px;
 }
 
+.add-card {
+  cursor: pointer;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 28, 47, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  padding: 20px;
+}
+
+.modal-card {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 30px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--shadow);
+}
+
+.modal-card h2 {
+  margin: 0 0 10px;
+}
+
+.modal-card .field {
+  height: 48px;
+  background: var(--soft);
+  border-radius: 12px;
+  margin-bottom: 6px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 22px;
+}
+
 .ai-strip {
   margin-top: 34px;
   border: 1px solid #79e2bd;

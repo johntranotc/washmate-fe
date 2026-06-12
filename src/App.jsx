@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { vehicleApi } from "./api/vehicleApi";
 import {
   ArrowRight,
   BarChart3,
@@ -61,12 +62,6 @@ const rewardItems = [
     "Hỗ trợ khẩn cấp tận nơi và bảo hiểm mở rộng.",
     "1.800 điểm",
   ],
-];
-
-const cars = [
-  ["Tesla Model 3", "51G - 888.88", "Sedan cao cấp", "342", "Sẵn sàng"],
-  ["VinFast VF8", "51H - 999.01", "SUV thông minh", "156", "Đang di chuyển"],
-  ["BMW 5 Series", "30A - 123.45", "Sedan điều hành", "89", "Bảo trì"],
 ];
 
 const bookingHistory = [
@@ -1059,15 +1054,102 @@ function StepCard({ title, children }) {
   );
 }
 
+const VEHICLE_STATUS_LABELS = {
+  ACTIVE: "Đang sử dụng",
+  INACTIVE: "Tạm ngưng",
+  DELETED: "Đã xóa",
+};
+
+const EMPTY_VEHICLE_FORM = {
+  licensePlate: "",
+  brand: "",
+  model: "",
+  color: "",
+};
+
 function Fleet({ setScreen }) {
+  const [vehicles, setVehicles] = useState([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [vehicleForm, setVehicleForm] = useState(EMPTY_VEHICLE_FORM);
+
+  const fetchVehicles = async () => {
+    try {
+      setLoadingVehicles(true);
+
+      const data = await vehicleApi.getMyVehicles();
+
+      setVehicles(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingVehicles(false);
+    }
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on mount
+    fetchVehicles();
+  }, []);
+
+  const activeVehicleCount = vehicles.filter(
+    (vehicle) => vehicle.status === "ACTIVE",
+  ).length;
+
+  const handleVehicleFormChange = (e) => {
+    const { name, value } = e.target;
+    setVehicleForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const closeAddModal = () => {
+    setShowAddModal(false);
+    setFormError("");
+    setVehicleForm(EMPTY_VEHICLE_FORM);
+  };
+
+  const handleAddVehicle = async (e) => {
+    e.preventDefault();
+
+    const licensePlate = vehicleForm.licensePlate.trim().toUpperCase();
+    const brand = vehicleForm.brand.trim();
+    const model = vehicleForm.model.trim();
+    const color = vehicleForm.color.trim();
+
+    if (!licensePlate || !brand || !model) {
+      setFormError("Vui lòng nhập đầy đủ biển số, hãng xe và dòng xe.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setFormError("");
+
+      await vehicleApi.createVehicle({
+        licensePlate,
+        brand,
+        model,
+        color: color || "Chưa cập nhật",
+      });
+
+      await fetchVehicles();
+      closeAddModal();
+    } catch (error) {
+      setFormError(error.message || "Không thể thêm xe. Vui lòng thử lại.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <Shell active="fleet" setScreen={setScreen} topbar>
       <div className="title-row">
         <div>
-          <h1>Quản lý phương tiện</h1>
+          <h1>Đội xe</h1>
           <p>Theo dõi và tối ưu hóa hiệu suất hạm đội SparkleAI của bạn.</p>
         </div>
-        <button className="primary">
+        <button className="primary" onClick={() => setShowAddModal(true)}>
           <Plus /> Thêm xe mới
         </button>
       </div>
@@ -1075,14 +1157,14 @@ function Fleet({ setScreen }) {
       <div className="stats three">
         <StatCard
           title="Tổng số xe"
-          value="12"
-          note="+2 xe trong tháng này"
+          value={String(vehicles.length).padStart(2, "0")}
+          note="Theo tài khoản của bạn"
           icon={Car}
         />
         <StatCard
           title="Đang hoạt động"
-          value="08"
-          note="Cập nhật thời gian thực"
+          value={String(activeVehicleCount).padStart(2, "0")}
+          note="Trạng thái ACTIVE"
           icon={Zap}
         />
         <StatCard
@@ -1094,10 +1176,22 @@ function Fleet({ setScreen }) {
       </div>
 
       <div className="fleet-grid">
-        {cars.map((car) => (
-          <FleetCard key={car[0]} car={car} />
-        ))}
-        <article className="add-card">
+        {loadingVehicles ? (
+          <p>Đang tải danh sách xe...</p>
+        ) : (
+          vehicles.map((vehicle) => (
+            <FleetCard
+              key={vehicle.vehicleId || vehicle.id}
+              vehicle={vehicle}
+            />
+          ))
+        )}
+        <article
+          className="add-card"
+          role="button"
+          tabIndex={0}
+          onClick={() => setShowAddModal(true)}
+        >
           <Plus />
           <h2>Thêm phương tiện mới</h2>
           <p>Tự động đồng bộ với hệ thống quản lý SparkleAI.</p>
@@ -1116,11 +1210,82 @@ function Fleet({ setScreen }) {
           </p>
         </div>
       </section>
+
+      {showAddModal && (
+        <div className="modal-overlay" onClick={closeAddModal}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h2>Thêm xe mới</h2>
+
+            <form onSubmit={handleAddVehicle}>
+              <label>Biển số xe</label>
+              <div className="field">
+                <input
+                  name="licensePlate"
+                  value={vehicleForm.licensePlate}
+                  onChange={handleVehicleFormChange}
+                  placeholder="Ví dụ: 51A-12345"
+                />
+              </div>
+
+              <label>Hãng xe</label>
+              <div className="field">
+                <input
+                  name="brand"
+                  value={vehicleForm.brand}
+                  onChange={handleVehicleFormChange}
+                  placeholder="Ví dụ: Toyota"
+                />
+              </div>
+
+              <label>Dòng xe</label>
+              <div className="field">
+                <input
+                  name="model"
+                  value={vehicleForm.model}
+                  onChange={handleVehicleFormChange}
+                  placeholder="Ví dụ: Vios"
+                />
+              </div>
+
+              <label>Màu xe</label>
+              <div className="field">
+                <input
+                  name="color"
+                  value={vehicleForm.color}
+                  onChange={handleVehicleFormChange}
+                  placeholder="Ví dụ: Trắng"
+                />
+              </div>
+
+              {formError && <div className="form-message">{formError}</div>}
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="outline-button"
+                  onClick={closeAddModal}
+                >
+                  Hủy
+                </button>
+                <button className="primary" type="submit" disabled={submitting}>
+                  {submitting ? "Đang lưu..." : "Lưu xe"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </Shell>
   );
 }
 
-function FleetCard({ car }) {
+function FleetCard({ vehicle }) {
+  const title =
+    [vehicle.brand, vehicle.model].filter(Boolean).join(" ") ||
+    "Chưa cập nhật";
+  const statusLabel =
+    VEHICLE_STATUS_LABELS[vehicle.status] || vehicle.status || "—";
+
   return (
     <article className="fleet-card">
       <div className="car-photo">
@@ -1128,20 +1293,20 @@ function FleetCard({ car }) {
       </div>
       <div>
         <div className="title-row small-title">
-          <h2>{car[0]}</h2>
+          <h2>{title}</h2>
           <span>
             <Wrench size={18} />
             <Trash2 size={18} />
           </span>
         </div>
-        <b>{car[1]}</b>
-        <p>{car[2]}</p>
+        <b>{vehicle.licensePlate}</b>
+        <p>{vehicle.color || "Chưa cập nhật màu"}</p>
         <div className="metric-pair">
           <span>
-            Lượt dùng <strong>{car[3]}</strong>
+            Lượt dùng <strong>{vehicle.totalBookings ?? 0}</strong>
           </span>
           <span>
-            Trạng thái <strong>{car[4]}</strong>
+            Trạng thái <strong>{statusLabel}</strong>
           </span>
         </div>
       </div>
