@@ -821,11 +821,37 @@ function Booking({ setScreen }) {
   const [step, setStep] = useState(1);
   const [historyFilter, setHistoryFilter] = useState("Tất cả");
   const [selectedBooking, setSelectedBooking] = useState(bookingHistory[0]);
+  const [vehicles, setVehicles] = useState([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(true);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const steps = ["Xe", "Dịch vụ", "Thời gian", "Xác nhận", "Theo dõi"];
   const filteredHistory =
     historyFilter === "Tất cả"
       ? bookingHistory
       : bookingHistory.filter((booking) => booking.status === historyFilter);
+
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        setLoadingVehicles(true);
+
+        const data = await vehicleApi.getMyVehicles();
+
+        setVehicles(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoadingVehicles(false);
+      }
+    };
+
+    fetchVehicles();
+  }, []);
+
+  const handleSelectVehicle = (vehicle) => {
+    setSelectedVehicle(vehicle);
+    setStep(2);
+  };
 
   return (
     <Shell active="booking" setScreen={setScreen} topbar>
@@ -863,21 +889,22 @@ function Booking({ setScreen }) {
               <>
                 <h2>Chọn phương tiện</h2>
                 <p>Chọn xe bạn muốn làm sạch hôm nay từ gara SparkleAI.</p>
-                <div className="vehicle-row">
-                  <Vehicle
-                    name="Mercedes-Benz S-Class"
-                    plate="30A - 888.88"
-                    last="12 ngày trước"
-                    onClick={() => setStep(2)}
-                  />
-                  <Vehicle
-                    name="Tesla Model Y"
-                    plate="51H - 999.99"
-                    last="Hôm qua"
-                    green
-                    onClick={() => setStep(2)}
-                  />
-                </div>
+                {loadingVehicles ? (
+                  <p>Đang tải danh sách xe...</p>
+                ) : vehicles.length === 0 ? (
+                  <p>Bạn chưa có xe nào. Hãy thêm xe ở mục Đội xe.</p>
+                ) : (
+                  <div className="vehicle-row">
+                    {vehicles.map((vehicle) => (
+                      <Vehicle
+                        key={vehicle.id ?? vehicle.vehicleId}
+                        vehicle={vehicle}
+                        selected={selectedVehicle?.id === vehicle.id}
+                        onClick={() => handleSelectVehicle(vehicle)}
+                      />
+                    ))}
+                  </div>
+                )}
               </>
             )}
 
@@ -912,7 +939,12 @@ function Booking({ setScreen }) {
               <StepCard title="Xác nhận lịch hẹn">
                 <div className="confirm-list">
                   <p>
-                    <Car size={18} /> Tesla Model Y · 51H - 999.99
+                    <Car size={18} />{" "}
+                    {selectedVehicle
+                      ? `${[selectedVehicle.brand, selectedVehicle.model]
+                          .filter(Boolean)
+                          .join(" ")} · ${selectedVehicle.licensePlate}`
+                      : "Chưa chọn xe"}
                   </p>
                   <p>
                     <Droplets size={18} /> Rửa xe cao cấp
@@ -1027,16 +1059,22 @@ function StatusBadge({ status }) {
   return <span className={`status-badge ${className}`}>{status}</span>;
 }
 
-function Vehicle({ name, plate, last, green, onClick }) {
+function Vehicle({ vehicle, selected, onClick }) {
+  const title =
+    [vehicle.brand, vehicle.model].filter(Boolean).join(" ") ||
+    "Chưa cập nhật";
+  const statusLabel = VEHICLE_STATUS_LABELS[vehicle.status] || vehicle.status;
+
   return (
-    <article className="vehicle-card">
-      <span className={green ? "green" : "blue"}>
+    <article className={`vehicle-card ${selected ? "selected" : ""}`}>
+      <span className={vehicle.status === "ACTIVE" ? "green" : "blue"}>
         <Car />
       </span>
       <div>
-        <h3>{name}</h3>
-        <b>{plate}</b>
-        <p>Lần cuối: {last}</p>
+        <h3>{title}</h3>
+        <b>{vehicle.licensePlate}</b>
+        {vehicle.color && <p>Màu xe: {vehicle.color}</p>}
+        {statusLabel && <p>Trạng thái: {statusLabel}</p>}
         <button onClick={onClick}>
           Chọn <ArrowRight size={15} />
         </button>

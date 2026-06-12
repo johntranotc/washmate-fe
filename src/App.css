@@ -1000,6 +1000,11 @@ svg {
   align-items: center;
 }
 
+.vehicle-card.selected {
+  border-color: rgba(11, 103, 209, 0.55);
+  background: #f5f9ff;
+}
+
 .vehicle-card > span {
   width: 58px;
   height: 58px;
