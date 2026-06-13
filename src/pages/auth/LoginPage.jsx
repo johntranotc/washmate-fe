@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import Button from "../../components/common/Button";
+import Input from "../../components/common/Input";
+import "../../components/common/ui.css";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -64,94 +68,100 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
-      <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-slate-800 mb-2">
-          AutoWash Pro
-        </h1>
-
-        <p className="text-center text-slate-500 mb-6">Đăng nhập hệ thống</p>
-
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-600">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin}>
-          <div className="mb-4 text-left">
-            <label className="block mb-2 font-medium text-slate-700">
-              Email
-            </label>
-
-            <input
-              type="email"
-              placeholder="Nhập email"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-slate-800"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="mb-4 text-left">
-            <label className="block mb-2 font-medium text-slate-700">
-              Password
-            </label>
-
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Nhập mật khẩu"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 pr-14 outline-none focus:ring-2 focus:ring-slate-800"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 hover:text-slate-800"
-              >
-                {showPassword ? "Ẩn" : "Hiện"}
-              </button>
-            </div>
-          </div>
-
-          <div className="mb-6 flex items-center justify-between">
-            <label className="flex items-center gap-2 text-sm text-slate-600">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              Ghi nhớ đăng nhập
-            </label>
-
-            <button
-              type="button"
-              onClick={handleForgotPassword}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              Quên mật khẩu?
-            </button>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-slate-900 text-white py-2 rounded-lg hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed"
-          >
-            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-          </button>
-        </form>
-
-        <p className="text-center mt-4 text-sm text-slate-500">
-          Chưa có tài khoản?{" "}
-          <Link to="/register" className="text-blue-600 hover:underline">
-            Đăng ký
-          </Link>
+    <div className="w-full max-w-sm mx-auto">
+      <div className="mb-8 text-center md:text-left">
+        <h2 className="text-2xl font-bold text-[var(--text-main)]">
+          Đăng nhập
+        </h2>
+        <p className="mt-2 text-sm text-[var(--text-muted)]">
+          Chào mừng bạn quay lại WashMate. Vui lòng đăng nhập để tiếp tục.
         </p>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleLogin} className="space-y-4">
+        <Input
+          label="Email hoặc số điện thoại"
+          icon={Mail}
+          type="text"
+          placeholder="email@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+        />
+
+        <div className="ui-field">
+          <label className="ui-field-label" htmlFor="login-password">
+            Mật khẩu
+          </label>
+          <div className="ui-field-wrap">
+            <Lock size={18} className="ui-field-icon" />
+            <input
+              id="login-password"
+              type={showPassword ? "text" : "password"}
+              className="ui-field-input"
+              placeholder="Nhập mật khẩu"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="ui-field-icon"
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                display: "flex",
+              }}
+              aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between text-sm">
+          <label className="flex items-center gap-2 text-[var(--text-muted)]">
+            <input
+              type="checkbox"
+              className="accent-[var(--brand-blue)]"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+            />
+            Ghi nhớ đăng nhập
+          </label>
+
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            className="font-semibold text-[var(--brand-blue)] hover:underline"
+          >
+            Quên mật khẩu?
+          </button>
+        </div>
+
+        <Button type="submit" variant="primary" fullWidth loading={loading}>
+          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
+        Chưa có tài khoản?{" "}
+        <Link
+          to="/register"
+          className="font-semibold text-[var(--brand-blue)] hover:underline"
+        >
+          Đăng ký ngay
+        </Link>
+      </p>
     </div>
   );
 }
