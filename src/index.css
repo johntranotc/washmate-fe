@@ -1,176 +1,192 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+/* Custom variants used by @base-ui/react primitives (accordion, checkbox, etc.) */
+@custom-variant data-open {
+  &:where([data-state="open"]),
+  &:where([data-open]:not([data-open="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-closed {
+  &:where([data-state="closed"]),
+  &:where([data-closed]:not([data-closed="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-checked {
+  &:where([data-state="checked"]),
+  &:where([data-checked]:not([data-checked="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-unchecked {
+  &:where([data-state="unchecked"]),
+  &:where([data-unchecked]:not([data-unchecked="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-selected {
+  &:where([data-selected="true"]) {
+    @slot;
+  }
+}
+
+@custom-variant data-disabled {
+  &:where([data-disabled="true"]),
+  &:where([data-disabled]:not([data-disabled="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-active {
+  &:where([data-state="active"]),
+  &:where([data-active]:not([data-active="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-horizontal {
+  &:where([data-orientation="horizontal"]) {
+    @slot;
+  }
+}
+
+@custom-variant data-vertical {
+  &:where([data-orientation="vertical"]) {
+    @slot;
+  }
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@theme inline {
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--accordion-panel-height, auto);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--accordion-panel-height, auto);
+    }
+    to {
+      height: 0;
+    }
+  }
+
+  --font-heading: var(--font-sans);
+  --font-sans: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Be Vietnam Pro", ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-brand: var(--brand);
+  --color-brand-dark: var(--brand-dark);
+  --color-teal: var(--teal);
+  --color-gold: var(--gold);
+  --color-surface: var(--surface);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 12px);
+  --radius-3xl: calc(var(--radius) + 20px);
+}
 
 :root {
-  --aqua-primary: #1268d6;
-  --aqua-primary-hover: #0758bd;
-  --aqua-primary-dark: #064a9b;
-  --aqua-navy: #102a43;
-  --aqua-cyan: #12a8e3;
-  --aqua-page: #f5f8fc;
-  --aqua-soft: #eaf3ff;
-  --aqua-border: #dce5f0;
-  --aqua-muted: #64748b;
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-  color: var(--aqua-navy);
-  background: var(--aqua-page);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+  --radius: 1rem;
+
+  --background: #ffffff;
+  --foreground: #102033;
+  --card: #ffffff;
+  --card-foreground: #102033;
+  --popover: #ffffff;
+  --popover-foreground: #102033;
+
+  --primary: #0b8cff;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f5faff;
+  --secondary-foreground: #075dce;
+
+  --muted: #f5faff;
+  --muted-foreground: #5f6f82;
+
+  --accent: #b8f3f1;
+  --accent-foreground: #075dce;
+
+  --destructive: #e5484d;
+
+  --border: #ddeaf6;
+  --input: #ddeaf6;
+  --ring: #0b8cff;
+
+  /* Brand custom tokens */
+  --brand: #0b8cff;
+  --brand-dark: #075dce;
+  --teal: #b8f3f1;
+  --gold: #f7c948;
+  --surface: #f5faff;
+
+  --chart-1: #0b8cff;
+  --chart-2: #38bdf8;
+  --chart-3: #b8f3f1;
+  --chart-4: #f7c948;
+  --chart-5: #075dce;
 }
 
-* {
-  box-sizing: border-box;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
 }
 
-html,
-body,
-#root {
-  min-width: 320px;
-  min-height: 100%;
-}
-
-body {
-  min-height: 100vh;
-  margin: 0;
-  background: var(--aqua-page);
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-button,
-a {
-  -webkit-tap-highlight-color: transparent;
-}
-
-button {
-  cursor: pointer;
-}
-
-::selection {
-  color: white;
-  background: var(--aqua-primary);
-}
-
-/* AquaSmart theme bridge for legacy pages. */
-[class~="bg-slate-100"] {
-  background-color: var(--aqua-page);
-}
-
-[class~="bg-slate-900"] {
-  background-color: var(--aqua-primary);
-}
-
-[class~="hover:bg-slate-800"]:hover {
-  background-color: var(--aqua-primary-hover);
-}
-
-[class~="border-slate-900"] {
-  border-color: var(--aqua-primary);
-}
-
-[class~="text-slate-900"],
-[class~="text-slate-950"] {
-  color: var(--aqua-navy);
-}
-
-[class~="focus:border-slate-900"]:focus,
-[class~="focus:border-emerald-500"]:focus {
-  border-color: var(--aqua-primary);
-}
-
-[class~="focus:ring-slate-800"]:focus,
-[class~="focus:ring-emerald-100"]:focus {
-  --tw-ring-color: rgba(18, 104, 214, 0.18);
-}
-
-[class~="bg-green-700"],
-[class~="bg-emerald-700"],
-[class~="bg-emerald-600"],
-[class~="bg-emerald-500"],
-[class~="bg-teal-600"],
-[class~="bg-teal-500"],
-[class~="bg-cyan-700"],
-[class~="bg-cyan-600"],
-[class~="bg-cyan-500"] {
-  background-color: var(--aqua-primary);
-}
-
-[class~="hover:bg-green-800"]:hover,
-[class~="hover:bg-emerald-800"]:hover,
-[class~="hover:bg-emerald-700"]:hover,
-[class~="hover:bg-emerald-600"]:hover,
-[class~="hover:bg-cyan-800"]:hover {
-  background-color: var(--aqua-primary-hover);
-}
-
-[class~="text-green-600"],
-[class~="text-green-700"],
-[class~="text-green-800"],
-[class~="text-green-900"],
-[class~="text-emerald-600"],
-[class~="text-emerald-700"],
-[class~="text-emerald-800"],
-[class~="text-emerald-900"],
-[class~="text-teal-600"],
-[class~="text-teal-700"],
-[class~="text-cyan-600"],
-[class~="text-cyan-700"],
-[class~="text-cyan-800"] {
-  color: var(--aqua-primary);
-}
-
-[class~="bg-green-50"],
-[class~="bg-green-100"],
-[class~="bg-emerald-50"],
-[class~="bg-emerald-100"],
-[class~="bg-cyan-50"],
-[class~="bg-cyan-100"],
-[class~="bg-teal-50"],
-[class~="bg-teal-100"] {
-  background-color: var(--aqua-soft);
-}
-
-[class~="border-green-200"],
-[class~="border-emerald-200"],
-[class~="border-cyan-200"],
-[class~="border-teal-200"] {
-  border-color: #bed8f7;
-}
-
-[class~="shadow-emerald-500/20"],
-[class~="shadow-emerald-500/30"],
-[class~="shadow-cyan-700/20"] {
-  --tw-shadow-color: rgba(18, 104, 214, 0.2);
-}
-
-[class~="from-green-500"],
-[class~="from-emerald-500"],
-[class~="from-teal-500"] {
-  --tw-gradient-from: var(--aqua-primary);
-  --tw-gradient-stops:
-    var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
-}
-
-[class~="via-emerald-500"],
-[class~="via-teal-500"] {
-  --tw-gradient-via: #0e83db;
-  --tw-gradient-via-stops:
-    var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position);
-  --tw-gradient-stops: var(--tw-gradient-via-stops);
-}
-
-[class~="to-green-600"],
-[class~="to-emerald-600"],
-[class~="to-teal-600"],
-[class~="to-cyan-500"],
-[class~="to-cyan-600"] {
-  --tw-gradient-to: var(--aqua-cyan);
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
 }

@@ -1,81 +1,144 @@
-import { LockKeyhole, Mail } from "lucide-react";
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAppStore } from "../../state/AppStore";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthHeading } from "@/components/auth/auth-heading";
+import { Field } from "@/components/auth/field";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { authApi } from "@/api/authApi";
 
-const demoAccounts = [
-  ["Khách hàng", "customer@demo.com"],
-  ["Nhân viên", "staff@demo.com"],
-  ["Quản trị viên", "admin@demo.com"],
-];
-
-const homeByRole = {
-  CUSTOMER: "/customer",
-  STAFF: "/staff/queue",
-  ADMIN: "/admin/dashboard",
-};
-
-function LoginPage() {
+export default function LoginPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { actions } = useAppStore();
-  const [email, setEmail] = useState("customer@demo.com");
-  const [password, setPassword] = useState("123456");
-  const [error, setError] = useState("");
 
-  function handleSubmit(event) {
-    event.preventDefault();
-    if (!email.includes("@") || password.length < 6) {
-      setError("Vui lòng nhập email hợp lệ và mật khẩu có ít nhất 6 ký tự.");
-      return;
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const data = await authApi.login({ email, password });
+
+      if (data?.accessToken) {
+        localStorage.setItem("accessToken", data.accessToken);
+      }
+      if (data?.refreshToken) {
+        localStorage.setItem("refreshToken", data.refreshToken);
+      }
+      localStorage.setItem("userEmail", email);
+
+      navigate("/select-workspace");
+    } catch (err) {
+      setError(err?.message || "Đăng nhập thất bại. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
     }
-    const user = actions.login(email);
-    navigate(location.state?.from || homeByRole[user.role], { replace: true });
-  }
+  };
 
   return (
-    <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-7 shadow-xl shadow-blue-950/5">
-      <h1 className="text-2xl font-extrabold">Chào mừng trở lại</h1>
-      <p className="mt-2 text-sm text-slate-500">
-        Đăng nhập để tiếp tục sử dụng hệ thống.
-      </p>
-      {error && <div className="mt-5 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">{error}</div>}
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        <label className="block text-xs font-bold text-slate-600">
-          Thư điện tử
-          <span className="mt-2 flex h-11 items-center gap-2 rounded-lg border border-slate-200 px-3 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
-            <Mail size={16} className="text-slate-400" />
-            <input value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border-0 bg-transparent text-sm outline-none" />
-          </span>
-        </label>
-        <label className="block text-xs font-bold text-slate-600">
-          Mật khẩu
-          <span className="mt-2 flex h-11 items-center gap-2 rounded-lg border border-slate-200 px-3 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
-            <LockKeyhole size={16} className="text-slate-400" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border-0 bg-transparent text-sm outline-none" />
-          </span>
-        </label>
-        <button className="h-11 w-full rounded-lg bg-blue-600 text-sm font-bold text-white hover:bg-blue-700">
-          Đăng nhập
+    <div>
+      <AuthHeading title="Đăng nhập" description="Chào mừng trở lại! Đăng nhập để tiếp tục chăm sóc xe của bạn." />
+
+      {error && (
+        <div className="mb-5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <Field
+          id="email"
+          label="Email"
+          type="email"
+          placeholder="ban@email.com"
+          icon="mail"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <Field
+          id="password"
+          label="Mật khẩu"
+          type="password"
+          placeholder="••••••••"
+          icon="lock"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="remember"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(!!checked)}
+            />
+            <Label htmlFor="remember" className="text-[14px] font-medium text-muted-foreground">
+              Ghi nhớ đăng nhập
+            </Label>
+          </div>
+          <Link to="/forgot-password" className="text-[14px] font-semibold text-primary hover:underline">
+            Quên mật khẩu?
+          </Link>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="inline-flex h-12 items-center justify-center rounded-xl bg-primary text-[15px] font-bold text-primary-foreground shadow-[0_12px_28px_-10px_rgba(11,140,255,0.75)] transition-all hover:-translate-y-0.5 hover:bg-brand-dark disabled:opacity-60"
+        >
+          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
       </form>
-      <div className="mt-6 border-t border-slate-100 pt-5">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-          Tài khoản dùng thử
-        </p>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {demoAccounts.map(([label, account]) => (
-            <button key={account} type="button" onClick={() => setEmail(account)} className="rounded-lg border border-blue-100 bg-blue-50 px-2 py-2 text-[10px] font-bold text-blue-700">
-              {label}
-            </button>
-          ))}
-        </div>
+
+      <div className="my-7 flex items-center gap-3">
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-[13px] font-medium text-muted-foreground">hoặc</span>
+        <span className="h-px flex-1 bg-border" />
       </div>
-      <p className="mt-5 text-center text-xs text-slate-500">
-        Chưa có tài khoản? <Link to="/register" className="font-bold text-blue-600">Đăng ký ngay</Link>
+
+      <button
+        type="button"
+        className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-border bg-card text-[15px] font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
+      >
+        <GoogleIcon className="size-5" />
+        Tiếp tục với Google
+      </button>
+
+      <p className="mt-8 text-center text-[15px] text-muted-foreground">
+        Chưa có tài khoản?{" "}
+        <Link to="/register" className="font-semibold text-primary hover:underline">
+          Đăng ký ngay
+        </Link>
       </p>
     </div>
   );
 }
 
-export default LoginPage;
+function GoogleIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38Z"
+      />
+    </svg>
+  );
+}

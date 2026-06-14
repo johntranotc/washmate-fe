@@ -1,0 +1,286 @@
+/* Shared V0-style primitives for src/components/common.
+   Built on top of the design tokens defined in src/styles/theme.css */
+
+/* ---------- Button ---------- */
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: var(--radius-button);
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.ui-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.ui-btn-sm {
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.ui-btn-md {
+  min-height: 46px;
+  padding: 0 22px;
+  font-size: 15px;
+}
+
+.ui-btn-lg {
+  min-height: 54px;
+  padding: 0 28px;
+  font-size: 16px;
+}
+
+.ui-btn-full {
+  width: 100%;
+}
+
+.ui-btn-primary {
+  background: var(--brand-blue);
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(11, 140, 255, 0.28);
+}
+
+.ui-btn-primary:hover:not(:disabled) {
+  background: var(--brand-blue-dark);
+  transform: translateY(-1px);
+}
+
+.ui-btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
+}
+
+.ui-btn-secondary:hover:not(:disabled) {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue);
+}
+
+.ui-btn-outline {
+  background: transparent;
+  color: var(--brand-blue);
+  border: 1.5px solid var(--brand-blue);
+}
+
+.ui-btn-outline:hover:not(:disabled) {
+  background: rgba(11, 140, 255, 0.08);
+}
+
+.ui-btn-ghost {
+  background: transparent;
+  color: var(--text-main);
+}
+
+.ui-btn-ghost:hover:not(:disabled) {
+  background: var(--bg-main);
+  color: var(--brand-blue);
+}
+
+.ui-btn-danger {
+  background: #ff4d4f;
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(255, 77, 79, 0.24);
+}
+
+.ui-btn-danger:hover:not(:disabled) {
+  background: #e0383a;
+  transform: translateY(-1px);
+}
+
+/* ---------- Spinner ---------- */
+.ui-spin {
+  animation: ui-spin 0.8s linear infinite;
+}
+
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Card ---------- */
+.ui-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.ui-card-header {
+  padding: 24px 28px 0;
+}
+
+.ui-card-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.ui-card-description {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.ui-card-body {
+  padding: 24px 28px;
+}
+
+.ui-card-footer {
+  padding: 0 28px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ---------- Input ---------- */
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.ui-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.ui-field-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-button);
+  padding: 0 16px;
+  min-height: 50px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.ui-field-wrap:focus-within {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(11, 140, 255, 0.12);
+}
+
+.ui-field-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.ui-field-input {
+  flex: 1;
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 15px;
+  color: var(--text-main);
+}
+
+.ui-field-input::placeholder {
+  color: var(--text-muted);
+}
+
+.ui-field-error-state .ui-field-wrap {
+  border-color: #ff4d4f;
+}
+
+.ui-field-error {
+  font-size: 12.5px;
+  color: #ff4d4f;
+  font-weight: 600;
+}
+
+.ui-field-helper {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+/* ---------- EmptyState ---------- */
+.ui-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 56px 24px;
+  border-radius: var(--radius-card);
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+}
+
+.ui-empty-icon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--bg-main);
+  color: var(--brand-blue);
+}
+
+.ui-empty-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.ui-empty-description {
+  margin: 0;
+  max-width: 380px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.ui-empty-action {
+  margin-top: 8px;
+}
+
+/* ---------- Loading ---------- */
+.ui-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 32px;
+}
+
+.ui-loading-fullscreen {
+  position: fixed;
+  inset: 0;
+  background: rgba(245, 250, 255, 0.85);
+  z-index: 100;
+}
+
+.ui-loading .ui-spin {
+  color: var(--brand-blue);
+}
