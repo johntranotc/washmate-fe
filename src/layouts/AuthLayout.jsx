@@ -1,57 +1,60 @@
-import { Outlet } from "react-router-dom";
-import { Car, Droplets, ShieldCheck, Sparkles } from "lucide-react";
-import Card from "../components/common/Card";
+import { Link, Outlet } from "react-router-dom";
+import { Sparkles, Clock, Activity, Gift } from "lucide-react";
+import { Logo } from "@/components/site/logo";
 
 const highlights = [
-  { icon: Car, label: "Quản lý đội xe & lịch rửa thông minh" },
-  { icon: Droplets, label: "Đặt lịch rửa xe chỉ trong vài bước" },
-  { icon: ShieldCheck, label: "Bảo mật tài khoản & thanh toán an toàn" },
+  { icon: Clock, label: "Đặt lịch rửa xe chỉ trong 1 phút" },
+  { icon: Activity, label: "Theo dõi tiến độ theo thời gian thực" },
+  { icon: Gift, label: "Tích điểm và nhận đặc quyền thành viên" },
 ];
 
-function AuthLayout() {
+export default function AuthLayout() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center px-4 py-10 bg-[var(--bg-main)]">
-      <Card className="w-full max-w-5xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
-        <div className="relative hidden md:flex flex-col justify-between p-10 text-white bg-gradient-to-br from-[var(--brand-blue)] to-[var(--brand-blue-dark)] overflow-hidden">
-          <div className="relative z-10">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-white/15">
-              <Sparkles size={26} />
-            </div>
-            <h1 className="mt-6 text-3xl font-extrabold tracking-tight">
-              WashMate
-            </h1>
-            <p className="mt-3 max-w-sm text-white/85 leading-relaxed">
-              Nền tảng đặt lịch &amp; quản lý rửa xe thông minh, giúp xe của
-              bạn luôn sạch bóng mỗi ngày.
-            </p>
+    <div className="flex min-h-screen flex-col lg:flex-row">
+      <div className="flex flex-1 flex-col px-5 py-8 sm:px-10 lg:px-16">
+        <header className="flex items-center justify-between">
+          <Logo />
+          <Link to="/" className="text-sm font-semibold text-muted-foreground transition-colors hover:text-primary">
+            Về trang chủ
+          </Link>
+        </header>
+        <main className="flex flex-1 items-center justify-center py-10">
+          <div className="w-full max-w-md">
+            <Outlet />
           </div>
+        </main>
+        <footer className="text-center text-sm text-muted-foreground">
+          © {new Date().getFullYear()} SparkleAI / WashMate. Bảo lưu mọi quyền.
+        </footer>
+      </div>
 
-          <ul className="relative z-10 mt-10 space-y-4">
-            {highlights.map(({ icon: Icon, label }) => (
-              <li
-                key={label}
-                className="flex items-center gap-3 text-sm font-medium"
-              >
-                <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/15">
-                  <Icon size={18} />
+      <div className="relative hidden w-[44%] overflow-hidden bg-primary lg:block">
+        <img
+          src="/images/auth-side.png"
+          alt="Gara rửa xe hiện đại của SparkleAI"
+          className="absolute inset-0 size-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#062a52]/90 via-[#062a52]/40 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-12 text-white">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur">
+            <Sparkles className="size-4" />
+            Nền tảng rửa xe thông minh
+          </span>
+          <h2 className="mt-5 text-balance text-3xl font-extrabold leading-tight">
+            Chăm sóc xe của bạn dễ dàng hơn bao giờ hết
+          </h2>
+          <ul className="mt-6 flex flex-col gap-3">
+            {highlights.map((h) => (
+              <li key={h.label} className="flex items-center gap-3 text-[15px] text-white/90">
+                <span className="flex size-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur">
+                  <h.icon className="size-4.5" />
                 </span>
-                {label}
+                {h.label}
               </li>
             ))}
           </ul>
-
-          <div className="absolute -right-12 -bottom-12 w-56 h-56 rounded-full bg-white/10 blur-2xl" />
-          <div className="absolute right-8 top-8 w-24 h-24 rounded-full bg-white/10 blur-xl" />
         </div>
-
-        <div className="flex items-center justify-center p-6 sm:p-10">
-          <div className="w-full">
-            <Outlet />
-          </div>
-        </div>
-      </Card>
+      </div>
     </div>
   );
 }
-
-export default AuthLayout;
