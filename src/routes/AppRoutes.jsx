@@ -26,7 +26,15 @@ import NotificationPage from "../pages/customer/NotificationPage";
 import StaffBookingSearchPage from "../pages/staff/StaffBookingSearchPage";
 import StaffWorkflowPage from "../pages/staff/StaffWorkflowPage";
 import StaffQueuePage from "../pages/staff/StaffQueuePage";
+import StaffDashboardPage from "../pages/staff/StaffDashboardPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
+import GarageManagementPage from "../pages/admin/GarageManagementPage";
+import AdminServicePage from "../pages/admin/AdminServicePage";
+import AdminSlotPage from "../pages/admin/AdminSlotPage";
+import AdminBookingPage from "../pages/admin/AdminBookingPage";
+import AdminPaymentPage from "../pages/admin/AdminPaymentPage";
+import AdminInvoicePage from "../pages/admin/AdminInvoicePage";
+import AdminReportPage from "../pages/admin/AdminReportPage";
 import ScrollToHash from "./ScrollToHash";
 
 export default function AppRoutes() {
@@ -76,12 +84,23 @@ export default function AppRoutes() {
           <Route path="/customer/notifications" element={<NotificationPage />} />
         </Route>
         <Route element={<StaffLayout />}>
+          <Route path="/staff" element={<StaffDashboardPage />} />
+          <Route path="/staff/dashboard" element={<StaffDashboardPage />} />
           <Route path="/staff/bookings" element={<StaffBookingSearchPage />} />
           <Route path="/staff/queue" element={<StaffQueuePage />} />
+          <Route path="/staff/bookings/:bookingId" element={<StaffWorkflowPage />} />
           <Route path="/staff/bookings/:bookingId/workflow" element={<StaffWorkflowPage />} />
         </Route>
         <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+          <Route path="/admin/garages" element={<GarageManagementPage />} />
+          <Route path="/admin/services" element={<AdminServicePage />} />
+          <Route path="/admin/slots" element={<AdminSlotPage />} />
+          <Route path="/admin/bookings" element={<AdminBookingPage />} />
+          <Route path="/admin/payments" element={<AdminPaymentPage />} />
+          <Route path="/admin/invoices" element={<AdminInvoicePage />} />
+          <Route path="/admin/reports" element={<AdminReportPage />} />
         </Route>
 
         <Route path="*" element={<div className="grid min-h-screen place-items-center text-xl font-bold">404 - Không tìm thấy trang</div>} />

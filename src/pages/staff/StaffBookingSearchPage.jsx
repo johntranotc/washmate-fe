@@ -1,125 +1,84 @@
-import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { useAppStore } from "../../state/AppStore";
+import { ArrowRight, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { staffApi } from "../../api/staffApi";
+import DemoDataNotice from "../../components/customer/DemoDataNotice";
+import { getStaffDemoBookings } from "../../lib/staff-demo-store";
+import {
+  bookingStatusLabels,
+  normalizeBookingList,
+  normalizeStaffBooking,
+  paymentStatusLabels,
+} from "../../lib/staff-booking-data";
 
-const statuses = [
-  "ALL",
-  "PENDING",
-  "CONFIRMED",
-  "CHECKED_IN",
-  "WASHING",
-  "COMPLETED",
-  "CANCELLED",
-  "NO_SHOW",
-];
+const filters = ["ALL", "CONFIRMED", "CHECKED_IN", "WASHING", "COMPLETED", "NO_SHOW", "CANCELLED"];
+const filterLabels = { ALL: "Tất cả", ...bookingStatusLabels };
 
-const statusLabels = {
-  ALL: "Tất cả",
-  PENDING: "Chờ thanh toán",
-  CONFIRMED: "Đã xác nhận",
-  CHECKED_IN: "Đã tiếp nhận",
-  WASHING: "Đang rửa",
-  COMPLETED: "Đã hoàn tất",
-  CANCELLED: "Đã hủy",
-  NO_SHOW: "Khách không đến",
-};
-
-const paymentLabels = {
-  PENDING: "Chờ thanh toán",
-  PAID: "Đã thanh toán",
-  REFUNDED: "Đã hoàn tiền",
-};
-
-function StaffBookingSearchPage() {
-  const { state } = useAppStore();
+export default function StaffBookingSearchPage() {
+  const [searchParams] = useSearchParams();
+  const [bookings, setBookings] = useState([]);
   const [keyword, setKeyword] = useState("");
-  const [status, setStatus] = useState("ALL");
-  const bookings = useMemo(
-    () =>
-      state.bookings.filter((item) => {
-        const text =
-          `${item.code} ${item.customerName} ${item.phone} ${item.plate}`.toLowerCase();
-        return (
-          text.includes(keyword.toLowerCase()) &&
-          (status === "ALL" || item.bookingStatus === status)
-        );
-      }),
-    [keyword, state.bookings, status],
-  );
+  const [status, setStatus] = useState(searchParams.get("status") || "ALL");
+  const [loading, setLoading] = useState(true);
+  const [isMock, setIsMock] = useState(false);
+
+  useEffect(() => {
+    staffApi.getTodayBookings()
+      .then((response) => {
+        setBookings(normalizeBookingList(response).map(normalizeStaffBooking));
+        setIsMock(false);
+      })
+      .catch(() => {
+        setBookings(getStaffDemoBookings());
+        setIsMock(true);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const visibleBookings = useMemo(() => bookings.filter((item) => {
+    const text = `${item.code} ${item.customerName} ${item.phone} ${item.plate}`.toLowerCase();
+    return text.includes(keyword.toLowerCase()) && (status === "ALL" || item.bookingStatus === status);
+  }), [bookings, keyword, status]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-extrabold">Tra cứu lịch đặt</h1>
-        <p className="mt-2 text-xs text-slate-500">
-          Xác minh khách hàng bằng mã đặt lịch, số điện thoại hoặc biển số xe.
-        </p>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Vận hành hôm nay</p>
+        <h1 className="mt-2 text-3xl font-extrabold">Danh sách lịch đặt</h1>
+        <p className="mt-2 text-sm text-slate-500">Tra cứu và xử lý booking theo đúng vòng đời dịch vụ.</p>
       </header>
-      <section className="grid gap-3 rounded-xl border border-slate-200 bg-white p-5 md:grid-cols-[1fr_220px]">
-        <label className="flex h-11 items-center gap-2 rounded-lg border border-slate-200 px-3">
-          <Search size={16} className="text-slate-400" />
-          <input
-            value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
-            placeholder="Tìm kiếm lịch đặt..."
-            className="w-full border-0 bg-transparent text-xs outline-none"
-          />
+      {isMock && <DemoDataNotice />}
+      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
+        <label className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-3">
+          <Search size={17} className="text-slate-400" />
+          <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="Tìm mã lịch, khách hàng, số điện thoại hoặc biển số..." className="w-full bg-transparent text-sm outline-none" />
         </label>
-        <select
-          value={status}
-          onChange={(event) => setStatus(event.target.value)}
-          className="h-11 rounded-lg border border-slate-200 px-3 text-xs"
-        >
-          {statuses.map((item) => (
-            <option key={item} value={item}>
-              {statusLabels[item]}
-            </option>
-          ))}
-        </select>
-      </section>
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-        <div className="divide-y divide-slate-100">
-          {bookings.map((booking) => (
-            <article
-              key={booking.id}
-              className="grid gap-4 p-5 md:grid-cols-[1.2fr_1fr_1fr_auto] md:items-center"
-            >
-              <div>
-                <div className="flex gap-2">
-                  <b>{booking.code}</b>
-                  <span className="rounded-full bg-blue-50 px-2 py-1 text-[8px] font-bold text-blue-700">
-                    {statusLabels[booking.bookingStatus] || booking.bookingStatus}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs font-semibold">
-                  {booking.customerName}
-                </p>
-                <p className="text-[9px] text-slate-500">{booking.phone}</p>
-              </div>
-              <div className="text-xs">
-                <b>{booking.vehicle}</b>
-                <p className="text-[9px] text-slate-500">{booking.plate}</p>
-              </div>
-              <div className="text-xs">
-                <b>{booking.bookingDate}</b>
-                <p className="text-[9px] text-slate-500">
-                  {booking.slotTime} ·{" "}
-                  {paymentLabels[booking.paymentStatus] || booking.paymentStatus}
-                </p>
-              </div>
-              <Link
-                to={`/staff/bookings/${booking.id}/workflow`}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-center text-[10px] font-bold text-white"
-              >
-                Mở quy trình
-              </Link>
-            </article>
-          ))}
+        <div className="flex flex-wrap gap-2">
+          {filters.map((item) => <button key={item} onClick={() => setStatus(item)} className={`rounded-full px-4 py-2 text-xs font-bold ${status === item ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"}`}>{filterLabels[item]}</button>)}
         </div>
+      </section>
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        {loading ? <p className="py-16 text-center text-sm text-slate-500">Đang tải lịch đặt...</p> : visibleBookings.length === 0 ? <p className="py-16 text-center text-sm text-slate-500">Không có lịch đặt phù hợp.</p> : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px] text-left text-xs">
+              <thead className="bg-slate-50 text-[10px] uppercase text-slate-500"><tr><th className="p-4">Booking / Khách</th><th className="p-4">Xe</th><th className="p-4">Dịch vụ</th><th className="p-4">Khung giờ</th><th className="p-4">Trạng thái</th><th className="p-4">Thanh toán</th><th className="p-4">Thao tác</th></tr></thead>
+              <tbody className="divide-y divide-slate-100">
+                {visibleBookings.map((booking) => (
+                  <tr key={booking.id}>
+                    <td className="p-4"><b>{booking.code}</b><span className="mt-1 block text-slate-500">{booking.customerName}</span></td>
+                    <td className="p-4"><b>{booking.vehicle}</b><span className="mt-1 block text-slate-500">{booking.plate}</span></td>
+                    <td className="p-4">{booking.serviceName}</td>
+                    <td className="p-4">{booking.bookingDate}<span className="mt-1 block font-bold text-blue-600">{booking.slotTime}</span></td>
+                    <td className="p-4"><span className="rounded-full bg-blue-50 px-2.5 py-1 font-bold text-blue-700">{bookingStatusLabels[booking.bookingStatus]}</span></td>
+                    <td className="p-4">{paymentStatusLabels[booking.paymentStatus]}</td>
+                    <td className="p-4"><Link to={`/staff/bookings/${booking.id}`} className="inline-flex items-center gap-1 font-bold text-blue-600">Xem chi tiết <ArrowRight size={13} /></Link></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );
 }
-
-export default StaffBookingSearchPage;

@@ -348,8 +348,7 @@ export function AppStoreProvider({ children }) {
             ...(nextStatus === "WASHING" && { serviceStartTime: timestamp }),
             ...(nextStatus === "COMPLETED" && { completedTime: timestamp }),
           };
-          let loyalty = current.loyalty;
-          let notifications = addNotification(
+          const notifications = addNotification(
             current.notifications,
             target.customerId,
             `Lịch đặt ${statusLabels[nextStatus] || "đã cập nhật"}`,
@@ -358,37 +357,12 @@ export function AppStoreProvider({ children }) {
             }.`,
             "SERVICE",
           );
-          if (nextStatus === "COMPLETED" && target.paymentStatus === "PAID") {
-            const points = Math.floor(target.finalAmount / 1000);
-            loyalty = {
-              ...loyalty,
-              availablePoints: loyalty.availablePoints + points,
-              totalPoints: loyalty.totalPoints + points,
-              transactions: [
-                {
-                  id: Date.now(),
-                  type: "EARN",
-                  points,
-                  description: `Nhận điểm từ ${target.code}`,
-                  createdAt: timestamp,
-                },
-                ...loyalty.transactions,
-              ],
-            };
-            notifications = addNotification(
-              notifications,
-              target.customerId,
-              "Đã nhận điểm thưởng",
-              `Bạn đã nhận ${points} điểm từ ${target.code}.`,
-              "LOYALTY",
-            );
-          }
           return {
             ...current,
             bookings: current.bookings.map((booking) =>
               booking.id === target.id ? updated : booking,
             ),
-            loyalty,
+            loyalty: current.loyalty,
             notifications,
             auditLogs: addAudit(
               current,
