@@ -20,8 +20,19 @@ import LoyaltyPage from "../pages/customer/LoyaltyPage";
 import PublicLayout from "../layouts/PublicLayout";
 import AuthLayout from "../layouts/AuthLayout";
 import CustomerLayout from "../layouts/CustomerLayout";
+import CustomerPortalLayout from "../layouts/CustomerPortalLayout";
 import StaffLayout from "../layouts/StaffLayout";
 import AdminLayout from "../layouts/AdminLayout";
+
+import DashboardPage from "../pages/customer-portal/DashboardPage";
+import VehiclesPage from "../pages/customer-portal/VehiclesPage";
+import NewBookingPage from "../pages/customer-portal/NewBookingPage";
+import MyBookingsPage from "../pages/customer-portal/MyBookingsPage";
+import PaymentInvoicePage from "../pages/customer-portal/PaymentInvoicePage";
+import MembershipPointsPage from "../pages/customer-portal/MembershipPointsPage";
+import PromotionsPage from "../pages/customer-portal/PromotionsPage";
+import NotificationsPage from "../pages/customer-portal/NotificationsPage";
+import AccountPage from "../pages/customer-portal/AccountPage";
 import StaffBookingSearchPage from "../pages/staff/StaffBookingSearchPage";
 import StaffWorkflowPage from "../pages/staff/StaffWorkflowPage";
 
@@ -42,11 +53,13 @@ function AppRoutes() {
 
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/dang-nhap" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         </Route>
 
         <Route path="/select-workspace" element={<SelectWorkspacePage />} />
+        <Route path="/chon-khong-gian-lam-viec" element={<SelectWorkspacePage />} />
 
         <Route element={<CustomerLayout />}>
           <Route path="/customer" element={<CustomerHomePage />} />
@@ -68,6 +81,18 @@ function AppRoutes() {
             element={<InvoicePage />}
           />
           <Route path="/customer/loyalty" element={<LoyaltyPage />} />
+        </Route>
+
+        <Route element={<CustomerPortalLayout />}>
+          <Route path="/khach-hang" element={<DashboardPage />} />
+          <Route path="/khach-hang/xe-cua-toi" element={<VehiclesPage />} />
+          <Route path="/khach-hang/dat-lich-moi" element={<NewBookingPage />} />
+          <Route path="/khach-hang/lich-dat" element={<MyBookingsPage />} />
+          <Route path="/khach-hang/thanh-toan" element={<PaymentInvoicePage />} />
+          <Route path="/khach-hang/diem-thanh-vien" element={<MembershipPointsPage />} />
+          <Route path="/khach-hang/uu-dai" element={<PromotionsPage />} />
+          <Route path="/khach-hang/thong-bao" element={<NotificationsPage />} />
+          <Route path="/khach-hang/tai-khoan" element={<AccountPage />} />
         </Route>
 
         <Route element={<StaffLayout />}>
