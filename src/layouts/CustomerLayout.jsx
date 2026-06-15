@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { label: "Bảng điều khiển", path: "/customer", icon: LayoutDashboard, end: true },
+  { label: "Trang khách hàng", path: "/customer", icon: LayoutDashboard, end: true },
   { label: "Xe của tôi", path: "/customer/vehicles", icon: Car },
   { label: "Dịch vụ", path: "/customer/services", icon: Wrench },
   { label: "Đặt lịch", path: "/customer/booking", icon: Calendar },

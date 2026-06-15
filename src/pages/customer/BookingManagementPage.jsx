@@ -1,141 +1,73 @@
-﻿import { CalendarDays, Eye, Plus, XCircle } from "lucide-react";
-import { useMemo, useState } from "react";
+import { CalendarDays, CreditCard, Eye, Plus } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAppStore } from "../../state/AppStore";
+import { bookingApi } from "@/api/bookingApi";
+import { useAppStore } from "@/state/AppStore";
+import { StatusBadge } from "@/components/customer/BookingStatusBadge";
+import {
+  bookingStatusLabels,
+  formatBookingDate,
+  formatMoney,
+  normalizeBooking,
+  normalizeBookingList,
+} from "@/lib/customer-booking-data";
+import { cn } from "@/lib/utils";
 
-const filters = [
-  "ALL",
-  "PENDING",
-  "CONFIRMED",
-  "CHECKED_IN",
-  "WASHING",
-  "COMPLETED",
-  "CANCELLED",
-  "NO_SHOW",
-];
+const filters = ["ALL", "PENDING", "CONFIRMED", "CHECKED_IN", "WASHING", "COMPLETED", "CANCELLED", "NO_SHOW"];
 
-const statusLabels = {
-  ALL: "Tất cả",
-  PENDING: "Chờ thanh toán",
-  CONFIRMED: "Đã xác nhận",
-  CHECKED_IN: "Đã tiếp nhận",
-  WASHING: "Đang thực hiện",
-  COMPLETED: "Đã hoàn tất",
-  CANCELLED: "Đã hủy",
-  NO_SHOW: "Khách không đến",
-};
-
-const paymentLabels = {
-  PENDING: "Chờ thanh toán",
-  PAID: "Đã thanh toán",
-  REFUNDED: "Đã hoàn tiền",
-};
-
-function BookingManagementPage() {
-  const { state, actions } = useAppStore();
+export default function BookingManagementPage() {
+  const { state } = useAppStore();
   const [filter, setFilter] = useState("ALL");
-  const bookings = useMemo(
-    () =>
-      state.bookings.filter(
-        (item) =>
-          item.customerId === state.session?.id &&
-          (filter === "ALL" || item.bookingStatus === filter),
-      ),
-    [filter, state.bookings, state.session?.id],
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isMock, setIsMock] = useState(false);
+
+  const loadBookings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await bookingApi.getMyBookings();
+      const list = normalizeBookingList(data);
+      if (!list.length) throw new Error("EMPTY");
+      setBookings(list);
+      setIsMock(false);
+    } catch {
+      setBookings(state.bookings.map((item) => normalizeBooking({ ...item, isMock: true })));
+      setIsMock(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [state.bookings]);
+
+  useEffect(() => {
+    loadBookings();
+  }, [loadBookings]);
+
+  const filtered = useMemo(
+    () => bookings.filter((item) => filter === "ALL" || item.bookingStatus === filter),
+    [bookings, filter],
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold">Lịch đặt của tôi</h1>
-          <p className="mt-2 text-xs text-slate-500">
-            Theo dõi thanh toán, tiến độ dịch vụ và lịch sử đặt lịch.
-          </p>
-        </div>
-        <Link
-          to="/customer/bookings/create"
-          className="flex h-10 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-xs font-bold text-white"
-        >
-          <Plus size={15} /> Đặt lịch mới
-        </Link>
+        <div><p className="text-sm font-extrabold uppercase tracking-[0.16em] text-[var(--brand-blue)]">Quản lý lịch</p><h1 className="mt-2 text-3xl font-extrabold">Lịch đặt của tôi</h1><p className="mt-2 text-sm text-[var(--text-muted)]">Theo dõi thanh toán và tiến độ chăm sóc xe.</p></div>
+        <Link to="/customer/booking" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white"><Plus size={17} /> Đặt lịch mới</Link>
       </header>
-
-      <div className="flex gap-2 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2">
-        {filters.map((item) => (
-          <button
-            key={item}
-            onClick={() => setFilter(item)}
-            className={`whitespace-nowrap rounded-lg px-3 py-2 text-[9px] font-bold ${
-              filter === item
-                ? "bg-blue-600 text-white"
-                : "text-slate-500 hover:bg-blue-50"
-            }`}
-          >
-            {statusLabels[item]}
-          </button>
-        ))}
+      {isMock && <div className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-700"><strong>Dữ liệu mẫu.</strong> Dữ liệu này dùng để demo giao diện. API thật sẽ được kết nối sau.</div>}
+      <div className="flex gap-2 overflow-x-auto rounded-2xl border border-[var(--border-soft)] bg-white p-2">
+        {filters.map((status) => <button key={status} onClick={() => setFilter(status)} className={cn("whitespace-nowrap rounded-xl px-4 py-2 text-xs font-bold", filter === status ? "bg-[var(--brand-blue)] text-white" : "text-[var(--text-muted)] hover:bg-[var(--bg-main)]")}>{status === "ALL" ? "Tất cả" : bookingStatusLabels[status]}</button>)}
       </div>
-
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-        {bookings.length === 0 ? (
-          <div className="p-12 text-center">
-            <CalendarDays className="mx-auto text-blue-300" size={36} />
-            <h2 className="mt-4 font-bold">Không tìm thấy lịch đặt</h2>
+      {loading ? <div className="rounded-3xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải dữ liệu...</div> : !filtered.length ? (
+        <div className="rounded-3xl border border-dashed border-[var(--border-soft)] bg-white p-12 text-center"><CalendarDays className="mx-auto size-10 text-[var(--brand-blue)]" /><h2 className="mt-4 text-xl font-extrabold">Bạn chưa có lịch đặt nào</h2><Link to="/customer/booking" className="mt-5 inline-flex rounded-2xl bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white">Đặt lịch mới</Link></div>
+      ) : <div className="grid gap-5">{filtered.map((booking) => (
+        <article key={booking.id} className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center">
+            <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><strong className="text-lg">{booking.code}</strong><StatusBadge status={booking.bookingStatus} /><StatusBadge status={booking.paymentStatus} type="payment" /></div><h2 className="mt-4 font-extrabold">{booking.vehicle} · {booking.plate}</h2><p className="mt-1 text-sm text-[var(--text-muted)]">{booking.serviceName} tại {booking.garageName}</p></div>
+            <div className="grid gap-2 text-sm sm:grid-cols-2 lg:w-72 lg:grid-cols-1"><span>{formatBookingDate(booking.bookingDate)} · {booking.slotTime}</span><strong className="text-[var(--brand-blue)]">{formatMoney(booking.finalAmount)}</strong></div>
+            <div className="flex flex-wrap gap-2"><Link to={`/customer/bookings/${booking.id}`} className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-soft)] px-4 py-2.5 text-sm font-bold"><Eye size={16} /> Xem chi tiết</Link>{booking.paymentStatus !== "PAID" && <Link to={`/customer/bookings/${booking.id}/payment`} className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand-blue)] px-4 py-2.5 text-sm font-bold text-white"><CreditCard size={16} /> Thanh toán</Link>}</div>
           </div>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {bookings.map((booking) => (
-              <article
-                key={booking.id}
-                className="grid gap-4 p-5 md:grid-cols-[1.2fr_1fr_1fr_auto] md:items-center"
-              >
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <strong>{booking.code}</strong>
-                    <span className="rounded-full bg-blue-50 px-2 py-1 text-[8px] font-bold text-blue-700">
-                      {statusLabels[booking.bookingStatus] || booking.bookingStatus}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm font-semibold">{booking.vehicle}</p>
-                  <p className="text-[10px] text-slate-500">{booking.plate}</p>
-                </div>
-                <div className="text-[10px]">
-                  <b className="block">{booking.serviceName}</b>
-                  <span className="mt-1 block text-slate-500">
-                    {booking.garageName}
-                  </span>
-                </div>
-                <div className="text-[10px]">
-                  <b className="block">{booking.bookingDate}</b>
-                  <span className="mt-1 block text-slate-500">
-                    {booking.slotTime} · {paymentLabels[booking.paymentStatus] || booking.paymentStatus}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <Link
-                    to={`/customer/bookings/${booking.id}`}
-                    className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-blue-600"
-                  >
-                    <Eye size={15} />
-                  </Link>
-                  {["PENDING", "CONFIRMED"].includes(booking.bookingStatus) && (
-                    <button
-                      onClick={() => actions.cancelBooking(booking.id)}
-                      className="grid h-9 w-9 place-items-center rounded-lg bg-rose-50 text-rose-600"
-                    >
-                      <XCircle size={15} />
-                    </button>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
+        </article>
+      ))}</div>}
     </div>
   );
 }
-
-export default BookingManagementPage;
-

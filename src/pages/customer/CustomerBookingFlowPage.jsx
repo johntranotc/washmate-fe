@@ -269,7 +269,15 @@ export default function CustomerBookingFlowPage() {
       } else {
         response = await bookingApi.createBooking(payload);
       }
-      setResult(normalizeBookingResponse(response));
+      const normalizedResult = normalizeBookingResponse(response);
+      const isDemoResult = demoMode || usingMockData;
+      setResult({
+        ...normalizedResult,
+        paymentId:
+          normalizedResult.paymentId ||
+          (isDemoResult ? normalizedResult.bookingId : null),
+        isDemo: isDemoResult,
+      });
       setStep(6);
     } catch (error) {
       const isDemoFlow =
@@ -278,9 +286,23 @@ export default function CustomerBookingFlowPage() {
         selection.service.isMock ||
         selection.slot.isMock;
       if (isDemoFlow) {
+        const demoBooking = actions.createBooking({
+          ...payload,
+          garageName: selection.garage.name,
+          vehicle: `${selection.vehicle.brand} ${selection.vehicle.model}`.trim(),
+          plate: selection.vehicle.licensePlate,
+          serviceName: selection.service.name,
+          bookingDate,
+          slotTime: selection.slot.startTime,
+          amount: selection.service.price,
+          discount: 0,
+          finalAmount: selection.service.price,
+          note: note.trim(),
+        });
         setResult({
-          bookingId: `DEMO-${Date.now()}`,
-          bookingCode: `DEMO-${String(Date.now()).slice(-6)}`,
+          bookingId: demoBooking.id,
+          bookingCode: demoBooking.code,
+          paymentId: demoBooking.id,
           bookingStatus: "PENDING",
           paymentStatus: "PENDING",
           isDemo: true,

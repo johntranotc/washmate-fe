@@ -15,6 +15,7 @@ import SelectWorkspacePage from "../pages/auth/SelectWorkspacePage";
 import CustomerHomePage from "../pages/customer/CustomerHomePage";
 import VehiclePage from "../pages/customer/VehiclePage";
 import BookingCreatePage from "../pages/customer/BookingCreatePage";
+import BookingManagementPage from "../pages/customer/BookingManagementPage";
 import BookingDetailPage from "../pages/customer/BookingDetailPage";
 import PaymentPage from "../pages/customer/PaymentPage";
 import InvoicePage from "../pages/customer/InvoicePage";
@@ -58,8 +59,13 @@ export default function AppRoutes() {
           <Route path="/customer/vehicles" element={<VehiclePage />} />
           <Route path="/customer/booking" element={<BookingCreatePage />} />
           <Route path="/customer/bookings/create" element={<BookingCreatePage />} />
+          <Route path="/customer/bookings" element={<BookingManagementPage />} />
           <Route path="/customer/bookings/:bookingId" element={<BookingDetailPage />} />
+          <Route path="/customer/payments" element={<Navigate to="/customer/bookings" replace />} />
+          <Route path="/customer/payments/:paymentId" element={<PaymentPage />} />
           <Route path="/customer/bookings/:bookingId/payment" element={<PaymentPage />} />
+          <Route path="/customer/invoices" element={<Navigate to="/customer/bookings" replace />} />
+          <Route path="/customer/invoices/:invoiceId" element={<InvoicePage />} />
           <Route path="/customer/bookings/:bookingId/invoice" element={<InvoicePage />} />
           <Route path="/customer/loyalty" element={<LoyaltyPage />} />
         </Route>
