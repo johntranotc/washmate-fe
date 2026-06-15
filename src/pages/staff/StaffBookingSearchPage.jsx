@@ -5,11 +5,14 @@ import { staffApi } from "../../api/staffApi";
 import DemoDataNotice from "../../components/customer/DemoDataNotice";
 import { getStaffDemoBookings } from "../../lib/staff-demo-store";
 import {
-  bookingStatusLabels,
   normalizeBookingList,
   normalizeStaffBooking,
-  paymentStatusLabels,
 } from "../../lib/staff-booking-data";
+import {
+  bookingStatusLabels,
+  getBookingStatusLabel,
+  getPaymentStatusLabel,
+} from "../../lib/status-labels";
 
 const filters = ["ALL", "CONFIRMED", "CHECKED_IN", "WASHING", "COMPLETED", "NO_SHOW", "CANCELLED"];
 const filterLabels = { ALL: "Tất cả", ...bookingStatusLabels };
@@ -69,8 +72,8 @@ export default function StaffBookingSearchPage() {
                     <td className="p-4"><b>{booking.vehicle}</b><span className="mt-1 block text-slate-500">{booking.plate}</span></td>
                     <td className="p-4">{booking.serviceName}</td>
                     <td className="p-4">{booking.bookingDate}<span className="mt-1 block font-bold text-blue-600">{booking.slotTime}</span></td>
-                    <td className="p-4"><span className="rounded-full bg-blue-50 px-2.5 py-1 font-bold text-blue-700">{bookingStatusLabels[booking.bookingStatus]}</span></td>
-                    <td className="p-4">{paymentStatusLabels[booking.paymentStatus]}</td>
+                    <td className="p-4"><span className="rounded-full bg-blue-50 px-2.5 py-1 font-bold text-blue-700">{getBookingStatusLabel(booking.bookingStatus)}</span></td>
+                    <td className="p-4">{getPaymentStatusLabel(booking.paymentStatus)}</td>
                     <td className="p-4"><Link to={`/staff/bookings/${booking.id}`} className="inline-flex items-center gap-1 font-bold text-blue-600">Xem chi tiết <ArrowRight size={13} /></Link></td>
                   </tr>
                 ))}

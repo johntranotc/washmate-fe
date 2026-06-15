@@ -4,7 +4,8 @@ import { Link } from "react-router-dom";
 import { staffApi } from "../../api/staffApi";
 import DemoDataNotice from "../../components/customer/DemoDataNotice";
 import { getStaffDemoBookings } from "../../lib/staff-demo-store";
-import { bookingStatusLabels, normalizeBookingList, normalizeStaffBooking } from "../../lib/staff-booking-data";
+import { normalizeBookingList, normalizeStaffBooking } from "../../lib/staff-booking-data";
+import { getBookingStatusLabel } from "../../lib/status-labels";
 
 export default function StaffDashboardPage() {
   const [bookings, setBookings] = useState([]);
@@ -37,7 +38,7 @@ export default function StaffDashboardPage() {
       <section className="grid gap-5 lg:grid-cols-[1.4fr_0.6fr]">
         <article className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="flex items-center justify-between"><h2 className="font-extrabold">Việc cần làm tiếp theo</h2><Link to="/staff/bookings" className="text-xs font-bold text-blue-600">Xem tất cả</Link></div>
-          <div className="mt-4 space-y-3">{nextBookings.length ? nextBookings.map((item) => <Link key={item.id} to={`/staff/bookings/${item.id}`} className="flex items-center gap-4 rounded-xl bg-slate-50 p-4 hover:bg-blue-50"><span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-blue-600"><ListTodo size={18} /></span><div className="flex-1"><b className="text-sm">{item.code} · {item.customerName}</b><p className="mt-1 text-xs text-slate-500">{item.slotTime} · {item.vehicle} · {item.serviceName}</p></div><span className="text-[10px] font-bold text-blue-600">{bookingStatusLabels[item.bookingStatus]}</span></Link>) : <p className="py-10 text-center text-sm text-slate-500">Không còn việc cần xử lý.</p>}</div>
+          <div className="mt-4 space-y-3">{nextBookings.length ? nextBookings.map((item) => <Link key={item.id} to={`/staff/bookings/${item.id}`} className="flex items-center gap-4 rounded-xl bg-slate-50 p-4 hover:bg-blue-50"><span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-blue-600"><ListTodo size={18} /></span><div className="flex-1"><b className="text-sm">{item.code} · {item.customerName}</b><p className="mt-1 text-xs text-slate-500">{item.slotTime} · {item.vehicle} · {item.serviceName}</p></div><span className="text-[10px] font-bold text-blue-600">{getBookingStatusLabel(item.bookingStatus)}</span></Link>) : <p className="py-10 text-center text-sm text-slate-500">Không còn việc cần xử lý.</p>}</div>
         </article>
         <aside className="rounded-2xl bg-gradient-to-br from-blue-700 to-cyan-500 p-6 text-white"><p className="text-xs text-blue-100">Thao tác nhanh</p><h2 className="mt-2 text-2xl font-black">Sẵn sàng tiếp nhận xe?</h2><p className="mt-3 text-xs leading-5 text-blue-100">Mở danh sách lịch đã xác nhận để check-in khách đúng khung giờ.</p><Link to="/staff/bookings" className="mt-6 block rounded-xl bg-white py-3 text-center text-xs font-bold text-blue-700">Mở lịch hôm nay</Link></aside>
       </section>

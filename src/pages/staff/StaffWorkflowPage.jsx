@@ -4,7 +4,8 @@ import { Link, useParams } from "react-router-dom";
 import { staffApi } from "../../api/staffApi";
 import DemoDataNotice from "../../components/customer/DemoDataNotice";
 import { getStaffDemoBookings, updateStaffDemoBooking } from "../../lib/staff-demo-store";
-import { bookingStatusLabels, normalizeStaffBooking, paymentStatusLabels } from "../../lib/staff-booking-data";
+import { normalizeStaffBooking } from "../../lib/staff-booking-data";
+import { getBookingStatusLabel, getPaymentStatusLabel } from "../../lib/status-labels";
 
 const actionByStatus = {
   CONFIRMED: { next: "CHECKED_IN", label: "Check-in khách", icon: LogIn, api: "checkInBooking" },
@@ -50,7 +51,7 @@ export default function StaffWorkflowPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Chi tiết vận hành</p><h1 className="mt-2 text-3xl font-extrabold">{booking.code}</h1><p className="mt-2 text-sm text-slate-500">{booking.customerName} · {booking.vehicle} · {booking.plate}</p></div><span className="w-fit rounded-full bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700">{bookingStatusLabels[booking.bookingStatus]}</span></header>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Chi tiết vận hành</p><h1 className="mt-2 text-3xl font-extrabold">{booking.code}</h1><p className="mt-2 text-sm text-slate-500">{booking.customerName} · {booking.vehicle} · {booking.plate}</p></div><span className="w-fit rounded-full bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700">{getBookingStatusLabel(booking.bookingStatus)}</span></header>
       {isMock && <DemoDataNotice />}
       {booking.bookingStatus === "PENDING" && <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"><CircleAlert size={19} />Lịch này chưa thanh toán nên chưa thể check-in.</div>}
       <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
@@ -62,7 +63,7 @@ export default function StaffWorkflowPage() {
             ["Dịch vụ", booking.serviceName],
             ["Gara", booking.garageName],
             ["Ngày giờ", `${booking.bookingDate} · ${booking.slotTime}`],
-            ["Thanh toán", paymentStatusLabels[booking.paymentStatus]],
+            ["Thanh toán", getPaymentStatusLabel(booking.paymentStatus)],
           ].map(([label, value]) => <div key={label} className="rounded-xl bg-slate-50 p-4"><p className="text-[10px] text-slate-400">{label}</p><b className="mt-1 block text-sm">{value}</b></div>)}</div>
           <div><p className="text-xs font-bold">Ghi chú</p><p className="mt-2 rounded-xl border border-slate-100 p-4 text-sm text-slate-500">{booking.note || "Không có ghi chú."}</p></div>
           <div><h2 className="font-extrabold">Dòng thời gian trạng thái</h2><div className="mt-4 grid gap-3 sm:grid-cols-3">{[["Check-in", booking.checkinTime], ["Bắt đầu rửa", booking.serviceStartTime], ["Hoàn tất", booking.completedTime]].map(([label, value]) => <div key={label} className="rounded-xl border border-slate-100 p-4"><Clock3 className="text-blue-600" size={16} /><p className="mt-2 text-xs font-bold">{label}</p><p className="mt-1 text-[10px] text-slate-500">{value ? new Date(value).toLocaleString("vi-VN") : "Chưa ghi nhận"}</p></div>)}</div></div>

@@ -1,18 +1,7 @@
-export const bookingStatusLabels = {
-  PENDING: "Chờ thanh toán",
-  CONFIRMED: "Đã xác nhận",
-  CHECKED_IN: "Đã check-in",
-  WASHING: "Đang rửa",
-  COMPLETED: "Đã hoàn tất",
-  CANCELLED: "Đã hủy",
-  NO_SHOW: "Không đến",
-};
-
-export const paymentStatusLabels = {
-  PENDING: "Chờ thanh toán",
-  PAID: "Đã thanh toán",
-  REFUNDED: "Đã hoàn tiền",
-};
+export {
+  bookingStatusLabels,
+  paymentStatusLabels,
+} from "./status-labels";
 
 export const normalizeBookingList = (payload) => {
   if (Array.isArray(payload)) return payload;

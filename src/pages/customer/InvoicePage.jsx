@@ -8,12 +8,12 @@ import { useAppStore } from "@/state/AppStore";
 import {
   formatBookingDate,
   formatMoney,
-  invoiceStatusLabels,
   normalizeBooking,
   normalizeInvoice,
   normalizePayment,
   paymentMethodLabels,
 } from "@/lib/customer-booking-data";
+import { getInvoiceStatusLabel } from "@/lib/status-labels";
 import { createDemoInvoice } from "@/lib/invoice-mock-data";
 import { createDemoPayment } from "@/lib/payment-mock-data";
 
@@ -85,7 +85,7 @@ export default function InvoicePage() {
       `Khách hàng: ${booking.customerName || "Khách hàng WashMate"}`,
       `Dịch vụ: ${booking.serviceName}`,
       `Tổng tiền: ${formatMoney(booking.finalAmount)}`,
-      `Trạng thái: ${invoiceStatusLabels[invoice.status]}`,
+      `Trạng thái: ${getInvoiceStatusLabel(invoice.status)}`,
     ].join("\n");
     const url = URL.createObjectURL(new Blob([content], { type: "text/plain;charset=utf-8" }));
     const anchor = document.createElement("a");
@@ -108,7 +108,7 @@ export default function InvoicePage() {
         {invoice.isMock && <p className="mt-5 rounded-2xl bg-blue-50 px-4 py-3 text-sm text-blue-700">Dữ liệu này dùng để demo giao diện. API thật sẽ được kết nối sau.</p>}
         <section className="grid gap-6 py-7 sm:grid-cols-2">
           <div><p className="text-xs font-semibold text-[var(--text-muted)]">Thông tin khách hàng</p><strong className="mt-2 block">{booking.customerName || "Khách hàng WashMate"}</strong><p className="mt-1 text-sm text-[var(--text-muted)]">{booking.vehicle} · {booking.plate}</p></div>
-          <div className="sm:text-right"><p className="text-xs font-semibold text-[var(--text-muted)]">Thông tin chứng từ</p><p className="mt-2 font-bold">Booking: {booking.code}</p><p className="mt-1 text-sm text-[var(--text-muted)]">Ngày phát hành: {formatBookingDate(invoice.issuedAt)}</p><span className="mt-2 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">{invoiceStatusLabels[invoice.status]}</span></div>
+          <div className="sm:text-right"><p className="text-xs font-semibold text-[var(--text-muted)]">Thông tin chứng từ</p><p className="mt-2 font-bold">Booking: {booking.code}</p><p className="mt-1 text-sm text-[var(--text-muted)]">Ngày phát hành: {formatBookingDate(invoice.issuedAt)}</p><span className="mt-2 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">{getInvoiceStatusLabel(invoice.status)}</span></div>
         </section>
         <section className="rounded-3xl bg-[var(--bg-main)] p-5"><div className="grid gap-4 text-sm sm:grid-cols-2"><div><span className="text-[var(--text-muted)]">Gara</span><strong className="mt-1 block">{booking.garageName}</strong></div><div><span className="text-[var(--text-muted)]">Lịch hẹn</span><strong className="mt-1 block">{formatBookingDate(booking.bookingDate)} · {booking.slotTime}</strong></div><div><span className="text-[var(--text-muted)]">Phương thức</span><strong className="mt-1 block">{paymentMethodLabels[payment.method] || payment.method || "Đang cập nhật"}</strong></div><div><span className="text-[var(--text-muted)]">Mã giao dịch</span><strong className="mt-1 block">{payment.transactionCode || "Đang cập nhật"}</strong></div></div></section>
         <table className="mt-7 w-full text-left text-sm"><thead><tr className="border-b border-[var(--border-soft)] text-[var(--text-muted)]"><th className="py-3">Nội dung</th><th className="py-3 text-right">Số tiền</th></tr></thead><tbody><tr className="border-b border-[var(--border-soft)]"><td className="py-4 font-bold">{booking.serviceName}</td><td className="py-4 text-right">{formatMoney(booking.amount)}</td></tr><tr><td className="py-3">Giảm giá</td><td className="py-3 text-right">-{formatMoney(booking.discount)}</td></tr><tr className="text-lg font-extrabold"><td className="py-4">Tổng tiền</td><td className="py-4 text-right text-[var(--brand-blue)]">{formatMoney(booking.finalAmount)}</td></tr></tbody></table>

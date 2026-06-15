@@ -29,6 +29,7 @@ import { loyaltyMockAccount } from "../../mocks/loyaltyMockData";
 import { notificationMockData } from "../../mocks/notificationMockData";
 import { promotionMockData } from "../../mocks/promotionMockData";
 import { useAppStore } from "../../state/AppStore";
+import { getPaymentStatusLabel } from "../../lib/status-labels";
 
 const currency = (value) => `${Number(value || 0).toLocaleString("vi-VN")}đ`;
 
@@ -111,7 +112,7 @@ export default function CustomerHomePage() {
               <Link key={booking.id} to={`/customer/bookings/${booking.id}`} className="flex flex-col gap-3 rounded-xl border border-slate-100 p-4 transition hover:border-blue-200 hover:bg-blue-50/30 sm:flex-row sm:items-center">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600"><CalendarDays size={18} /></span>
                 <div className="min-w-0 flex-1"><b className="text-sm">{booking.serviceName || "Dịch vụ chăm sóc xe"}</b><p className="mt-1 text-[11px] text-slate-500">{booking.bookingDate || "Chưa có ngày"} · {booking.slotTime || "Chưa có giờ"} · {booking.vehicle || booking.plate}</p></div>
-                <div className="text-left sm:text-right"><span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">{booking.paymentStatus === "PAID" ? "Đã thanh toán" : "Chờ thanh toán"}</span><p className="mt-2 text-xs font-bold">{currency(booking.finalAmount || booking.amount)}</p></div>
+                <div className="text-left sm:text-right"><span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">{getPaymentStatusLabel(booking.paymentStatus)}</span><p className="mt-2 text-xs font-bold">{currency(booking.finalAmount || booking.amount)}</p></div>
               </Link>
             ))}
           </div>

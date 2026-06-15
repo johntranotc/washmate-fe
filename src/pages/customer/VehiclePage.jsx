@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { vehicleApi } from "../../api/vehicleApi";
-
-const statusLabels = {
-  ACTIVE: "Đang sử dụng",
-  INACTIVE: "Tạm ngưng",
-  DELETED: "Đã xóa",
-};
+import { getOperationStatusLabel } from "../../lib/status-labels";
 
 function StatusBadge({ status }) {
   const statusClass =
@@ -20,7 +15,7 @@ function StatusBadge({ status }) {
     <span
       className={`rounded-full border px-3 py-1 text-xs font-bold ${statusClass}`}
     >
-      {statusLabels[status] || status}
+      {getOperationStatusLabel(status)}
     </span>
   );
 }
@@ -216,8 +211,8 @@ function VehiclePage() {
       <section className="grid gap-4 md:grid-cols-3">
         {[
           ["Tổng phương tiện", vehicles.length],
-          ["Đang sử dụng", activeVehicleCount],
-          ["Tạm ngưng", inactiveVehicleCount],
+          ["Đang hoạt động", activeVehicleCount],
+          ["Ngừng hoạt động", inactiveVehicleCount],
         ].map(([label, value]) => (
           <article
             key={label}
@@ -249,8 +244,8 @@ function VehiclePage() {
                 className="mt-2 h-10 w-full rounded-lg border border-slate-200 px-3 text-xs"
               >
                 <option value="ALL">Tất cả</option>
-                <option value="ACTIVE">Đang sử dụng</option>
-                <option value="INACTIVE">Tạm ngưng</option>
+                <option value="ACTIVE">Đang hoạt động</option>
+                <option value="INACTIVE">Ngừng hoạt động</option>
               </select>
             </label>
           </section>

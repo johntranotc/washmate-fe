@@ -1,29 +1,9 @@
 import { asList } from "./booking-flow";
-
-export const bookingStatusLabels = {
-  PENDING: "Chờ thanh toán",
-  CONFIRMED: "Đã xác nhận",
-  CHECKED_IN: "Đã check-in",
-  WASHING: "Đang rửa xe",
-  COMPLETED: "Hoàn tất",
-  CANCELLED: "Đã hủy",
-  NO_SHOW: "Không đến",
-};
-
-export const paymentStatusLabels = {
-  PENDING: "Chờ thanh toán",
-  PAID: "Đã thanh toán",
-  FAILED: "Thanh toán thất bại",
-  CANCELLED: "Đã hủy thanh toán",
-  REFUNDED: "Đã hoàn tiền",
-};
-
-export const invoiceStatusLabels = {
-  ISSUED: "Đã phát hành",
-  PAID: "Đã thanh toán",
-  CANCELLED: "Đã hủy",
-  REFUNDED: "Đã hoàn tiền",
-};
+export {
+  bookingStatusLabels,
+  invoiceStatusLabels,
+  paymentStatusLabels,
+} from "./status-labels";
 
 export const paymentMethodLabels = {
   CASH: "Tiền mặt tại gara",

@@ -1,8 +1,5 @@
 import { cn } from "@/lib/utils";
-import {
-  bookingStatusLabels,
-  paymentStatusLabels,
-} from "@/lib/customer-booking-data";
+import { getBookingStatusLabel, getPaymentStatusLabel } from "@/lib/status-labels";
 
 const tones = {
   PENDING: "bg-amber-100 text-amber-700",
@@ -18,10 +15,13 @@ const tones = {
 };
 
 export function StatusBadge({ status, type = "booking", className }) {
-  const labels = type === "payment" ? paymentStatusLabels : bookingStatusLabels;
+  const label =
+    type === "payment"
+      ? getPaymentStatusLabel(status)
+      : getBookingStatusLabel(status);
   return (
     <span className={cn("inline-flex rounded-full px-3 py-1.5 text-xs font-extrabold", tones[status] || "bg-slate-100 text-slate-600", className)}>
-      {labels[status] || status}
+      {label}
     </span>
   );
 }

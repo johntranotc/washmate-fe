@@ -1,5 +1,5 @@
 import { Check, Circle, CircleX } from "lucide-react";
-import { bookingStatusLabels } from "@/lib/customer-booking-data";
+import { getBookingStatusLabel } from "@/lib/status-labels";
 import { cn } from "@/lib/utils";
 
 const steps = ["PENDING", "CONFIRMED", "CHECKED_IN", "WASHING", "COMPLETED"];
@@ -10,7 +10,7 @@ export function BookingTimeline({ booking }) {
       <div className="mt-6 flex items-center gap-4 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700">
         <span className="grid size-11 place-items-center rounded-2xl bg-white"><CircleX /></span>
         <div>
-          <strong>{bookingStatusLabels[booking.bookingStatus]}</strong>
+          <strong>{getBookingStatusLabel(booking.bookingStatus)}</strong>
           <p className="mt-1 text-sm">Lịch đặt đã dừng và không tiếp tục theo tiến trình dịch vụ.</p>
         </div>
       </div>
@@ -35,7 +35,7 @@ export function BookingTimeline({ booking }) {
                 {done ? <Check size={17} strokeWidth={3} /> : <Circle size={13} />}
               </span>
               <div className="md:mt-3">
-                <strong className={cn("text-sm", done ? "text-[var(--text-main)]" : "text-[var(--text-muted)]")}>{bookingStatusLabels[status]}</strong>
+                <strong className={cn("text-sm", done ? "text-[var(--text-main)]" : "text-[var(--text-muted)]")}>{getBookingStatusLabel(status)}</strong>
                 <p className="mt-1 text-xs text-[var(--text-muted)]">Bước {index + 1}</p>
               </div>
             </div>
