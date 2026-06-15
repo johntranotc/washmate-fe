@@ -20,6 +20,9 @@ import BookingDetailPage from "../pages/customer/BookingDetailPage";
 import PaymentPage from "../pages/customer/PaymentPage";
 import InvoicePage from "../pages/customer/InvoicePage";
 import LoyaltyPage from "../pages/customer/LoyaltyPage";
+import PromotionsPage from "../pages/customer/PromotionsPage";
+import RewardsPage from "../pages/customer/RewardsPage";
+import NotificationPage from "../pages/customer/NotificationPage";
 import StaffBookingSearchPage from "../pages/staff/StaffBookingSearchPage";
 import StaffWorkflowPage from "../pages/staff/StaffWorkflowPage";
 import StaffQueuePage from "../pages/staff/StaffQueuePage";
@@ -68,6 +71,9 @@ export default function AppRoutes() {
           <Route path="/customer/invoices/:invoiceId" element={<InvoicePage />} />
           <Route path="/customer/bookings/:bookingId/invoice" element={<InvoicePage />} />
           <Route path="/customer/loyalty" element={<LoyaltyPage />} />
+          <Route path="/customer/promotions" element={<PromotionsPage />} />
+          <Route path="/customer/rewards" element={<RewardsPage />} />
+          <Route path="/customer/notifications" element={<NotificationPage />} />
         </Route>
         <Route element={<StaffLayout />}>
           <Route path="/staff/bookings" element={<StaffBookingSearchPage />} />

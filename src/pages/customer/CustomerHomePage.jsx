@@ -1,196 +1,159 @@
-﻿import {
+import {
   ArrowRight,
+  Award,
+  Bell,
   CalendarDays,
-  Check,
-  CircleAlert,
-  Info,
-  MapPin,
-  Plus,
+  CheckCircle2,
+  CircleDollarSign,
+  Gift,
+  Lightbulb,
+  Sparkles,
+  Star,
 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { analyticsApi } from "../../api/analyticsApi";
+import { loyaltyApi } from "../../api/loyaltyApi";
+import { notificationApi } from "../../api/notificationApi";
+import { promotionApi } from "../../api/promotionApi";
+import DemoDataNotice from "../../components/customer/DemoDataNotice";
+import {
+  normalizeLoyalty,
+  normalizeNotifications,
+  normalizePromotions,
+  normalizeSummary,
+  tierLabels,
+} from "../../lib/customer-engagement-data";
+import { customerDashboardMockData } from "../../mocks/customerDashboardMockData";
+import { loyaltyMockAccount } from "../../mocks/loyaltyMockData";
+import { notificationMockData } from "../../mocks/notificationMockData";
+import { promotionMockData } from "../../mocks/promotionMockData";
+import { useAppStore } from "../../state/AppStore";
 
-const vehicles = [
-  {
-    name: "Tesla Model 3",
-    plate: "AQ-FLOW-01",
-    image:
-      "https://images.unsplash.com/photo-1617788131775-16a213582423?auto=format&fit=crop&w=700&q=85",
-    note: "Lần rửa gần nhất: 4 ngày trước",
-    primary: true,
-  },
-  {
-    name: "Porsche Cayenne",
-    plate: "K-SPORT-22",
-    image:
-      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=700&q=85",
-    note: "Lần rửa gần nhất: 12 ngày trước",
-  },
-  {
-    name: "Range Rover",
-    plate: "LUX-V-09",
-    image:
-      "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=700&q=85",
-    note: "Cần chú ý",
-    alert: true,
-  },
-];
+const currency = (value) => `${Number(value || 0).toLocaleString("vi-VN")}đ`;
 
-function CustomerHomePage() {
+export default function CustomerHomePage() {
+  const { state } = useAppStore();
+  const [summary, setSummary] = useState(customerDashboardMockData);
+  const [loyalty, setLoyalty] = useState(loyaltyMockAccount);
+  const [promotions, setPromotions] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [isMock, setIsMock] = useState(false);
+
+  useEffect(() => {
+    Promise.allSettled([
+      analyticsApi.getCustomerSummary(),
+      loyaltyApi.getMyLoyalty(),
+      promotionApi.getActivePromotions(),
+      notificationApi.getNotifications(),
+    ]).then(([summaryResult, loyaltyResult, promotionResult, notificationResult]) => {
+      const hasFallback = [summaryResult, loyaltyResult, promotionResult, notificationResult].some((item) => item.status === "rejected");
+      setSummary(summaryResult.status === "fulfilled" ? normalizeSummary(summaryResult.value) : customerDashboardMockData);
+      setLoyalty(loyaltyResult.status === "fulfilled" ? normalizeLoyalty(loyaltyResult.value) : loyaltyMockAccount);
+      setPromotions(promotionResult.status === "fulfilled" ? normalizePromotions(promotionResult.value) : promotionMockData);
+      setNotifications(notificationResult.status === "fulfilled" ? normalizeNotifications(notificationResult.value) : notificationMockData);
+      setIsMock(hasFallback);
+    });
+  }, []);
+
+  const customerName = useMemo(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      return user.fullName || user.name || state.session?.name || "Khách hàng";
+    } catch {
+      return state.session?.name || "Khách hàng";
+    }
+  }, [state.session?.name]);
+
+  const bookings = state.bookings || [];
+  const upcomingBookings = bookings.filter((item) => !["COMPLETED", "CANCELLED", "NO_SHOW"].includes(item.bookingStatus));
+  const recentBookings = bookings.slice(0, 3);
+  const unreadCount = notifications.filter((item) => !item.read).length;
+  const tierName = loyalty.tierName || tierLabels[loyalty.tier] || loyalty.tier;
+
+  const metrics = [
+    [CalendarDays, "Lịch sắp tới", upcomingBookings.length, "lịch"],
+    [CheckCircle2, "Đã hoàn tất", summary.completedBookings, "lịch"],
+    [Sparkles, "Điểm khả dụng", loyalty.availablePoints, "điểm"],
+    [Gift, "Ưu đãi đang có", promotions.length, "ưu đãi"],
+  ];
+
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-[22px] bg-[#071e32] px-7 py-9 text-white shadow-sm md:px-11 md:py-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(255,255,255,.16)_0_2px,transparent_3px),radial-gradient(circle_at_64%_76%,rgba(255,255,255,.12)_0_5px,transparent_6px)] opacity-70" />
-        <div className="absolute -bottom-32 right-16 h-64 w-96 rounded-full border-[45px] border-white/[0.025] bg-blue-500/10" />
-
-        <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-          <div className="max-w-2xl">
-            <span className="inline-flex rounded-full bg-white px-3 py-1 text-[9px] font-extrabold text-blue-700">
-              THÀNH VIÊN VÀNG
-            </span>
-            <h1 className="mt-4 text-3xl font-extrabold tracking-[-0.04em] md:text-5xl">
-              Chào mừng trở lại, Alex!
-            </h1>
-            <p className="mt-3 text-sm leading-6 text-blue-100">
-              Sẵn sàng giúp chiếc xe của bạn sáng bóng trở lại? Lần rửa xe cao
-              cấp tiếp theo được <strong className="text-white">giảm 20%.</strong>
-            </p>
+      <section className="relative overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-white via-blue-50 to-cyan-50 p-7 md:p-9">
+        <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-blue-200/40 blur-3xl" />
+        <div className="relative flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-3 py-1.5 text-[10px] font-extrabold text-white"><Award size={13} /> THÀNH VIÊN {tierName?.toUpperCase()}</span>
+            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">Xin chào, {customerName}!</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">Mọi thông tin đặt lịch, điểm thưởng và ưu đãi của bạn được tổng hợp tại đây.</p>
           </div>
-
-          <Link
-            to="/customer/booking"
-            className="flex min-h-20 min-w-48 items-center justify-between gap-5 rounded-2xl bg-blue-600 px-7 text-lg font-extrabold shadow-lg shadow-blue-950/20 transition hover:bg-blue-500"
-          >
-            Đặt lịch nhanh <ArrowRight size={20} />
-          </Link>
+          <Link to="/customer/booking" className="inline-flex items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 text-sm font-extrabold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700">Đặt lịch nhanh <ArrowRight size={18} /></Link>
         </div>
       </section>
+      {isMock && <DemoDataNotice />}
 
-      <section className="grid gap-5 lg:grid-cols-[320px_1fr]">
-        <article className="rounded-2xl border border-slate-200 bg-white p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-extrabold text-blue-700">
-              Tổng quan điểm thưởng
-            </h2>
-            <Info size={17} className="text-blue-600" />
-          </div>
-          <p className="mt-7 text-[10px] font-medium text-slate-500">
-            Điểm hiện có
-          </p>
-          <p className="mt-1 text-4xl font-bold tracking-tight">
-            1.250 <span className="text-xs text-slate-500">điểm</span>
-          </p>
-          <div className="mt-6 flex justify-between text-[9px] font-semibold">
-            <span className="text-slate-500">Hạng tiếp theo: Bạch kim</span>
-            <span className="text-blue-600">250 điểm nữa</span>
-          </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-blue-100">
-            <div className="h-full w-4/5 rounded-full bg-blue-600" />
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {metrics.map(([Icon, label, value, unit]) => (
+          <article key={label} className="rounded-2xl border border-slate-200 bg-white p-5">
+            <div className="flex items-center justify-between"><span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-600"><Icon size={19} /></span><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{unit}</span></div>
+            <p className="mt-4 text-xs text-slate-500">{label}</p>
+            <strong className="mt-1 block text-2xl text-slate-950">{Number(value || 0).toLocaleString("vi-VN")}</strong>
+          </article>
+        ))}
+      </section>
+
+      <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="flex items-center justify-between"><div><h2 className="font-extrabold">Lịch đặt gần đây</h2><p className="mt-1 text-xs text-slate-500">Theo dõi nhanh các lịch của bạn.</p></div><Link to="/customer/bookings" className="text-xs font-bold text-blue-600">Xem tất cả</Link></div>
+          <div className="mt-4 space-y-3">
+            {recentBookings.length === 0 ? <p className="rounded-xl bg-slate-50 py-10 text-center text-sm text-slate-500">Chưa có lịch đặt.</p> : recentBookings.map((booking) => (
+              <Link key={booking.id} to={`/customer/bookings/${booking.id}`} className="flex flex-col gap-3 rounded-xl border border-slate-100 p-4 transition hover:border-blue-200 hover:bg-blue-50/30 sm:flex-row sm:items-center">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600"><CalendarDays size={18} /></span>
+                <div className="min-w-0 flex-1"><b className="text-sm">{booking.serviceName || "Dịch vụ chăm sóc xe"}</b><p className="mt-1 text-[11px] text-slate-500">{booking.bookingDate || "Chưa có ngày"} · {booking.slotTime || "Chưa có giờ"} · {booking.vehicle || booking.plate}</p></div>
+                <div className="text-left sm:text-right"><span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">{booking.paymentStatus === "PAID" ? "Đã thanh toán" : "Chờ thanh toán"}</span><p className="mt-2 text-xs font-bold">{currency(booking.finalAmount || booking.amount)}</p></div>
+              </Link>
+            ))}
           </div>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-extrabold">Lịch đặt đang hoạt động</h2>
-            <Link
-              to="/customer/bookings"
-              className="text-[10px] font-bold text-blue-600"
-            >
-              Xem tất cả
-            </Link>
-          </div>
+        <article className="rounded-2xl bg-gradient-to-br from-blue-700 to-blue-500 p-6 text-white">
+          <div className="flex items-center justify-between"><div><p className="text-xs text-blue-100">Điểm hiện có</p><p className="mt-1 text-4xl font-black">{loyalty.availablePoints.toLocaleString("vi-VN")}</p></div><Award size={34} className="text-blue-200" /></div>
+          <p className="mt-6 text-xs font-semibold">Tiến độ đến hạng {loyalty.nextTierName || tierLabels[loyalty.nextTier] || "tiếp theo"}</p>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/20"><div className="h-full rounded-full bg-white" style={{ width: `${Math.min(loyalty.progressPercent, 100)}%` }} /></div>
+          <p className="mt-2 text-[11px] text-blue-100">{loyalty.pointsToNextTier.toLocaleString("vi-VN")} điểm nữa</p>
+          <Link to="/customer/loyalty" className="mt-6 inline-flex items-center gap-2 text-xs font-extrabold">Xem chi tiết <ArrowRight size={14} /></Link>
+        </article>
+      </section>
 
-          <div className="mt-5 flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center">
-            <img
-              src={vehicles[0].image}
-              alt="Tesla Model 3"
-              className="h-20 w-full rounded-lg object-cover sm:w-28"
-            />
-            <div className="min-w-0 flex-1">
-              <h3 className="font-extrabold">Tesla Model 3</h3>
-              <p className="mt-2 flex items-center gap-2 text-[10px] text-slate-600">
-                <CalendarDays size={13} /> Hôm nay, 14:00
-              </p>
-              <p className="mt-2 flex items-center gap-2 text-[10px] text-slate-600">
-                <MapPin size={13} /> Downtown Hub
-              </p>
-            </div>
-            <div className="self-start text-right">
-              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-[9px] font-bold text-blue-700">
-                <Check size={11} /> Đã xác nhận
-              </span>
-              <p className="mt-2 text-[8px] text-slate-400">Có thể đổi lịch</p>
-            </div>
-          </div>
+      <section className="grid gap-5 lg:grid-cols-3">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="flex items-center gap-2"><Star className="text-blue-600" size={18} /><h2 className="font-extrabold">Dịch vụ yêu thích</h2></div>
+          <p className="mt-5 text-xl font-black">{summary.favoriteService}</p>
+          <p className="mt-2 text-xs text-slate-500">Tổng chi tiêu ghi nhận: <b>{currency(summary.totalSpent)}</b></p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="flex items-center gap-2"><Lightbulb className="text-amber-500" size={18} /><h2 className="font-extrabold">Gợi ý chăm sóc</h2></div>
+          <p className="mt-4 text-xs leading-6 text-slate-600">{summary.careSuggestion || customerDashboardMockData.careSuggestion}</p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="flex items-center justify-between"><div className="flex items-center gap-2"><Bell className="text-blue-600" size={18} /><h2 className="font-extrabold">Thông báo</h2></div><span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700">{unreadCount} mới</span></div>
+          <p className="mt-4 line-clamp-2 text-xs leading-5 text-slate-600">{notifications[0]?.message || "Bạn chưa có thông báo mới."}</p>
+          <Link to="/customer/notifications" className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-blue-600">Mở trung tâm thông báo <ArrowRight size={13} /></Link>
         </article>
       </section>
 
       <section>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-extrabold">Phương tiện của tôi</h2>
-          <Link
-            to="/customer/vehicles"
-            className="flex items-center gap-1 text-[10px] font-bold text-blue-600"
-          >
-            <Plus size={14} /> Thêm phương tiện
-          </Link>
-        </div>
-
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          {vehicles.map((vehicle) => (
-            <article
-              key={vehicle.plate}
-              className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 transition hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              <div className="relative overflow-hidden rounded-xl">
-                {vehicle.primary && (
-                  <span className="absolute right-2 top-2 z-10 rounded bg-blue-600 px-2 py-1 text-[8px] font-extrabold text-white">
-                    PRIMARY
-                  </span>
-                )}
-                <img
-                  src={vehicle.image}
-                  alt={vehicle.name}
-                  className="h-32 w-full object-cover"
-                />
-              </div>
-              <h3 className="mt-4 text-base font-extrabold">{vehicle.name}</h3>
-              <p className="mt-1 text-[9px] text-slate-500">
-                Plate: {vehicle.plate}
-              </p>
-              <div
-                className={`mt-5 flex items-center justify-between text-[9px] font-semibold ${
-                  vehicle.alert ? "text-rose-600" : "text-slate-500"
-                }`}
-              >
-                {vehicle.note}
-                {vehicle.alert ? (
-                  <CircleAlert size={16} />
-                ) : (
-                  <span className="grid h-4 w-4 place-items-center rounded-full bg-blue-600 text-white">
-                    <Check size={10} />
-                  </span>
-                )}
-              </div>
+        <div className="flex items-end justify-between"><div><h2 className="text-lg font-extrabold">Ưu đãi dành cho bạn</h2><p className="mt-1 text-xs text-slate-500">Các chương trình nổi bật đang có.</p></div><Link to="/customer/promotions" className="text-xs font-bold text-blue-600">Xem tất cả</Link></div>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          {promotions.slice(0, 3).map((item) => (
+            <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-5">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-600"><CircleDollarSign size={19} /></span>
+              <p className="mt-4 text-xs font-bold text-blue-600">{item.discountLabel}</p><h3 className="mt-1 font-extrabold">{item.title}</h3><p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">{item.description}</p>
             </article>
           ))}
-
-          <Link
-            to="/customer/vehicles"
-            className="flex min-h-64 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 px-7 text-center transition hover:border-blue-400 hover:bg-blue-50/40"
-          >
-            <span className="grid h-9 w-9 place-items-center rounded-full border-2 border-slate-900">
-              <Plus size={18} />
-            </span>
-            <strong className="mt-4 text-base">Thêm phương tiện</strong>
-            <span className="mt-2 text-[9px] leading-4 text-slate-500">
-              Đăng ký xe mới để đặt lịch nhanh chóng.
-            </span>
-          </Link>
         </div>
       </section>
     </div>
   );
 }
-
-export default CustomerHomePage;
-
