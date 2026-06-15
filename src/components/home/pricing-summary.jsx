@@ -20,7 +20,7 @@ export function PricingSummary() {
         </div>
 
         <div className="mt-12 text-center">
-          <LinkButton href="/pricing" variant="secondary">
+          <LinkButton href="/bang-gia" variant="secondary">
             Xem bảng giá chi tiết
           </LinkButton>
         </div>

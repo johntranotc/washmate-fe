@@ -18,7 +18,7 @@ export function TierBadge({ tier, size = "md" }) {
       <img
         src={tier.badge || "/placeholder.svg"}
         alt={`Huy hiệu hạng ${tier.name}`}
-        className="relative drop-shadow-[0_6px_14px_rgba(0,0,0,0.45)]"
+        className="relative size-[82%] object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.28)]"
       />
     </div>
   );

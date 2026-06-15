@@ -76,7 +76,7 @@ export function PlanCard({ plan }) {
       </ul>
 
       <LinkButton
-        href="/register"
+        href="/dang-nhap"
         variant={plan.featured ? "white" : "primary"}
         size="lg"
         className="mt-7 w-full"

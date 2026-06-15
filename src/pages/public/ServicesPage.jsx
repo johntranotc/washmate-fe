@@ -8,7 +8,7 @@ export default function ServicesPage() {
       <PageHero
         breadcrumb="Dịch vụ"
         eyebrow="Dịch vụ chăm sóc xe"
-        title="Dịch vụ rửa và chăm sóc xe chuyên nghiệp"
+        title="Dịch vụ chăm sóc xe"
         description="Lựa chọn gói dịch vụ phù hợp với nhu cầu của bạn, từ rửa nhanh hằng ngày đến chăm sóc chuyên sâu định kỳ."
       />
       <section className="bg-background py-16 lg:py-20">

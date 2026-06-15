@@ -14,7 +14,7 @@ export function FeaturedServices() {
             title="Đa dạng dịch vụ chăm sóc xe"
             description="Từ rửa nhanh đến chăm sóc chuyên sâu, luôn có gói dịch vụ phù hợp với nhu cầu của bạn."
           />
-          <LinkButton href="/services" variant="outline" className="shrink-0">
+          <LinkButton href="/dich-vu" variant="outline" className="shrink-0">
             Xem tất cả dịch vụ
           </LinkButton>
         </div>
