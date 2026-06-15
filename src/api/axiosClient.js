@@ -29,7 +29,11 @@ axiosClient.interceptors.response.use(
     return Promise.reject({
       status,
       errorCode: body?.errorCode || "UNKNOWN_ERROR",
-      message: body?.message || (error.code === "ECONNABORTED" ? "Máy chủ phản hồi quá lâu." : "Không thể kết nối đến máy chủ."),
+      message:
+        body?.message ||
+        (error.code === "ECONNABORTED"
+          ? "Máy chủ phản hồi quá lâu."
+          : "Không thể kết nối đến máy chủ."),
       details: body?.details || null,
     });
   },

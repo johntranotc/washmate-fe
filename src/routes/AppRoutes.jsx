@@ -56,6 +56,7 @@ export default function AppRoutes() {
           <Route path="/customer" element={<CustomerHomePage />} />
           <Route path="/customer/dashboard" element={<CustomerHomePage />} />
           <Route path="/customer/vehicles" element={<VehiclePage />} />
+          <Route path="/customer/booking" element={<BookingCreatePage />} />
           <Route path="/customer/bookings/create" element={<BookingCreatePage />} />
           <Route path="/customer/bookings/:bookingId" element={<BookingDetailPage />} />
           <Route path="/customer/bookings/:bookingId/payment" element={<PaymentPage />} />

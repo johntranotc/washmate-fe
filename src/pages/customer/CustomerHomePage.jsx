@@ -57,7 +57,7 @@ function CustomerHomePage() {
           </div>
 
           <Link
-            to="/customer/bookings/create"
+            to="/customer/booking"
             className="flex min-h-20 min-w-48 items-center justify-between gap-5 rounded-2xl bg-blue-600 px-7 text-lg font-extrabold shadow-lg shadow-blue-950/20 transition hover:bg-blue-500"
           >
             Đặt lịch nhanh <ArrowRight size={20} />

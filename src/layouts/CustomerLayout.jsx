@@ -23,7 +23,7 @@ const navItems = [
   { label: "Bảng điều khiển", path: "/customer", icon: LayoutDashboard, end: true },
   { label: "Xe của tôi", path: "/customer/vehicles", icon: Car },
   { label: "Dịch vụ", path: "/customer/services", icon: Wrench },
-  { label: "Đặt lịch", path: "/customer/bookings/create", icon: Calendar },
+  { label: "Đặt lịch", path: "/customer/booking", icon: Calendar },
   { label: "Lịch đặt của tôi", path: "/customer/bookings", icon: ClipboardList },
   { label: "Thanh toán", path: "/customer/payments", icon: CreditCard },
   { label: "Hóa đơn", path: "/customer/invoices", icon: Receipt },
@@ -38,18 +38,22 @@ function CustomerLayout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const customerName =
-    localStorage.getItem("userEmail") ||
-    sessionStorage.getItem("userEmail") ||
-    "Khách hàng";
+    (() => {
+      try {
+        const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
+        return user.fullName || user.name || user.email;
+      } catch {
+        return "";
+      }
+    })() || "Khách hàng";
 
   const avatarInitial = customerName.trim().charAt(0).toUpperCase() || "K";
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userEmail");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("userEmail");
-    navigate("/login");
+    ["accessToken", "refreshToken", "currentUser", "roles", "garageIds"].forEach(
+      (key) => localStorage.removeItem(key),
+    );
+    navigate("/dang-nhap");
   };
 
   const navLinkClass = ({ isActive }) =>
@@ -70,7 +74,7 @@ function CustomerLayout() {
             WashMate
           </span>
           <span className="block text-xs font-medium text-[var(--text-muted)]">
-            Customer Portal
+            Cổng khách hàng
           </span>
         </span>
       </Link>

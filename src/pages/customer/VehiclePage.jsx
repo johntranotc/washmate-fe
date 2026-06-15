@@ -302,7 +302,7 @@ function VehiclePage() {
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
-                          onClick={() => navigate("/customer/bookings/create")}
+                          onClick={() => navigate("/customer/booking")}
                           disabled={vehicle.status !== "ACTIVE"}
                           className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white disabled:bg-slate-300"
                         >
