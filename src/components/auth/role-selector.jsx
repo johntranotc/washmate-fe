@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { User, Wrench, Lock, Check, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/site/logo";
 import { cn } from "@/lib/utils";
+import { ROLES, setCurrentRole } from "@/lib/auth-role";
 
 const workspaces = [
   {
@@ -34,6 +35,12 @@ const workspaces = [
   },
 ];
 
+const roleByWorkspace = {
+  "khach-hang": ROLES.CUSTOMER,
+  "nhan-vien": ROLES.STAFF,
+  "quan-tri": ROLES.ADMIN,
+};
+
 export function RoleSelector() {
   const [selected, setSelected] = useState("khach-hang");
   const navigate = useNavigate();
@@ -41,6 +48,7 @@ export function RoleSelector() {
   const handleContinue = () => {
     const workspace = workspaces.find((w) => w.id === selected);
     if (workspace) {
+      setCurrentRole(roleByWorkspace[workspace.id]);
       navigate(workspace.route);
     }
   };

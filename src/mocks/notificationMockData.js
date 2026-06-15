@@ -6,7 +6,7 @@ export const notificationMockData = [
     type: "BOOKING",
     read: false,
     createdAt: "2026-06-15T02:15:00.000Z",
-    link: "/customer/bookings",
+    link: "/khach-hang/lich-dat",
   },
   {
     id: "notice-2",
@@ -15,7 +15,7 @@ export const notificationMockData = [
     type: "PAYMENT",
     read: false,
     createdAt: "2026-06-14T08:30:00.000Z",
-    link: "/customer/invoices",
+    link: "/khach-hang/thanh-toan",
   },
   {
     id: "notice-3",
@@ -24,7 +24,7 @@ export const notificationMockData = [
     type: "PROMOTION",
     read: false,
     createdAt: "2026-06-13T04:00:00.000Z",
-    link: "/customer/promotions",
+    link: "/khach-hang/uu-dai",
   },
   {
     id: "notice-4",
@@ -33,7 +33,7 @@ export const notificationMockData = [
     type: "LOYALTY",
     read: true,
     createdAt: "2026-06-11T08:05:00.000Z",
-    link: "/customer/loyalty",
+    link: "/khach-hang/diem-thanh-vien",
   },
   {
     id: "notice-5",
