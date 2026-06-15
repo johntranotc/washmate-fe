@@ -50,7 +50,7 @@ export default function AppRoutes() {
       <ScrollToHash />
 
       <Routes>
-        {/* Public routes */}
+        {/* Public */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/dich-vu" element={<ServicesPage />} />
@@ -58,15 +58,21 @@ export default function AppRoutes() {
           <Route path="/hang-thanh-vien" element={<TiersPage />} />
         </Route>
 
-        {/* Auth routes */}
+        {/* Auth */}
         <Route element={<AuthLayout />}>
           <Route path="/dang-nhap" element={<LoginPage />} />
           <Route path="/dang-ky" element={<RegisterPage />} />
           <Route path="/quen-mat-khau" element={<ForgotPasswordPage />} />
 
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/login" element={<Navigate to="/dang-nhap" replace />} />
+          <Route
+            path="/register"
+            element={<Navigate to="/dang-ky" replace />}
+          />
+          <Route
+            path="/forgot-password"
+            element={<Navigate to="/quen-mat-khau" replace />}
+          />
         </Route>
 
         <Route
@@ -86,117 +92,170 @@ export default function AppRoutes() {
           element={<Navigate to="/hang-thanh-vien" replace />}
         />
 
-        {/* Customer flow chính: Prompt 2–3 của Ngữ + Prompt 4–7 của Đạt */}
+        {/* Khách hàng - route tiếng Việt chính */}
         <Route element={<CustomerLayout />}>
-          <Route path="/customer" element={<CustomerHomePage />} />
-          <Route path="/customer/dashboard" element={<CustomerHomePage />} />
-
-          <Route path="/customer/vehicles" element={<VehiclePage />} />
-
+          <Route path="/khach-hang" element={<CustomerHomePage />} />
+          <Route path="/khach-hang/tong-quan" element={<CustomerHomePage />} />
+          <Route path="/khach-hang/xe-cua-toi" element={<VehiclePage />} />
           <Route
-            path="/customer/services"
-            element={<Navigate to="/customer/booking" replace />}
+            path="/khach-hang/dich-vu"
+            element={<Navigate to="/khach-hang/dat-lich" replace />}
           />
-
-          <Route path="/customer/booking" element={<BookingCreatePage />} />
+          <Route path="/khach-hang/dat-lich" element={<BookingCreatePage />} />
           <Route
-            path="/customer/bookings/create"
+            path="/khach-hang/dat-lich-moi"
             element={<BookingCreatePage />}
           />
+          <Route
+            path="/khach-hang/lich-dat"
+            element={<BookingManagementPage />}
+          />
+          <Route
+            path="/khach-hang/lich-dat/:bookingId"
+            element={<BookingDetailPage />}
+          />
+          <Route
+            path="/khach-hang/lich-dat/:bookingId/thanh-toan"
+            element={<PaymentPage />}
+          />
+          <Route
+            path="/khach-hang/lich-dat/:bookingId/hoa-don"
+            element={<InvoicePage />}
+          />
+          <Route
+            path="/khach-hang/thanh-toan"
+            element={<Navigate to="/khach-hang/lich-dat" replace />}
+          />
+          <Route
+            path="/khach-hang/hoa-don"
+            element={<Navigate to="/khach-hang/lich-dat" replace />}
+          />
+          <Route path="/khach-hang/diem-thuong" element={<LoyaltyPage />} />
+          <Route path="/khach-hang/diem-thanh-vien" element={<LoyaltyPage />} />
+          <Route
+            path="/khach-hang/uu-dai"
+            element={<CustomerPromotionsPage />}
+          />
+          <Route path="/khach-hang/doi-thuong" element={<RewardsPage />} />
+          <Route path="/khach-hang/thong-bao" element={<NotificationPage />} />
+          <Route path="/khach-hang/ho-so" element={<AccountPage />} />
+          <Route path="/khach-hang/tai-khoan" element={<AccountPage />} />
 
+          {/* Customer route cũ - giữ để không vỡ code */}
+          <Route
+            path="/customer"
+            element={<Navigate to="/khach-hang" replace />}
+          />
+          <Route
+            path="/customer/dashboard"
+            element={<Navigate to="/khach-hang/tong-quan" replace />}
+          />
+          <Route
+            path="/customer/vehicles"
+            element={<Navigate to="/khach-hang/xe-cua-toi" replace />}
+          />
+          <Route
+            path="/customer/services"
+            element={<Navigate to="/khach-hang/dich-vu" replace />}
+          />
+          <Route
+            path="/customer/booking"
+            element={<Navigate to="/khach-hang/dat-lich" replace />}
+          />
+          <Route
+            path="/customer/bookings/create"
+            element={<Navigate to="/khach-hang/dat-lich" replace />}
+          />
           <Route
             path="/customer/bookings"
-            element={<BookingManagementPage />}
+            element={<Navigate to="/khach-hang/lich-dat" replace />}
           />
           <Route
             path="/customer/bookings/:bookingId"
             element={<BookingDetailPage />}
           />
-
+          <Route
+            path="/customer/bookings/:bookingId/payment"
+            element={<PaymentPage />}
+          />
+          <Route
+            path="/customer/bookings/:bookingId/invoice"
+            element={<InvoicePage />}
+          />
           <Route
             path="/customer/payments"
-            element={<Navigate to="/customer/bookings" replace />}
+            element={<Navigate to="/khach-hang/lich-dat" replace />}
           />
           <Route
             path="/customer/payments/:paymentId"
             element={<PaymentPage />}
           />
           <Route
-            path="/customer/bookings/:bookingId/payment"
-            element={<PaymentPage />}
-          />
-
-          <Route
             path="/customer/invoices"
-            element={<Navigate to="/customer/bookings" replace />}
+            element={<Navigate to="/khach-hang/lich-dat" replace />}
           />
           <Route
             path="/customer/invoices/:invoiceId"
             element={<InvoicePage />}
           />
           <Route
-            path="/customer/bookings/:bookingId/invoice"
-            element={<InvoicePage />}
+            path="/customer/loyalty"
+            element={<Navigate to="/khach-hang/diem-thuong" replace />}
           />
-
-          <Route path="/customer/loyalty" element={<LoyaltyPage />} />
           <Route
             path="/customer/promotions"
-            element={<CustomerPromotionsPage />}
+            element={<Navigate to="/khach-hang/uu-dai" replace />}
           />
-          <Route path="/customer/rewards" element={<RewardsPage />} />
+          <Route
+            path="/customer/rewards"
+            element={<Navigate to="/khach-hang/doi-thuong" replace />}
+          />
           <Route
             path="/customer/notifications"
-            element={<NotificationPage />}
+            element={<Navigate to="/khach-hang/thong-bao" replace />}
           />
-
-          <Route path="/customer/profile" element={<AccountPage />} />
+          <Route
+            path="/customer/profile"
+            element={<Navigate to="/khach-hang/ho-so" replace />}
+          />
         </Route>
 
-        {/* Alias route của Ngữ: chuyển /khach-hang sang flow hoàn chỉnh /customer */}
-        <Route
-          path="/khach-hang"
-          element={<Navigate to="/customer" replace />}
-        />
-        <Route
-          path="/khach-hang/xe-cua-toi"
-          element={<Navigate to="/customer/vehicles" replace />}
-        />
-        <Route
-          path="/khach-hang/dat-lich-moi"
-          element={<Navigate to="/customer/booking" replace />}
-        />
-        <Route
-          path="/khach-hang/lich-dat"
-          element={<Navigate to="/customer/bookings" replace />}
-        />
-        <Route
-          path="/khach-hang/thanh-toan"
-          element={<Navigate to="/customer/bookings" replace />}
-        />
-        <Route
-          path="/khach-hang/diem-thanh-vien"
-          element={<Navigate to="/customer/loyalty" replace />}
-        />
-        <Route
-          path="/khach-hang/uu-dai"
-          element={<Navigate to="/customer/promotions" replace />}
-        />
-        <Route
-          path="/khach-hang/thong-bao"
-          element={<Navigate to="/customer/notifications" replace />}
-        />
-        <Route
-          path="/khach-hang/tai-khoan"
-          element={<Navigate to="/customer/profile" replace />}
-        />
-
-        {/* Staff flow */}
+        {/* Nhân viên - route tiếng Việt chính */}
         <Route element={<StaffLayout />}>
-          <Route path="/staff" element={<StaffDashboardPage />} />
-          <Route path="/staff/dashboard" element={<StaffDashboardPage />} />
-          <Route path="/staff/bookings" element={<StaffBookingSearchPage />} />
-          <Route path="/staff/queue" element={<StaffQueuePage />} />
+          <Route path="/nhan-vien" element={<StaffDashboardPage />} />
+          <Route path="/nhan-vien/tong-quan" element={<StaffDashboardPage />} />
+          <Route
+            path="/nhan-vien/lich-hom-nay"
+            element={<StaffBookingSearchPage />}
+          />
+          <Route
+            path="/nhan-vien/lich-dat"
+            element={<StaffBookingSearchPage />}
+          />
+          <Route path="/nhan-vien/dang-xu-ly" element={<StaffQueuePage />} />
+          <Route
+            path="/nhan-vien/lich-dat/:bookingId"
+            element={<StaffWorkflowPage />}
+          />
+          <Route
+            path="/nhan-vien/lich-dat/:bookingId/quy-trinh"
+            element={<StaffWorkflowPage />}
+          />
+
+          {/* Staff route cũ - giữ để không vỡ code */}
+          <Route path="/staff" element={<Navigate to="/nhan-vien" replace />} />
+          <Route
+            path="/staff/dashboard"
+            element={<Navigate to="/nhan-vien/tong-quan" replace />}
+          />
+          <Route
+            path="/staff/bookings"
+            element={<Navigate to="/nhan-vien/lich-dat" replace />}
+          />
+          <Route
+            path="/staff/queue"
+            element={<Navigate to="/nhan-vien/dang-xu-ly" replace />}
+          />
           <Route
             path="/staff/bookings/:bookingId"
             element={<StaffWorkflowPage />}
@@ -207,20 +266,54 @@ export default function AppRoutes() {
           />
         </Route>
 
-        {/* Admin flow */}
+        {/* Quản trị - route tiếng Việt chính */}
         <Route element={<AdminLayout />}>
-          <Route path="/admin" element={<AdminDashboardPage />} />
-          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-          <Route path="/admin/garages" element={<GarageManagementPage />} />
-          <Route path="/admin/services" element={<AdminServicePage />} />
-          <Route path="/admin/slots" element={<AdminSlotPage />} />
-          <Route path="/admin/bookings" element={<AdminBookingPage />} />
-          <Route path="/admin/payments" element={<AdminPaymentPage />} />
-          <Route path="/admin/invoices" element={<AdminInvoicePage />} />
-          <Route path="/admin/reports" element={<AdminReportPage />} />
+          <Route path="/quan-tri" element={<AdminDashboardPage />} />
+          <Route path="/quan-tri/tong-quan" element={<AdminDashboardPage />} />
+          <Route path="/quan-tri/gara" element={<GarageManagementPage />} />
+          <Route path="/quan-tri/dich-vu" element={<AdminServicePage />} />
+          <Route path="/quan-tri/khung-gio" element={<AdminSlotPage />} />
+          <Route path="/quan-tri/lich-dat" element={<AdminBookingPage />} />
+          <Route path="/quan-tri/thanh-toan" element={<AdminPaymentPage />} />
+          <Route path="/quan-tri/hoa-don" element={<AdminInvoicePage />} />
+          <Route path="/quan-tri/bao-cao" element={<AdminReportPage />} />
+
+          {/* Admin route cũ - giữ để không vỡ code */}
+          <Route path="/admin" element={<Navigate to="/quan-tri" replace />} />
+          <Route
+            path="/admin/dashboard"
+            element={<Navigate to="/quan-tri/tong-quan" replace />}
+          />
+          <Route
+            path="/admin/garages"
+            element={<Navigate to="/quan-tri/gara" replace />}
+          />
+          <Route
+            path="/admin/services"
+            element={<Navigate to="/quan-tri/dich-vu" replace />}
+          />
+          <Route
+            path="/admin/slots"
+            element={<Navigate to="/quan-tri/khung-gio" replace />}
+          />
+          <Route
+            path="/admin/bookings"
+            element={<Navigate to="/quan-tri/lich-dat" replace />}
+          />
+          <Route
+            path="/admin/payments"
+            element={<Navigate to="/quan-tri/thanh-toan" replace />}
+          />
+          <Route
+            path="/admin/invoices"
+            element={<Navigate to="/quan-tri/hoa-don" replace />}
+          />
+          <Route
+            path="/admin/reports"
+            element={<Navigate to="/quan-tri/bao-cao" replace />}
+          />
         </Route>
 
-        {/* 404 */}
         <Route
           path="*"
           element={
