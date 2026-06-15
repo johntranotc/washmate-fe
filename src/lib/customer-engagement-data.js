@@ -85,3 +85,19 @@ export const tierLabels = {
   DIAMOND: "Kim cương",
   PLATINUM: "Bạch kim",
 };
+
+// Map mã hạng loyalty sang tên hạng dùng cho huy hiệu trang /tiers
+export const tierCodeToBadgeName = {
+  BRONZE: "Đồng",
+  SILVER: "Bạc",
+  GOLD: "Vàng",
+  PLATINUM: "Bạch Kim",
+  DIAMOND: "Kim Cương",
+};
+
+export const loyaltyTransactionLabels = {
+  EARN: "Tích điểm",
+  REDEEM: "Đổi thưởng",
+  ADJUSTMENT: "Điều chỉnh",
+  ROLLBACK: "Hoàn điểm",
+};

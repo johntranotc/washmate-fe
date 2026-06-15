@@ -302,16 +302,16 @@ export default function CustomerBookingFlowPage() {
     <div className="mx-auto max-w-7xl space-y-7 p-8">
       <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-[var(--brand-blue)]">Đặt lịch thông minh</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Đặt lịch rửa xe</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">Chọn xe, dịch vụ, gara và khung giờ phù hợp để tạo lịch rửa xe thông minh.</p>
+          <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-primary">Đặt lịch thông minh</p>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">Đặt lịch rửa xe</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Chọn xe, dịch vụ, gara và khung giờ phù hợp để tạo lịch rửa xe thông minh.</p>
         </div>
-        <Link to="/khach-hang" className="inline-flex items-center gap-2 self-start rounded-2xl border border-[var(--border-soft)] bg-white px-4 py-3 text-sm font-bold text-[var(--text-main)] shadow-sm"><ArrowLeft size={17} /> Quay lại trang khách hàng</Link>
+        <Link to="/khach-hang" className="inline-flex items-center gap-2 self-start rounded-2xl border border-border bg-card px-4 py-3 text-sm font-bold text-foreground shadow-sm"><ArrowLeft size={17} /> Quay lại trang khách hàng</Link>
       </header>
       <BookingStepper currentStep={step} />
       {usingMockData && step < 6 && (
-        <div className="flex flex-col gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-700 sm:flex-row sm:items-center sm:justify-between">
-          <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[var(--brand-blue)]">
+        <div className="flex flex-col gap-2 rounded-2xl border border-border bg-secondary px-5 py-4 text-sm text-secondary-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span className="w-fit rounded-full bg-card px-3 py-1 text-xs font-extrabold text-primary">
             Dữ liệu mẫu
           </span>
           <p>Dữ liệu này dùng để demo giao diện. API thật sẽ được kết nối sau.</p>
@@ -320,12 +320,12 @@ export default function CustomerBookingFlowPage() {
       {submitError && <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">{submitError}</div>}
       {content()}
       {step < 6 && !loading && !loadError && (
-        <div className="flex flex-col-reverse justify-between gap-3 border-t border-[var(--border-soft)] pt-6 sm:flex-row">
-          <button type="button" onClick={() => setStep((current) => Math.max(1, current - 1))} disabled={step === 1 || submitting} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-white px-6 py-3 font-bold text-[var(--text-main)] disabled:cursor-not-allowed disabled:opacity-40"><ArrowLeft size={18} /> Quay lại</button>
+        <div className="flex flex-col-reverse justify-between gap-3 border-t border-border pt-6 sm:flex-row">
+          <button type="button" onClick={() => setStep((current) => Math.max(1, current - 1))} disabled={step === 1 || submitting} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-card px-6 py-3 font-bold text-foreground disabled:cursor-not-allowed disabled:opacity-40"><ArrowLeft size={18} /> Quay lại</button>
           {step < 5 ? (
-            <button type="button" onClick={goNext} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--brand-blue)] px-6 py-3 font-bold text-white shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)]">Tiếp tục <ArrowRight size={18} /></button>
+            <button type="button" onClick={goNext} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)]">Tiếp tục <ArrowRight size={18} /></button>
           ) : (
-            <button type="button" onClick={createBooking} disabled={submitting} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--brand-blue)] px-6 py-3 font-bold text-white shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)] disabled:opacity-60">{submitting ? "Đang tạo lịch đặt..." : "Tạo lịch đặt"} <ArrowRight size={18} /></button>
+            <button type="button" onClick={createBooking} disabled={submitting} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)] disabled:opacity-60">{submitting ? "Đang tạo lịch đặt..." : "Tạo lịch đặt"} <ArrowRight size={18} /></button>
           )}
         </div>
       )}
