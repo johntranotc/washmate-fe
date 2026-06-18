@@ -1,5 +1,5 @@
-import { WorkspaceSelector } from "@/components/auth/workspace-selector";
+import { RoleSelector } from "@/components/auth/role-selector";
 
 export default function SelectWorkspacePage() {
-  return <WorkspaceSelector />;
+  return <RoleSelector />;
 }

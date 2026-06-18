@@ -1,0 +1,100 @@
+import { CalendarDays, Clock3 } from "lucide-react";
+import { nextDates } from "@/lib/booking-flow";
+import { cn } from "@/lib/utils";
+
+function slotLabel(slot) {
+  if (slot.status === "CLOSED") return { text: "Tạm đóng", color: "bg-slate-100 text-slate-500" };
+  if (slot.disabled) return { text: "Đã đầy", color: "bg-red-50 text-red-600" };
+  if (slot.almostFull) return { text: "Sắp đầy", color: "bg-amber-50 text-amber-700" };
+  return { text: "Còn chỗ", color: "bg-emerald-50 text-emerald-700" };
+}
+
+export function SlotStep({ date, onDateChange, slots, selectedId, onSelect, loading }) {
+  const dates = nextDates();
+  return (
+    <div className="space-y-6">
+      {/* Date picker */}
+      <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+        <h2 className="flex items-center gap-2 text-lg font-extrabold text-foreground">
+          <CalendarDays className="text-primary" /> Chọn ngày
+        </h2>
+        <div className="mt-5 grid grid-cols-4 gap-2 sm:grid-cols-7">
+          {dates.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => onDateChange(item.value)}
+              className={cn(
+                "rounded-2xl border px-2 py-3 text-center transition",
+                date === item.value
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-muted text-foreground hover:border-primary",
+              )}
+            >
+              <span className="block text-[10px] font-bold">{item.weekday}</span>
+              <strong className="mt-1 block text-lg">{item.day}</strong>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Slot picker */}
+      <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+        <h2 className="flex items-center gap-2 text-lg font-extrabold text-foreground">
+          <Clock3 className="text-primary" /> Khung giờ phù hợp
+        </h2>
+
+        {loading ? (
+          <p className="py-12 text-center text-sm text-muted-foreground">Đang tải dữ liệu...</p>
+        ) : !slots.length ? (
+          <p className="py-12 text-center text-sm text-muted-foreground">
+            Không có khung giờ phù hợp trong ngày này.
+          </p>
+        ) : (
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {slots.map((slot) => {
+              const selected = String(selectedId) === String(slot.id);
+              const { text: labelText, color: labelColor } = slotLabel(slot);
+              return (
+                <button
+                  key={slot.id}
+                  type="button"
+                  disabled={slot.disabled}
+                  onClick={() => onSelect(slot)}
+                  className={cn(
+                    "rounded-2xl border-2 p-4 text-left transition",
+                    selected && "border-primary bg-primary text-primary-foreground",
+                    !selected && !slot.disabled && "border-border text-foreground hover:border-primary",
+                    slot.disabled && "cursor-not-allowed border-border bg-muted text-muted-foreground opacity-55",
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <strong className="text-sm">
+                      {slot.startTime} - {slot.endTime || "..."}
+                    </strong>
+                    <span
+                      className={cn(
+                        "rounded-full px-2.5 py-1 text-[10px] font-bold",
+                        selected ? "bg-white/20 text-primary-foreground" : labelColor,
+                      )}
+                    >
+                      {labelText}
+                    </span>
+                  </div>
+                  <p
+                    className={cn(
+                      "mt-3 text-xs",
+                      selected ? "text-primary-foreground/80" : "text-muted-foreground",
+                    )}
+                  >
+                    Đã đặt {slot.bookedCount}/{slot.maxCapacity} chỗ
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}

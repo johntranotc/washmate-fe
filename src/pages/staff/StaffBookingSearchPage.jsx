@@ -77,15 +77,15 @@ function formatCurrency(value) {
 
 function getStatusLabel(status) {
   const labels = {
-    PENDING: "PENDING - Chờ xử lý",
-    CONFIRMED: "CONFIRMED - Đã xác nhận",
-    CHECKED_IN: "CHECKED_IN - Đã check-in",
-    WASHING: "WASHING - Đang rửa xe",
-    COMPLETED: "COMPLETED - Hoàn tất",
-    CANCELLED: "CANCELLED - Đã hủy",
-    NO_SHOW: "NO_SHOW - Không đến",
-    PAID: "PAID - Đã thanh toán",
-    NOT_ISSUED: "NOT_ISSUED - Chưa phát hành",
+    PENDING: "Chờ xử lý",
+    CONFIRMED: "Đã xác nhận",
+    CHECKED_IN: "Đã check-in",
+    WASHING: "Đang rửa xe",
+    COMPLETED: "Hoàn tất",
+    CANCELLED: "Đã hủy",
+    NO_SHOW: "Không đến",
+    PAID: "Đã thanh toán",
+    NOT_ISSUED: "Chưa phát hành",
   };
 
   return labels[status] || status;
@@ -94,18 +94,18 @@ function getStatusLabel(status) {
 function StatusBadge({ status }) {
   const statusClass =
     status === "PAID" || status === "CONFIRMED" || status === "COMPLETED"
-      ? "bg-green-100 text-green-700 border-green-200"
+      ? "bg-emerald-100 text-emerald-700"
       : status === "CHECKED_IN" || status === "WASHING"
-        ? "bg-blue-100 text-blue-700 border-blue-200"
+        ? "bg-blue-100 text-blue-700"
         : status === "CANCELLED" || status === "NO_SHOW"
-          ? "bg-red-100 text-red-700 border-red-200"
+          ? "bg-rose-100 text-rose-700"
           : status === "NOT_ISSUED"
-            ? "bg-slate-100 text-slate-700 border-slate-200"
-            : "bg-amber-100 text-amber-700 border-amber-200";
+            ? "bg-slate-100 text-slate-600"
+            : "bg-amber-100 text-amber-700";
 
   return (
     <span
-      className={`rounded-full border px-3 py-1 text-xs font-bold ${statusClass}`}
+      className={`inline-block rounded-full px-3 py-1.5 text-[10px] font-extrabold ${statusClass}`}
     >
       {getStatusLabel(status)}
     </span>
@@ -158,8 +158,7 @@ function StaffBookingSearchPage() {
       </div>
 
       <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-center text-sm text-blue-800">
-        <strong>Quy tắc nghiệp vụ:</strong> Staff chỉ được xử lý workflow khi
-        booking đã CONFIRMED và payment đã PAID.
+        <strong>Quy tắc nghiệp vụ:</strong> Chỉ được xử lý quy trình khi lịch đã được xác nhận và đã thanh toán.
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -186,13 +185,13 @@ function StaffBookingSearchPage() {
               className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-900"
             >
               <option value="ALL">Tất cả trạng thái</option>
-              <option value="PENDING">PENDING - Chờ xử lý</option>
-              <option value="CONFIRMED">CONFIRMED - Đã xác nhận</option>
-              <option value="CHECKED_IN">CHECKED_IN - Đã check-in</option>
-              <option value="WASHING">WASHING - Đang rửa xe</option>
-              <option value="COMPLETED">COMPLETED - Hoàn tất</option>
-              <option value="CANCELLED">CANCELLED - Đã hủy</option>
-              <option value="NO_SHOW">NO_SHOW - Không đến</option>
+              <option value="PENDING">Chờ xử lý</option>
+              <option value="CONFIRMED">Đã xác nhận</option>
+              <option value="CHECKED_IN">Đã check-in</option>
+              <option value="WASHING">Đang rửa xe</option>
+              <option value="COMPLETED">Hoàn tất</option>
+              <option value="CANCELLED">Đã hủy</option>
+              <option value="NO_SHOW">Không đến</option>
             </select>
           </div>
         </div>
@@ -242,8 +241,8 @@ function StaffBookingSearchPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-5">
+      <div className="w-full">
+        <div className="border-b border-slate-200 p-5 bg-white rounded-t-2xl">
           <h2 className="text-xl font-bold text-slate-900">
             Danh sách booking
           </h2>
@@ -253,7 +252,7 @@ function StaffBookingSearchPage() {
         </div>
 
         {filteredBookings.length === 0 ? (
-          <div className="p-10 text-center">
+          <div className="p-10 text-center bg-white rounded-b-2xl border border-t-0 border-slate-200 shadow-sm">
             <h3 className="text-lg font-bold text-slate-900">
               Không tìm thấy booking phù hợp
             </h3>
@@ -262,77 +261,76 @@ function StaffBookingSearchPage() {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-200">
-            {filteredBookings.map((booking) => {
-              const allowWorkflow = canProcessWorkflow(booking);
+          <div className="w-full">
+            <div className="hidden sm:grid text-[11px] uppercase font-bold text-slate-400 tracking-wider sm:grid-cols-[1.7fr_1.1fr_1.2fr_1.2fr_1.2fr] divide-x divide-slate-100 px-2">
+              <span className="px-4 py-3">Booking / Khách</span>
+              <span className="px-4 py-3 text-center">Lịch hẹn</span>
+              <span className="px-4 py-3 text-center">Thanh toán</span>
+              <span className="px-4 py-3 text-center">Gara</span>
+              <span className="px-4 py-3 text-center">Thao tác</span>
+            </div>
+            <div className="flex flex-col gap-4 mt-2">
+              {filteredBookings.map((booking) => {
+                const allowWorkflow = canProcessWorkflow(booking);
 
-              return (
-                <div
-                  key={booking.bookingId}
-                  className="grid grid-cols-1 gap-4 p-5 lg:grid-cols-[1.4fr_1fr_1fr_auto]"
-                >
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-lg font-bold text-slate-900">
-                        {booking.bookingCode}
-                      </h3>
-                      <StatusBadge status={booking.bookingStatus} />
-                    </div>
-
-                    <p className="mt-2 font-semibold text-slate-900">
-                      {booking.customerName}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      SĐT: {booking.phone}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      Xe: {booking.licensePlate} - {booking.vehicleName}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-slate-500">Lịch hẹn</p>
-                    <p className="mt-1 font-bold text-slate-900">
-                      {booking.bookingDate}
-                    </p>
-                    <p className="text-sm text-slate-500">{booking.slotTime}</p>
-                    <p className="mt-2 text-sm text-slate-500">
-                      {booking.garageName}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-slate-500">Thanh toán</p>
-                    <div className="mt-2">
-                      <StatusBadge status={booking.paymentStatus} />
-                    </div>
-                    <p className="mt-2 font-bold text-slate-900">
-                      {formatCurrency(booking.finalAmount)}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      Hóa đơn: {getStatusLabel(booking.invoiceStatus)}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => goToWorkflow(booking.bookingId)}
-                      disabled={!allowWorkflow}
-                      className="rounded-lg bg-slate-900 px-4 py-2 font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
-                    >
-                      Xử lý workflow
-                    </button>
-
-                    {!allowWorkflow && (
-                      <p className="max-w-[180px] text-center text-xs text-red-500">
-                        Chỉ xử lý khi booking đã xác nhận và payment đã PAID.
+                return (
+                  <article
+                    key={booking.bookingId}
+                    className="grid sm:grid-cols-[1.7fr_1.1fr_1.2fr_1.2fr_1.2fr] items-stretch bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all divide-y sm:divide-y-0 sm:divide-x divide-slate-100 overflow-hidden"
+                  >
+                    <div className="p-4 sm:p-5 min-w-0 flex flex-col">
+                      <b className="text-sm text-blue-600 block mb-1">{booking.bookingCode}</b>
+                      <p className="text-sm font-bold truncate">{booking.customerName}</p>
+                      <p className="text-xs text-slate-500 truncate mt-0.5">{booking.phone}</p>
+                      <p className="text-xs text-slate-600 mt-1 truncate">
+                        {booking.vehicleName} · {booking.licensePlate}
                       </p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                      <p className="text-xs text-slate-500 truncate">{booking.serviceName}</p>
+                    </div>
+
+                    <div className="p-4 sm:p-5 min-w-0 flex flex-col items-center text-center">
+                      <p className="text-[10px] text-slate-400 uppercase font-bold mb-1 sm:hidden">Lịch hẹn</p>
+                      <p className="font-bold text-sm">{booking.bookingDate}</p>
+                      <p className="text-xs text-blue-600 font-semibold mt-0.5">{booking.slotTime}</p>
+                    </div>
+
+                    <div className="p-4 sm:p-5 min-w-0 flex flex-col items-center text-center">
+                      <p className="text-[10px] text-slate-400 uppercase font-bold mb-1 sm:hidden">Thanh toán</p>
+                      <div>
+                        <StatusBadge status={booking.paymentStatus} />
+                      </div>
+                      <p className="text-sm font-bold mt-1.5">{formatCurrency(booking.finalAmount)}</p>
+                      <p className="text-[11px] text-slate-500 mt-1 truncate">HĐ: {getStatusLabel(booking.invoiceStatus)}</p>
+                    </div>
+
+                    <div className="p-4 sm:p-5 min-w-0 flex flex-col items-center text-center">
+                      <p className="text-[10px] text-slate-400 uppercase font-bold mb-1 sm:hidden">Gara</p>
+                      <div>
+                        <StatusBadge status={booking.bookingStatus} />
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-1.5 truncate">{booking.garageName}</p>
+                    </div>
+
+                    <div className="p-4 sm:p-5 flex flex-col items-center text-center">
+                      <button
+                        type="button"
+                        onClick={() => goToWorkflow(booking.bookingId)}
+                        disabled={!allowWorkflow}
+                        className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all disabled:cursor-not-allowed disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:shadow-none"
+                      >
+                        Xử lý quy trình
+                      </button>
+
+                      {!allowWorkflow && (
+                        <p className="w-full text-center text-[10px] text-amber-600 leading-tight mt-2 px-1">
+                          Chỉ xử lý khi lịch đã xác nhận và đã thanh toán.
+                        </p>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
