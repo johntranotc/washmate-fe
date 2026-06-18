@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/site/logo";
 import { dashboardCustomer } from "@/lib/customer-dashboard-data";
+import { loyaltyMockAccount } from "@/mocks/loyaltyMockData";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
@@ -27,13 +29,30 @@ const menuItems = [
   { href: "/khach-hang/tai-khoan", label: "Tài khoản", icon: User },
 ];
 
+function resolveDisplayName() {
+  try {
+    const raw = localStorage.getItem("washmate_user_profile");
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p.name) return p.name;
+    }
+  } catch {
+    // ignore
+  }
+  return dashboardCustomer.name;
+}
+
 function DashboardHeader() {
   const navigate = useNavigate();
+  const [customerName, setCustomerName] = useState(resolveDisplayName);
 
-  const customerName =
-    localStorage.getItem("userEmail") ||
-    sessionStorage.getItem("userEmail") ||
-    dashboardCustomer.name;
+  useEffect(() => {
+    function handleProfileUpdate() {
+      setCustomerName(resolveDisplayName());
+    }
+    window.addEventListener("washmate-profile-updated", handleProfileUpdate);
+    return () => window.removeEventListener("washmate-profile-updated", handleProfileUpdate);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
@@ -68,7 +87,7 @@ function DashboardHeader() {
             <div>
               <p className="text-sm font-semibold text-foreground">{customerName}</p>
               <p className="text-xs text-muted-foreground">
-                Hạng {dashboardCustomer.memberTier} • {dashboardCustomer.points.toLocaleString("vi-VN")} điểm
+                Hạng {loyaltyMockAccount.tierName} • {loyaltyMockAccount.availablePoints.toLocaleString("vi-VN")} điểm
               </p>
             </div>
           </div>
