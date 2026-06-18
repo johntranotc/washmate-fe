@@ -13,6 +13,7 @@ import {
   normalizePayment,
 } from "@/lib/customer-booking-data";
 import { loadCustomerBookingList } from "@/lib/customer-bookings";
+import { cancelBookingByCustomer } from "@/lib/shared-booking-store";
 
 export default function CustomerBookingDetailPage() {
   const { bookingId } = useParams();
@@ -152,6 +153,19 @@ export default function CustomerBookingDetailPage() {
         <Link to="/khach-hang" className="rounded-2xl border border-[var(--border-soft)] bg-white px-5 py-3 text-sm font-bold">Quay về trang khách hàng</Link>
         <Link to="/khach-hang/lich-dat" className="rounded-2xl border border-[var(--border-soft)] bg-white px-5 py-3 text-sm font-bold">Xem lịch đặt</Link>
         <Link to="/khach-hang/dat-lich-moi" className="rounded-2xl bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white">Đặt lịch mới</Link>
+        {booking && (booking.bookingStatus === "PENDING_STAFF_CONFIRMATION" || booking.bookingStatus === "CONFIRMED") && (
+          <button
+            onClick={() => {
+              if (window.confirm("Bạn có chắc chắn muốn hủy lịch đặt này không?")) {
+                cancelBookingByCustomer(booking.id);
+                setBooking({ ...booking, bookingStatus: "CANCELLED" });
+              }
+            }}
+            className="rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-bold text-red-600 hover:bg-red-100"
+          >
+            Hủy lịch
+          </button>
+        )}
       </div>
     </div>
   );

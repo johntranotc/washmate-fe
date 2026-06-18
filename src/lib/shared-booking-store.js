@@ -60,7 +60,7 @@ export function confirmBookingByStaff(bookingId) {
     id: `notif-confirm-${bookingId}`,
     type: "BOOKING",
     title: "Lịch đặt đã được gara xác nhận",
-    message: `Lịch rửa xe của bạn tại ${booking.garageName || "gara WashMate"}${booking.bookingDate ? ` vào ${booking.bookingDate}` : ""}${booking.slotTime ? ` lúc ${booking.slotTime}` : ""} đã được xác nhận. Bạn có thể tiếp tục thanh toán hoặc đến đúng giờ theo lịch.`,
+    message: `Gara đã xác nhận lịch đặt của bạn. Vui lòng hoàn tất thanh toán để giữ khung giờ.`,
     read: false,
     createdAt: new Date().toISOString(),
     link: `/khach-hang/lich-dat/${booking.id}`,
@@ -128,4 +128,30 @@ export function updateSharedBookingStatus(bookingId, nextStatus, extra = {}) {
       : b,
   );
   saveSharedBookings(updated);
+}
+
+// Called by customer when cancelling a booking.
+export function cancelBookingByCustomer(bookingId) {
+  const bookings = getSharedBookings();
+  const booking = bookings.find((b) => String(b.id) === String(bookingId));
+  if (!booking) return;
+  if (booking.bookingStatus === "CANCELLED") return;
+
+  saveSharedBookings(
+    bookings.map((b) =>
+      String(b.id) === String(bookingId)
+        ? { ...b, bookingStatus: "CANCELLED" }
+        : b,
+    ),
+  );
+
+  pushDemoNotification({
+    id: `notif-cancel-${bookingId}-${Date.now()}`,
+    type: "BOOKING",
+    title: "Bạn đã hủy lịch đặt",
+    message: `Lịch đặt ${booking.code} của bạn tại ${booking.garageName || "gara WashMate"} đã được hủy thành công.`,
+    read: false,
+    createdAt: new Date().toISOString(),
+    link: `/khach-hang/lich-dat/${booking.id}`,
+  });
 }

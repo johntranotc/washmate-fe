@@ -46,6 +46,13 @@ import StaffBookingListPage from "../pages/staff/StaffBookingListPage";
 import StaffBookingWorkflowPage from "../pages/staff/StaffBookingWorkflowPage";
 
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
+import AdminBookingPage from "../pages/admin/AdminBookingPage";
+import AdminCustomerPage from "../pages/admin/AdminCustomerPage";
+import AdminGaragePage from "../pages/admin/AdminGaragePage";
+import AdminPaymentPage from "../pages/admin/AdminPaymentPage";
+import AdminRevenuePage from "../pages/admin/AdminRevenuePage";
+import AdminLoyaltyPage from "../pages/admin/AdminLoyaltyPage";
+import AdminSettingsPage from "../pages/admin/AdminSettingsPage";
 import ScrollToHash from "./ScrollToHash";
 import { RequireRole } from "../components/auth/RequireRole";
 import { ROLES } from "../lib/auth-role";
@@ -144,6 +151,13 @@ function AppRoutes() {
           }
         >
           <Route path="/quan-tri" element={<AdminDashboardPage />} />
+          <Route path="/quan-tri/dat-lich" element={<AdminBookingPage />} />
+          <Route path="/quan-tri/khach-hang" element={<AdminCustomerPage />} />
+          <Route path="/quan-tri/gara" element={<AdminGaragePage />} />
+          <Route path="/quan-tri/thanh-toan" element={<AdminPaymentPage />} />
+          <Route path="/quan-tri/doanh-thu" element={<AdminRevenuePage />} />
+          <Route path="/quan-tri/diem-thanh-vien" element={<AdminLoyaltyPage />} />
+          <Route path="/quan-tri/cai-dat" element={<AdminSettingsPage />} />
         </Route>
 
         <Route path="*" element={<div>404 - Không tìm thấy trang</div>} />

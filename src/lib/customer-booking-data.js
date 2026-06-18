@@ -3,7 +3,7 @@ import { asList } from "./booking-flow";
 export const bookingStatusLabels = {
   PENDING_STAFF_CONFIRMATION: "Chờ gara xác nhận",
   PENDING: "Chờ thanh toán",
-  CONFIRMED: "Đã được gara xác nhận",
+  CONFIRMED: "Đã xác nhận",
   PAYMENT_PENDING: "Chờ thanh toán",
   PAID: "Đã thanh toán",
   CHECKED_IN: "Đã check-in",
@@ -11,7 +11,7 @@ export const bookingStatusLabels = {
   COMPLETED: "Hoàn tất",
   CANCELLED: "Đã hủy",
   REJECTED: "Gara từ chối",
-  NO_SHOW: "Không đến",
+  NO_SHOW: "Khách không đến",
 };
 
 export const paymentStatusLabels = {

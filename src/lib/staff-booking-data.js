@@ -3,17 +3,24 @@ export const bookingStatusLabels = {
   PENDING: "Chờ thanh toán",
   CONFIRMED: "Đã xác nhận",
   CHECKED_IN: "Đã check-in",
-  WASHING: "Đang rửa",
-  COMPLETED: "Đã hoàn tất",
+  WASHING: "Đang rửa xe",
+  COMPLETED: "Hoàn tất",
   CANCELLED: "Đã hủy",
   REJECTED: "Gara từ chối",
-  NO_SHOW: "Không đến",
+  NO_SHOW: "Khách không đến",
 };
 
 export const paymentStatusLabels = {
   PENDING: "Chờ thanh toán",
   PAID: "Đã thanh toán",
+  UNPAID: "Chưa thanh toán",
+  FAILED: "Thanh toán lỗi",
   REFUNDED: "Đã hoàn tiền",
+};
+
+export const invoiceStatusLabels = {
+  NOT_ISSUED: "Chưa phát hành",
+  ISSUED: "Đã phát hành",
 };
 
 export const normalizeBookingList = (payload) => {

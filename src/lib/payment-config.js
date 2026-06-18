@@ -37,23 +37,15 @@ function stripVietnamese(str) {
  * Output is uppercase, no diacritics, no special chars, max 50 chars.
  * Same inputs always produce the same output.
  */
-export function generateTransferContent(bookingCode, customerName = "") {
-  // Strip Vietnamese → uppercase → keep A-Z0-9 space → take first 2 words → max 8 chars
-  const namePart = stripVietnamese(customerName)
+export function generateTransferContent(bookingCode, username = "") {
+  const namePart = stripVietnamese(username.split("@")[0]) // in case of email, use prefix
     .toUpperCase()
-    .replace(/[^A-Z0-9 ]/g, "")
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w.slice(0, 4))
-    .join("")
-    .slice(0, 8) || "CUSTOMER";
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 15) || "USER";
 
-  // Keep alphanumeric only, uppercase, last 8 chars
   const codePart = (bookingCode || "")
-    .replace(/[^A-Z0-9]/gi, "")
-    .toUpperCase()
-    .slice(-8) || "WASHMATE";
+    .replace(/[^A-Z0-9\-]/gi, "")
+    .toUpperCase();
 
   return `WASHMATE ${namePart} ${codePart}`.slice(0, 50);
 }

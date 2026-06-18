@@ -23,7 +23,7 @@ export default function StaffDashboardPage() {
   const metrics = [
     [CalendarDays, "Lịch hôm nay", bookings.length],
     [Clock3, "Chờ check-in", count("CONFIRMED")],
-    [Droplets, "Đang rửa", count("WASHING")],
+    [Droplets, "Đang rửa xe", count("WASHING")],
     [CheckCircle2, "Hoàn tất hôm nay", count("COMPLETED")],
     [CircleSlash, "Không đến", count("NO_SHOW")],
   ];
@@ -36,10 +36,15 @@ export default function StaffDashboardPage() {
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">{metrics.map(([Icon, label, value]) => <article key={label} className="rounded-2xl border border-slate-200 bg-white p-5"><Icon className="text-blue-600" size={20} /><p className="mt-4 text-xs text-slate-500">{label}</p><b className="mt-1 block text-2xl">{value}</b></article>)}</section>
       <section className="grid gap-5 lg:grid-cols-[1.4fr_0.6fr]">
         <article className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="flex items-center justify-between"><h2 className="font-extrabold">Việc cần làm tiếp theo</h2><Link to="/nhan-vien/danh-sach" className="text-xs font-bold text-blue-600">Xem tất cả</Link></div>
+          <div className="flex items-center justify-between"><h2 className="font-extrabold">Việc cần làm tiếp theo</h2><Link to="/nhan-vien/danh-sach" className="text-xs font-bold text-blue-600">Xem danh sách lịch</Link></div>
           <div className="mt-4 space-y-3">{nextBookings.length ? nextBookings.map((item) => <Link key={item.id} to={`/nhan-vien/danh-sach/${item.id}`} className="flex items-center gap-4 rounded-xl bg-slate-50 p-4 hover:bg-blue-50"><span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-blue-600"><ListTodo size={18} /></span><div className="flex-1"><b className="text-sm">{item.code} · {item.customerName}</b><p className="mt-1 text-xs text-slate-500">{item.slotTime} · {item.vehicle} · {item.serviceName}</p></div><span className="text-[10px] font-bold text-blue-600">{bookingStatusLabels[item.bookingStatus]}</span></Link>) : <p className="py-10 text-center text-sm text-slate-500">Không còn việc cần xử lý.</p>}</div>
         </article>
-        <aside className="rounded-2xl bg-gradient-to-br from-blue-700 to-cyan-500 p-6 text-white"><p className="text-xs text-blue-100">Thao tác nhanh</p><h2 className="mt-2 text-2xl font-black">Sẵn sàng tiếp nhận xe?</h2><p className="mt-3 text-xs leading-5 text-blue-100">Mở danh sách lịch đã xác nhận để check-in khách đúng khung giờ.</p><Link to="/nhan-vien/danh-sach" className="mt-6 block rounded-xl bg-white py-3 text-center text-xs font-bold text-blue-700">Mở lịch hôm nay</Link></aside>
+        <aside className="rounded-2xl bg-gradient-to-br from-blue-700 to-cyan-500 p-6 text-white"><p className="text-xs text-blue-100">Thao tác nhanh</p><h2 className="mt-2 text-2xl font-black">Sẵn sàng tiếp nhận xe?</h2><p className="mt-3 text-xs leading-5 text-blue-100">Mở danh sách lịch đã xác nhận để check-in khách đúng khung giờ.</p>
+        <div className="mt-6 flex flex-col gap-2">
+          <Link to="/nhan-vien/hang-doi" className="block rounded-xl bg-white py-3 text-center text-xs font-bold text-blue-700 hover:bg-blue-50">Mở hàng đợi hôm nay</Link>
+          <Link to="/staff/bookings" className="block rounded-xl border border-blue-400 bg-blue-600/30 py-3 text-center text-xs font-bold text-white hover:bg-blue-600/50">Tra cứu lịch đặt</Link>
+        </div>
+        </aside>
       </section>
     </div>
   );

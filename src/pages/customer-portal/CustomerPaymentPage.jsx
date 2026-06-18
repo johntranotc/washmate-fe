@@ -198,10 +198,10 @@ export default function CustomerPaymentPage() {
     loadPayment();
   }, [loadPayment]);
 
-  // Stable transfer content derived from booking fields — no random component
   const transferContent = useMemo(() => {
     if (!booking) return "";
-    return generateTransferContent(booking.code, booking.customerName || "");
+    const username = localStorage.getItem("userEmail") || sessionStorage.getItem("userEmail") || booking.customerName || "";
+    return generateTransferContent(booking.code, username);
   }, [booking]);
 
   async function confirmPayment() {

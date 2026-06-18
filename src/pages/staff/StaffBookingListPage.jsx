@@ -11,7 +11,24 @@ import {
   normalizeStaffBooking,
   paymentStatusLabels,
 } from "@/lib/staff-booking-data";
+import { formatBookingDate, formatMoney } from "@/lib/customer-booking-data";
 import { cn } from "@/lib/utils";
+
+function getPaymentTone(status) {
+  switch (status) {
+    case "PAID":
+      return "bg-emerald-100 text-emerald-700";
+    case "PENDING":
+    case "UNPAID":
+      return "bg-amber-100 text-amber-700";
+    case "FAILED":
+      return "bg-red-100 text-red-700";
+    case "REFUNDED":
+      return "bg-slate-100 text-slate-600";
+    default:
+      return "bg-slate-100 text-slate-600";
+  }
+}
 
 const STATUS_FILTERS = [
   "ALL",
@@ -139,7 +156,7 @@ export default function StaffBookingListPage() {
       </section>
 
       {/* Table */}
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <section className="w-full">
         {loading ? (
           <p className="py-16 text-center text-sm text-slate-500">
             Đang tải lịch đặt...
@@ -149,80 +166,71 @@ export default function StaffBookingListPage() {
             Không có lịch đặt phù hợp.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-xs">
-              <thead className="bg-slate-50 text-[10px] uppercase text-slate-500">
-                <tr>
-                  <th className="p-4">Booking / Khách</th>
-                  <th className="p-4">Xe</th>
-                  <th className="p-4">Dịch vụ</th>
-                  <th className="p-4">Khung giờ</th>
-                  <th className="p-4">Trạng thái</th>
-                  <th className="p-4">Thanh toán</th>
-                  <th className="p-4">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {visibleBookings.map((booking) => (
-                  <tr
-                    key={booking.id}
-                    className={cn(
-                      booking.bookingStatus === "PENDING_STAFF_CONFIRMATION" &&
-                        "bg-orange-50/50",
-                    )}
-                  >
-                    <td className="p-4">
-                      <b>{booking.code}</b>
-                      <span className="mt-1 block text-slate-500">
-                        {booking.customerName}
-                      </span>
-                      {booking.phone && (
-                        <span className="block text-slate-400">
-                          {booking.phone}
-                        </span>
+          <div className="w-full">
+            <div className="hidden sm:grid text-[11px] uppercase font-bold text-slate-400 tracking-wider sm:grid-cols-[1.7fr_1.1fr_1.2fr_1.2fr_1.2fr] divide-x divide-slate-100 px-2 bg-white rounded-2xl border border-slate-200 mb-4 shadow-sm">
+              <span className="px-4 py-3">Booking / Khách</span>
+              <span className="px-4 py-3 text-center">Lịch hẹn</span>
+              <span className="px-4 py-3 text-center">Thanh toán</span>
+              <span className="px-4 py-3 text-center">Gara</span>
+              <span className="px-4 py-3 text-center">Thao tác</span>
+            </div>
+            <div className="flex flex-col gap-4 mt-2">
+              {visibleBookings.map((booking) => (
+                <article
+                  key={booking.id}
+                  className={cn(
+                    "grid sm:grid-cols-[1.7fr_1.1fr_1.2fr_1.2fr_1.2fr] items-stretch bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all divide-y sm:divide-y-0 sm:divide-x divide-slate-100 overflow-hidden",
+                    booking.bookingStatus === "PENDING_STAFF_CONFIRMATION" && "border-orange-200 bg-orange-50/30"
+                  )}
+                >
+                  <div className="p-4 sm:p-5 min-w-0 flex flex-col">
+                    <b className="text-sm text-blue-600 block mb-1">{booking.code}</b>
+                    <p className="text-sm font-bold truncate">{booking.customerName}</p>
+                    {booking.phone && <p className="text-xs text-slate-500 truncate mt-0.5">{booking.phone}</p>}
+                    <p className="text-xs text-slate-600 mt-1 truncate">
+                      {booking.vehicle} · {booking.plate}
+                    </p>
+                    <p className="text-xs text-slate-500 truncate">{booking.serviceName}</p>
+                  </div>
+
+                  <div className="p-4 sm:p-5 min-w-0 flex flex-col items-center text-center">
+                    <p className="text-[10px] text-slate-400 uppercase font-bold mb-1 sm:hidden">Lịch hẹn</p>
+                    <p className="font-bold text-sm">{formatBookingDate(booking.bookingDate)}</p>
+                    <p className="text-xs text-blue-600 font-semibold mt-0.5">{booking.slotTime}</p>
+                  </div>
+
+                  <div className="p-4 sm:p-5 min-w-0 flex flex-col items-center text-center">
+                    <p className="text-[10px] text-slate-400 uppercase font-bold mb-1 sm:hidden">Thanh toán</p>
+                    <span className={cn("px-3 py-1.5 rounded-full text-[10px] font-extrabold inline-block", getPaymentTone(booking.paymentStatus))}>
+                      {paymentStatusLabels[booking.paymentStatus] || booking.paymentStatus}
+                    </span>
+                    <p className="text-sm font-bold mt-1.5">{formatMoney(booking.finalAmount)}</p>
+                  </div>
+
+                  <div className="p-4 sm:p-5 min-w-0 flex flex-col items-center text-center">
+                    <p className="text-[10px] text-slate-400 uppercase font-bold mb-1 sm:hidden">Gara</p>
+                    <span
+                      className={cn(
+                        "inline-block rounded-full px-3 py-1.5 text-[10px] font-extrabold",
+                        bookingStatusTone[booking.bookingStatus] || "bg-slate-100 text-slate-600"
                       )}
-                    </td>
-                    <td className="p-4">
-                      <b>{booking.vehicle}</b>
-                      <span className="mt-1 block text-slate-500">
-                        {booking.plate}
-                      </span>
-                    </td>
-                    <td className="p-4">{booking.serviceName}</td>
-                    <td className="p-4">
-                      {booking.bookingDate}
-                      <span className="mt-1 block font-bold text-blue-600">
-                        {booking.slotTime}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={cn(
-                          "rounded-full px-2.5 py-1 text-[10px] font-extrabold",
-                          bookingStatusTone[booking.bookingStatus] ||
-                            "bg-slate-100 text-slate-600",
-                        )}
-                      >
-                        {bookingStatusLabels[booking.bookingStatus] ||
-                          booking.bookingStatus}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      {paymentStatusLabels[booking.paymentStatus] ||
-                        booking.paymentStatus}
-                    </td>
-                    <td className="p-4">
-                      <Link
-                        to={`/nhan-vien/danh-sach/${booking.id}`}
-                        className="inline-flex items-center gap-1 font-bold text-blue-600 hover:underline"
-                      >
-                        Xem chi tiết <ArrowRight size={13} />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    >
+                      {bookingStatusLabels[booking.bookingStatus] || booking.bookingStatus}
+                    </span>
+                    <p className="text-[11px] text-slate-500 mt-1.5 truncate">{booking.garageName}</p>
+                  </div>
+
+                  <div className="p-4 sm:p-5 flex flex-col items-center text-center">
+                    <Link
+                      to={`/nhan-vien/danh-sach/${booking.id}`}
+                      className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all"
+                    >
+                      Xử lý <ArrowRight size={13} />
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         )}
       </section>

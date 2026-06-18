@@ -7,7 +7,7 @@ import { getStaffDemoBookings, updateStaffDemoBooking } from "@/lib/staff-demo-s
 import { bookingStatusLabels, normalizeStaffBooking, paymentStatusLabels } from "@/lib/staff-booking-data";
 
 const actionByStatus = {
-  CONFIRMED: { next: "CHECKED_IN", label: "Check-in khách", icon: LogIn, api: "checkInBooking" },
+  CONFIRMED: { next: "CHECKED_IN", label: "Xác nhận khách đến", icon: LogIn, api: "checkInBooking" },
   CHECKED_IN: { next: "WASHING", label: "Bắt đầu rửa xe", icon: Droplets, api: "startWashing" },
   WASHING: { next: "COMPLETED", label: "Hoàn tất dịch vụ", icon: CheckCircle2, api: "completeBooking" },
 };
@@ -52,7 +52,7 @@ export default function StaffBookingWorkflowPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Chi tiết vận hành</p><h1 className="mt-2 text-3xl font-extrabold">{booking.code}</h1><p className="mt-2 text-sm text-slate-500">{booking.customerName} · {booking.vehicle} · {booking.plate}</p></div><span className="w-fit rounded-full bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700">{bookingStatusLabels[booking.bookingStatus]}</span></header>
       {isMock && <DemoDataNotice />}
-      {booking.bookingStatus === "PENDING" && <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"><CircleAlert size={19} />Lịch này chưa thanh toán nên chưa thể check-in.</div>}
+      {booking.bookingStatus === "CONFIRMED" && booking.paymentStatus !== "PAID" && <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"><CircleAlert size={19} />Lịch này chưa thanh toán nên chưa thể check-in.</div>}
       <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
           <h2 className="font-extrabold">Thông tin booking</h2>
@@ -70,9 +70,9 @@ export default function StaffBookingWorkflowPage() {
         <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6">
           <h2 className="font-extrabold">Thao tác xử lý</h2>
           <p className="mt-2 text-xs leading-5 text-slate-500">{terminal ? (booking.bookingStatus === "COMPLETED" ? "Dịch vụ đã hoàn tất." : "Lịch đã kết thúc, không còn thao tác xử lý.") : action ? `Bước hợp lệ tiếp theo: ${action.label}.` : "Booking chưa đủ điều kiện xử lý."}</p>
-          {action && <button disabled={updating} onClick={() => transition(action.next, action.api)} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-xs font-bold text-white disabled:bg-slate-300"><ActionIcon size={16} />{updating ? "Đang cập nhật..." : action.label}</button>}
+          {action && <button disabled={updating || (action.next === "CHECKED_IN" && booking.paymentStatus !== "PAID")} onClick={() => transition(action.next, action.api)} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-xs font-bold text-white disabled:bg-slate-300"><ActionIcon size={16} />{updating ? "Đang cập nhật..." : action.label}</button>}
           {booking.bookingStatus === "CONFIRMED" && <button disabled={updating} onClick={() => transition("NO_SHOW", "markNoShow")} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 py-3 text-xs font-bold text-rose-600"><UserX size={16} />Đánh dấu không đến</button>}
-          <Link to="/staff/bookings" className="mt-4 block text-center text-xs font-bold text-blue-600">Quay lại danh sách</Link>
+          <Link to="/nhan-vien/danh-sach" className="mt-4 block text-center text-xs font-bold text-blue-600">Quay lại danh sách</Link>
         </aside>
       </div>
     </div>
