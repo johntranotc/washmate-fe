@@ -1,10 +1,34 @@
-import { Check, Circle, CircleX } from "lucide-react";
+import { Check, Circle, CircleX, Clock } from "lucide-react";
 import { bookingStatusLabels } from "@/lib/customer-booking-data";
 import { cn } from "@/lib/utils";
 
 const steps = ["PENDING", "CONFIRMED", "CHECKED_IN", "WASHING", "COMPLETED"];
 
 export function BookingTimeline({ booking }) {
+  if (booking.bookingStatus === "PENDING_STAFF_CONFIRMATION") {
+    return (
+      <div className="mt-6 flex items-center gap-4 rounded-2xl border border-orange-200 bg-orange-50 p-5 text-orange-700">
+        <span className="grid size-11 place-items-center rounded-2xl bg-white"><Clock size={22} /></span>
+        <div>
+          <strong>Chờ gara xác nhận</strong>
+          <p className="mt-1 text-sm">Gara đang xem xét lịch đặt của bạn. Vui lòng chờ trong giây lát.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (booking.bookingStatus === "REJECTED") {
+    return (
+      <div className="mt-6 flex items-center gap-4 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700">
+        <span className="grid size-11 place-items-center rounded-2xl bg-white"><CircleX /></span>
+        <div>
+          <strong>Gara từ chối lịch đặt</strong>
+          <p className="mt-1 text-sm">Gara không thể nhận lịch này. Vui lòng đặt lịch mới hoặc chọn gara khác.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (["CANCELLED", "NO_SHOW"].includes(booking.bookingStatus)) {
     return (
       <div className="mt-6 flex items-center gap-4 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700">
@@ -17,11 +41,7 @@ export function BookingTimeline({ booking }) {
     );
   }
 
-  const effectiveStatus =
-    booking.paymentStatus !== "PAID" && booking.bookingStatus === "CONFIRMED"
-      ? "PENDING"
-      : booking.bookingStatus;
-  const currentIndex = Math.max(0, steps.indexOf(effectiveStatus));
+  const currentIndex = Math.max(0, steps.indexOf(booking.bookingStatus));
 
   return (
     <ol className="mt-7 grid gap-4 md:grid-cols-5">

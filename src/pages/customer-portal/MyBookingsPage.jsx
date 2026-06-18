@@ -56,30 +56,72 @@ export default function MyBookingsPage() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {bookings.map((booking) => (
-            <Link
-              key={booking.id}
-              to={`/khach-hang/lich-dat/${booking.id}`}
-              className="block rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm transition hover:border-[var(--brand-blue)]"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <strong className="text-lg">{booking.code}</strong>
-                  {booking.isMock && <span className="ml-2 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-extrabold text-[var(--brand-blue)]">Dữ liệu mẫu</span>}
-                  <p className="mt-1 font-semibold">{booking.serviceName}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <StatusBadge status={booking.bookingStatus} />
-                  <StatusBadge status={booking.paymentStatus} type="payment" />
-                </div>
+          {bookings.map((booking) => {
+            const isPendingConfirm = booking.bookingStatus === "PENDING_STAFF_CONFIRMATION";
+            const isConfirmedUnpaid =
+              booking.bookingStatus === "CONFIRMED" &&
+              (booking.paymentStatus === "PENDING" || !booking.paymentStatus);
+            const isRejected = booking.bookingStatus === "REJECTED";
+
+            return (
+              <div key={booking.id} className="rounded-3xl border border-[var(--border-soft)] bg-white shadow-sm transition hover:border-[var(--brand-blue)]">
+                <Link
+                  to={`/khach-hang/lich-dat/${booking.id}`}
+                  className="block p-6"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <strong className="text-lg">{booking.code}</strong>
+                      {booking.isMock && <span className="ml-2 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-extrabold text-[var(--brand-blue)]">Dữ liệu mẫu</span>}
+                      <p className="mt-1 font-semibold">{booking.serviceName}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <StatusBadge status={booking.bookingStatus} />
+                      <StatusBadge status={booking.paymentStatus} type="payment" />
+                    </div>
+                  </div>
+                  <div className="mt-4 grid gap-3 text-sm text-[var(--text-muted)] sm:grid-cols-3">
+                    <span className="inline-flex items-center gap-2"><MapPin size={16} /> {booking.garageName}</span>
+                    <span className="inline-flex items-center gap-2"><CalendarDays size={16} /> {formatBookingDate(booking.bookingDate)} · {booking.slotTime}</span>
+                    <span className="font-bold text-[var(--brand-blue)] sm:text-right">{formatMoney(booking.finalAmount)}</span>
+                  </div>
+                </Link>
+
+                {/* Conditional action row */}
+                {(isPendingConfirm || isConfirmedUnpaid || isRejected) && (
+                  <div className="border-t border-[var(--border-soft)] px-6 py-3">
+                    {isPendingConfirm && (
+                      <p className="text-xs text-orange-600 font-semibold">
+                        Vui lòng chờ gara xác nhận trước khi thanh toán.
+                      </p>
+                    )}
+                    {isRejected && (
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs text-red-600 font-semibold">Gara đã từ chối lịch này.</p>
+                        <Link
+                          to="/khach-hang/dat-lich-moi"
+                          className="rounded-xl bg-red-600 px-3 py-1.5 text-xs font-bold text-white"
+                        >
+                          Đặt lịch mới
+                        </Link>
+                      </div>
+                    )}
+                    {isConfirmedUnpaid && (
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs text-emerald-700 font-semibold">Gara đã xác nhận. Hãy hoàn tất thanh toán.</p>
+                        <Link
+                          to={`/khach-hang/thanh-toan/${booking.id}`}
+                          className="rounded-xl bg-[var(--brand-blue)] px-3 py-1.5 text-xs font-bold text-white"
+                        >
+                          Thanh toán ngay
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className="mt-4 grid gap-3 text-sm text-[var(--text-muted)] sm:grid-cols-3">
-                <span className="inline-flex items-center gap-2"><MapPin size={16} /> {booking.garageName}</span>
-                <span className="inline-flex items-center gap-2"><CalendarDays size={16} /> {formatBookingDate(booking.bookingDate)} · {booking.slotTime}</span>
-                <span className="font-bold text-[var(--brand-blue)] sm:text-right">{formatMoney(booking.finalAmount)}</span>
-              </div>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

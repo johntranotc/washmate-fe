@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { notificationApi } from "@/api/notificationApi";
 import DemoDataNotice from "@/components/customer/DemoDataNotice";
 import { normalizeNotifications } from "@/lib/customer-engagement-data";
-import { getDemoNotifications } from "@/lib/shared-booking-store";
+import { getDemoNotifications, markDemoNotificationRead, markAllDemoNotificationsRead } from "@/lib/shared-booking-store";
 import { notificationMockData } from "@/mocks/notificationMockData";
 
 const filters = [
@@ -58,7 +58,10 @@ export default function NotificationsPage() {
   }, []);
 
   const markRead = async (id) => {
-    const updateLocal = () => setNotifications((items) => items.map((item) => item.id === id ? { ...item, read: true } : item));
+    const updateLocal = () => {
+      setNotifications((items) => items.map((item) => item.id === id ? { ...item, read: true } : item));
+      markDemoNotificationRead(id);
+    };
     if (isMock) return updateLocal();
     try {
       await notificationApi.markNotificationAsRead(id);
@@ -78,6 +81,7 @@ export default function NotificationsPage() {
       }
     }
     setNotifications((items) => items.map((item) => ({ ...item, read: true })));
+    markAllDemoNotificationsRead();
   };
 
   const visibleItems = useMemo(() => notifications.filter((item) => {

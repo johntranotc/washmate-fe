@@ -57,16 +57,12 @@ export function normalizeBooking(value) {
     method: item.paymentMethod,
   });
   const backendStatus = item.bookingStatus || item.status || "PENDING_STAFF_CONFIRMATION";
+  // Trust the stored status from the backend/localStorage.
+  // Only auto-promote PENDING→CONFIRMED when payment is already PAID (legacy compat).
   const bookingStatus =
-    backendStatus === "PENDING_STAFF_CONFIRMATION" || backendStatus === "REJECTED"
-      ? backendStatus
-      : payment.status === "PAID"
-        ? backendStatus === "PENDING"
-          ? "CONFIRMED"
-          : backendStatus
-        : backendStatus === "CONFIRMED"
-          ? "PENDING"
-          : backendStatus;
+    backendStatus === "PENDING" && payment.status === "PAID"
+      ? "CONFIRMED"
+      : backendStatus;
 
   return {
     ...item,

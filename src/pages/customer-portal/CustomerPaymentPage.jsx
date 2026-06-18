@@ -1,6 +1,16 @@
-import { CheckCircle2, CreditCard, Landmark, Smartphone, Wallet, XCircle } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import {
+  CheckCircle2,
+  Clock,
+  Copy,
+  CreditCard,
+  Landmark,
+  Smartphone,
+  Wallet,
+  XCircle,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { QRCodeSVG } from "qrcode.react";
 import { bookingApi } from "@/api/bookingApi";
 import { paymentApi } from "@/api/paymentApi";
 import { StatusBadge } from "@/components/customer/BookingStatusBadge";
@@ -14,6 +24,12 @@ import {
 import { loadCustomerBookingList } from "@/lib/customer-bookings";
 import { createDemoPayment, createPaidDemoPayment } from "@/lib/payment-mock-data";
 import { updateCustomerDemoBookingPayment } from "@/lib/customer-demo-store";
+import { pushDemoNotification } from "@/lib/shared-booking-store";
+import {
+  WASHMATE_BANK,
+  buildQrContent,
+  generateTransferContent,
+} from "@/lib/payment-config";
 import { cn } from "@/lib/utils";
 
 const methods = [
@@ -22,6 +38,123 @@ const methods = [
   ["DOMESTIC_CARD", "Thẻ nội địa", CreditCard],
   ["E_WALLET", "Ví điện tử", Smartphone],
 ];
+
+function CopyButton({ value, label }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    if (!value) return;
+    const text = String(value);
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  function fallbackCopy(text) {
+    const el = document.createElement("textarea");
+    el.value = text;
+    el.style.position = "fixed";
+    el.style.opacity = "0";
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand("copy");
+    document.body.removeChild(el);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition",
+        copied
+          ? "bg-emerald-100 text-emerald-700"
+          : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+      )}
+    >
+      <Copy size={13} />
+      {copied ? "Đã sao chép" : label}
+    </button>
+  );
+}
+
+function BankTransferBlock({ booking, transferContent }) {
+  const amount = booking.finalAmount;
+  const qrContent = useMemo(
+    () =>
+      buildQrContent({
+        bankName: WASHMATE_BANK.bankName,
+        accountNumber: WASHMATE_BANK.accountNumber,
+        accountName: WASHMATE_BANK.accountName,
+        amount,
+        transferContent,
+      }),
+    [amount, transferContent],
+  );
+
+  const rows = [
+    ["Ngân hàng", WASHMATE_BANK.bankName, null],
+    ["Số tài khoản", WASHMATE_BANK.accountNumber, WASHMATE_BANK.accountNumber],
+    ["Chủ tài khoản", WASHMATE_BANK.accountName, null],
+    ["Số tiền", formatMoney(amount), String(amount)],
+    ["Nội dung chuyển khoản", transferContent, transferContent],
+  ];
+
+  return (
+    <div className="mt-6 overflow-hidden rounded-3xl border border-blue-200 bg-blue-50/40">
+      <div className="border-b border-blue-100 px-5 py-4">
+        <h3 className="text-sm font-extrabold text-blue-800">Quét mã QR để thanh toán</h3>
+        <p className="mt-0.5 text-xs text-blue-600">
+          Vui lòng chuyển đúng nội dung để hệ thống đối soát nhanh hơn.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-6 p-5 sm:flex-row sm:items-start">
+        {/* QR code */}
+        <div className="flex shrink-0 flex-col items-center gap-3">
+          <div className="rounded-2xl border border-blue-100 bg-white p-3 shadow-sm">
+            <QRCodeSVG value={qrContent} size={220} level="M" includeMargin={false} />
+          </div>
+          <p className="text-[11px] font-bold text-blue-700">{WASHMATE_BANK.bankName}</p>
+        </div>
+
+        {/* Bank details */}
+        <div className="flex-1 space-y-3">
+          {rows.map(([label, display, copyValue]) => (
+            <div key={label} className="rounded-2xl border border-blue-100 bg-white p-4">
+              <p className="text-[11px] font-semibold text-slate-400">{label}</p>
+              <div className="mt-1.5 flex items-center justify-between gap-3">
+                <span
+                  className={cn(
+                    "font-extrabold",
+                    label === "Nội dung chuyển khoản"
+                      ? "text-sm text-blue-700"
+                      : label === "Số tiền"
+                        ? "text-base text-emerald-700"
+                        : "text-sm text-slate-800",
+                  )}
+                >
+                  {display}
+                </span>
+                {copyValue && <CopyButton value={copyValue} label="Sao chép" />}
+              </div>
+            </div>
+          ))}
+
+          <p className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+            <strong>Lưu ý:</strong> Nhập đúng nội dung{" "}
+            <strong className="text-amber-800">{transferContent}</strong> để hệ thống
+            tự động đối soát giao dịch.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function CustomerPaymentPage() {
   const { bookingId } = useParams();
@@ -65,32 +198,78 @@ export default function CustomerPaymentPage() {
     loadPayment();
   }, [loadPayment]);
 
+  // Stable transfer content derived from booking fields — no random component
+  const transferContent = useMemo(() => {
+    if (!booking) return "";
+    return generateTransferContent(booking.code, booking.customerName || "");
+  }, [booking]);
+
   async function confirmPayment() {
     if (!booking) return;
     setProcessing(true);
     setError("");
+
+    const bankExtra =
+      method === "BANK_TRANSFER"
+        ? {
+            bankName: WASHMATE_BANK.bankName,
+            bankCode: WASHMATE_BANK.bankCode,
+            accountNumber: WASHMATE_BANK.accountNumber,
+            accountName: WASHMATE_BANK.accountName,
+            transferContent,
+          }
+        : {};
+
     try {
       if (!payment?.id) throw new Error("PAYMENT_API_NOT_READY");
       const response = await paymentApi.confirmPayment(payment.id, { paymentMethod: method });
       const paidPayment = normalizePayment(response);
       if (paidPayment.status !== "PAID") throw new Error("PAYMENT_NOT_PAID");
-      const updatedBooking = normalizeBooking({ ...booking, payment: paidPayment, paymentStatus: "PAID" });
-      setPayment(paidPayment);
+      const merged = normalizePayment({ ...paidPayment, ...bankExtra });
+      const updatedBooking = normalizeBooking({ ...booking, payment: merged, paymentStatus: "PAID" });
+      setPayment(merged);
       setBooking(updatedBooking);
-      if (booking.isMock) updateCustomerDemoBookingPayment(booking.id, paidPayment, booking);
+      if (booking.isMock) updateCustomerDemoBookingPayment(booking.id, merged, booking);
+      _pushPaymentNotification(booking, merged);
     } catch {
       const paidPayment = createPaidDemoPayment(booking, method);
-      const updatedBooking = normalizeBooking({ ...booking, payment: paidPayment, paymentStatus: "PAID", isMock: true });
-      setPayment(paidPayment);
+      const merged = normalizePayment({ ...paidPayment, ...bankExtra });
+      const updatedBooking = normalizeBooking({ ...booking, payment: merged, paymentStatus: "PAID", isMock: true });
+      setPayment(merged);
       setBooking(updatedBooking);
-      updateCustomerDemoBookingPayment(booking.id, paidPayment, booking);
+      updateCustomerDemoBookingPayment(booking.id, merged, booking);
+      _pushPaymentNotification(booking, merged);
     } finally {
       setProcessing(false);
     }
   }
 
+  function _pushPaymentNotification(b, paidPayment) {
+    const contentPart =
+      paidPayment.transferContent
+        ? ` với nội dung "${paidPayment.transferContent}"`
+        : "";
+    pushDemoNotification({
+      id: `notif-payment-${b.id}`,
+      type: "PAYMENT",
+      title: "Thanh toán thành công",
+      message: `Thanh toán cho lịch đặt ${b.code}${contentPart} đã được ghi nhận. Hóa đơn của bạn đã sẵn sàng.`,
+      read: false,
+      createdAt: new Date().toISOString(),
+      link: `/khach-hang/lich-dat/${b.id}`,
+    });
+  }
+
+  /* ── Loading / error / guard states ── */
+
   if (loading) {
-    return <div className="mx-auto max-w-5xl p-8"><div className="rounded-3xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải thông tin thanh toán...</div></div>;
+    return (
+      <div className="mx-auto max-w-5xl p-8">
+        <div className="rounded-3xl bg-white p-12 text-center text-[var(--text-muted)]">
+          Đang tải thông tin thanh toán...
+        </div>
+      </div>
+    );
   }
 
   if (!booking) {
@@ -100,52 +279,183 @@ export default function CustomerPaymentPage() {
           <XCircle className="mx-auto text-red-500" />
           <h1 className="mt-4 text-xl font-extrabold text-red-700">Không thể tải dữ liệu lịch đặt</h1>
           <p className="mt-2 text-sm text-red-600">{error}</p>
-          <button onClick={loadPayment} className="mt-5 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white">Thử lại</button>
+          <button onClick={loadPayment} className="mt-5 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white">
+            Thử lại
+          </button>
         </div>
       </div>
     );
   }
 
+  if (booking.bookingStatus === "PENDING_STAFF_CONFIRMATION") {
+    return (
+      <div className="mx-auto max-w-5xl p-8">
+        <div className="rounded-3xl border border-orange-200 bg-orange-50 p-10 text-center">
+          <Clock className="mx-auto text-orange-500" size={40} />
+          <h1 className="mt-4 text-xl font-extrabold text-orange-800">Chưa thể thanh toán</h1>
+          <p className="mt-2 text-sm text-orange-700">
+            Lịch đặt cần được gara xác nhận trước khi thanh toán.
+          </p>
+          <p className="mt-1 text-sm font-bold text-orange-700">
+            Vui lòng chờ gara xác nhận và kiểm tra lại thông báo của bạn.
+          </p>
+          <Link
+            to="/khach-hang/lich-dat"
+            className="mt-6 inline-block rounded-2xl border border-orange-300 bg-white px-5 py-3 text-sm font-bold text-orange-700"
+          >
+            Quay lại lịch đặt
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (booking.bookingStatus === "REJECTED") {
+    return (
+      <div className="mx-auto max-w-5xl p-8">
+        <div className="rounded-3xl border border-red-200 bg-red-50 p-10 text-center">
+          <XCircle className="mx-auto text-red-500" size={40} />
+          <h1 className="mt-4 text-xl font-extrabold text-red-700">Gara từ chối lịch đặt</h1>
+          <p className="mt-2 text-sm text-red-600">
+            Gara không thể nhận lịch này. Không thể thực hiện thanh toán.
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Link to="/khach-hang/lich-dat" className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700">
+              Quay lại lịch đặt
+            </Link>
+            <Link to="/khach-hang/dat-lich-moi" className="rounded-2xl bg-red-600 px-5 py-3 text-sm font-bold text-white">
+              Đặt lịch mới
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Main payment view ── */
+
   const paid = payment?.status === "PAID";
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-8">
       <header className="text-center">
-        <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-[var(--brand-blue)]">Thanh toán an toàn</p>
+        <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-[var(--brand-blue)]">
+          Thanh toán an toàn
+        </p>
         <h1 className="mt-2 text-3xl font-extrabold">Thanh toán lịch đặt</h1>
-        <p className="mt-2 text-sm text-[var(--text-muted)]">Thanh toán thành công sẽ xác nhận lịch và tạo hóa đơn.</p>
+        <p className="mt-2 text-sm text-[var(--text-muted)]">
+          Gara đã xác nhận lịch. Thanh toán để giữ khung giờ của bạn.
+        </p>
       </header>
-      {booking.isMock && <div className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-700"><strong>Dữ liệu mẫu.</strong> Dữ liệu này dùng để demo giao diện. API thật sẽ được kết nối sau.</div>}
+
+      {booking.isMock && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-700">
+          <strong>Dữ liệu mẫu.</strong> Dữ liệu này dùng để demo giao diện. API thật sẽ được kết nối sau.
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        {/* ── Left: payment method + QR ── */}
         <section className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-extrabold">Phương thức thanh toán</h2>
             <StatusBadge status={payment?.status || "PENDING"} type="payment" />
           </div>
-          {payment?.status === "FAILED" && <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">Thanh toán thất bại. Vui lòng thử lại.</p>}
-          {payment?.status === "CANCELLED" && <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-700">Thanh toán đã bị hủy. Bạn có thể chọn phương thức và thử lại.</p>}
+
+          {payment?.status === "FAILED" && (
+            <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+              Thanh toán thất bại. Vui lòng thử lại.
+            </p>
+          )}
+          {payment?.status === "CANCELLED" && (
+            <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-700">
+              Thanh toán đã bị hủy. Bạn có thể chọn phương thức và thử lại.
+            </p>
+          )}
+
           {!paid && (
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {methods.map(([value, label, Icon]) => (
-                <button key={value} onClick={() => setMethod(value)} className={cn("rounded-2xl border-2 p-5 text-left transition", method === value ? "border-[var(--brand-blue)] bg-blue-50 text-[var(--brand-blue)]" : "border-[var(--border-soft)]")}>
+                <button
+                  key={value}
+                  onClick={() => setMethod(value)}
+                  className={cn(
+                    "rounded-2xl border-2 p-5 text-left transition",
+                    method === value
+                      ? "border-[var(--brand-blue)] bg-blue-50 text-[var(--brand-blue)]"
+                      : "border-[var(--border-soft)]",
+                  )}
+                >
                   <Icon size={22} />
                   <strong className="mt-3 block text-sm">{label}</strong>
                 </button>
               ))}
             </div>
           )}
+
+          {/* ── Per-method supplementary content ── */}
+          {!paid && method === "BANK_TRANSFER" && (
+            <BankTransferBlock booking={booking} transferContent={transferContent} />
+          )}
+
+          {!paid && method === "CASH" && (
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-700">
+              <strong className="block font-extrabold">Thanh toán tại gara</strong>
+              <p className="mt-2 leading-6">
+                Bạn sẽ thanh toán trực tiếp tại gara sau khi hoàn tất dịch vụ. Nhân viên sẽ xuất
+                hóa đơn và ghi nhận thanh toán tại chỗ.
+              </p>
+            </div>
+          )}
+
+          {!paid && (method === "DOMESTIC_CARD" || method === "E_WALLET") && (
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
+              <strong className="block font-extrabold text-slate-700">
+                {method === "DOMESTIC_CARD" ? "Thẻ nội địa" : "Ví điện tử"} — Demo
+              </strong>
+              <p className="mt-2 leading-6">
+                Tích hợp cổng thanh toán đang được hoàn thiện. Bấm xác nhận bên dưới để ghi nhận
+                thanh toán thử nghiệm.
+              </p>
+            </div>
+          )}
+
+          {/* ── Confirm / paid result ── */}
           {!paid ? (
-            <button onClick={confirmPayment} disabled={processing} className="mt-6 w-full rounded-2xl bg-[var(--brand-blue)] py-3.5 font-bold text-white disabled:opacity-60">
+            <button
+              onClick={confirmPayment}
+              disabled={processing}
+              className="mt-6 w-full rounded-2xl bg-[var(--brand-blue)] py-3.5 font-bold text-white disabled:opacity-60"
+            >
               {processing ? "Đang xử lý thanh toán..." : "Xác nhận thanh toán"}
             </button>
           ) : (
             <div className="mt-6 rounded-3xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-700">
-              <p className="flex items-center gap-2 text-lg font-extrabold"><CheckCircle2 /> Thanh toán thành công</p>
-              <p className="mt-2 text-sm">Lịch đặt đã được xác nhận. Phương thức: {paymentMethodLabels[payment.method] || payment.method}</p>
-              <p className="mt-1 text-sm">Mã giao dịch: {payment.transactionCode || "Đang cập nhật"}</p>
+              <p className="flex items-center gap-2 text-lg font-extrabold">
+                <CheckCircle2 /> Thanh toán thành công
+              </p>
+              <p className="mt-2 text-sm">
+                Phương thức: {paymentMethodLabels[payment.method] || payment.method}
+              </p>
+              {payment.transferContent && (
+                <p className="mt-1 text-sm">
+                  Nội dung: <strong>{payment.transferContent}</strong>
+                </p>
+              )}
+              <p className="mt-1 text-sm">
+                Mã giao dịch: {payment.transactionCode || "Đang cập nhật"}
+              </p>
             </div>
           )}
-          {error && <p className="mt-4 rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">Thanh toán thất bại. Vui lòng thử lại.</p>}
+
+          {error && (
+            <p className="mt-4 rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">
+              Không thể xác nhận thanh toán. Vui lòng thử lại.
+            </p>
+          )}
         </section>
+
+        {/* ── Right: summary ── */}
         <aside className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
           <h2 className="text-xl font-extrabold">Tóm tắt thanh toán</h2>
           <dl className="mt-5 space-y-4 text-sm">
@@ -163,17 +473,42 @@ export default function CustomerPaymentPage() {
             ))}
           </dl>
           <div className="mt-6 space-y-3 border-t border-[var(--border-soft)] pt-5 text-sm">
-            <div className="flex justify-between"><span>Giá dịch vụ</span><strong>{formatMoney(booking.amount)}</strong></div>
-            <div className="flex justify-between"><span>Giảm giá</span><strong>-{formatMoney(booking.discount)}</strong></div>
-            <div className="flex justify-between text-lg"><span className="font-bold">Tổng cần thanh toán</span><strong className="text-[var(--brand-blue)]">{formatMoney(booking.finalAmount)}</strong></div>
+            <div className="flex justify-between">
+              <span>Giá dịch vụ</span>
+              <strong>{formatMoney(booking.amount)}</strong>
+            </div>
+            <div className="flex justify-between">
+              <span>Giảm giá</span>
+              <strong>-{formatMoney(booking.discount)}</strong>
+            </div>
+            <div className="flex justify-between text-lg">
+              <span className="font-bold">Tổng cần thanh toán</span>
+              <strong className="text-[var(--brand-blue)]">{formatMoney(booking.finalAmount)}</strong>
+            </div>
           </div>
         </aside>
       </div>
+
       {paid && (
         <div className="flex flex-wrap justify-center gap-3">
-          <Link to={`/khach-hang/lich-dat/${booking.id}`} className="rounded-2xl border border-[var(--border-soft)] bg-white px-5 py-3 text-sm font-bold">Xem chi tiết lịch đặt</Link>
-          <Link to={`/khach-hang/thanh-toan/${booking.id}/hoa-don`} className="rounded-2xl bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white">Xem hóa đơn</Link>
-          <Link to="/khach-hang" className="rounded-2xl border border-[var(--border-soft)] bg-white px-5 py-3 text-sm font-bold">Về trang khách hàng</Link>
+          <Link
+            to={`/khach-hang/lich-dat/${booking.id}`}
+            className="rounded-2xl border border-[var(--border-soft)] bg-white px-5 py-3 text-sm font-bold"
+          >
+            Xem chi tiết lịch đặt
+          </Link>
+          <Link
+            to={`/khach-hang/thanh-toan/${booking.id}/hoa-don`}
+            className="rounded-2xl bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white"
+          >
+            Xem hóa đơn
+          </Link>
+          <Link
+            to="/khach-hang"
+            className="rounded-2xl border border-[var(--border-soft)] bg-white px-5 py-3 text-sm font-bold"
+          >
+            Về trang khách hàng
+          </Link>
         </div>
       )}
     </div>

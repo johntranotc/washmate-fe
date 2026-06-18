@@ -23,6 +23,8 @@ export function saveSharedBookings(bookings) {
 export function pushDemoNotification(notif) {
   try {
     const list = JSON.parse(localStorage.getItem(NOTIF_KEY) || "[]");
+    // Dedup: skip if a notification with the same id already exists
+    if (notif.id && list.some((n) => String(n.id) === String(notif.id))) return;
     localStorage.setItem(NOTIF_KEY, JSON.stringify([notif, ...list].slice(0, 50)));
   } catch {
     // ignore
@@ -43,6 +45,8 @@ export function confirmBookingByStaff(bookingId) {
   const bookings = getSharedBookings();
   const booking = bookings.find((b) => String(b.id) === String(bookingId));
   if (!booking) return;
+  // Deduplicate: skip if already confirmed
+  if (booking.bookingStatus === "CONFIRMED") return;
 
   saveSharedBookings(
     bookings.map((b) =>
@@ -53,7 +57,7 @@ export function confirmBookingByStaff(bookingId) {
   );
 
   pushDemoNotification({
-    id: `notif-confirm-${bookingId}-${Date.now()}`,
+    id: `notif-confirm-${bookingId}`,
     type: "BOOKING",
     title: "Lịch đặt đã được gara xác nhận",
     message: `Lịch rửa xe của bạn tại ${booking.garageName || "gara WashMate"}${booking.bookingDate ? ` vào ${booking.bookingDate}` : ""}${booking.slotTime ? ` lúc ${booking.slotTime}` : ""} đã được xác nhận. Bạn có thể tiếp tục thanh toán hoặc đến đúng giờ theo lịch.`,
@@ -69,6 +73,8 @@ export function rejectBookingByStaff(bookingId, reason = "") {
   const bookings = getSharedBookings();
   const booking = bookings.find((b) => String(b.id) === String(bookingId));
   if (!booking) return;
+  // Deduplicate: skip if already rejected
+  if (booking.bookingStatus === "REJECTED") return;
 
   saveSharedBookings(
     bookings.map((b) =>
@@ -83,7 +89,7 @@ export function rejectBookingByStaff(bookingId, reason = "") {
     : `Gara ${booking.garageName || "WashMate"} không thể xác nhận lịch đặt này. Vui lòng đặt lịch mới hoặc liên hệ trực tiếp với gara.`;
 
   pushDemoNotification({
-    id: `notif-reject-${bookingId}-${Date.now()}`,
+    id: `notif-reject-${bookingId}`,
     type: "BOOKING",
     title: "Lịch đặt chưa được xác nhận",
     message: baseMsg,
@@ -91,6 +97,26 @@ export function rejectBookingByStaff(bookingId, reason = "") {
     createdAt: new Date().toISOString(),
     link: `/khach-hang/lich-dat/${booking.id}`,
   });
+}
+
+export function markDemoNotificationRead(id) {
+  try {
+    const list = getDemoNotifications();
+    localStorage.setItem(NOTIF_KEY, JSON.stringify(
+      list.map((n) => String(n.id) === String(id) ? { ...n, read: true } : n),
+    ));
+  } catch {
+    // ignore
+  }
+}
+
+export function markAllDemoNotificationsRead() {
+  try {
+    const list = getDemoNotifications();
+    localStorage.setItem(NOTIF_KEY, JSON.stringify(list.map((n) => ({ ...n, read: true }))));
+  } catch {
+    // ignore
+  }
 }
 
 // Update a booking's status in shared store (for workflow updates after CONFIRMED)

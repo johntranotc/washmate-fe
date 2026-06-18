@@ -129,6 +129,18 @@ export default function CustomerInvoicePage() {
             <div><span className="text-[var(--text-muted)]">Lịch hẹn</span><strong className="mt-1 block">{formatBookingDate(booking.bookingDate)} · {booking.slotTime}</strong></div>
             <div><span className="text-[var(--text-muted)]">Phương thức</span><strong className="mt-1 block">{paymentMethodLabels[payment.method] || payment.method || "Đang cập nhật"}</strong></div>
             <div><span className="text-[var(--text-muted)]">Mã giao dịch</span><strong className="mt-1 block">{payment.transactionCode || "Đang cập nhật"}</strong></div>
+            {payment.bankName && (
+              <div><span className="text-[var(--text-muted)]">Ngân hàng</span><strong className="mt-1 block">{payment.bankName}</strong></div>
+            )}
+            {payment.accountName && (
+              <div><span className="text-[var(--text-muted)]">Chủ tài khoản</span><strong className="mt-1 block">{payment.accountName}</strong></div>
+            )}
+            {payment.transferContent && (
+              <div className="sm:col-span-2">
+                <span className="text-[var(--text-muted)]">Nội dung chuyển khoản</span>
+                <strong className="mt-1 block font-extrabold text-[var(--brand-blue)]">{payment.transferContent}</strong>
+              </div>
+            )}
           </div>
         </section>
         <table className="mt-7 w-full text-left text-sm">
