@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { notificationApi } from "@/api/notificationApi";
 import DemoDataNotice from "@/components/customer/DemoDataNotice";
 import { normalizeNotifications } from "@/lib/customer-engagement-data";
+import { getDemoNotifications } from "@/lib/shared-booking-store";
 import { notificationMockData } from "@/mocks/notificationMockData";
 
 const filters = [
@@ -29,13 +30,29 @@ export default function NotificationsPage() {
   const [isMock, setIsMock] = useState(false);
 
   useEffect(() => {
-    notificationApi.getNotifications()
+    // Always load local demo notifications (from staff confirm/reject actions)
+    const localNotifs = getDemoNotifications();
+    notificationApi
+      .getNotifications()
       .then((response) => {
-        setNotifications(normalizeNotifications(response));
-        setIsMock(false);
+        const apiNotifs = normalizeNotifications(response);
+        // Merge: local (newest) first, then API, deduplicate by id
+        const seenIds = new Set(localNotifs.map((n) => n.id));
+        const merged = [
+          ...localNotifs,
+          ...apiNotifs.filter((n) => !seenIds.has(n.id)),
+        ];
+        setNotifications(merged);
+        setIsMock(localNotifs.length > 0);
       })
       .catch(() => {
-        setNotifications(notificationMockData);
+        // Merge local with static mock data
+        const seenIds = new Set(localNotifs.map((n) => n.id));
+        const merged = [
+          ...localNotifs,
+          ...notificationMockData.filter((n) => !seenIds.has(n.id)),
+        ];
+        setNotifications(merged);
         setIsMock(true);
       });
   }, []);

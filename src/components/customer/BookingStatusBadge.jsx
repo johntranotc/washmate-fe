@@ -5,7 +5,9 @@ import {
 } from "@/lib/customer-booking-data";
 
 const tones = {
+  PENDING_STAFF_CONFIRMATION: "bg-orange-100 text-orange-700",
   PENDING: "bg-amber-100 text-amber-700",
+  PAYMENT_PENDING: "bg-amber-100 text-amber-700",
   CONFIRMED: "bg-blue-100 text-blue-700",
   CHECKED_IN: "bg-cyan-100 text-cyan-700",
   WASHING: "bg-violet-100 text-violet-700",
@@ -13,6 +15,7 @@ const tones = {
   PAID: "bg-emerald-100 text-emerald-700",
   FAILED: "bg-red-100 text-red-700",
   CANCELLED: "bg-slate-200 text-slate-700",
+  REJECTED: "bg-red-100 text-red-700",
   NO_SHOW: "bg-orange-100 text-orange-700",
   REFUNDED: "bg-purple-100 text-purple-700",
 };

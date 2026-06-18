@@ -29,21 +29,24 @@ import {
 import {
   createMockGarages,
   createMockServices,
+  createMockServicesForGarage,
   createMockSlots,
   createMockVehicles,
 } from "@/lib/booking-mock-data";
 import { addCustomerDemoBooking } from "@/lib/customer-demo-store";
 
+// Step order: 1=Gara, 2=Service, 3=Vehicle, 4=Slot, 5=Review, 6=Success
+
 export default function CustomerBookingFlowPage() {
   const [step, setStep] = useState(1);
   const [vehicles, setVehicles] = useState([]);
-  const [services, setServices] = useState([]);
+  const [allServices, setAllServices] = useState([]);
   const [garages, setGarages] = useState([]);
   const [slots, setSlots] = useState([]);
   const [selection, setSelection] = useState({
-    vehicle: null,
-    service: null,
     garage: null,
+    service: null,
+    vehicle: null,
     date: nextDates()[0].value,
     slot: null,
   });
@@ -60,30 +63,23 @@ export default function CustomerBookingFlowPage() {
     setLoading(true);
     setLoadError("");
     try {
-      const [vehicleResult, serviceResult, garageResult] =
-        await Promise.allSettled([
-          vehicleApi.getMyVehicles(),
-          servicePackageApi.getAll(),
-          garageApi.getAll(),
-        ]);
+      const [vehicleResult, serviceResult, garageResult] = await Promise.allSettled([
+        vehicleApi.getMyVehicles(),
+        servicePackageApi.getAll(),
+        garageApi.getAll(),
+      ]);
 
       const apiVehicles =
         vehicleResult.status === "fulfilled"
-          ? asList(vehicleResult.value)
-              .map(normalizeVehicle)
-              .filter((item) => item.status === "ACTIVE")
+          ? asList(vehicleResult.value).map(normalizeVehicle).filter((v) => v.status === "ACTIVE")
           : createMockVehicles();
       const apiServices =
         serviceResult.status === "fulfilled"
-          ? asList(serviceResult.value)
-              .map(normalizeService)
-              .filter((item) => item.status === "ACTIVE")
+          ? asList(serviceResult.value).map(normalizeService).filter((s) => s.status === "ACTIVE")
           : createMockServices();
       const apiGarages =
         garageResult.status === "fulfilled"
-          ? asList(garageResult.value)
-              .map(normalizeGarage)
-              .filter((item) => item.status === "ACTIVE")
+          ? asList(garageResult.value).map(normalizeGarage).filter((g) => g.status === "ACTIVE")
           : createMockGarages();
 
       setUsingMockData(
@@ -92,11 +88,11 @@ export default function CustomerBookingFlowPage() {
           garageResult.status === "rejected",
       );
       setVehicles(apiVehicles);
-      setServices(apiServices);
+      setAllServices(apiServices);
       setGarages(apiGarages);
 
-      if (!apiVehicles.length && !apiServices.length && !apiGarages.length) {
-        setLoadError("Không thể tải dữ liệu đặt lịch.");
+      if (!apiGarages.length) {
+        setLoadError("Không thể tải danh sách gara.");
       }
     } finally {
       setLoading(false);
@@ -107,14 +103,22 @@ export default function CustomerBookingFlowPage() {
     loadFoundationData();
   }, [loadFoundationData]);
 
-  const compatibleGarages = useMemo(() => {
-    if (!selection.service?.garageId) return garages;
-    return garages.filter(
-      (garage) =>
-        String(getGarageId(garage)) === String(selection.service.garageId),
+  // Services filtered for the selected garage
+  const servicesForGarage = useMemo(() => {
+    if (!selection.garage) return [];
+    const garageId = getGarageId(selection.garage);
+    // If garage is mock, use per-garage mock services
+    if (selection.garage.isMock) {
+      return createMockServicesForGarage(garageId);
+    }
+    // From API: filter by garageId or show all if API doesn't have garageId on services
+    const filtered = allServices.filter(
+      (s) => !s.garageId || String(s.garageId) === String(garageId),
     );
-  }, [garages, selection.service]);
+    return filtered.length ? filtered : allServices;
+  }, [allServices, selection.garage]);
 
+  // Load slots when garage + date change
   useEffect(() => {
     if (!selection.garage || !selection.date) {
       setSlots([]);
@@ -124,7 +128,7 @@ export default function CustomerBookingFlowPage() {
     async function loadSlots() {
       const garageId = getGarageId(selection.garage);
       setSlotLoading(true);
-      setSelection((current) => ({ ...current, slot: null }));
+      setSelection((cur) => ({ ...cur, slot: null }));
       if (!garageId) {
         setSlots([]);
         setSlotLoading(false);
@@ -136,16 +140,10 @@ export default function CustomerBookingFlowPage() {
           if (active) setSlots(createMockSlots(garageId));
           return;
         }
-        const data = await bookingSlotApi.getAvailable({
-          garageId,
-          date: selection.date,
-        });
+        const data = await bookingSlotApi.getAvailable({ garageId, date: selection.date });
         const normalized = asList(data)
           .map(normalizeSlot)
-          .filter(
-            (slot) =>
-              !slot.garageId || String(slot.garageId) === String(garageId),
-          );
+          .filter((slot) => !slot.garageId || String(slot.garageId) === String(garageId));
         if (active) setSlots(normalized);
       } catch {
         if (active) {
@@ -157,28 +155,26 @@ export default function CustomerBookingFlowPage() {
       }
     }
     loadSlots();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [selection.date, selection.garage]);
 
-  function selectService(service) {
-    setSelection((current) => ({
-      ...current,
-      service,
-      garage:
-        service.garageId &&
-        String(getGarageId(current.garage)) !== String(service.garageId)
-          ? null
-          : current.garage,
+  function selectGarage(garage) {
+    setSelection((cur) => ({
+      ...cur,
+      garage,
+      service: null, // clear service when garage changes
       slot: null,
     }));
   }
 
+  function selectService(service) {
+    setSelection((cur) => ({ ...cur, service, slot: null }));
+  }
+
   function canContinue() {
-    if (step === 1) return Boolean(selection.vehicle);
+    if (step === 1) return Boolean(selection.garage) && Boolean(selection.garage.isOpen);
     if (step === 2) return Boolean(selection.service);
-    if (step === 3) return Boolean(selection.garage);
+    if (step === 3) return Boolean(selection.vehicle);
     if (step === 4) return Boolean(selection.date && selection.slot && !selection.slot.disabled);
     return true;
   }
@@ -186,37 +182,39 @@ export default function CustomerBookingFlowPage() {
   function goNext() {
     setSubmitError("");
     if (!canContinue()) {
-      setSubmitError("Vui lòng chọn đầy đủ thông tin đặt lịch.");
+      if (step === 1 && selection.garage && !selection.garage.isOpen) {
+        setSubmitError("Gara này đang tạm đóng. Vui lòng chọn gara khác.");
+      } else {
+        setSubmitError("Vui lòng chọn đầy đủ thông tin trước khi tiếp tục.");
+      }
       return;
     }
-    setStep((current) => Math.min(current + 1, 5));
+    setStep((cur) => Math.min(cur + 1, 5));
   }
 
   async function createBooking() {
-    if (!selection.vehicle || !selection.service || !selection.garage || !selection.slot) {
+    if (!selection.garage || !selection.service || !selection.vehicle || !selection.slot) {
       setSubmitError("Vui lòng chọn đầy đủ thông tin đặt lịch.");
       return;
     }
-    const bookingDate = normalizeBookingDate(
-      selection.slot.slotDate || selection.date,
-    );
+    const bookingDate = normalizeBookingDate(selection.slot.slotDate || selection.date);
     if (!bookingDate) {
-      setSubmitError("Vui lòng chọn ngày đặt lịch");
+      setSubmitError("Vui lòng chọn ngày đặt lịch.");
       return;
     }
     const garageId = getGarageId(selection.garage);
     if (!garageId) {
-      setSubmitError(
-        "Không tìm thấy gara hợp lệ. Vui lòng tải lại danh sách gara.",
-      );
+      setSubmitError("Không tìm thấy gara hợp lệ. Vui lòng tải lại danh sách gara.");
       return;
     }
     if (selection.slot.disabled) {
-      setSubmitError("Khung giờ này đã đầy.");
+      setSubmitError("Khung giờ này đã đầy hoặc tạm đóng.");
       return;
     }
+
     setSubmitting(true);
     setSubmitError("");
+
     const payload = {
       vehicleId: selection.vehicle.id,
       serviceId: selection.service.id,
@@ -225,19 +223,37 @@ export default function CustomerBookingFlowPage() {
       bookingDate,
       bookingNote: note.trim(),
     };
+
     const isDemoFlow =
       usingMockData ||
       selection.vehicle.isMock ||
       selection.garage.isMock ||
       selection.service.isMock ||
       selection.slot.isMock;
+
+    const userProfile = (() => {
+      try {
+        return JSON.parse(localStorage.getItem("washmate_user_profile") || "{}");
+      } catch {
+        return {};
+      }
+    })();
+
     const demoBookingRecord = (id, code) => ({
       bookingId: id,
       bookingCode: code,
-      bookingStatus: "PENDING",
+      bookingStatus: "PENDING_STAFF_CONFIRMATION",
       paymentStatus: "PENDING",
-      vehicle: [selection.vehicle.brand, selection.vehicle.model].filter(Boolean).join(" ") || selection.vehicle.licensePlate,
+      customerName:
+        userProfile.fullName || userProfile.name || userProfile.customerName || "Khách hàng",
+      customerEmail: userProfile.email || "",
+      customerPhone: userProfile.phone || userProfile.phoneNumber || "",
+      vehicle:
+        [selection.vehicle.brand, selection.vehicle.model].filter(Boolean).join(" ") ||
+        selection.vehicle.licensePlate,
       plate: selection.vehicle.licensePlate,
+      garageId: getGarageId(selection.garage),
+      serviceId: selection.service.id,
       serviceName: selection.service.name,
       garageName: selection.garage.name,
       garageAddress: selection.garage.address,
@@ -248,7 +264,9 @@ export default function CustomerBookingFlowPage() {
       amount: selection.service.price,
       discount: 0,
       finalAmount: selection.service.price,
+      createdAt: new Date().toISOString(),
     });
+
     try {
       const response = await bookingApi.createBooking(payload);
       const normalizedResult = normalizeBookingResponse(response);
@@ -259,9 +277,7 @@ export default function CustomerBookingFlowPage() {
       }
       setResult({
         ...normalizedResult,
-        paymentId:
-          normalizedResult.paymentId ||
-          (isDemoFlow ? normalizedResult.bookingId : null),
+        bookingStatus: "PENDING_STAFF_CONFIRMATION",
         isDemo: isDemoFlow,
       });
       setStep(6);
@@ -273,8 +289,7 @@ export default function CustomerBookingFlowPage() {
         setResult({
           bookingId: demoId,
           bookingCode,
-          paymentId: demoId,
-          bookingStatus: "PENDING",
+          bookingStatus: "PENDING_STAFF_CONFIRMATION",
           paymentStatus: "PENDING",
           isDemo: true,
         });
@@ -290,11 +305,56 @@ export default function CustomerBookingFlowPage() {
   function content() {
     if (loading) return <StepLoading />;
     if (loadError) return <StepError message={loadError} onRetry={loadFoundationData} />;
-    if (step === 1) return <VehicleStep vehicles={vehicles} selectedId={selection.vehicle?.id} onSelect={(vehicle) => setSelection((current) => ({ ...current, vehicle }))} />;
-    if (step === 2) return <ServiceStep services={services} selectedId={selection.service?.id} onSelect={selectService} />;
-    if (step === 3) return <GarageStep garages={compatibleGarages} selectedId={getGarageId(selection.garage)} onSelect={(garage) => setSelection((current) => ({ ...current, garage, slot: null }))} />;
-    if (step === 4) return <SlotStep date={selection.date} onDateChange={(date) => setSelection((current) => ({ ...current, date, slot: null }))} slots={slots} selectedId={selection.slot?.id} onSelect={(slot) => setSelection((current) => ({ ...current, slot }))} loading={slotLoading} />;
-    if (step === 5) return <BookingReviewStep selection={selection} note={note} onNoteChange={setNote} />;
+
+    // Step 1: Chọn gara
+    if (step === 1) {
+      return (
+        <GarageStep
+          garages={garages}
+          selectedId={getGarageId(selection.garage)}
+          onSelect={selectGarage}
+        />
+      );
+    }
+    // Step 2: Chọn dịch vụ (theo gara)
+    if (step === 2) {
+      return (
+        <ServiceStep
+          services={servicesForGarage}
+          selectedId={selection.service?.id}
+          onSelect={selectService}
+          garageName={selection.garage?.name}
+        />
+      );
+    }
+    // Step 3: Chọn xe
+    if (step === 3) {
+      return (
+        <VehicleStep
+          vehicles={vehicles}
+          selectedId={selection.vehicle?.id}
+          onSelect={(vehicle) => setSelection((cur) => ({ ...cur, vehicle }))}
+        />
+      );
+    }
+    // Step 4: Chọn ngày & khung giờ
+    if (step === 4) {
+      return (
+        <SlotStep
+          date={selection.date}
+          onDateChange={(date) => setSelection((cur) => ({ ...cur, date, slot: null }))}
+          slots={slots}
+          selectedId={selection.slot?.id}
+          onSelect={(slot) => setSelection((cur) => ({ ...cur, slot }))}
+          loading={slotLoading}
+        />
+      );
+    }
+    // Step 5: Xác nhận
+    if (step === 5) {
+      return <BookingReviewStep selection={selection} note={note} onNoteChange={setNote} />;
+    }
+    // Step 6: Hoàn tất
     return <BookingSuccessStep result={result} selection={selection} />;
   }
 
@@ -302,30 +362,75 @@ export default function CustomerBookingFlowPage() {
     <div className="mx-auto max-w-7xl space-y-7 p-8">
       <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-primary">Đặt lịch thông minh</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">Đặt lịch rửa xe</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Chọn xe, dịch vụ, gara và khung giờ phù hợp để tạo lịch rửa xe thông minh.</p>
+          <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-primary">
+            Đặt lịch thông minh
+          </p>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+            Đặt lịch rửa xe
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Chọn gara, dịch vụ, xe và khung giờ phù hợp. Gara sẽ xác nhận lịch hẹn trong thời gian sớm nhất.
+          </p>
         </div>
-        <Link to="/khach-hang" className="inline-flex items-center gap-2 self-start rounded-2xl border border-border bg-card px-4 py-3 text-sm font-bold text-foreground shadow-sm"><ArrowLeft size={17} /> Quay lại trang khách hàng</Link>
+        <Link
+          to="/khach-hang"
+          className="inline-flex items-center gap-2 self-start rounded-2xl border border-border bg-card px-4 py-3 text-sm font-bold text-foreground shadow-sm"
+        >
+          <ArrowLeft size={17} /> Quay lại
+        </Link>
       </header>
+
       <BookingStepper currentStep={step} />
+
       {usingMockData && step < 6 && (
         <div className="flex flex-col gap-2 rounded-2xl border border-border bg-secondary px-5 py-4 text-sm text-secondary-foreground sm:flex-row sm:items-center sm:justify-between">
           <span className="w-fit rounded-full bg-card px-3 py-1 text-xs font-extrabold text-primary">
             Dữ liệu mẫu
           </span>
-          <p>Dữ liệu này dùng để demo giao diện. API thật sẽ được kết nối sau.</p>
+          <p>Đang dùng dữ liệu mẫu để demo. API thật sẽ được kết nối sau.</p>
         </div>
       )}
-      {submitError && <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">{submitError}</div>}
+
+      {submitError && (
+        <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">
+          {submitError}
+        </div>
+      )}
+
       {content()}
+
       {step < 6 && !loading && !loadError && (
         <div className="flex flex-col-reverse justify-between gap-3 border-t border-border pt-6 sm:flex-row">
-          <button type="button" onClick={() => setStep((current) => Math.max(1, current - 1))} disabled={step === 1 || submitting} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-card px-6 py-3 font-bold text-foreground disabled:cursor-not-allowed disabled:opacity-40"><ArrowLeft size={18} /> Quay lại</button>
+          <button
+            type="button"
+            onClick={() => {
+              setSubmitError("");
+              setStep((cur) => Math.max(1, cur - 1));
+            }}
+            disabled={step === 1 || submitting}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-card px-6 py-3 font-bold text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ArrowLeft size={18} /> Quay lại
+          </button>
+
           {step < 5 ? (
-            <button type="button" onClick={goNext} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)]">Tiếp tục <ArrowRight size={18} /></button>
+            <button
+              type="button"
+              onClick={goNext}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)]"
+            >
+              Tiếp tục <ArrowRight size={18} />
+            </button>
           ) : (
-            <button type="button" onClick={createBooking} disabled={submitting} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)] disabled:opacity-60">{submitting ? "Đang tạo lịch đặt..." : "Tạo lịch đặt"} <ArrowRight size={18} /></button>
+            <button
+              type="button"
+              onClick={createBooking}
+              disabled={submitting}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)] disabled:opacity-60"
+            >
+              {submitting ? "Đang gửi yêu cầu..." : "Gửi yêu cầu đặt lịch"}
+              <ArrowRight size={18} />
+            </button>
           )}
         </div>
       )}

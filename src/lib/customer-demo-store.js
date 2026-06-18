@@ -1,10 +1,11 @@
 import { normalizeBooking } from "./customer-booking-data";
 
-const KEY = "washmate_customer_demo_bookings";
+const KEY = "washmate_demo_bookings";
+const NOTIF_KEY = "washmate_demo_notifications";
 
 export function getCustomerDemoBookings() {
   try {
-    const saved = sessionStorage.getItem(KEY);
+    const saved = localStorage.getItem(KEY);
     return saved ? JSON.parse(saved) : [];
   } catch {
     return [];
@@ -13,7 +14,7 @@ export function getCustomerDemoBookings() {
 
 export function saveCustomerDemoBookings(bookings) {
   try {
-    sessionStorage.setItem(KEY, JSON.stringify(bookings));
+    localStorage.setItem(KEY, JSON.stringify(bookings));
   } catch {
     return bookings;
   }
@@ -23,7 +24,18 @@ export function saveCustomerDemoBookings(bookings) {
 export function addCustomerDemoBooking(rawBooking) {
   const bookings = getCustomerDemoBookings();
   const normalized = normalizeBooking({ ...rawBooking, isMock: true });
-  return saveCustomerDemoBookings([normalized, ...bookings]);
+  const result = saveCustomerDemoBookings([normalized, ...bookings]);
+  _pushNotification({
+    id: Date.now(),
+    type: "NEW_BOOKING",
+    bookingId: normalized.id,
+    bookingCode: normalized.code,
+    garageName: normalized.garageName,
+    message: `Đặt lịch ${normalized.code} tại ${normalized.garageName} đang chờ xác nhận`,
+    createdAt: new Date().toISOString(),
+    read: false,
+  });
+  return result;
 }
 
 export function findCustomerDemoBooking(bookingId) {
@@ -47,4 +59,23 @@ export function updateCustomerDemoBookingPayment(bookingId, payment, fallbackBoo
       ? [normalizeBooking({ ...fallbackBooking, payment, paymentStatus: payment.status, isMock: true }), ...bookings]
       : bookings;
   return saveCustomerDemoBookings(next);
+}
+
+function _pushNotification(notif) {
+  try {
+    const saved = localStorage.getItem(NOTIF_KEY);
+    const list = saved ? JSON.parse(saved) : [];
+    localStorage.setItem(NOTIF_KEY, JSON.stringify([notif, ...list].slice(0, 50)));
+  } catch {
+    // silently ignore
+  }
+}
+
+export function getDemoNotifications() {
+  try {
+    const saved = localStorage.getItem(NOTIF_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
 }

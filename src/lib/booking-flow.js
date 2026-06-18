@@ -1,7 +1,7 @@
 export const bookingSteps = [
-  "Xe của bạn",
+  "Chọn gara",
   "Dịch vụ",
-  "Gara",
+  "Xe của bạn",
   "Khung giờ",
   "Xác nhận",
   "Hoàn tất",
@@ -63,6 +63,15 @@ export function normalizeGarage(item) {
     phone: item.phone || item.phoneNumber || "Đang cập nhật",
     openingHours: item.openingHours || item.workingHours || "07:00 - 20:00",
     status: item.status || "ACTIVE",
+    rating: Number(item.rating ?? 4.5),
+    reviewCount: Number(item.reviewCount ?? 0),
+    availableSlots: Number(item.availableSlots ?? 0),
+    distanceKm: item.distanceKm ?? null,
+    isOpen: item.isOpen !== false,
+    district: item.district || "",
+    badges: Array.isArray(item.badges) ? item.badges : [],
+    lat: item.lat ?? null,
+    lng: item.lng ?? null,
     isMock: Boolean(item.isMock),
   };
 }
@@ -71,6 +80,8 @@ export function normalizeSlot(item) {
   const maxCapacity = Number(item.maxCapacity ?? item.capacity ?? 1);
   const bookedCount = Number(item.bookedCount ?? item.currentBookings ?? 0);
   const status = item.status || (bookedCount >= maxCapacity ? "FULL" : "OPEN");
+  const disabled = status !== "OPEN" || bookedCount >= maxCapacity;
+  const almostFull = !disabled && maxCapacity > 0 && bookedCount >= Math.ceil(maxCapacity * 0.5);
   return {
     ...item,
     id: getId(item, ["slotId", "bookingSlotId"]),
@@ -81,7 +92,8 @@ export function normalizeSlot(item) {
     bookedCount,
     status,
     isMock: Boolean(item.isMock),
-    disabled: status !== "OPEN" || bookedCount >= maxCapacity,
+    disabled,
+    almostFull,
   };
 }
 
