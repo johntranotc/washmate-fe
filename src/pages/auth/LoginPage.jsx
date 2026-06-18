@@ -31,7 +31,7 @@ export default function LoginPage() {
       }
       localStorage.setItem("userEmail", email);
 
-      navigate("/select-workspace");
+      navigate("/chon-khong-gian-lam-viec");
     } catch (err) {
       setError(err?.message || "Đăng nhập thất bại. Vui lòng thử lại.");
     } finally {
@@ -104,6 +104,7 @@ export default function LoginPage() {
 
       <button
         type="button"
+        onClick={() => navigate("/chon-khong-gian-lam-viec")}
         className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-border bg-card text-[15px] font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
       >
         <GoogleIcon className="size-5" />
