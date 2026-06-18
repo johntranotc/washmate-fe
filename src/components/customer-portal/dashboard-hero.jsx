@@ -1,9 +1,53 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Droplets, Check } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
 
 export function DashboardHero() {
   const navigate = useNavigate();
+  const [customerName, setCustomerName] = useState("Khách hàng");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+
+        // In log ra để đồng bộ kiểm tra
+        console.log("=== TOKEN PAYLOAD (HERO) ===", decoded);
+
+        // Áp dụng đúng logic quét linh hoạt như bên Layout
+        let name =
+          decoded.full_name ||
+          decoded.fullName ||
+          decoded.name ||
+          decoded.username ||
+          decoded.user_name ||
+          decoded.customerName;
+
+        if (!name && decoded.user && typeof decoded.user === "object") {
+          name = decoded.user.name || decoded.user.fullName || decoded.user.full_name;
+        }
+        if (!name && decoded.customer && typeof decoded.customer === "object") {
+          name = decoded.customer.name || decoded.customer.fullName || decoded.customer.full_name;
+        }
+
+        if (name && typeof name === "string" && isNaN(Number(name))) {
+          setCustomerName(name);
+        } else {
+          const email = decoded.email || decoded.sub;
+          if (email && typeof email === "string" && email.includes("@")) {
+            setCustomerName(email.split("@")[0]);
+          } else {
+            setCustomerName("Khách hàng");
+          }
+        }
+      } catch (error) {
+        console.error("Lỗi giải mã token tại DashboardHero:", error);
+      }
+    }
+  }, []);
 
   return (
     <div className="relative mb-8 overflow-hidden rounded-3xl border border-border bg-gradient-to-r from-primary/20 via-accent/20 to-brand-dark/10 p-8">
@@ -13,7 +57,7 @@ export function DashboardHero() {
             <span className="text-xs font-semibold text-muted-foreground">Khu vực khách hàng</span>
           </div>
           <h1 className="mb-3 text-4xl font-extrabold leading-tight text-foreground">
-            Xin chào, Ngữ!
+            Xin chào, {customerName}!
           </h1>
           <p className="mb-8 text-lg font-medium leading-relaxed text-muted-foreground">
             Chào mừng bạn quay lại SparkleAI / WashMate. Hôm nay bạn muốn chăm sóc chiếc xe nào?
