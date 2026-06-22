@@ -18,9 +18,9 @@ export function SiteHeader() {
   const { pathname } = useLocation();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-900/80 backdrop-blur-xl">
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-        <Logo />
+        <Logo variant="light" />
 
         <nav className="hidden items-center gap-1 lg:flex">
           {navItems.map((item) => {
@@ -37,8 +37,8 @@ export function SiteHeader() {
                 className={cn(
                   "rounded-xl px-3.5 py-2 text-[15px] font-semibold transition-colors",
                   active
-                    ? "bg-secondary text-primary"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                    ? "bg-white/10 text-white"
+                    : "text-slate-300 hover:bg-white/10 hover:text-white",
                 )}
               >
                 {item.label}
@@ -50,13 +50,13 @@ export function SiteHeader() {
         <div className="hidden items-center gap-2 lg:flex">
           <Link
             to="/login"
-            className="rounded-xl px-4 py-2.5 text-[15px] font-bold text-foreground transition-colors hover:bg-secondary"
+            className="rounded-xl px-4 py-2.5 text-[15px] font-bold text-white transition-colors hover:bg-white/10"
           >
             Đăng nhập
           </Link>
           <Link
             to="/register"
-            className="inline-flex items-center gap-1.5 rounded-2xl bg-primary px-5 py-2.5 text-[15px] font-bold text-primary-foreground shadow-[0_10px_24px_-8px_rgba(11,140,255,0.7)] transition-all hover:-translate-y-0.5 hover:bg-brand-dark"
+            className="inline-flex items-center gap-1.5 rounded-2xl bg-primary px-5 py-2.5 text-[15px] font-bold text-white shadow-[0_10px_24px_-8px_rgba(11,140,255,0.7)] transition-all hover:-translate-y-0.5 hover:bg-blue-600"
           >
             Đăng ký ngay
             <ArrowRight className="size-4" />
@@ -66,7 +66,7 @@ export function SiteHeader() {
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="inline-flex size-11 items-center justify-center rounded-2xl border border-border bg-card text-foreground lg:hidden"
+          className="inline-flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white lg:hidden"
           aria-label={open ? "Đóng menu" : "Mở menu"}
           aria-expanded={open}
         >
@@ -75,30 +75,30 @@ export function SiteHeader() {
       </div>
 
       {open && (
-        <div className="border-t border-border bg-background lg:hidden">
+        <div className="border-t border-white/10 bg-slate-900 lg:hidden">
           <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4 sm:px-6">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
                 onClick={() => setOpen(false)}
-                className="rounded-xl px-3 py-3 text-base font-semibold text-foreground hover:bg-secondary"
+                className="rounded-xl px-3 py-3 text-base font-semibold text-white hover:bg-white/10"
               >
                 {item.label}
               </Link>
             ))}
-            <div className="mt-2 flex flex-col gap-2 border-t border-border pt-4">
+            <div className="mt-2 flex flex-col gap-2 border-t border-white/10 pt-4">
               <Link
                 to="/login"
                 onClick={() => setOpen(false)}
-                className="rounded-2xl border border-border px-4 py-3 text-center text-base font-bold text-foreground"
+                className="rounded-2xl border border-white/20 px-4 py-3 text-center text-base font-bold text-white"
               >
                 Đăng nhập
               </Link>
               <Link
                 to="/register"
                 onClick={() => setOpen(false)}
-                className="rounded-2xl bg-primary px-4 py-3 text-center text-base font-bold text-primary-foreground"
+                className="rounded-2xl bg-primary px-4 py-3 text-center text-base font-bold text-white"
               >
                 Đăng ký ngay
               </Link>

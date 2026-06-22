@@ -50,59 +50,35 @@ export function DashboardHero() {
   }, []);
 
   return (
-    <div className="relative mb-8 overflow-hidden rounded-3xl border border-border bg-gradient-to-r from-primary/20 via-accent/20 to-brand-dark/10 p-8">
-      <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-        <div className="flex flex-col justify-center">
-          <div className="mb-4 inline-block w-fit rounded-full border border-border bg-white/60 px-4 py-2 backdrop-blur">
-            <span className="text-xs font-semibold text-muted-foreground">Khu vực khách hàng</span>
-          </div>
-          <h1 className="mb-3 text-4xl font-extrabold leading-tight text-foreground">
-            Xin chào, {customerName}!
-          </h1>
-          <p className="mb-8 text-lg font-medium leading-relaxed text-muted-foreground">
-            Chào mừng bạn quay lại SparkleAI / WashMate. Hôm nay bạn muốn chăm sóc chiếc xe nào?
-          </p>
-          <div className="flex gap-4">
-            <Button
-              size="lg"
-              onClick={() => navigate("/khach-hang/dat-lich-moi")}
-              className="rounded-2xl bg-primary font-semibold text-primary-foreground hover:bg-brand-dark"
-            >
-              Đặt lịch mới
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate("/khach-hang/xe-cua-toi")}
-              className="rounded-2xl border-border font-semibold text-primary hover:bg-secondary"
-            >
-              Xem xe của tôi
-            </Button>
-          </div>
+    <div 
+      className="relative w-full min-h-[400px] rounded-2xl overflow-hidden bg-cover bg-center flex items-center p-8 md:p-12 mb-8 shadow-md"
+      style={{ backgroundImage: 'url("/images/hero-carwash.png")' }}
+    >
+      <div className="absolute inset-0 bg-black/40"></div>
+
+      <div className="relative z-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl p-8 rounded-3xl max-w-xl">
+        <div className="mb-4 inline-block w-fit rounded-full border border-white/20 bg-white/10 px-4 py-1.5 backdrop-blur-sm">
+          <span className="text-xs font-semibold text-white/90">Khu vực khách hàng</span>
         </div>
-
-        <div className="relative h-80">
-          <img
-            src="/images/hero-carwash.png"
-            alt="Xe sạch bóng"
-            className="absolute inset-0 size-full rounded-2xl object-cover"
-          />
-
-          <div className="absolute -bottom-6 -left-6 max-w-xs rounded-2xl border border-border bg-white p-4 shadow-lg sm:-left-12">
-            <div className="mb-2 flex items-center gap-2">
-              <Check size={20} className="text-green-500" />
-              <span className="text-sm font-semibold text-foreground">Đặt lịch trong 1 phút</span>
-            </div>
-            <p className="text-xs text-muted-foreground">Quy trình nhanh và đơn giản</p>
-          </div>
-
-          <div className="absolute -top-6 -right-6 max-w-xs rounded-2xl border border-border bg-white p-4 shadow-lg sm:-right-12">
-            <div className="mb-2 flex items-center gap-2">
-              <Droplets size={20} className="text-primary" />
-              <span className="text-sm font-semibold text-foreground">Tích điểm sau mỗi lần</span>
-            </div>
-            <p className="text-xs text-muted-foreground">Và nhận ưu đãi độc quyền</p>
-          </div>
+        <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
+          Xin chào, {customerName}!
+        </h1>
+        <p className="text-sm md:text-base text-white/90 mb-8">
+          Chào mừng bạn quay lại WashMate. Hôm nay bạn muốn chăm sóc chiếc xe nào?
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <button 
+            onClick={() => navigate("/khach-hang/dat-lich-moi")}
+            className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all px-6 py-3 rounded-xl font-semibold"
+          >
+            Đặt lịch mới
+          </button>
+          <button 
+            onClick={() => navigate("/khach-hang/xe-cua-toi")}
+            className="bg-black/30 hover:bg-black/40 text-white border border-white/20 backdrop-blur-sm transition-all px-6 py-3 rounded-xl font-semibold"
+          >
+            Xem xe của tôi
+          </button>
         </div>
       </div>
     </div>
