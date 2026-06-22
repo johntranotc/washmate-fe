@@ -83,69 +83,70 @@ const defaultNotifications = {
 // ── Profile Hero Card ──────────────────────────────────────────
 function ProfileHeroCard({ profile }) {
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-brand-dark p-6 text-primary-foreground shadow-lg shadow-primary/20">
+    <section className="relative overflow-hidden rounded-[2rem] bg-slate-900/60 backdrop-blur-xl border border-white/10 p-8 text-white shadow-2xl">
       {/* Decorative blur */}
-      <div className="pointer-events-none absolute -right-10 -top-10 size-64 rounded-full bg-accent/30 blur-3xl" />
+      <div className="pointer-events-none absolute -right-10 -top-10 size-64 rounded-full bg-blue-500/20 blur-[80px]" />
+      <div className="pointer-events-none absolute -left-10 -bottom-10 size-64 rounded-full bg-purple-500/20 blur-[80px]" />
 
-      <div className="relative grid gap-5 md:grid-cols-[auto_1fr] md:items-center lg:grid-cols-[auto_1fr_210px]">
+      <div className="relative grid gap-6 md:grid-cols-[auto_1fr] md:items-center lg:grid-cols-[auto_1fr_210px] z-10">
         {/* Tier badge + glow */}
         <div className="relative flex justify-center md:justify-start">
           <div
-            className="absolute -inset-6 rounded-full blur-3xl opacity-50"
+            className="absolute -inset-6 rounded-full blur-[40px] opacity-40"
             style={{ backgroundColor: currentTier?.color ?? "#0b8cff" }}
           />
-          <div className="relative drop-shadow-[0_0_24px_rgba(255,255,255,0.22)]">
+          <div className="relative drop-shadow-2xl">
             <TierBadge tier={currentTier} size="lg" />
           </div>
         </div>
 
         {/* Info column */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* Name + chips */}
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-2xl font-extrabold">{profile.name}</h2>
-            <span className="inline-flex rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-3xl font-extrabold">{profile.name}</h2>
+            <span className="inline-flex rounded-full bg-white/10 border border-white/20 shadow-inner px-4 py-1.5 text-[12px] font-bold tracking-wide">
               Hạng {loyaltyMockAccount.tierName}
             </span>
-            <span className="inline-flex rounded-full bg-green-400/25 px-3 py-1 text-[11px] font-semibold text-green-100">
+            <span className="inline-flex rounded-full bg-green-500/20 border border-green-500/30 px-4 py-1.5 text-[12px] font-semibold text-green-300">
               ● Đang hoạt động
             </span>
           </div>
 
           {/* Contact */}
-          <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-primary-foreground/75">
-            <span className="flex items-center gap-1.5">
-              <Mail size={14} className="shrink-0" />
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-300">
+            <span className="flex items-center gap-2">
+              <Mail size={16} className="shrink-0 text-slate-400" />
               {profile.email}
             </span>
             {profile.phone && (
-              <span className="flex items-center gap-1.5">
-                <Phone size={14} className="shrink-0" />
+              <span className="flex items-center gap-2">
+                <Phone size={16} className="shrink-0 text-slate-400" />
                 {profile.phone}
               </span>
             )}
           </div>
 
           {/* Points */}
-          <div>
-            <p className="text-sm font-medium text-primary-foreground/70">Điểm khả dụng</p>
-            <p className="mt-0.5 text-4xl font-extrabold leading-tight">
+          <div className="pt-2">
+            <p className="text-sm font-medium text-slate-400">Điểm khả dụng</p>
+            <p className="mt-1 text-4xl font-extrabold leading-tight text-white drop-shadow-md">
               {loyaltyMockAccount.availablePoints.toLocaleString("vi-VN")}
             </p>
           </div>
 
           {/* Progress – mobile/tablet only; desktop shows in mini panel */}
-          <div className="lg:hidden">
-            <div className="mb-2 flex justify-between text-xs font-semibold text-primary-foreground/65">
+          <div className="lg:hidden pt-2">
+            <div className="mb-2 flex justify-between text-xs font-semibold text-slate-300">
               <span>Hạng {loyaltyMockAccount.tierName}</span>
               <span>
                 Còn {loyaltyMockAccount.pointsToNextTier.toLocaleString("vi-VN")} điểm →{" "}
                 {loyaltyMockAccount.nextTierName}
               </span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-white/20">
+            <div className="h-2.5 overflow-hidden rounded-full bg-white/10 border border-white/10">
               <div
-                className="h-full rounded-full bg-white transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 shadow-[0_0_10px_rgba(96,165,250,0.5)] transition-all duration-500"
                 style={{ width: `${Math.min(loyaltyMockAccount.progressPercent, 100)}%` }}
               />
             </div>
@@ -153,27 +154,27 @@ function ProfileHeroCard({ profile }) {
         </div>
 
         {/* Mini info panel – desktop only */}
-        <div className="hidden lg:flex lg:flex-col lg:gap-3">
-          <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-primary-foreground/55">
+        <div className="hidden lg:flex lg:flex-col lg:gap-4">
+          <div className="rounded-2xl bg-white/5 border border-white/10 p-5 backdrop-blur-md hover:bg-white/10 transition-colors duration-300">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
               Gara thường dùng
             </p>
-            <div className="mt-1.5 flex items-center gap-1.5">
-              <Home size={14} className="shrink-0" />
-              <span className="text-sm font-bold">WashMate Quận 7</span>
+            <div className="flex items-center gap-2">
+              <Home size={16} className="shrink-0 text-blue-400" />
+              <span className="text-sm font-bold text-slate-100">WashMate Quận 7</span>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-primary-foreground/55">
+          <div className="rounded-2xl bg-white/5 border border-white/10 p-5 backdrop-blur-md hover:bg-white/10 transition-colors duration-300">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
               Tiến độ lên hạng {loyaltyMockAccount.nextTierName}
             </p>
-            <p className="mt-1 text-lg font-extrabold">
+            <p className="text-lg font-extrabold text-white">
               Còn {loyaltyMockAccount.pointsToNextTier.toLocaleString("vi-VN")} điểm
             </p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/20">
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10 border border-white/10">
               <div
-                className="h-full rounded-full bg-white/80 transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 shadow-[0_0_10px_rgba(96,165,250,0.5)] transition-all duration-500"
                 style={{ width: `${Math.min(loyaltyMockAccount.progressPercent, 100)}%` }}
               />
             </div>
@@ -690,15 +691,15 @@ export default function AccountPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-4 p-5 lg:p-7">
       {/* Page header */}
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Tài khoản</p>
-        <h1 className="mt-1 text-2xl font-extrabold leading-tight text-foreground">
+      <header className="bg-white/40 backdrop-blur-xl border border-white/50 p-6 sm:p-8 rounded-[2rem] shadow-sm mb-6">
+        <span className="inline-block rounded-full bg-blue-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 mb-3">Tài khoản</span>
+        <h1 className="text-3xl font-extrabold leading-tight text-slate-900">
           Tài khoản của tôi
         </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm font-medium text-slate-600">
           Quản lý thông tin cá nhân, bảo mật và tuỳ chọn nhận thông báo.
         </p>
-      </div>
+      </header>
 
       {/* Hero profile card */}
       <ProfileHeroCard profile={profile} />
