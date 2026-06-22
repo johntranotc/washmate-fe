@@ -57,18 +57,20 @@ export default function MembershipPointsPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <header className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between bg-white/40 backdrop-blur-xl border border-white/50 p-6 sm:p-8 rounded-[2rem] shadow-sm mb-6">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">WashMate Rewards</p>
-          <h1 className="mt-2 text-3xl font-extrabold leading-tight text-foreground">Điểm thưởng của tôi</h1>
-          <p className="mt-2 text-sm font-medium text-muted-foreground">Theo dõi hạng thành viên và toàn bộ biến động điểm.</p>
+          <span className="inline-block rounded-full bg-blue-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 mb-3">WashMate Rewards</span>
+          <h1 className="text-3xl font-extrabold leading-tight text-slate-900">Điểm thưởng của tôi</h1>
+          <p className="mt-2 text-sm font-medium text-slate-600">Theo dõi hạng thành viên và toàn bộ biến động điểm.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild className="rounded-xl bg-primary font-bold text-primary-foreground hover:bg-brand-dark">
-            <Link to="/khach-hang/doi-thuong"><Gift size={15} /> Đổi điểm lấy quà</Link>
+        <div className="flex flex-wrap gap-3">
+          <Button asChild className="h-11 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 font-bold text-white shadow-lg shadow-blue-500/30 hover:scale-105 hover:shadow-blue-500/50 transition-all duration-300 border-0">
+            <Link to="/khach-hang/doi-thuong" className="flex items-center gap-2 px-6">
+              <Gift size={18} /> Đổi điểm lấy quà
+            </Link>
           </Button>
-          <Button variant="outline" onClick={loadData} className="rounded-xl border-border font-bold text-foreground">
-            <RotateCcw size={15} /> Tải lại
+          <Button variant="outline" onClick={loadData} className="h-11 rounded-2xl border border-white/60 bg-white/50 backdrop-blur-md font-bold text-slate-700 hover:bg-white/80 hover:text-slate-900 shadow-sm transition-all duration-300 flex items-center gap-2 px-5">
+            <RotateCcw size={18} /> Tải lại
           </Button>
         </div>
       </header>
