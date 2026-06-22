@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, Menu, X } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { Logo } from "./logo";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { label: "Trang chủ", href: "/" },
-  { label: "Dịch vụ", href: "/dich-vu" },
-  { label: "Bảng giá", href: "/bang-gia" },
-  { label: "Hạng thành viên", href: "/hang-thanh-vien" },
+  { label: "Dịch vụ", href: "/services" },
+  { label: "Bảng giá", href: "/pricing" },
+  { label: "Hạng thành viên", href: "/tiers" },
   { label: "Quy trình", href: "/#quy-trinh" },
   { label: "Liên hệ", href: "/#lien-he" },
 ];
@@ -18,38 +18,93 @@ export function SiteHeader() {
   const { pathname } = useLocation();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex min-h-18 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-        <Logo />
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-900/80 backdrop-blur-xl">
+      <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <Logo variant="light" />
+
         <nav className="hidden items-center gap-1 lg:flex">
           {navItems.map((item) => {
-            const route = item.href.split("#")[0];
-            const active = route === "/" ? pathname === "/" && item.href === "/" : pathname === route;
+            const active =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href.split("#")[0]) &&
+                  item.href !== "/#quy-trinh" &&
+                  item.href !== "/#lien-he";
             return (
-              <Link key={item.href} to={item.href} className={cn("rounded-xl px-3 py-2 text-sm font-semibold transition-colors", active ? "bg-secondary text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground")}>
+              <Link
+                key={item.href}
+                to={item.href}
+                className={cn(
+                  "rounded-xl px-3.5 py-2 text-[15px] font-semibold transition-colors",
+                  active
+                    ? "bg-white/10 text-white"
+                    : "text-slate-300 hover:bg-white/10 hover:text-white",
+                )}
+              >
                 {item.label}
               </Link>
             );
           })}
         </nav>
+
         <div className="hidden items-center gap-2 lg:flex">
-          <Link to="/dang-nhap" className="rounded-xl px-4 py-2.5 text-sm font-bold text-foreground hover:bg-secondary">Đăng nhập</Link>
-          <Link to="/dang-ky" className="inline-flex items-center gap-1.5 rounded-2xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-[0_10px_24px_-8px_rgba(11,140,255,.7)] transition hover:-translate-y-0.5 hover:bg-brand-dark">
-            Đăng ký ngay <ArrowRight className="size-4" />
+          <Link
+            to="/login"
+            className="rounded-xl px-4 py-2.5 text-[15px] font-bold text-white transition-colors hover:bg-white/10"
+          >
+            Đăng nhập
+          </Link>
+          <Link
+            to="/register"
+            className="inline-flex items-center gap-1.5 rounded-2xl bg-primary px-5 py-2.5 text-[15px] font-bold text-white shadow-[0_10px_24px_-8px_rgba(11,140,255,0.7)] transition-all hover:-translate-y-0.5 hover:bg-blue-600"
+          >
+            Đăng ký ngay
+            <ArrowRight className="size-4" />
           </Link>
         </div>
-        <button type="button" onClick={() => setOpen((value) => !value)} className="grid size-11 place-items-center rounded-2xl border border-border bg-card lg:hidden" aria-label={open ? "Đóng menu" : "Mở menu"}>
+
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="inline-flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white lg:hidden"
+          aria-label={open ? "Đóng menu" : "Mở menu"}
+          aria-expanded={open}
+        >
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
       </div>
+
       {open && (
-        <nav className="border-t border-border bg-background px-4 py-4 lg:hidden">
-          {navItems.map((item) => <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className="block rounded-xl px-3 py-3 font-semibold hover:bg-secondary">{item.label}</Link>)}
-          <div className="mt-3 grid gap-2 border-t border-border pt-4">
-            <Link to="/dang-nhap" onClick={() => setOpen(false)} className="rounded-2xl border border-border px-4 py-3 text-center font-bold">Đăng nhập</Link>
-            <Link to="/dang-ky" onClick={() => setOpen(false)} className="rounded-2xl bg-primary px-4 py-3 text-center font-bold text-white">Đăng ký ngay</Link>
-          </div>
-        </nav>
+        <div className="border-t border-white/10 bg-slate-900 lg:hidden">
+          <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4 sm:px-6">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                onClick={() => setOpen(false)}
+                className="rounded-xl px-3 py-3 text-base font-semibold text-white hover:bg-white/10"
+              >
+                {item.label}
+              </Link>
+            ))}
+            <div className="mt-2 flex flex-col gap-2 border-t border-white/10 pt-4">
+              <Link
+                to="/login"
+                onClick={() => setOpen(false)}
+                className="rounded-2xl border border-white/20 px-4 py-3 text-center text-base font-bold text-white"
+              >
+                Đăng nhập
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setOpen(false)}
+                className="rounded-2xl bg-primary px-4 py-3 text-center text-base font-bold text-white"
+              >
+                Đăng ký ngay
+              </Link>
+            </div>
+          </nav>
+        </div>
       )}
     </header>
   );

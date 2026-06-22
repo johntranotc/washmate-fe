@@ -32,9 +32,9 @@ const columns = [
     title: "Khám phá",
     links: [
       { label: "Trang chủ", href: "/" },
-      { label: "Dịch vụ", href: "/dich-vu" },
-      { label: "Bảng giá", href: "/bang-gia" },
-      { label: "Hạng thành viên", href: "/hang-thanh-vien" },
+      { label: "Dịch vụ", href: "/services" },
+      { label: "Bảng giá", href: "/pricing" },
+      { label: "Hạng thành viên", href: "/tiers" },
     ],
   },
   {
@@ -42,15 +42,15 @@ const columns = [
     links: [
       { label: "Quy trình sử dụng", href: "/#quy-trinh" },
       { label: "Câu hỏi thường gặp", href: "/#lien-he" },
-      { label: "Đăng nhập", href: "/dang-nhap" },
-      { label: "Tạo tài khoản", href: "/dang-ky" },
+      { label: "Đăng nhập", href: "/login" },
+      { label: "Tạo tài khoản", href: "/register" },
     ],
   },
 ];
 
 export function SiteFooter() {
   return (
-    <footer id="lien-he" className="border-t border-border bg-secondary">
+    <footer id="lien-he" className="border-t border-white/10 bg-slate-950">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
           <div>
@@ -59,7 +59,7 @@ export function SiteFooter() {
                 <Droplets className="size-5.5" strokeWidth={2.4} />
               </span>
               <span className="flex flex-col leading-none">
-                <span className="text-[17px] font-extrabold tracking-tight text-foreground">
+                <span className="text-[17px] font-extrabold tracking-tight text-white">
                   SparkleAI
                 </span>
                 <span className="text-[12px] font-bold tracking-wide text-primary">
@@ -67,7 +67,7 @@ export function SiteFooter() {
                 </span>
               </span>
             </div>
-            <p className="mt-4 max-w-xs text-[15px] leading-relaxed text-muted-foreground">
+            <p className="mt-4 max-w-xs text-[15px] leading-relaxed text-slate-400">
               Hệ thống quản lý rửa xe thông minh giúp bạn đặt lịch, thanh toán,
               theo dõi tiến độ và tích điểm thành viên trên một nền tảng hiện đại.
             </p>
@@ -76,7 +76,7 @@ export function SiteFooter() {
                 <a
                   key={i}
                   href="#"
-                  className="flex size-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                  className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400 transition-colors hover:border-primary hover:text-white hover:bg-primary"
                   aria-label="Mạng xã hội"
                 >
                   <Icon className="size-4.5" />
@@ -87,13 +87,13 @@ export function SiteFooter() {
 
           {columns.map((col) => (
             <div key={col.title}>
-              <h4 className="text-[15px] font-bold text-foreground">{col.title}</h4>
+              <h4 className="text-[15px] font-bold text-white">{col.title}</h4>
               <ul className="mt-4 flex flex-col gap-3">
                 {col.links.map((link) => (
                   <li key={link.label}>
                     <Link
                       to={link.href}
-                      className="text-[15px] text-muted-foreground transition-colors hover:text-primary"
+                      className="text-[15px] text-slate-400 transition-colors hover:text-primary"
                     >
                       {link.label}
                     </Link>
@@ -104,8 +104,8 @@ export function SiteFooter() {
           ))}
 
           <div>
-            <h4 className="text-[15px] font-bold text-foreground">Liên hệ</h4>
-            <ul className="mt-4 flex flex-col gap-3.5 text-[15px] text-muted-foreground">
+            <h4 className="text-[15px] font-bold text-white">Liên hệ</h4>
+            <ul className="mt-4 flex flex-col gap-3.5 text-[15px] text-slate-400">
               <li className="flex items-start gap-3">
                 <MapPin className="mt-0.5 size-4.5 shrink-0 text-primary" />
                 <span>123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh</span>
@@ -122,7 +122,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-center text-sm text-muted-foreground sm:flex-row sm:text-left">
+        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-center text-sm text-slate-500 sm:flex-row sm:text-left">
           <p>© 2026 SparkleAI / WashMate. Toàn bộ quyền được bảo lưu.</p>
           <div className="flex items-center gap-5">
             <a href="#" className="hover:text-primary">Điều khoản sử dụng</a>
