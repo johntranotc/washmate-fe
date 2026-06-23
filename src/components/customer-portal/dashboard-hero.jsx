@@ -52,7 +52,7 @@ export function DashboardHero() {
   return (
     <div 
       className="relative w-full min-h-[400px] rounded-2xl overflow-hidden bg-cover bg-center bg-no-repeat flex items-center p-8 md:p-12 mb-8 shadow-md"
-      style={{ backgroundImage: 'url("/images/hero-carwash.png")' }}
+      style={{ backgroundImage: 'url("/images/hero-carwash-full.png")' }}
     >
       <div className="absolute inset-0 bg-black/40"></div>
 
