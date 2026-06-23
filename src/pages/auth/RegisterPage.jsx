@@ -113,15 +113,17 @@ export default function RegisterPage() {
             checked={agreed}
             onCheckedChange={(checked) => setAgreed(!!checked)}
           />
-          <Label htmlFor="terms" className="text-[14px] font-medium leading-relaxed text-muted-foreground">
-            Tôi đồng ý với{" "}
-            <Link to="#" className="font-semibold text-primary hover:underline">
-              Điều khoản dịch vụ
-            </Link>{" "}
-            và{" "}
-            <Link to="#" className="font-semibold text-primary hover:underline">
-              Chính sách bảo mật
-            </Link>
+          <Label htmlFor="terms" className="text-[14px] font-medium leading-relaxed text-muted-foreground font-normal">
+            <span>
+              Tôi đồng ý với{" "}
+              <Link to="#" className="font-semibold text-primary hover:underline">
+                Điều khoản dịch vụ
+              </Link>{" "}
+              và{" "}
+              <Link to="#" className="font-semibold text-primary hover:underline">
+                Chính sách bảo mật
+              </Link>
+            </span>
           </Label>
         </div>
 
