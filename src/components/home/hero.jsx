@@ -7,7 +7,7 @@ export function Hero() {
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img
-          src="/images/hero-carwash.png"
+          src="/images/hero-carwash-full.png"
           alt="AutoWash Background"
           className="h-full w-full object-cover object-center"
         />
