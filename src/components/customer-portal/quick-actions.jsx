@@ -46,17 +46,17 @@ export function QuickActions() {
           return (
             <Card
               key={action.title}
-              className="group cursor-pointer rounded-2xl border border-border p-6 transition-all hover:shadow-lg"
+              className="group flex h-full flex-col cursor-pointer rounded-2xl border border-border p-6 transition-all hover:shadow-lg"
             >
-              <div className="mb-4 inline-block rounded-xl bg-primary/10 p-3">
+              <div className="mb-4 w-fit rounded-xl bg-primary/10 p-3">
                 <Icon size={24} className="text-primary" />
               </div>
               <h3 className="mb-1 font-bold leading-tight text-foreground">{action.title}</h3>
-              <p className="mb-4 text-sm font-medium text-muted-foreground">{action.description}</p>
+              <p className="mb-4 flex-1 text-sm font-medium text-muted-foreground">{action.description}</p>
               <Button
                 size="sm"
                 onClick={() => navigate(action.href)}
-                className="w-full rounded-lg bg-primary text-xs font-semibold text-primary-foreground hover:bg-brand-dark"
+                className="mt-auto w-full rounded-lg bg-primary text-xs font-semibold text-primary-foreground hover:bg-brand-dark"
               >
                 {action.buttonText}
               </Button>
