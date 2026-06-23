@@ -163,28 +163,33 @@ function DashboardHeader() {
 
 function DashboardSidebar() {
   return (
-    <aside className="w-64 border-r border-gray-200 bg-white/40 shadow-xl backdrop-blur-2xl font-sans">
-      <nav className="p-4 space-y-2">
-        {menuItems.map((item) => (
-          <NavLink
-            key={item.href}
-            to={item.href}
-            end={item.end}
-            className={({ isActive }) =>
-              cn(
-                "rounded-2xl px-4 py-3 flex items-center gap-3 transition-all duration-200",
-                isActive
-                  ? "bg-blue-500/15 text-blue-800 shadow-md shadow-blue-500/20 border border-blue-500/30 backdrop-blur-md font-semibold"
-                  : "text-slate-500 hover:bg-gray-100 hover:text-slate-900",
-              )
-            }
-          >
-            <item.icon size={20} />
-            <span>{item.label}</span>
-          </NavLink>
-        ))}
-      </nav>
-    </aside>
+    <div className="relative w-[88px] shrink-0 z-30">
+      <aside className="absolute top-0 left-0 h-full w-[88px] hover:w-64 group transition-all duration-300 ease-in-out border-r border-white/40 bg-white/40 hover:bg-white/60 hover:shadow-2xl backdrop-blur-2xl font-sans overflow-hidden flex flex-col">
+        <nav className="p-4 space-y-2 flex-1 overflow-y-auto no-scrollbar">
+          {menuItems.map((item) => (
+            <NavLink
+              key={item.href}
+              to={item.href}
+              end={item.end}
+              title={item.label}
+              className={({ isActive }) =>
+                cn(
+                  "rounded-2xl p-3.5 flex items-center gap-4 transition-all duration-200",
+                  isActive
+                    ? "bg-blue-500/15 text-blue-800 shadow-md shadow-blue-500/20 border border-blue-500/30 backdrop-blur-md font-semibold"
+                    : "text-slate-500 hover:bg-white/60 hover:text-slate-900",
+                )
+              }
+            >
+              <item.icon size={22} className="shrink-0" />
+              <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium">
+                {item.label}
+              </span>
+            </NavLink>
+          ))}
+        </nav>
+      </aside>
+    </div>
   );
 }
 
