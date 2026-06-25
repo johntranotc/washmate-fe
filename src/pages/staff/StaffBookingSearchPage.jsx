@@ -1,72 +1,6 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-
-const mockBookings = [
-  {
-    bookingId: 1,
-    bookingCode: "BK-0001",
-    customerName: "Nguyễn Văn A",
-    phone: "0900000000",
-    licensePlate: "51A-12345",
-    vehicleName: "Toyota Vios",
-    garageName: "AutoWash Garage Thủ Đức",
-    serviceName: "Premium Wash",
-    bookingDate: "2026-06-06",
-    slotTime: "09:00 - 09:30",
-    bookingStatus: "CONFIRMED",
-    paymentStatus: "PAID",
-    invoiceStatus: "PAID",
-    finalAmount: 110000,
-  },
-  {
-    bookingId: 2,
-    bookingCode: "BK-0002",
-    customerName: "Trần Minh B",
-    phone: "0911111111",
-    licensePlate: "59C-88888",
-    vehicleName: "Honda City",
-    garageName: "AutoWash Garage Thủ Đức",
-    serviceName: "Basic Wash",
-    bookingDate: "2026-06-06",
-    slotTime: "10:00 - 10:30",
-    bookingStatus: "PENDING",
-    paymentStatus: "PENDING",
-    invoiceStatus: "NOT_ISSUED",
-    finalAmount: 80000,
-  },
-  {
-    bookingId: 3,
-    bookingCode: "BK-0003",
-    customerName: "Lê Hoàng C",
-    phone: "0922222222",
-    licensePlate: "60A-99999",
-    vehicleName: "Mazda 3",
-    garageName: "AutoWash Garage Quận 1",
-    serviceName: "Full Detailing",
-    bookingDate: "2026-06-06",
-    slotTime: "14:00 - 15:30",
-    bookingStatus: "WASHING",
-    paymentStatus: "PAID",
-    invoiceStatus: "PAID",
-    finalAmount: 250000,
-  },
-  {
-    bookingId: 4,
-    bookingCode: "BK-0004",
-    customerName: "Phạm Quốc D",
-    phone: "0933333333",
-    licensePlate: "51B-67890",
-    vehicleName: "Kia K3",
-    garageName: "AutoWash Garage Thủ Đức",
-    serviceName: "Premium Wash",
-    bookingDate: "2026-06-06",
-    slotTime: "15:00 - 15:45",
-    bookingStatus: "COMPLETED",
-    paymentStatus: "PAID",
-    invoiceStatus: "PAID",
-    finalAmount: 120000,
-  },
-];
+import { useEffect } from "react";
+import { staffApi } from "@/api/staffApi";
+import { normalizeBookingList, normalizeStaffBooking } from "@/lib/staff-booking-data";
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("vi-VN", {
@@ -117,24 +51,33 @@ function StaffBookingSearchPage() {
 
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [allBookings, setAllBookings] = useState([]);
+
+  useEffect(() => {
+    staffApi.getTodayBookings()
+      .then((data) => {
+        setAllBookings(normalizeBookingList(data).map(normalizeStaffBooking));
+      })
+      .catch((error) => console.error("Failed to fetch search bookings:", error));
+  }, []);
 
   const filteredBookings = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
 
-    return mockBookings.filter((booking) => {
+    return allBookings.filter((booking) => {
       const matchesKeyword =
         !normalizedKeyword ||
-        booking.bookingCode.toLowerCase().includes(normalizedKeyword) ||
-        booking.customerName.toLowerCase().includes(normalizedKeyword) ||
-        booking.phone.toLowerCase().includes(normalizedKeyword) ||
-        booking.licensePlate.toLowerCase().includes(normalizedKeyword);
+        (booking.code || "").toLowerCase().includes(normalizedKeyword) ||
+        (booking.customerName || "").toLowerCase().includes(normalizedKeyword) ||
+        (booking.phone || "").toLowerCase().includes(normalizedKeyword) ||
+        (booking.plate || "").toLowerCase().includes(normalizedKeyword);
 
       const matchesStatus =
         statusFilter === "ALL" || booking.bookingStatus === statusFilter;
 
       return matchesKeyword && matchesStatus;
     });
-  }, [keyword, statusFilter]);
+  }, [keyword, statusFilter, allBookings]);
 
   function goToWorkflow(bookingId) {
     navigate(`/staff/bookings/${bookingId}/workflow`);
@@ -201,7 +144,7 @@ function StaffBookingSearchPage() {
           <div className="rounded-xl bg-slate-50 p-4 text-center">
             <p className="text-sm text-slate-500">Tổng booking</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">
-              {mockBookings.length}
+              {allBookings.length}
             </p>
           </div>
 
@@ -209,7 +152,7 @@ function StaffBookingSearchPage() {
             <p className="text-sm text-green-700">Đã thanh toán</p>
             <p className="mt-1 text-2xl font-bold text-green-800">
               {
-                mockBookings.filter(
+                allBookings.filter(
                   (booking) => booking.paymentStatus === "PAID",
                 ).length
               }
@@ -220,7 +163,7 @@ function StaffBookingSearchPage() {
             <p className="text-sm text-blue-700">Đang xử lý</p>
             <p className="mt-1 text-2xl font-bold text-blue-800">
               {
-                mockBookings.filter((booking) =>
+                allBookings.filter((booking) =>
                   ["CONFIRMED", "CHECKED_IN", "WASHING"].includes(
                     booking.bookingStatus,
                   ),
@@ -233,7 +176,7 @@ function StaffBookingSearchPage() {
             <p className="text-sm text-amber-700">Chờ thanh toán</p>
             <p className="mt-1 text-2xl font-bold text-amber-800">
               {
-                mockBookings.filter(
+                allBookings.filter(
                   (booking) => booking.paymentStatus === "PENDING",
                 ).length
               }
@@ -268,13 +211,13 @@ function StaffBookingSearchPage() {
 
               return (
                 <div
-                  key={booking.bookingId}
+                  key={booking.id}
                   className="grid grid-cols-1 gap-4 p-5 lg:grid-cols-[1.4fr_1fr_1fr_auto]"
                 >
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-lg font-bold text-slate-900">
-                        {booking.bookingCode}
+                        {booking.code}
                       </h3>
                       <StatusBadge status={booking.bookingStatus} />
                     </div>
@@ -286,7 +229,7 @@ function StaffBookingSearchPage() {
                       SĐT: {booking.phone}
                     </p>
                     <p className="text-sm text-slate-500">
-                      Xe: {booking.licensePlate} - {booking.vehicleName}
+                      Xe: {booking.plate} - {booking.vehicle}
                     </p>
                   </div>
 
@@ -317,7 +260,7 @@ function StaffBookingSearchPage() {
                   <div className="flex flex-col justify-center gap-3">
                     <button
                       type="button"
-                      onClick={() => goToWorkflow(booking.bookingId)}
+                      onClick={() => goToWorkflow(booking.id)}
                       disabled={!allowWorkflow}
                       className="rounded-lg bg-slate-900 px-4 py-2 font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                     >

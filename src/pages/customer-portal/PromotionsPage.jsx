@@ -1,9 +1,7 @@
 import { BadgePercent, CalendarClock, Search, Tag } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { promotionApi } from "@/api/promotionApi";
-import DemoDataNotice from "@/components/customer/DemoDataNotice";
 import { normalizePromotions } from "@/lib/customer-engagement-data";
-import { promotionMockData } from "@/mocks/promotionMockData";
 
 const filters = [
   ["ALL", "Tất cả"],
@@ -16,17 +14,15 @@ export default function PromotionsPage() {
   const [promotions, setPromotions] = useState([]);
   const [filter, setFilter] = useState("ALL");
   const [query, setQuery] = useState("");
-  const [isMock, setIsMock] = useState(false);
+
 
   useEffect(() => {
     promotionApi.getPromotions()
       .then((response) => {
         setPromotions(normalizePromotions(response));
-        setIsMock(false);
       })
-      .catch(() => {
-        setPromotions(promotionMockData);
-        setIsMock(true);
+      .catch((error) => {
+        console.error("Failed to load promotions:", error);
       });
   }, []);
 
@@ -43,7 +39,7 @@ export default function PromotionsPage() {
         <h1 className="mt-2 text-3xl font-extrabold text-slate-950">Khám phá ưu đãi phù hợp</h1>
         <p className="mt-2 text-sm text-slate-500">Xem chương trình đang có. Ưu đãi chưa được tự động áp dụng vào booking.</p>
       </header>
-      {isMock && <DemoDataNotice />}
+
       <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-2">
           {filters.map(([value, label]) => (

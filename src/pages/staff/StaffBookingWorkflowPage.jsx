@@ -2,8 +2,7 @@ import { CheckCircle2, CircleAlert, Clock3, Droplets, LogIn, UserX } from "lucid
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { staffApi } from "@/api/staffApi";
-import DemoDataNotice from "@/components/customer/DemoDataNotice";
-import { getStaffDemoBookings, updateStaffDemoBooking } from "@/lib/staff-demo-store";
+
 import { bookingStatusLabels, normalizeStaffBooking, paymentStatusLabels } from "@/lib/staff-booking-data";
 
 const actionByStatus = {
@@ -15,15 +14,15 @@ const actionByStatus = {
 export default function StaffBookingWorkflowPage() {
   const { bookingId } = useParams();
   const [booking, setBooking] = useState(null);
-  const [isMock, setIsMock] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
-    staffApi.getStaffBookingById(bookingId).then((data) => setBooking(normalizeStaffBooking(data))).catch(() => {
-      setBooking(getStaffDemoBookings().find((item) => String(item.id) === String(bookingId)) || null);
-      setIsMock(true);
-    }).finally(() => setLoading(false));
+    staffApi.getStaffBookingById(bookingId)
+      .then((data) => setBooking(normalizeStaffBooking(data)))
+      .catch((error) => console.error("Failed to fetch booking details:", error))
+      .finally(() => setLoading(false));
   }, [bookingId]);
 
   const transition = async (nextStatus, apiMethod) => {
@@ -32,10 +31,8 @@ export default function StaffBookingWorkflowPage() {
     try {
       await staffApi[apiMethod](booking.id);
       setBooking((item) => ({ ...item, bookingStatus: nextStatus }));
-    } catch {
-      const next = updateStaffDemoBooking(booking.id, nextStatus).find((item) => String(item.id) === String(booking.id));
-      setBooking(next);
-      setIsMock(true);
+    } catch (error) {
+      console.error("Failed to update status:", error);
     } finally {
       setUpdating(false);
     }
@@ -51,7 +48,7 @@ export default function StaffBookingWorkflowPage() {
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Chi tiết vận hành</p><h1 className="mt-2 text-3xl font-extrabold">{booking.code}</h1><p className="mt-2 text-sm text-slate-500">{booking.customerName} · {booking.vehicle} · {booking.plate}</p></div><span className="w-fit rounded-full bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700">{bookingStatusLabels[booking.bookingStatus]}</span></header>
-      {isMock && <DemoDataNotice />}
+
       {booking.bookingStatus === "PENDING" && <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"><CircleAlert size={19} />Lịch này chưa thanh toán nên chưa thể check-in.</div>}
       <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6">

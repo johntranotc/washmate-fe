@@ -37,14 +37,8 @@ export default function CustomerBookingDetailPage() {
         setBooking(normalized);
       }
     } catch {
-      const { bookings } = await loadCustomerBookingList();
-      const found = bookings.find((item) => String(item.id) === String(bookingId));
-      if (!found) {
-        setError("Không thể tải dữ liệu lịch đặt.");
-        setBooking(null);
-      } else {
-        setBooking(normalizeBooking({ ...found, isMock: true }));
-      }
+      setError("Không thể tải dữ liệu lịch đặt.");
+      setBooking(null);
     } finally {
       setLoading(false);
     }
@@ -92,9 +86,7 @@ export default function CustomerBookingDetailPage() {
             <StatusBadge status={booking.bookingStatus} />
           </div>
         </div>
-        {booking.isMock && <span className="w-fit rounded-full bg-blue-50 px-3 py-1.5 text-xs font-extrabold text-[var(--brand-blue)]">Dữ liệu mẫu</span>}
       </header>
-      {booking.isMock && <p className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-700">Dữ liệu này dùng để demo giao diện. API thật sẽ được kết nối sau.</p>}
 
       <section className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4">

@@ -11,14 +11,16 @@ import { loadCustomerBookingList } from "@/lib/customer-bookings";
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [usingMockData, setUsingMockData] = useState(false);
-
   const load = useCallback(async () => {
     setLoading(true);
-    const { bookings: list, usingMockData: mock } = await loadCustomerBookingList();
-    setBookings(list);
-    setUsingMockData(mock);
-    setLoading(false);
+    try {
+      const { bookings: list } = await loadCustomerBookingList();
+      setBookings(list);
+    } catch {
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -38,12 +40,7 @@ export default function MyBookingsPage() {
         </Link>
       </header>
 
-      {usingMockData && (
-        <div className="flex flex-col gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-700 sm:flex-row sm:items-center sm:justify-between">
-          <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[var(--brand-blue)]">Dữ liệu mẫu</span>
-          <p>Dữ liệu này dùng để demo giao diện. API thật sẽ được kết nối sau.</p>
-        </div>
-      )}
+
 
       {loading ? (
         <div className="rounded-3xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải lịch đặt...</div>
@@ -72,7 +69,7 @@ export default function MyBookingsPage() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <strong className="text-lg">{booking.code}</strong>
-                      {booking.isMock && <span className="ml-2 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-extrabold text-[var(--brand-blue)]">Dữ liệu mẫu</span>}
+
                       <p className="mt-1 font-semibold">{booking.serviceName}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">

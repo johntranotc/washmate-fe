@@ -13,9 +13,7 @@ import {
   normalizePayment,
   paymentMethodLabels,
 } from "@/lib/customer-booking-data";
-import { loadCustomerBookingList } from "@/lib/customer-bookings";
-import { createDemoInvoice } from "@/lib/invoice-mock-data";
-import { createDemoPayment } from "@/lib/payment-mock-data";
+
 
 export default function CustomerInvoicePage() {
   const { bookingId } = useParams();
@@ -40,18 +38,8 @@ export default function CustomerInvoicePage() {
       setPayment(normalizedPayment);
       setInvoice(normalizeInvoice(invoiceData));
     } catch {
-      const { bookings } = await loadCustomerBookingList();
-      const found = bookings.find((item) => String(item.id) === String(bookingId));
-      if (!found || found.paymentStatus !== "PAID") {
-        setError("Chưa có hóa đơn.");
-        setBooking(null);
-      } else {
-        const normalizedBooking = normalizeBooking({ ...found, isMock: true });
-        const demoPayment = found.payment?.status === "PAID" ? found.payment : createDemoPayment(normalizedBooking, { status: "PAID", isMock: true });
-        setBooking(normalizedBooking);
-        setPayment(demoPayment);
-        setInvoice(createDemoInvoice(normalizedBooking, demoPayment));
-      }
+      setError("Chưa có hóa đơn.");
+      setBooking(null);
     } finally {
       setLoading(false);
     }
@@ -104,12 +92,12 @@ export default function CustomerInvoicePage() {
             <div><strong className="text-xl">SparkleAI</strong><p className="text-sm font-bold text-[var(--brand-blue)]">/ WashMate</p></div>
           </div>
           <div className="sm:text-right">
-            {invoice.isMock && <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-extrabold text-[var(--brand-blue)]">Dữ liệu mẫu</span>}
+
             <h1 className="mt-3 text-2xl font-extrabold">Hóa đơn thanh toán</h1>
             <p className="mt-1 text-sm text-[var(--text-muted)]">{invoice.code}</p>
           </div>
         </header>
-        {invoice.isMock && <p className="mt-5 rounded-2xl bg-blue-50 px-4 py-3 text-sm text-blue-700">Dữ liệu này dùng để demo giao diện. API thật sẽ được kết nối sau.</p>}
+
         <section className="grid gap-6 py-7 sm:grid-cols-2">
           <div>
             <p className="text-xs font-semibold text-[var(--text-muted)]">Thông tin khách hàng</p>

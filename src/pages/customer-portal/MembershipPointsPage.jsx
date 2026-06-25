@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { loyaltyApi } from "@/api/loyaltyApi";
 import { Button } from "@/components/ui/button";
-import DemoDataNotice from "@/components/customer/DemoDataNotice";
+
 import { LoyaltyHeroCard } from "@/components/customer/loyalty/LoyaltyHeroCard";
 import { LoyaltyStatsGrid } from "@/components/customer/loyalty/LoyaltyStatsGrid";
 import { TierLevelGrid } from "@/components/customer/loyalty/TierLevelGrid";
@@ -15,15 +15,11 @@ import {
   tierLabels,
   tierCodeToBadgeName,
 } from "@/lib/customer-engagement-data";
-import {
-  loyaltyMockAccount,
-  loyaltyTransactionMockData,
-} from "@/mocks/loyaltyMockData";
+
 
 export default function MembershipPointsPage() {
-  const [account, setAccount] = useState(loyaltyMockAccount);
+  const [account, setAccount] = useState({});
   const [transactions, setTransactions] = useState([]);
-  const [isMock, setIsMock] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
@@ -36,11 +32,8 @@ export default function MembershipPointsPage() {
         : [];
       setAccount(normalizedAccount);
       setTransactions(normalizeTransactions(transactionResponse));
-      setIsMock(false);
-    } catch {
-      setAccount(loyaltyMockAccount);
-      setTransactions(loyaltyTransactionMockData);
-      setIsMock(true);
+      setAccount({});
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
@@ -75,7 +68,6 @@ export default function MembershipPointsPage() {
         </div>
       </header>
 
-      {isMock && <DemoDataNotice />}
 
       <LoyaltyHeroCard
         tier={currentTier}

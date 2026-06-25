@@ -22,9 +22,8 @@ import {
   paymentMethodLabels,
 } from "@/lib/customer-booking-data";
 import { loadCustomerBookingList } from "@/lib/customer-bookings";
-import { createDemoPayment, createPaidDemoPayment } from "@/lib/payment-mock-data";
-import { updateCustomerDemoBookingPayment } from "@/lib/customer-demo-store";
-import { pushDemoNotification } from "@/lib/shared-booking-store";
+
+
 import {
   WASHMATE_BANK,
   buildQrContent,
@@ -176,19 +175,8 @@ export default function CustomerPaymentPage() {
       setBooking(normalizeBooking({ ...bookingData, payment: paymentData, paymentStatus: paymentData.status }));
       setPayment(paymentData);
       setMethod(paymentData.method || "DOMESTIC_CARD");
-    } catch {
-      const { bookings } = await loadCustomerBookingList();
-      const found = bookings.find((item) => String(item.id) === String(bookingId));
-      if (!found) {
-        setError("Không thể tải thông tin thanh toán.");
-        setBooking(null);
-      } else {
-        const normalizedBooking = normalizeBooking({ ...found, isMock: true });
-        const demoPayment = found.payment?.id ? found.payment : createDemoPayment(normalizedBooking);
-        setBooking(normalizedBooking);
-        setPayment(demoPayment);
-        setMethod(demoPayment.method || "DOMESTIC_CARD");
-      }
+      setError("Không thể tải thông tin thanh toán.");
+      setBooking(null);
     } finally {
       setLoading(false);
     }
@@ -229,36 +217,13 @@ export default function CustomerPaymentPage() {
       const updatedBooking = normalizeBooking({ ...booking, payment: merged, paymentStatus: "PAID" });
       setPayment(merged);
       setBooking(updatedBooking);
-      if (booking.isMock) updateCustomerDemoBookingPayment(booking.id, merged, booking);
-      _pushPaymentNotification(booking, merged);
-    } catch {
-      const paidPayment = createPaidDemoPayment(booking, method);
-      const merged = normalizePayment({ ...paidPayment, ...bankExtra });
-      const updatedBooking = normalizeBooking({ ...booking, payment: merged, paymentStatus: "PAID", isMock: true });
-      setPayment(merged);
-      setBooking(updatedBooking);
-      updateCustomerDemoBookingPayment(booking.id, merged, booking);
-      _pushPaymentNotification(booking, merged);
+      throw error;
     } finally {
       setProcessing(false);
     }
   }
 
-  function _pushPaymentNotification(b, paidPayment) {
-    const contentPart =
-      paidPayment.transferContent
-        ? ` với nội dung "${paidPayment.transferContent}"`
-        : "";
-    pushDemoNotification({
-      id: `notif-payment-${b.id}`,
-      type: "PAYMENT",
-      title: "Thanh toán thành công",
-      message: `Thanh toán cho lịch đặt ${b.code}${contentPart} đã được ghi nhận. Hóa đơn của bạn đã sẵn sàng.`,
-      read: false,
-      createdAt: new Date().toISOString(),
-      link: `/khach-hang/lich-dat/${b.id}`,
-    });
-  }
+
 
   /* ── Loading / error / guard states ── */
 
@@ -348,11 +313,7 @@ export default function CustomerPaymentPage() {
         </p>
       </header>
 
-      {booking.isMock && (
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-700">
-          <strong>Dữ liệu mẫu.</strong> Dữ liệu này dùng để demo giao diện. API thật sẽ được kết nối sau.
-        </div>
-      )}
+
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         {/* ── Left: payment method + QR ── */}

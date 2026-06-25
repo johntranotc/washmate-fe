@@ -26,14 +26,7 @@ import {
   normalizeSlot,
   normalizeVehicle,
 } from "@/lib/booking-flow";
-import {
-  createMockGarages,
-  createMockServices,
-  createMockServicesForGarage,
-  createMockSlots,
-  createMockVehicles,
-} from "@/lib/booking-mock-data";
-import { addCustomerDemoBooking } from "@/lib/customer-demo-store";
+
 
 // Step order: 1=Gara, 2=Service, 3=Vehicle, 4=Slot, 5=Review, 6=Success
 
@@ -57,7 +50,6 @@ export default function CustomerBookingFlowPage() {
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
-  const [usingMockData, setUsingMockData] = useState(false);
 
   const loadFoundationData = useCallback(async () => {
     setLoading(true);
@@ -69,24 +61,9 @@ export default function CustomerBookingFlowPage() {
         garageApi.getAll(),
       ]);
 
-      const apiVehicles =
-        vehicleResult.status === "fulfilled"
-          ? asList(vehicleResult.value).map(normalizeVehicle).filter((v) => v.status === "ACTIVE")
-          : createMockVehicles();
-      const apiServices =
-        serviceResult.status === "fulfilled"
-          ? asList(serviceResult.value).map(normalizeService).filter((s) => s.status === "ACTIVE")
-          : createMockServices();
-      const apiGarages =
-        garageResult.status === "fulfilled"
-          ? asList(garageResult.value).map(normalizeGarage).filter((g) => g.status === "ACTIVE")
-          : createMockGarages();
-
-      setUsingMockData(
-        vehicleResult.status === "rejected" ||
-          serviceResult.status === "rejected" ||
-          garageResult.status === "rejected",
-      );
+      const apiVehicles = vehicleResult.status === "fulfilled" ? asList(vehicleResult.value).map(normalizeVehicle).filter((v) => v.status === "ACTIVE") : [];
+      const apiServices = serviceResult.status === "fulfilled" ? asList(serviceResult.value).map(normalizeService).filter((s) => s.status === "ACTIVE") : [];
+      const apiGarages = garageResult.status === "fulfilled" ? asList(garageResult.value).map(normalizeGarage).filter((g) => g.status === "ACTIVE") : [];
       setVehicles(apiVehicles);
       setAllServices(apiServices);
       setGarages(apiGarages);
@@ -107,10 +84,7 @@ export default function CustomerBookingFlowPage() {
   const servicesForGarage = useMemo(() => {
     if (!selection.garage) return [];
     const garageId = getGarageId(selection.garage);
-    // If garage is mock, use per-garage mock services
-    if (selection.garage.isMock) {
-      return createMockServicesForGarage(garageId);
-    }
+
     // From API: filter by garageId or show all if API doesn't have garageId on services
     const filtered = allServices.filter(
       (s) => !s.garageId || String(s.garageId) === String(garageId),
@@ -135,21 +109,14 @@ export default function CustomerBookingFlowPage() {
         return;
       }
       try {
-        if (selection.garage.isMock) {
-          setUsingMockData(true);
-          if (active) setSlots(createMockSlots(garageId));
-          return;
-        }
+
         const data = await bookingSlotApi.getAvailable({ garageId, date: selection.date });
         const normalized = asList(data)
           .map(normalizeSlot)
           .filter((slot) => !slot.garageId || String(slot.garageId) === String(garageId));
         if (active) setSlots(normalized);
       } catch {
-        if (active) {
-          setUsingMockData(true);
-          setSlots(createMockSlots(garageId));
-        }
+        if (active) setSlots([]);
       } finally {
         if (active) setSlotLoading(false);
       }
@@ -224,79 +191,18 @@ export default function CustomerBookingFlowPage() {
       bookingNote: note.trim(),
     };
 
-    const isDemoFlow =
-      usingMockData ||
-      selection.vehicle.isMock ||
-      selection.garage.isMock ||
-      selection.service.isMock ||
-      selection.slot.isMock;
 
-    const userProfile = (() => {
-      try {
-        return JSON.parse(localStorage.getItem("washmate_user_profile") || "{}");
-      } catch {
-        return {};
-      }
-    })();
-
-    const demoBookingRecord = (id, code) => ({
-      bookingId: id,
-      bookingCode: code,
-      bookingStatus: "PENDING_STAFF_CONFIRMATION",
-      paymentStatus: "PENDING",
-      customerName:
-        userProfile.fullName || userProfile.name || userProfile.customerName || "Khách hàng",
-      customerEmail: userProfile.email || "",
-      customerPhone: userProfile.phone || userProfile.phoneNumber || "",
-      vehicle:
-        [selection.vehicle.brand, selection.vehicle.model].filter(Boolean).join(" ") ||
-        selection.vehicle.licensePlate,
-      plate: selection.vehicle.licensePlate,
-      garageId: getGarageId(selection.garage),
-      serviceId: selection.service.id,
-      serviceName: selection.service.name,
-      garageName: selection.garage.name,
-      garageAddress: selection.garage.address,
-      bookingDate,
-      slotTime: selection.slot.startTime,
-      endTime: selection.slot.endTime,
-      note: note.trim(),
-      amount: selection.service.price,
-      discount: 0,
-      finalAmount: selection.service.price,
-      createdAt: new Date().toISOString(),
-    });
 
     try {
       const response = await bookingApi.createBooking(payload);
       const normalizedResult = normalizeBookingResponse(response);
-      if (isDemoFlow) {
-        addCustomerDemoBooking(
-          demoBookingRecord(normalizedResult.bookingId, normalizedResult.bookingCode),
-        );
-      }
       setResult({
         ...normalizedResult,
         bookingStatus: "PENDING_STAFF_CONFIRMATION",
-        isDemo: isDemoFlow,
       });
       setStep(6);
     } catch (error) {
-      if (isDemoFlow) {
-        const demoId = Date.now();
-        const bookingCode = `BK-${String(demoId).slice(-6)}`;
-        addCustomerDemoBooking(demoBookingRecord(demoId, bookingCode));
-        setResult({
-          bookingId: demoId,
-          bookingCode,
-          bookingStatus: "PENDING_STAFF_CONFIRMATION",
-          paymentStatus: "PENDING",
-          isDemo: true,
-        });
-        setStep(6);
-      } else {
-        setSubmitError(bookingErrorMessage(error));
-      }
+      setSubmitError(bookingErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
@@ -382,14 +288,7 @@ export default function CustomerBookingFlowPage() {
 
       <BookingStepper currentStep={step} />
 
-      {usingMockData && step < 6 && (
-        <div className="flex flex-col gap-2 rounded-2xl border border-border bg-secondary px-5 py-4 text-sm text-secondary-foreground sm:flex-row sm:items-center sm:justify-between">
-          <span className="w-fit rounded-full bg-card px-3 py-1 text-xs font-extrabold text-primary">
-            Dữ liệu mẫu
-          </span>
-          <p>Đang dùng dữ liệu mẫu để demo. API thật sẽ được kết nối sau.</p>
-        </div>
-      )}
+
 
       {submitError && (
         <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">

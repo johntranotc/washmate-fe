@@ -26,8 +26,7 @@ import {
 } from "lucide-react";
 import { tiers as membershipTiers } from "@/lib/site-data";
 import { tierCodeToBadgeName } from "@/lib/customer-engagement-data";
-import { loyaltyMockAccount } from "@/mocks/loyaltyMockData";
-import { dashboardCustomer, upcomingBookings, userVehicles } from "@/lib/customer-dashboard-data";
+
 import { TierBadge } from "@/components/site/tier-badge";
 import { cn } from "@/lib/utils";
 
@@ -35,11 +34,17 @@ import { cn } from "@/lib/utils";
 const PROFILE_KEY = "washmate_user_profile";
 const NOTIF_KEY = "washmate_notifications";
 
-// Resolve tier object from site-data via loyaltyMockAccount
-const currentTierBadgeName =
-  tierCodeToBadgeName[loyaltyMockAccount.tier] ?? loyaltyMockAccount.tierName;
-const currentTier =
-  membershipTiers.find((t) => t.name === currentTierBadgeName) ?? membershipTiers[0];
+const loyaltyData = {
+  tier: "NEW",
+  tierName: "Thành viên mới",
+  nextTierName: "Bạc",
+  availablePoints: 0,
+  pointsToNextTier: 0,
+  progressPercent: 0,
+};
+
+const currentTierBadgeName = tierCodeToBadgeName[loyaltyData.tier] ?? loyaltyData.tierName;
+const currentTier = membershipTiers.find((t) => t.name === currentTierBadgeName) ?? membershipTiers[0];
 
 // ── Helpers ────────────────────────────────────────────────────
 function getStoredProfile() {
@@ -61,8 +66,8 @@ function getStoredNotifications() {
 }
 
 const defaultProfile = {
-  name: dashboardCustomer.name,
-  email: dashboardCustomer.email,
+  name: "Khách hàng WashMate",
+  email: "khachhang@washmate.vn",
   phone: "0901 234 567",
   dob: "1995-03-15",
   gender: "Nam",
@@ -106,7 +111,7 @@ function ProfileHeroCard({ profile }) {
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-3xl font-extrabold">{profile.name}</h2>
             <span className="inline-flex rounded-full bg-white/10 border border-white/20 shadow-inner px-4 py-1.5 text-[12px] font-bold tracking-wide">
-              Hạng {loyaltyMockAccount.tierName}
+              Hạng {loyaltyData.tierName}
             </span>
             <span className="inline-flex rounded-full bg-green-500/20 border border-green-500/30 px-4 py-1.5 text-[12px] font-semibold text-green-300">
               ● Đang hoạt động
@@ -131,23 +136,23 @@ function ProfileHeroCard({ profile }) {
           <div className="pt-2">
             <p className="text-sm font-medium text-slate-400">Điểm khả dụng</p>
             <p className="mt-1 text-4xl font-extrabold leading-tight text-white drop-shadow-md">
-              {loyaltyMockAccount.availablePoints.toLocaleString("vi-VN")}
+              {loyaltyData.availablePoints.toLocaleString("vi-VN")}
             </p>
           </div>
 
           {/* Progress – mobile/tablet only; desktop shows in mini panel */}
           <div className="lg:hidden pt-2">
             <div className="mb-2 flex justify-between text-xs font-semibold text-slate-300">
-              <span>Hạng {loyaltyMockAccount.tierName}</span>
+              <span>Hạng {loyaltyData.tierName}</span>
               <span>
-                Còn {loyaltyMockAccount.pointsToNextTier.toLocaleString("vi-VN")} điểm →{" "}
-                {loyaltyMockAccount.nextTierName}
+                Còn {loyaltyData.pointsToNextTier.toLocaleString("vi-VN")} điểm →{" "}
+                {loyaltyData.nextTierName}
               </span>
             </div>
             <div className="h-2.5 overflow-hidden rounded-full bg-white/10 border border-white/10">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 shadow-[0_0_10px_rgba(96,165,250,0.5)] transition-all duration-500"
-                style={{ width: `${Math.min(loyaltyMockAccount.progressPercent, 100)}%` }}
+                style={{ width: `${Math.min(loyaltyData.progressPercent, 100)}%` }}
               />
             </div>
           </div>
@@ -167,15 +172,15 @@ function ProfileHeroCard({ profile }) {
 
           <div className="rounded-2xl bg-white/5 border border-white/10 p-5 backdrop-blur-md hover:bg-white/10 transition-colors duration-300">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
-              Tiến độ lên hạng {loyaltyMockAccount.nextTierName}
+              Tiến độ lên hạng {loyaltyData.nextTierName}
             </p>
             <p className="text-lg font-extrabold text-white">
-              Còn {loyaltyMockAccount.pointsToNextTier.toLocaleString("vi-VN")} điểm
+              Còn {loyaltyData.pointsToNextTier.toLocaleString("vi-VN")} điểm
             </p>
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10 border border-white/10">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 shadow-[0_0_10px_rgba(96,165,250,0.5)] transition-all duration-500"
-                style={{ width: `${Math.min(loyaltyMockAccount.progressPercent, 100)}%` }}
+                style={{ width: `${Math.min(loyaltyData.progressPercent, 100)}%` }}
               />
             </div>
           </div>
@@ -190,19 +195,19 @@ function StatsRow() {
   const stats = [
     {
       label: "Tổng lịch đã đặt",
-      value: upcomingBookings.length + 5,
+      value: 0,
       icon: BookOpen,
       cls: "text-blue-600 bg-blue-50",
     },
     {
       label: "Xe đang quản lý",
-      value: userVehicles.length,
+      value: 0,
       icon: Car,
       cls: "text-teal-600 bg-teal-50",
     },
     {
       label: "Điểm tích luỹ",
-      value: loyaltyMockAccount.availablePoints.toLocaleString("vi-VN"),
+      value: loyaltyData.availablePoints.toLocaleString("vi-VN"),
       icon: Star,
       cls: "text-amber-600 bg-amber-50",
     },

@@ -2,10 +2,7 @@ import { Bell, CheckCheck, CircleDollarSign, Gift, Info, Tag } from "lucide-reac
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { notificationApi } from "@/api/notificationApi";
-import DemoDataNotice from "@/components/customer/DemoDataNotice";
 import { normalizeNotifications } from "@/lib/customer-engagement-data";
-import { getDemoNotifications, markDemoNotificationRead, markAllDemoNotificationsRead } from "@/lib/shared-booking-store";
-import { notificationMockData } from "@/mocks/notificationMockData";
 
 const filters = [
   ["ALL", "Tất cả"],
@@ -27,61 +24,35 @@ const iconByType = {
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState("ALL");
-  const [isMock, setIsMock] = useState(false);
+
 
   useEffect(() => {
-    // Always load local demo notifications (from staff confirm/reject actions)
-    const localNotifs = getDemoNotifications();
     notificationApi
       .getNotifications()
       .then((response) => {
-        const apiNotifs = normalizeNotifications(response);
-        // Merge: local (newest) first, then API, deduplicate by id
-        const seenIds = new Set(localNotifs.map((n) => n.id));
-        const merged = [
-          ...localNotifs,
-          ...apiNotifs.filter((n) => !seenIds.has(n.id)),
-        ];
-        setNotifications(merged);
-        setIsMock(localNotifs.length > 0);
+        setNotifications(normalizeNotifications(response));
       })
-      .catch(() => {
-        // Merge local with static mock data
-        const seenIds = new Set(localNotifs.map((n) => n.id));
-        const merged = [
-          ...localNotifs,
-          ...notificationMockData.filter((n) => !seenIds.has(n.id)),
-        ];
-        setNotifications(merged);
-        setIsMock(true);
+      .catch((error) => {
+        console.error("Failed to load notifications:", error);
       });
   }, []);
 
   const markRead = async (id) => {
-    const updateLocal = () => {
-      setNotifications((items) => items.map((item) => item.id === id ? { ...item, read: true } : item));
-      markDemoNotificationRead(id);
-    };
-    if (isMock) return updateLocal();
+    setNotifications((items) => items.map((item) => item.id === id ? { ...item, read: true } : item));
     try {
       await notificationApi.markNotificationAsRead(id);
-      updateLocal();
-    } catch {
-      updateLocal();
-      setIsMock(true);
+    } catch (error) {
+      console.error("Failed to mark read:", error);
     }
   };
 
   const markAllRead = async () => {
-    if (!isMock) {
-      try {
-        await notificationApi.markAllRead();
-      } catch {
-        setIsMock(true);
-      }
-    }
     setNotifications((items) => items.map((item) => ({ ...item, read: true })));
-    markAllDemoNotificationsRead();
+    try {
+      await notificationApi.markAllRead();
+    } catch (error) {
+      console.error("Failed to mark all read:", error);
+    }
   };
 
   const visibleItems = useMemo(() => notifications.filter((item) => {
@@ -104,7 +75,7 @@ export default function NotificationsPage() {
           <CheckCheck size={16} /> Đánh dấu tất cả đã đọc
         </button>
       </header>
-      {isMock && <DemoDataNotice />}
+
       <div className="flex flex-wrap gap-2">
         {filters.map(([value, label]) => (
           <button key={value} onClick={() => setFilter(value)} className={`rounded-full px-4 py-2 text-xs font-bold ${filter === value ? "bg-blue-600 text-white" : "border border-slate-200 bg-white text-slate-600"}`}>{label}</button>

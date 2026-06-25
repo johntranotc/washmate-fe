@@ -2,8 +2,7 @@ import { ArrowRight, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { staffApi } from "@/api/staffApi";
-import DemoDataNotice from "@/components/customer/DemoDataNotice";
-import { getStaffDemoBookings } from "@/lib/staff-demo-store";
+
 import {
   bookingStatusLabels,
   bookingStatusTone,
@@ -36,18 +35,17 @@ export default function StaffBookingListPage() {
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState(searchParams.get("status") || "ALL");
   const [loading, setLoading] = useState(true);
-  const [isMock, setIsMock] = useState(false);
+
 
   useEffect(() => {
     staffApi
       .getTodayBookings()
       .then((response) => {
         setBookings(normalizeBookingList(response).map(normalizeStaffBooking));
-        setIsMock(false);
       })
-      .catch(() => {
-        setBookings(getStaffDemoBookings());
-        setIsMock(true);
+      .catch((error) => {
+        console.error("Failed to load today bookings:", error);
+        setBookings([]);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -81,7 +79,7 @@ export default function StaffBookingListPage() {
         </p>
       </header>
 
-      {isMock && <DemoDataNotice />}
+
 
       {/* Pending alert banner */}
       {pendingCount > 0 && (

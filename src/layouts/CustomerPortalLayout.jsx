@@ -13,8 +13,10 @@ import {
   User,
 } from "lucide-react";
 import { Logo } from "@/components/site/logo";
-import { dashboardCustomer } from "@/lib/customer-dashboard-data";
-import { loyaltyMockAccount } from "@/mocks/loyaltyMockData";
+const loyaltyMockAccount = {
+  tierName: "Thành viên mới",
+  availablePoints: 0
+};
 import { cn } from "@/lib/utils";
 import { jwtDecode } from "jwt-decode";
 

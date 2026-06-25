@@ -2,12 +2,7 @@ import { CheckCircle2, Clock3, Droplets, MessageSquare, TimerReset, UsersRound, 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { staffApi } from "@/api/staffApi";
-import DemoDataNotice from "@/components/customer/DemoDataNotice";
-import {
-  confirmStaffBooking,
-  getStaffDemoBookings,
-  rejectStaffBooking,
-} from "@/lib/staff-demo-store";
+
 import {
   bookingStatusLabels,
   bookingStatusTone,
@@ -18,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 export default function StaffQueuePage() {
   const [bookings, setBookings] = useState([]);
-  const [isMock, setIsMock] = useState(false);
+
   const [rejectingId, setRejectingId] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
 
@@ -28,9 +23,9 @@ export default function StaffQueuePage() {
       .then((data) => {
         setBookings(normalizeBookingList(data).map(normalizeStaffBooking));
       })
-      .catch(() => {
-        setBookings(getStaffDemoBookings());
-        setIsMock(true);
+      .catch((error) => {
+        console.error("Failed to load today bookings:", error);
+        setBookings([]);
       });
   }
 
@@ -38,16 +33,26 @@ export default function StaffQueuePage() {
     load();
   }, []);
 
-  function handleConfirm(bookingId) {
-    const updated = confirmStaffBooking(bookingId);
-    setBookings(updated);
+  async function handleConfirm(bookingId) {
+    try {
+      // TODO: Replace with real API call
+      // await staffApi.confirmBooking(bookingId);
+      load();
+    } catch (error) {
+      console.error(error);
+    }
   }
 
-  function handleReject(bookingId) {
-    const updated = rejectStaffBooking(bookingId, rejectReason.trim());
-    setBookings(updated);
-    setRejectingId(null);
-    setRejectReason("");
+  async function handleReject(bookingId) {
+    try {
+      // TODO: Replace with real API call
+      // await staffApi.rejectBooking(bookingId, rejectReason.trim());
+      setRejectingId(null);
+      setRejectReason("");
+      load();
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   const pending = bookings.filter(
@@ -69,7 +74,7 @@ export default function StaffQueuePage() {
         </p>
       </header>
 
-      {isMock && <DemoDataNotice />}
+
 
       {/* Stats */}
       <section className="grid gap-4 sm:grid-cols-3">
