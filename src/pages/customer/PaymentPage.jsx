@@ -12,7 +12,6 @@ import {
   normalizePayment,
   paymentMethodLabels,
 } from "@/lib/customer-booking-data";
-import { createDemoPayment, createPaidDemoPayment } from "@/lib/payment-mock-data";
 import { cn } from "@/lib/utils";
 
 const methods = [
@@ -31,7 +30,7 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
-  const [isMock, setIsMock] = useState(false);
+  
 
   const loadPayment = useCallback(async () => {
     setLoading(true);
@@ -54,18 +53,14 @@ export default function PaymentPage() {
       setBooking(normalizeBooking({ ...bookingData, payment: paymentData, paymentStatus: paymentData.status }));
       setPayment(paymentData);
       setMethod(paymentData.method || "DOMESTIC_CARD");
-      setIsMock(false);
+      
     } catch {
       if (!local) {
         setError("Không thể tải thông tin thanh toán.");
         setBooking(null);
       } else {
-        const normalizedBooking = normalizeBooking({ ...local, isMock: true });
-        const demoPayment = createDemoPayment(normalizedBooking);
-        setBooking(normalizedBooking);
-        setPayment(demoPayment);
-        setMethod(demoPayment.method || "DOMESTIC_CARD");
-        setIsMock(true);
+        setError("Đã xảy ra lỗi khi kết nối API thanh toán.");
+        setBooking(null);
       }
     } finally {
       setLoading(false);
@@ -91,14 +86,7 @@ export default function PaymentPage() {
       setPayment(paidPayment);
       setBooking(normalizeBooking({ ...booking, payment: paidPayment, paymentStatus: "PAID", bookingStatus: "CONFIRMED" }));
     } catch {
-      const paidPayment = createPaidDemoPayment(booking, method);
-      if (state.bookings.some((item) => String(item.id) === String(booking.id))) {
-        actions.payBooking(booking.id, method);
-      }
-      setPayment(paidPayment);
-      setBooking(normalizeBooking({ ...booking, payment: paidPayment, paymentStatus: "PAID", bookingStatus: "CONFIRMED", isMock: true }));
-      setIsMock(true);
-    } finally {
+      setError("Thanh toán thất bại. Vui lòng thử lại.");
       setProcessing(false);
     }
   }

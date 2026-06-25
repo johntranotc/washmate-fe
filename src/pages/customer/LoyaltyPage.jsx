@@ -7,12 +7,6 @@ import {
   normalizeTransactions,
   tierLabels,
 } from "../../lib/customer-engagement-data";
-import {
-  loyaltyMockAccount,
-  loyaltyTierMockData,
-  loyaltyTransactionMockData,
-} from "../../mocks/loyaltyMockData";
-
 const transactionLabels = {
   EARN: "Tích điểm",
   REDEEM: "Đổi thưởng",
@@ -21,9 +15,9 @@ const transactionLabels = {
 };
 
 export default function LoyaltyPage() {
-  const [account, setAccount] = useState(loyaltyMockAccount);
+  const [account, setAccount] = useState({});
   const [transactions, setTransactions] = useState([]);
-  const [isMock, setIsMock] = useState(false);
+  
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
@@ -36,11 +30,11 @@ export default function LoyaltyPage() {
         : [];
       setAccount(normalizedAccount);
       setTransactions(normalizeTransactions(transactionResponse));
-      setIsMock(false);
+      
     } catch {
-      setAccount(loyaltyMockAccount);
-      setTransactions(loyaltyTransactionMockData);
-      setIsMock(true);
+      setAccount({});
+      setTransactions([]);
+      
     } finally {
       setLoading(false);
     }
@@ -66,7 +60,7 @@ export default function LoyaltyPage() {
         </button>
       </header>
 
-      {isMock && <DemoDataNotice />}
+      
 
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-400 p-7 text-white shadow-lg shadow-blue-200/60">
         <Sparkles className="absolute -right-4 -top-4 opacity-20" size={150} />
@@ -106,7 +100,7 @@ export default function LoyaltyPage() {
       <section>
         <h2 className="text-lg font-extrabold text-slate-950">Các hạng thành viên</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {loyaltyTierMockData.map((tier) => (
+          {[].map((tier) => (
             <article key={tier.code} className={`rounded-2xl border bg-white p-5 ${account.tier === tier.code ? "border-blue-500 ring-2 ring-blue-100" : "border-slate-200"}`}>
               <div className="flex items-center justify-between">
                 <Award className={account.tier === tier.code ? "text-blue-600" : "text-slate-400"} size={22} />

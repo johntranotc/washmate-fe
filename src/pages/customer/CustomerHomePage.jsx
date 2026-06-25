@@ -24,21 +24,17 @@ import {
   normalizeSummary,
   tierLabels,
 } from "../../lib/customer-engagement-data";
-import { customerDashboardMockData } from "../../mocks/customerDashboardMockData";
-import { loyaltyMockAccount } from "../../mocks/loyaltyMockData";
-import { notificationMockData } from "../../mocks/notificationMockData";
-import { promotionMockData } from "../../mocks/promotionMockData";
 import { useAppStore } from "../../state/AppStore";
 
 const currency = (value) => `${Number(value || 0).toLocaleString("vi-VN")}đ`;
 
 export default function CustomerHomePage() {
   const { state } = useAppStore();
-  const [summary, setSummary] = useState(customerDashboardMockData);
-  const [loyalty, setLoyalty] = useState(loyaltyMockAccount);
+  const [summary, setSummary] = useState({});
+  const [loyalty, setLoyalty] = useState({});
   const [promotions, setPromotions] = useState([]);
   const [notifications, setNotifications] = useState([]);
-  const [isMock, setIsMock] = useState(false);
+  
 
   useEffect(() => {
     Promise.allSettled([
@@ -48,11 +44,11 @@ export default function CustomerHomePage() {
       notificationApi.getNotifications(),
     ]).then(([summaryResult, loyaltyResult, promotionResult, notificationResult]) => {
       const hasFallback = [summaryResult, loyaltyResult, promotionResult, notificationResult].some((item) => item.status === "rejected");
-      setSummary(summaryResult.status === "fulfilled" ? normalizeSummary(summaryResult.value) : customerDashboardMockData);
-      setLoyalty(loyaltyResult.status === "fulfilled" ? normalizeLoyalty(loyaltyResult.value) : loyaltyMockAccount);
+      setSummary(summaryResult.status === "fulfilled" ? normalizeSummary(summaryResult.value) : {});
+      setLoyalty(loyaltyResult.status === "fulfilled" ? normalizeLoyalty(loyaltyResult.value) : {});
       setPromotions(promotionResult.status === "fulfilled" ? normalizePromotions(promotionResult.value) : promotionMockData);
       setNotifications(notificationResult.status === "fulfilled" ? normalizeNotifications(notificationResult.value) : notificationMockData);
-      setIsMock(hasFallback);
+      
     });
   }, []);
 
@@ -91,7 +87,7 @@ export default function CustomerHomePage() {
           <Link to="/customer/booking" className="inline-flex items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 text-sm font-extrabold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700">Đặt lịch nhanh <ArrowRight size={18} /></Link>
         </div>
       </section>
-      {isMock && <DemoDataNotice />}
+      
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {metrics.map(([Icon, label, value, unit]) => (
@@ -134,7 +130,7 @@ export default function CustomerHomePage() {
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="flex items-center gap-2"><Lightbulb className="text-amber-500" size={18} /><h2 className="font-extrabold">Gợi ý chăm sóc</h2></div>
-          <p className="mt-4 text-xs leading-6 text-slate-600">{summary.careSuggestion || customerDashboardMockData.careSuggestion}</p>
+          <p className="mt-4 text-xs leading-6 text-slate-600">{summary.careSuggestion || {}.careSuggestion}</p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="flex items-center justify-between"><div className="flex items-center gap-2"><Bell className="text-blue-600" size={18} /><h2 className="font-extrabold">Thông báo</h2></div><span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700">{unreadCount} mới</span></div>

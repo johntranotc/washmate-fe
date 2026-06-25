@@ -2,15 +2,12 @@ import { Gift, LockKeyhole, Sparkles, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { loyaltyApi } from "../../api/loyaltyApi";
 import { rewardApi } from "../../api/rewardApi";
-import DemoDataNotice from "../../components/customer/DemoDataNotice";
 import { normalizeLoyalty, normalizeRewards } from "../../lib/customer-engagement-data";
-import { loyaltyMockAccount } from "../../mocks/loyaltyMockData";
-import { rewardMockData } from "../../mocks/promotionMockData";
 
 export default function RewardsPage() {
   const [rewards, setRewards] = useState([]);
   const [points, setPoints] = useState(0);
-  const [isMock, setIsMock] = useState(false);
+  
   const [message, setMessage] = useState("");
   const [redeemingId, setRedeemingId] = useState(null);
 
@@ -19,12 +16,12 @@ export default function RewardsPage() {
       .then(([accountResponse, rewardResponse]) => {
         setPoints(normalizeLoyalty(accountResponse).availablePoints);
         setRewards(normalizeRewards(rewardResponse));
-        setIsMock(false);
+        
       })
-      .catch(() => {
-        setPoints(loyaltyMockAccount.availablePoints);
-        setRewards(rewardMockData);
-        setIsMock(true);
+      .catch((error) => {
+        console.error("Failed to load rewards", error);
+        setPoints(0);
+        setRewards([]);
       });
   }, []);
 
@@ -50,7 +47,7 @@ export default function RewardsPage() {
         </div>
         <div className="rounded-2xl bg-blue-600 px-5 py-3 text-white"><p className="text-[10px] text-blue-100">Điểm khả dụng</p><b className="text-2xl">{points.toLocaleString("vi-VN")}</b></div>
       </header>
-      {isMock && <DemoDataNotice />}
+      
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {rewards.map((reward) => {
           const enoughPoints = points >= reward.pointsRequired;

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { staffApi } from "../../api/staffApi";
 import DemoDataNotice from "../../components/customer/DemoDataNotice";
-import { getStaffDemoBookings } from "../../lib/staff-demo-store";
+
 import {
   bookingStatusLabels,
   normalizeBookingList,
@@ -20,17 +20,17 @@ export default function StaffBookingSearchPage() {
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState(searchParams.get("status") || "ALL");
   const [loading, setLoading] = useState(true);
-  const [isMock, setIsMock] = useState(false);
+  
 
   useEffect(() => {
     staffApi.getTodayBookings()
       .then((response) => {
         setBookings(normalizeBookingList(response).map(normalizeStaffBooking));
-        setIsMock(false);
+        
       })
       .catch(() => {
-        setBookings(getStaffDemoBookings());
-        setIsMock(true);
+        setBookings([]);
+        
       })
       .finally(() => setLoading(false));
   }, []);
@@ -47,7 +47,7 @@ export default function StaffBookingSearchPage() {
         <h1 className="mt-2 text-3xl font-extrabold">Danh sách lịch đặt</h1>
         <p className="mt-2 text-sm text-slate-500">Tra cứu và xử lý booking theo đúng vòng đời dịch vụ.</p>
       </header>
-      {isMock && <DemoDataNotice />}
+      
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
         <label className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-3">
           <Search size={17} className="text-slate-400" />

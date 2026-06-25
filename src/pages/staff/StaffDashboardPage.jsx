@@ -3,19 +3,19 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { staffApi } from "../../api/staffApi";
 import DemoDataNotice from "../../components/customer/DemoDataNotice";
-import { getStaffDemoBookings } from "../../lib/staff-demo-store";
+
 import { bookingStatusLabels, normalizeBookingList, normalizeStaffBooking } from "../../lib/staff-booking-data";
 
 export default function StaffDashboardPage() {
   const [bookings, setBookings] = useState([]);
-  const [isMock, setIsMock] = useState(false);
+  
 
   useEffect(() => {
     staffApi.getTodayBookings().then((data) => {
       setBookings(normalizeBookingList(data).map(normalizeStaffBooking));
     }).catch(() => {
-      setBookings(getStaffDemoBookings());
-      setIsMock(true);
+      setBookings([]);
+      
     });
   }, []);
 
@@ -32,7 +32,7 @@ export default function StaffDashboardPage() {
   return (
     <div className="space-y-6">
       <header><p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Trung tâm vận hành</p><h1 className="mt-2 text-3xl font-extrabold">Xin chào nhân viên</h1><p className="mt-2 text-sm text-slate-500">Theo dõi công việc và lịch phục vụ trong ngày.</p></header>
-      {isMock && <DemoDataNotice />}
+      
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">{metrics.map(([Icon, label, value]) => <article key={label} className="rounded-2xl border border-slate-200 bg-white p-5"><Icon className="text-blue-600" size={20} /><p className="mt-4 text-xs text-slate-500">{label}</p><b className="mt-1 block text-2xl">{value}</b></article>)}</section>
       <section className="grid gap-5 lg:grid-cols-[1.4fr_0.6fr]">
         <article className="rounded-2xl border border-slate-200 bg-white p-5">

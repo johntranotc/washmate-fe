@@ -14,8 +14,7 @@ import {
   normalizePayment,
   paymentMethodLabels,
 } from "@/lib/customer-booking-data";
-import { createDemoInvoice } from "@/lib/invoice-mock-data";
-import { createDemoPayment } from "@/lib/payment-mock-data";
+
 
 export default function InvoicePage() {
   const { bookingId, invoiceId } = useParams();
@@ -62,11 +61,8 @@ export default function InvoicePage() {
         setError("Chưa có hóa đơn.");
         setBooking(null);
       } else {
-        const normalizedBooking = normalizeBooking({ ...local, isMock: true });
-        const demoPayment = createDemoPayment(normalizedBooking, { status: "PAID", isMock: true });
-        setBooking(normalizedBooking);
-        setPayment(demoPayment);
-        setInvoice(createDemoInvoice(normalizedBooking, demoPayment));
+        setError("Đã xảy ra lỗi khi kết nối API hóa đơn.");
+        setBooking(null);
       }
     } finally {
       setLoading(false);

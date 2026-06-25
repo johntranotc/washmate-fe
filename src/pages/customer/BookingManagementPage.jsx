@@ -20,7 +20,7 @@ export default function BookingManagementPage() {
   const [filter, setFilter] = useState("ALL");
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isMock, setIsMock] = useState(false);
+  
 
   const loadBookings = useCallback(async () => {
     setLoading(true);
@@ -29,10 +29,10 @@ export default function BookingManagementPage() {
       const list = normalizeBookingList(data);
       if (!list.length) throw new Error("EMPTY");
       setBookings(list);
-      setIsMock(false);
+      
     } catch {
       setBookings(state.bookings.map((item) => normalizeBooking({ ...item, isMock: true })));
-      setIsMock(true);
+      
     } finally {
       setLoading(false);
     }

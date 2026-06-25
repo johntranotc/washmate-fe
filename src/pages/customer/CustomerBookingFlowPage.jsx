@@ -27,10 +27,7 @@ import {
   normalizeSlot,
   normalizeVehicle,
 } from "@/lib/booking-flow";
-import {
-  createMockGarages,
-  createMockSlots,
-} from "@/lib/booking-mock-data";
+
 
 export default function CustomerBookingFlowPage() {
   const { state, actions } = useAppStore();
@@ -72,9 +69,7 @@ export default function CustomerBookingFlowPage() {
     const fallbackServices = state.services
       .map((item) => normalizeService({ ...item, isMock: true }))
       .filter((item) => item.status === "ACTIVE");
-    const fallbackGarages = createMockGarages(state.garages).filter(
-      (item) => item.status === "ACTIVE",
-    );
+    const fallbackGarages = [];
 
     if (demoMode) {
       setUsingMockData(true);
@@ -158,7 +153,7 @@ export default function CustomerBookingFlowPage() {
       try {
         if (demoMode || selection.garage.isMock) {
           setUsingMockData(true);
-          if (active) setSlots(createMockSlots(garageId));
+          if (active) setSlots([]);
           return;
         }
         const data = await bookingSlotApi.getAvailable({
@@ -175,7 +170,7 @@ export default function CustomerBookingFlowPage() {
       } catch {
         if (active) {
           setUsingMockData(true);
-          setSlots(createMockSlots(garageId));
+          setSlots([]);
         }
       } finally {
         if (active) setSlotLoading(false);

@@ -20,7 +20,7 @@ export default function BookingDetailPage() {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isMock, setIsMock] = useState(false);
+  
 
   const loadDetail = useCallback(async () => {
     setLoading(true);
@@ -38,7 +38,7 @@ export default function BookingDetailPage() {
       } else {
         setBooking(normalized);
       }
-      setIsMock(false);
+      
     } catch {
       const local = state.bookings.find((item) => String(item.id) === String(bookingId));
       if (!local) {
@@ -46,7 +46,7 @@ export default function BookingDetailPage() {
         setBooking(null);
       } else {
         setBooking(normalizeBooking({ ...local, isMock: true }));
-        setIsMock(true);
+        
       }
     } finally {
       setLoading(false);

@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { notificationApi } from "../../api/notificationApi";
 import DemoDataNotice from "../../components/customer/DemoDataNotice";
 import { normalizeNotifications } from "../../lib/customer-engagement-data";
-import { notificationMockData } from "../../mocks/notificationMockData";
 
 const filters = [
   ["ALL", "Tất cả"],
@@ -26,17 +25,17 @@ const iconByType = {
 export default function NotificationPage() {
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState("ALL");
-  const [isMock, setIsMock] = useState(false);
+  
 
   useEffect(() => {
     notificationApi.getNotifications()
       .then((response) => {
         setNotifications(normalizeNotifications(response));
-        setIsMock(false);
+        
       })
       .catch(() => {
         setNotifications(notificationMockData);
-        setIsMock(true);
+        
       });
   }, []);
 
@@ -48,7 +47,7 @@ export default function NotificationPage() {
       updateLocal();
     } catch {
       updateLocal();
-      setIsMock(true);
+      
     }
   };
 
@@ -57,7 +56,7 @@ export default function NotificationPage() {
       try {
         await notificationApi.markAllRead();
       } catch {
-        setIsMock(true);
+        
       }
     }
     setNotifications((items) => items.map((item) => ({ ...item, read: true })));
@@ -83,7 +82,7 @@ export default function NotificationPage() {
           <CheckCheck size={16} /> Đánh dấu tất cả đã đọc
         </button>
       </header>
-      {isMock && <DemoDataNotice />}
+      
       <div className="flex flex-wrap gap-2">
         {filters.map(([value, label]) => (
           <button key={value} onClick={() => setFilter(value)} className={`rounded-full px-4 py-2 text-xs font-bold ${filter === value ? "bg-blue-600 text-white" : "border border-slate-200 bg-white text-slate-600"}`}>{label}</button>
