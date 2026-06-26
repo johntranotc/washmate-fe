@@ -37,6 +37,7 @@ const navGroups = [
     items: [
       { label: "Doanh thu", path: "/quan-tri/doanh-thu", icon: BarChart3 },
       { label: "Điểm thành viên", path: "/quan-tri/diem-thanh-vien", icon: Gift },
+      { label: "AI Insights", path: "/admin/ai-insights", icon: Sparkles },
     ],
   },
   {

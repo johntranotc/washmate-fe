@@ -53,6 +53,7 @@ import AdminPaymentPage from "../pages/admin/AdminPaymentPage";
 import AdminRevenuePage from "../pages/admin/AdminRevenuePage";
 import AdminLoyaltyPage from "../pages/admin/AdminLoyaltyPage";
 import AdminSettingsPage from "../pages/admin/AdminSettingsPage";
+import AiInsightsPage from "../pages/admin/AiInsightsPage";
 import ScrollToHash from "./ScrollToHash";
 import { RequireRole } from "../components/auth/RequireRole";
 import { ROLES } from "../lib/auth-role";
@@ -158,6 +159,7 @@ function AppRoutes() {
           <Route path="/quan-tri/doanh-thu" element={<AdminRevenuePage />} />
           <Route path="/quan-tri/diem-thanh-vien" element={<AdminLoyaltyPage />} />
           <Route path="/quan-tri/cai-dat" element={<AdminSettingsPage />} />
+          <Route path="/admin/ai-insights" element={<AiInsightsPage />} />
         </Route>
 
         <Route path="*" element={<div>404 - Không tìm thấy trang</div>} />
