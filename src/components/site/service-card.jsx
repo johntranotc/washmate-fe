@@ -41,7 +41,7 @@ export function ServiceCard({ service, showBook = false }) {
           )}
         >
           <Link
-            to="/login"
+            to={`/dich-vu#${service.slug}`}
             className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2.5 text-[14px] font-bold text-foreground transition-colors hover:border-primary hover:text-primary"
           >
             Xem chi tiết
@@ -49,7 +49,7 @@ export function ServiceCard({ service, showBook = false }) {
           </Link>
           {showBook && (
             <Link
-              to="/login"
+              to="/dang-nhap"
               className="inline-flex flex-1 items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-[14px] font-bold text-primary-foreground transition-colors hover:bg-brand-dark"
             >
               Đặt lịch

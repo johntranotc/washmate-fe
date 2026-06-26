@@ -18,6 +18,12 @@ export const authApi = {
   // API Đăng ký tài khoản mới
   register: (payload) => axiosClient.post("/auth/register", payload),
 
+  // Các API xử lý OTP và Quên mật khẩu
+  requestOtp: (payload) => axiosClient.post("/auth/otp/request", payload),
+  verifyOtp: (payload) => axiosClient.post("/auth/otp/verify", payload),
+  forgotPassword: (payload) => axiosClient.post("/auth/password/forgot", payload),
+  resetPassword: (payload) => axiosClient.post("/auth/password/reset", payload),
+
   // API làm mới session token khi hết hạn
   refresh: () => axiosClient.post("/auth/refresh"),
 

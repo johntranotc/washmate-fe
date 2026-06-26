@@ -1,314 +1,115 @@
-import { useNavigate } from "react-router-dom";
+import { Download, Droplets, Printer } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { bookingApi } from "@/api/bookingApi";
+import { invoiceApi } from "@/api/invoiceApi";
+import { paymentApi } from "@/api/paymentApi";
+import { useAppStore } from "@/state/AppStore";
+import {
+  formatBookingDate,
+  formatMoney,
+  invoiceStatusLabels,
+  normalizeBooking,
+  normalizeInvoice,
+  normalizePayment,
+  paymentMethodLabels,
+} from "@/lib/customer-booking-data";
 
-const mockInvoice = {
-  invoiceId: 1,
-  invoiceCode: "INV-0001",
-  bookingId: 1,
-  bookingCode: "BK-0001",
-  garageName: "AutoWash Garage Thủ Đức",
-  garageAddress: "45 Võ Văn Ngân, Thủ Đức",
-  customerName: "Nguyễn Văn A",
-  vehicle: "51A-12345 - Toyota Vios",
-  serviceName: "Premium Wash",
-  bookingDate: "2026-06-06",
-  slotTime: "09:00 - 09:30",
-  paymentMethod: "CASH",
-  paymentStatus: "PAID",
-  invoiceStatus: "PAID",
-  issuedAt: "06/06/2026 09:35",
-  paidAt: "06/06/2026 09:36",
-  subtotal: 120000,
-  discount: 10000,
-  penaltyTotal: 0,
-  totalAmount: 110000,
-};
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(value);
-}
+export default function InvoicePage() {
+  const { bookingId, invoiceId } = useParams();
+  const { state } = useAppStore();
+  const [booking, setBooking] = useState(null);
+  const [payment, setPayment] = useState(null);
+  const [invoice, setInvoice] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-function getStatusLabel(status) {
-  const labels = {
-    PAID: "PAID - Đã thanh toán",
-    ISSUED: "ISSUED - Đã phát hành",
-    CANCELLED: "CANCELLED - Đã hủy",
-    REFUNDED: "REFUNDED - Đã hoàn tiền",
-  };
+  const loadInvoice = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    const local = state.bookings.find(
+      (item) =>
+        String(item.id) === String(bookingId || invoiceId) ||
+        String(item.invoiceCode) === String(invoiceId),
+    );
+    try {
+      let invoiceById = null;
+      if (invoiceId && !bookingId) {
+        invoiceById = await invoiceApi.getById(invoiceId);
+      }
+      const normalizedInvoiceById = invoiceById
+        ? normalizeInvoice(invoiceById)
+        : null;
+      const resolvedBookingId =
+        bookingId || normalizedInvoiceById?.bookingId || local?.id;
+      if (!resolvedBookingId) throw new Error("BOOKING_NOT_FOUND");
+      const [bookingData, paymentData, invoiceData] = await Promise.all([
+        bookingApi.getBookingById(resolvedBookingId),
+        paymentApi.getPaymentByBookingId(resolvedBookingId),
+        normalizedInvoiceById
+          ? Promise.resolve(normalizedInvoiceById)
+          : invoiceApi.getInvoiceByBookingId(resolvedBookingId),
+      ]);
+      const normalizedPayment = normalizePayment(paymentData);
+      if (normalizedPayment.status !== "PAID") throw new Error("INVOICE_NOT_AVAILABLE");
+      setBooking(normalizeBooking({ ...bookingData, payment: normalizedPayment, paymentStatus: "PAID" }));
+      setPayment(normalizedPayment);
+      setInvoice(normalizeInvoice(invoiceData));
+    } catch {
+      if (!local || local.paymentStatus !== "PAID") {
+        setError("Chưa có hóa đơn.");
+        setBooking(null);
+      } else {
+        setError("Đã xảy ra lỗi khi kết nối API hóa đơn.");
+        setBooking(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [bookingId, invoiceId, state.bookings]);
 
-  return labels[status] || status;
-}
+  useEffect(() => {
+    loadInvoice();
+  }, [loadInvoice]);
 
-function getPaymentMethodLabel(method) {
-  const labels = {
-    CASH: "Tiền mặt",
-    BANK_TRANSFER: "Chuyển khoản",
-    CARD: "Thẻ ngân hàng",
-    MOMO: "MoMo",
-    VNPAY: "VNPay",
-  };
-
-  return labels[method] || method;
-}
-
-function StatusBadge({ status }) {
-  const statusClass =
-    status === "PAID"
-      ? "bg-green-100 text-green-700 border-green-200"
-      : status === "REFUNDED"
-        ? "bg-red-100 text-red-700 border-red-200"
-        : "bg-blue-100 text-blue-700 border-blue-200";
-
-  return (
-    <span
-      className={`rounded-full border px-3 py-1 text-xs font-bold ${statusClass}`}
-    >
-      {getStatusLabel(status)}
-    </span>
-  );
-}
-
-function InvoicePage() {
-  const navigate = useNavigate();
-
-  function goToBookingDetail() {
-    navigate(`/customer/bookings/${mockInvoice.bookingId}`);
+  function downloadInvoice() {
+    const content = [
+      "SPARKLEAI / WASHMATE",
+      `Mã hóa đơn: ${invoice.code}`,
+      `Mã booking: ${booking.code}`,
+      `Khách hàng: ${booking.customerName || "Khách hàng WashMate"}`,
+      `Dịch vụ: ${booking.serviceName}`,
+      `Tổng tiền: ${formatMoney(booking.finalAmount)}`,
+      `Trạng thái: ${invoiceStatusLabels[invoice.status]}`,
+    ].join("\n");
+    const url = URL.createObjectURL(new Blob([content], { type: "text/plain;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${invoice.code || "hoa-don-washmate"}.txt`;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
-  function goToPayment() {
-    navigate(`/customer/bookings/${mockInvoice.bookingId}/payment`);
-  }
+  if (loading) return <div className="rounded-3xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải hóa đơn...</div>;
+  if (!booking || !invoice) return <div className="rounded-3xl border border-amber-200 bg-amber-50 p-10 text-center"><h1 className="text-xl font-extrabold text-amber-800">Chưa có hóa đơn</h1><p className="mt-2 text-sm text-amber-700">{error}</p><button onClick={loadInvoice} className="mt-5 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white">Thử lại</button></div>;
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-slate-900">
-          Hóa đơn thanh toán
-        </h1>
-        <p className="mt-2 text-slate-500">
-          Hóa đơn được phát hành sau khi payment PAID và booking được xác nhận.
-        </p>
-      </div>
-
-      <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-center text-sm text-green-800">
-        <strong>Trạng thái hợp lệ:</strong> Invoice PAID chỉ được tạo từ payment
-        cùng booking và cùng garage.
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-start md:justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900">
-                  AutoWash Pro
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  {mockInvoice.garageName}
-                </p>
-                <p className="text-sm text-slate-500">
-                  {mockInvoice.garageAddress}
-                </p>
-              </div>
-
-              <div className="text-left md:text-right">
-                <p className="text-sm text-slate-500">Mã hóa đơn</p>
-                <p className="text-xl font-bold text-slate-900">
-                  {mockInvoice.invoiceCode}
-                </p>
-                <div className="mt-2">
-                  <StatusBadge status={mockInvoice.invoiceStatus} />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Khách hàng</p>
-                <p className="mt-1 font-bold text-slate-900">
-                  {mockInvoice.customerName}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Phương tiện</p>
-                <p className="mt-1 font-bold text-slate-900">
-                  {mockInvoice.vehicle}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Mã đặt lịch</p>
-                <p className="mt-1 font-bold text-slate-900">
-                  {mockInvoice.bookingCode}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Gói dịch vụ</p>
-                <p className="mt-1 font-bold text-slate-900">
-                  {mockInvoice.serviceName}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Ngày đặt lịch</p>
-                <p className="mt-1 font-bold text-slate-900">
-                  {mockInvoice.bookingDate}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Khung giờ</p>
-                <p className="mt-1 font-bold text-slate-900">
-                  {mockInvoice.slotTime}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-slate-900">
-              Chi tiết thanh toán
-            </h2>
-
-            <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3">Nội dung</th>
-                    <th className="px-4 py-3 text-right">Số tiền</th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-slate-200">
-                  <tr>
-                    <td className="px-4 py-3 font-medium text-slate-700">
-                      Tạm tính dịch vụ
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold text-slate-900">
-                      {formatCurrency(mockInvoice.subtotal)}
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td className="px-4 py-3 font-medium text-slate-700">
-                      Giảm giá / khuyến mãi
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold text-green-600">
-                      -{formatCurrency(mockInvoice.discount)}
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td className="px-4 py-3 font-medium text-slate-700">
-                      Phí phát sinh
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold text-slate-900">
-                      {formatCurrency(mockInvoice.penaltyTotal)}
-                    </td>
-                  </tr>
-
-                  <tr className="bg-slate-50">
-                    <td className="px-4 py-4 text-lg font-bold text-slate-900">
-                      Tổng thanh toán
-                    </td>
-                    <td className="px-4 py-4 text-right text-lg font-bold text-slate-900">
-                      {formatCurrency(mockInvoice.totalAmount)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <p className="mt-3 text-sm text-slate-500">
-              Công thức: Tổng thanh toán = Tạm tính - Giảm giá + Phí phát sinh.
-            </p>
-          </div>
-        </div>
-
-        <aside className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-center text-xl font-bold text-slate-900">
-              Tóm tắt hóa đơn
-            </h2>
-
-            <div className="mt-5 space-y-4 text-sm">
-              <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Trạng thái hóa đơn</span>
-                <StatusBadge status={mockInvoice.invoiceStatus} />
-              </div>
-
-              <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Trạng thái thanh toán</span>
-                <StatusBadge status={mockInvoice.paymentStatus} />
-              </div>
-
-              <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Phương thức</span>
-                <span className="font-bold text-slate-900">
-                  {getPaymentMethodLabel(mockInvoice.paymentMethod)}
-                </span>
-              </div>
-
-              <div className="border-t border-slate-200 pt-4">
-                <div className="flex justify-between text-lg font-bold text-slate-900">
-                  <span>Đã thanh toán</span>
-                  <span>{formatCurrency(mockInvoice.totalAmount)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-center text-xl font-bold text-slate-900">
-              Mốc thời gian
-            </h2>
-
-            <div className="mt-5 space-y-4 text-sm">
-              <div>
-                <p className="text-slate-500">Thời điểm phát hành</p>
-                <p className="font-bold text-slate-900">
-                  {mockInvoice.issuedAt}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-slate-500">Thời điểm thanh toán</p>
-                <p className="font-bold text-slate-900">{mockInvoice.paidAt}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
-            <h2 className="text-xl font-bold text-slate-900">
-              Hành động tiếp theo
-            </h2>
-
-            <div className="mt-4 space-y-3">
-              <button
-                type="button"
-                onClick={goToBookingDetail}
-                className="w-full rounded-lg bg-slate-900 px-4 py-2 font-semibold text-white hover:bg-slate-800"
-              >
-                Xem chi tiết đặt lịch
-              </button>
-
-              <button
-                type="button"
-                onClick={goToPayment}
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                Quay lại thanh toán
-              </button>
-            </div>
-          </div>
-        </aside>
+    <div className="mx-auto max-w-4xl">
+      <div className="rounded-[2rem] border border-[var(--border-soft)] bg-white p-6 shadow-[var(--shadow-soft)] sm:p-10">
+        <header className="flex flex-col gap-5 border-b border-[var(--border-soft)] pb-7 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-3"><span className="grid size-12 place-items-center rounded-2xl bg-[var(--brand-blue)] text-white"><Droplets /></span><div><strong className="text-xl">SparkleAI</strong><p className="text-sm font-bold text-[var(--brand-blue)]">/ WashMate</p></div></div>
+          <div className="sm:text-right">{invoice.isMock && <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-extrabold text-[var(--brand-blue)]">Dữ liệu mẫu</span>}<h1 className="mt-3 text-2xl font-extrabold">Hóa đơn thanh toán</h1><p className="mt-1 text-sm text-[var(--text-muted)]">{invoice.code}</p></div>
+        </header>
+        {invoice.isMock && <p className="mt-5 rounded-2xl bg-blue-50 px-4 py-3 text-sm text-blue-700">Dữ liệu này dùng để demo giao diện. API thật sẽ được kết nối sau.</p>}
+        <section className="grid gap-6 py-7 sm:grid-cols-2">
+          <div><p className="text-xs font-semibold text-[var(--text-muted)]">Thông tin khách hàng</p><strong className="mt-2 block">{booking.customerName || "Khách hàng WashMate"}</strong><p className="mt-1 text-sm text-[var(--text-muted)]">{booking.vehicle} · {booking.plate}</p></div>
+          <div className="sm:text-right"><p className="text-xs font-semibold text-[var(--text-muted)]">Thông tin chứng từ</p><p className="mt-2 font-bold">Booking: {booking.code}</p><p className="mt-1 text-sm text-[var(--text-muted)]">Ngày phát hành: {formatBookingDate(invoice.issuedAt)}</p><span className="mt-2 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">{invoiceStatusLabels[invoice.status]}</span></div>
+        </section>
+        <section className="rounded-3xl bg-[var(--bg-main)] p-5"><div className="grid gap-4 text-sm sm:grid-cols-2"><div><span className="text-[var(--text-muted)]">Gara</span><strong className="mt-1 block">{booking.garageName}</strong></div><div><span className="text-[var(--text-muted)]">Lịch hẹn</span><strong className="mt-1 block">{formatBookingDate(booking.bookingDate)} · {booking.slotTime}</strong></div><div><span className="text-[var(--text-muted)]">Phương thức</span><strong className="mt-1 block">{paymentMethodLabels[payment.method] || payment.method || "Đang cập nhật"}</strong></div><div><span className="text-[var(--text-muted)]">Mã giao dịch</span><strong className="mt-1 block">{payment.transactionCode || "Đang cập nhật"}</strong></div></div></section>
+        <table className="mt-7 w-full text-left text-sm"><thead><tr className="border-b border-[var(--border-soft)] text-[var(--text-muted)]"><th className="py-3">Nội dung</th><th className="py-3 text-right">Số tiền</th></tr></thead><tbody><tr className="border-b border-[var(--border-soft)]"><td className="py-4 font-bold">{booking.serviceName}</td><td className="py-4 text-right">{formatMoney(booking.amount)}</td></tr><tr><td className="py-3">Giảm giá</td><td className="py-3 text-right">-{formatMoney(booking.discount)}</td></tr><tr className="text-lg font-extrabold"><td className="py-4">Tổng tiền</td><td className="py-4 text-right text-[var(--brand-blue)]">{formatMoney(booking.finalAmount)}</td></tr></tbody></table>
+        <div className="mt-8 flex flex-wrap justify-end gap-3"><Link to={`/customer/bookings/${booking.id}`} className="rounded-2xl border border-[var(--border-soft)] px-5 py-3 text-sm font-bold">Quay lại chi tiết lịch đặt</Link><button onClick={downloadInvoice} className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border-soft)] px-5 py-3 text-sm font-bold"><Download size={17} /> Tải hóa đơn</button><button onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-2xl bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white"><Printer size={17} /> In hóa đơn</button></div>
       </div>
     </div>
   );
 }
-
-export default InvoicePage;

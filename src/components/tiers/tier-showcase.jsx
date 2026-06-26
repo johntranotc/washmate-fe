@@ -3,15 +3,15 @@ import { tiers } from "@/lib/site-data";
 
 export function TierShowcase() {
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-border bg-gradient-to-b from-[#0c1b2e] to-[#060d16] p-8 shadow-[0_30px_70px_-30px_rgba(11,140,255,0.6)] sm:p-12">
-      <div className="pointer-events-none absolute left-1/2 top-0 size-96 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
-      <div className="relative flex flex-wrap items-end justify-center gap-x-8 gap-y-10 sm:gap-x-12">
-        {tiers.map((tier, i) => (
-          <div key={tier.name} className="flex flex-col items-center gap-3">
-            <TierBadge tier={tier} size={i === tiers.length - 1 ? "lg" : "md"} />
-            <span className="text-lg font-extrabold tracking-wide" style={{ color: tier.color }}>
-              {tier.name}
-            </span>
+    <div className="relative overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-white via-surface to-accent/30 p-8 shadow-[0_30px_70px_-40px_rgba(11,140,255,.55)] sm:p-12">
+      <div className="absolute left-1/2 top-0 size-96 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+      <div className="relative grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
+        {tiers.map((tier) => (
+          <div key={tier.name} className="flex flex-col items-center rounded-3xl border border-white/80 bg-white/75 p-5 text-center shadow-sm backdrop-blur">
+            <TierBadge tier={tier} size="md" />
+            <strong className="mt-4 text-lg" style={{ color: tier.color }}>{tier.name}</strong>
+            <span className="mt-1 text-sm text-muted-foreground">{tier.condition}</span>
+            <span className="mt-2 rounded-full px-3 py-1 text-xs font-bold text-white" style={{ backgroundColor: tier.color }}>{tier.discount}</span>
           </div>
         ))}
       </div>

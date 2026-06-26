@@ -1,303 +1,122 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { CheckCircle2, CreditCard, Landmark, Smartphone, Wallet, XCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { bookingApi } from "@/api/bookingApi";
+import { paymentApi } from "@/api/paymentApi";
+import { useAppStore } from "@/state/AppStore";
+import { StatusBadge } from "@/components/customer/BookingStatusBadge";
+import {
+  formatBookingDate,
+  formatMoney,
+  normalizeBooking,
+  normalizePayment,
+  paymentMethodLabels,
+} from "@/lib/customer-booking-data";
+import { cn } from "@/lib/utils";
 
-const mockPayment = {
-  bookingId: 1,
-  bookingCode: "BK-0001",
-  garageName: "AutoWash Garage Thủ Đức",
-  vehicle: "51A-12345 - Toyota Vios",
-  serviceName: "Premium Wash",
-  bookingDate: "2026-06-06",
-  slotTime: "09:00 - 09:30",
-  totalAmount: 120000,
-  discountAmount: 10000,
-  finalAmount: 110000,
-};
+const methods = [
+  ["CASH", "Tiền mặt tại gara", Wallet],
+  ["BANK_TRANSFER", "Chuyển khoản", Landmark],
+  ["DOMESTIC_CARD", "Thẻ nội địa", CreditCard],
+  ["E_WALLET", "Ví điện tử", Smartphone],
+];
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(value);
-}
+export default function PaymentPage() {
+  const { bookingId, paymentId } = useParams();
+  const { state, actions } = useAppStore();
+  const [booking, setBooking] = useState(null);
+  const [payment, setPayment] = useState(null);
+  const [method, setMethod] = useState("DOMESTIC_CARD");
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState("");
+  
 
-function getStatusLabel(status) {
-  const labels = {
-    PENDING: "PENDING - Chờ xử lý",
-    PAID: "PAID - Đã thanh toán",
-    CONFIRMED: "CONFIRMED - Đã xác nhận",
-    NOT_ISSUED: "NOT_ISSUED - Chưa phát hành",
-  };
+  const loadPayment = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    const local = state.bookings.find(
+      (item) =>
+        String(item.id) === String(bookingId || paymentId) ||
+        String(item.paymentId) === String(paymentId),
+    );
+    try {
+      let paymentData;
+      let resolvedBookingId = bookingId;
+      if (paymentId) {
+        paymentData = normalizePayment(await paymentApi.getById(paymentId));
+        resolvedBookingId = paymentData.bookingId || local?.id;
+      } else {
+        paymentData = normalizePayment(await paymentApi.getPaymentByBookingId(bookingId));
+      }
+      const bookingData = normalizeBooking(await bookingApi.getBookingById(resolvedBookingId));
+      setBooking(normalizeBooking({ ...bookingData, payment: paymentData, paymentStatus: paymentData.status }));
+      setPayment(paymentData);
+      setMethod(paymentData.method || "DOMESTIC_CARD");
+      
+    } catch {
+      if (!local) {
+        setError("Không thể tải thông tin thanh toán.");
+        setBooking(null);
+      } else {
+        setError("Đã xảy ra lỗi khi kết nối API thanh toán.");
+        setBooking(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [bookingId, paymentId, state.bookings]);
 
-  return labels[status] || status;
-}
+  useEffect(() => {
+    loadPayment();
+  }, [loadPayment]);
 
-function getPaymentMethodLabel(method) {
-  const labels = {
-    CASH: "Tiền mặt",
-    BANK_TRANSFER: "Chuyển khoản",
-    CARD: "Thẻ ngân hàng",
-  };
+  async function confirmPayment() {
+    if (!booking) return;
+    setProcessing(true);
+    setError("");
+    try {
+      if (!payment?.id) throw new Error("PAYMENT_API_NOT_READY");
+      const response = await paymentApi.confirmPayment(payment.id, { paymentMethod: method });
+      const paidPayment = normalizePayment(response);
+      if (paidPayment.status !== "PAID") throw new Error("PAYMENT_NOT_PAID");
+      if (state.bookings.some((item) => String(item.id) === String(booking.id))) {
+        actions.payBooking(booking.id, method);
+      }
+      setPayment(paidPayment);
+      setBooking(normalizeBooking({ ...booking, payment: paidPayment, paymentStatus: "PAID", bookingStatus: "CONFIRMED" }));
+    } catch {
+      setError("Thanh toán thất bại. Vui lòng thử lại.");
+      setProcessing(false);
+    }
+  }
 
-  return labels[method] || method;
-}
+  if (loading) return <div className="rounded-3xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải thông tin thanh toán...</div>;
+  if (!booking) return <div className="rounded-3xl border border-red-200 bg-red-50 p-10 text-center"><XCircle className="mx-auto text-red-500" /><h1 className="mt-4 text-xl font-extrabold text-red-700">Không thể tải dữ liệu lịch đặt</h1><p className="mt-2 text-sm text-red-600">{error}</p><button onClick={loadPayment} className="mt-5 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white">Thử lại</button></div>;
 
-function StatusBadge({ label, status }) {
-  const statusClass =
-    status === "PAID" || status === "CONFIRMED"
-      ? "bg-green-100 text-green-700 border-green-200"
-      : status === "NOT_ISSUED"
-        ? "bg-slate-100 text-slate-700 border-slate-200"
-        : "bg-amber-100 text-amber-700 border-amber-200";
-
+  const paid = payment?.status === "PAID";
   return (
-    <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4">
-      <span className="text-sm font-medium text-slate-600">{label}</span>
-      <span
-        className={`rounded-full border px-3 py-1 text-xs font-bold ${statusClass}`}
-      >
-        {getStatusLabel(status)}
-      </span>
-    </div>
-  );
-}
-
-function PaymentPage() {
-  const navigate = useNavigate();
-
-  const [paymentStatus, setPaymentStatus] = useState("PENDING");
-  const [bookingStatus, setBookingStatus] = useState("PENDING");
-  const [invoiceStatus, setInvoiceStatus] = useState("NOT_ISSUED");
-  const [paymentMethod, setPaymentMethod] = useState("CASH");
-  const [paidAt, setPaidAt] = useState("");
-  const [transactionCode, setTransactionCode] = useState("");
-
-  const isPaid = paymentStatus === "PAID";
-
-  function handleMockMarkPaid() {
-    const now = new Date();
-
-    setPaymentStatus("PAID");
-    setBookingStatus("CONFIRMED");
-    setInvoiceStatus("PAID");
-    setPaidAt(now.toLocaleString("vi-VN"));
-    setTransactionCode(`TXN-${now.getTime()}`);
-  }
-
-  function goToInvoice() {
-    navigate(`/customer/bookings/${mockPayment.bookingId}/invoice`);
-  }
-
-  function goToBookingDetail() {
-    navigate(`/customer/bookings/${mockPayment.bookingId}`);
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-slate-900">Trang thanh toán</h1>
-        <p className="mt-2 text-slate-500">
-          Thanh toán booking. Chỉ khi Payment PAID thì Booking mới CONFIRMED.
-        </p>
-      </div>
-
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-800">
-        <strong>Quy tắc nghiệp vụ:</strong> Payment PAID là điều kiện để booking
-        chuyển từ PENDING sang CONFIRMED.
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-center text-xl font-bold text-slate-900">
-              Thông tin đặt lịch
-            </h2>
-
-            <div className="mt-5 grid grid-cols-1 gap-5 text-center md:grid-cols-2">
-              <div>
-                <p className="text-sm text-slate-500">Mã đặt lịch</p>
-                <p className="font-bold text-slate-900">
-                  {mockPayment.bookingCode}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-slate-500">Cửa hàng</p>
-                <p className="font-bold text-slate-900">
-                  {mockPayment.garageName}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-slate-500">Phương tiện</p>
-                <p className="font-bold text-slate-900">
-                  {mockPayment.vehicle}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-slate-500">Gói dịch vụ</p>
-                <p className="font-bold text-slate-900">
-                  {mockPayment.serviceName}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-slate-500">Ngày đặt lịch</p>
-                <p className="font-bold text-slate-900">
-                  {mockPayment.bookingDate}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-slate-500">Khung giờ</p>
-                <p className="font-bold text-slate-900">
-                  {mockPayment.slotTime}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-center text-xl font-bold text-slate-900">
-              Phương thức thanh toán
-            </h2>
-
-            <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-              {["CASH", "BANK_TRANSFER", "CARD"].map((method) => (
-                <button
-                  key={method}
-                  type="button"
-                  onClick={() => setPaymentMethod(method)}
-                  disabled={isPaid}
-                  className={`rounded-xl border px-4 py-3 font-semibold transition ${
-                    paymentMethod === method
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  } disabled:cursor-not-allowed disabled:opacity-60`}
-                >
-                  {getPaymentMethodLabel(method)}
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-6 rounded-xl bg-slate-50 p-4 text-center">
-              <p className="text-sm text-slate-500">Phương thức đã chọn</p>
-              <p className="mt-1 text-lg font-bold text-slate-900">
-                {getPaymentMethodLabel(paymentMethod)}
-              </p>
-            </div>
-
-            {!isPaid && (
-              <button
-                type="button"
-                onClick={handleMockMarkPaid}
-                className="mt-6 w-full rounded-lg bg-green-700 px-4 py-3 font-semibold text-white hover:bg-green-800"
-              >
-                Xác nhận thanh toán thành công
-              </button>
-            )}
-
-            {isPaid && (
-              <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4">
-                <h3 className="font-bold text-green-800">
-                  Thanh toán thành công
-                </h3>
-                <p className="mt-1 text-sm text-green-700">
-                  Payment đã PAID, Booking đã chuyển sang CONFIRMED và Invoice
-                  đã PAID.
-                </p>
-
-                <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                  <div>
-                    <p className="text-xs text-green-700">Mã giao dịch</p>
-                    <p className="font-bold text-green-900">
-                      {transactionCode}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-green-700">
-                      Thời điểm thanh toán
-                    </p>
-                    <p className="font-bold text-green-900">{paidAt}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <aside className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-center text-xl font-bold text-slate-900">
-              Tóm tắt thanh toán
-            </h2>
-
-            <div className="mt-5 space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Tạm tính</span>
-                <span className="font-medium">
-                  {formatCurrency(mockPayment.totalAmount)}
-                </span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-slate-500">Giảm giá</span>
-                <span className="font-medium text-green-600">
-                  -{formatCurrency(mockPayment.discountAmount)}
-                </span>
-              </div>
-
-              <div className="border-t border-slate-200 pt-3">
-                <div className="flex justify-between text-lg font-bold text-slate-900">
-                  <span>Cần thanh toán</span>
-                  <span>{formatCurrency(mockPayment.finalAmount)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <StatusBadge label="Trạng thái đặt lịch" status={bookingStatus} />
-            <StatusBadge label="Trạng thái thanh toán" status={paymentStatus} />
-            <StatusBadge label="Trạng thái hóa đơn" status={invoiceStatus} />
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
-            <h2 className="text-xl font-bold text-slate-900">
-              Hành động tiếp theo
-            </h2>
-
-            {!isPaid ? (
-              <p className="mt-3 text-sm text-slate-500">
-                Booking hiện vẫn PENDING. Hãy xác nhận payment để booking được
-                CONFIRMED.
-              </p>
-            ) : (
-              <div className="mt-4 space-y-3">
-                <button
-                  type="button"
-                  onClick={goToInvoice}
-                  className="w-full rounded-lg bg-slate-900 px-4 py-2 font-semibold text-white hover:bg-slate-800"
-                >
-                  Xem hóa đơn
-                </button>
-
-                <button
-                  type="button"
-                  onClick={goToBookingDetail}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  Xem chi tiết đặt lịch
-                </button>
-              </div>
-            )}
-          </div>
+    <div className="mx-auto max-w-5xl space-y-6">
+      <header className="text-center"><p className="text-sm font-extrabold uppercase tracking-[0.16em] text-[var(--brand-blue)]">Thanh toán an toàn</p><h1 className="mt-2 text-3xl font-extrabold">Thanh toán lịch đặt</h1><p className="mt-2 text-sm text-[var(--text-muted)]">Thanh toán thành công sẽ xác nhận lịch và tạo hóa đơn.</p></header>
+      {isMock && <div className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-700"><strong>Dữ liệu mẫu.</strong> Dữ liệu này dùng để demo giao diện. API thật sẽ được kết nối sau.</div>}
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        <section className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between"><h2 className="text-xl font-extrabold">Phương thức thanh toán</h2><StatusBadge status={payment?.status || "PENDING"} type="payment" /></div>
+          {payment?.status === "FAILED" && <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">Thanh toán thất bại. Vui lòng thử lại.</p>}
+          {payment?.status === "CANCELLED" && <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-700">Thanh toán đã bị hủy. Bạn có thể chọn phương thức và thử lại.</p>}
+          {!paid && <div className="mt-6 grid gap-3 sm:grid-cols-2">{methods.map(([value, label, Icon]) => <button key={value} onClick={() => setMethod(value)} className={cn("rounded-2xl border-2 p-5 text-left transition", method === value ? "border-[var(--brand-blue)] bg-blue-50 text-[var(--brand-blue)]" : "border-[var(--border-soft)]")}><Icon size={22} /><strong className="mt-3 block text-sm">{label}</strong></button>)}</div>}
+          {!paid ? <button onClick={confirmPayment} disabled={processing} className="mt-6 w-full rounded-2xl bg-[var(--brand-blue)] py-3.5 font-bold text-white disabled:opacity-60">{processing ? "Đang xử lý thanh toán..." : "Xác nhận thanh toán"}</button> : <div className="mt-6 rounded-3xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-700"><p className="flex items-center gap-2 text-lg font-extrabold"><CheckCircle2 /> Thanh toán thành công</p><p className="mt-2 text-sm">Lịch đặt đã được xác nhận. Phương thức: {paymentMethodLabels[payment.method] || payment.method}</p><p className="mt-1 text-sm">Mã giao dịch: {payment.transactionCode || "Đang cập nhật"}</p></div>}
+          {error && <p className="mt-4 rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">Thanh toán thất bại. Vui lòng thử lại.</p>}
+        </section>
+        <aside className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-extrabold">Tóm tắt thanh toán</h2>
+          <dl className="mt-5 space-y-4 text-sm">
+            {[["Mã booking", booking.code],["Dịch vụ", booking.serviceName],["Gara", booking.garageName],["Xe", `${booking.vehicle} · ${booking.plate}`],["Ngày giờ", `${formatBookingDate(booking.bookingDate)} · ${booking.slotTime}`]].map(([label, value]) => <div key={label}><dt className="text-xs text-[var(--text-muted)]">{label}</dt><dd className="mt-1 font-bold">{value}</dd></div>)}
+          </dl>
+          <div className="mt-6 space-y-3 border-t border-[var(--border-soft)] pt-5 text-sm"><div className="flex justify-between"><span>Giá dịch vụ</span><strong>{formatMoney(booking.amount)}</strong></div><div className="flex justify-between"><span>Giảm giá</span><strong>-{formatMoney(booking.discount)}</strong></div><div className="flex justify-between text-lg"><span className="font-bold">Tổng cần thanh toán</span><strong className="text-[var(--brand-blue)]">{formatMoney(booking.finalAmount)}</strong></div></div>
         </aside>
       </div>
+      {paid && <div className="flex flex-wrap justify-center gap-3"><Link to={`/customer/bookings/${booking.id}`} className="rounded-2xl border border-[var(--border-soft)] bg-white px-5 py-3 text-sm font-bold">Xem chi tiết lịch đặt</Link><Link to={`/customer/bookings/${booking.id}/invoice`} className="rounded-2xl bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white">Xem hóa đơn</Link><Link to="/customer/dashboard" className="rounded-2xl border border-[var(--border-soft)] bg-white px-5 py-3 text-sm font-bold">Về trang khách hàng</Link></div>}
     </div>
   );
 }
-
-export default PaymentPage;

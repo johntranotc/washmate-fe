@@ -1,347 +1,153 @@
 import {
-  CalendarCheck,
+  ArrowRight,
+  Award,
+  Bell,
+  CalendarDays,
+  CheckCircle2,
   CircleDollarSign,
-  Car,
-  Users,
-  Droplets,
-  Clock,
+  Gift,
+  Lightbulb,
+  Sparkles,
+  Star,
 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { analyticsApi } from "../../api/analyticsApi";
+import { loyaltyApi } from "../../api/loyaltyApi";
+import { notificationApi } from "../../api/notificationApi";
+import { promotionApi } from "../../api/promotionApi";
+import DemoDataNotice from "../../components/customer/DemoDataNotice";
+import {
+  normalizeLoyalty,
+  normalizeNotifications,
+  normalizePromotions,
+  normalizeSummary,
+  tierLabels,
+} from "../../lib/customer-engagement-data";
+import { useAppStore } from "../../state/AppStore";
 
-const bookings = [
-  {
-    id: 1,
-    customer: "Nguyễn Văn An",
-    vehicle: "Toyota Vios",
-    packageName: "Tiêu chuẩn",
-    status: "WASHING",
-    payment: "PAID",
-    amount: 180000,
-    progress: 72,
-  },
-  {
-    id: 2,
-    customer: "Lê Thị Bình",
-    vehicle: "Honda CR-V",
-    packageName: "Cao cấp",
-    status: "CHECKED_IN",
-    payment: "PAID",
-    amount: 250000,
-    progress: 34,
-  },
-  {
-    id: 3,
-    customer: "Phạm Quốc Cường",
-    vehicle: "Ford Ranger",
-    packageName: "Detailing",
-    status: "CONFIRMED",
-    payment: "PAID",
-    amount: 420000,
-    progress: 12,
-  },
-  {
-    id: 4,
-    customer: "Trần Minh Khoa",
-    vehicle: "Mazda 3",
-    packageName: "Tiêu chuẩn",
-    status: "COMPLETED",
-    payment: "PAID",
-    amount: 160000,
-    progress: 100,
-  },
-];
+const currency = (value) => `${Number(value || 0).toLocaleString("vi-VN")}đ`;
 
-const slotBoard = [
-  { time: "08:00", capacity: 4, reserved: 4 },
-  { time: "08:30", capacity: 4, reserved: 3 },
-  { time: "09:00", capacity: 4, reserved: 2 },
-  { time: "09:30", capacity: 4, reserved: 1 },
-  { time: "10:00", capacity: 4, reserved: 4 },
-  { time: "10:30", capacity: 4, reserved: 2 },
-  { time: "11:00", capacity: 4, reserved: 0 },
-  { time: "11:30", capacity: 4, reserved: 1 },
-];
+export default function CustomerHomePage() {
+  const { state } = useAppStore();
+  const [summary, setSummary] = useState({});
+  const [loyalty, setLoyalty] = useState({});
+  const [promotions, setPromotions] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  
 
-const revenueData = [
-  { day: "T2", value: 3200000 },
-  { day: "T3", value: 2800000 },
-  { day: "T4", value: 3600000 },
-  { day: "T5", value: 4100000 },
-  { day: "T6", value: 5200000 },
-  { day: "T7", value: 8000000 },
-  { day: "CN", value: 6900000 },
-];
+  useEffect(() => {
+    Promise.allSettled([
+      analyticsApi.getCustomerSummary(),
+      loyaltyApi.getMyLoyalty(),
+      promotionApi.getActivePromotions(),
+      notificationApi.getNotifications(),
+    ]).then(([summaryResult, loyaltyResult, promotionResult, notificationResult]) => {
+      setSummary(summaryResult.status === "fulfilled" ? normalizeSummary(summaryResult.value) : {});
+      setLoyalty(loyaltyResult.status === "fulfilled" ? normalizeLoyalty(loyaltyResult.value) : {});
+      setPromotions(promotionResult.status === "fulfilled" ? normalizePromotions(promotionResult.value) : []);
+      setNotifications(notificationResult.status === "fulfilled" ? normalizeNotifications(notificationResult.value) : []);
+    });
+  }, []);
 
-function formatVnd(value) {
-  return new Intl.NumberFormat("vi-VN").format(value) + " đ";
-}
+  const customerName = useMemo(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      return user.fullName || user.name || state.session?.name || "Khách hàng";
+    } catch {
+      return state.session?.name || "Khách hàng";
+    }
+  }, [state.session?.name]);
 
-function StatCard({
-  label,
-  value,
-  delta,
-  hint,
-  icon: Icon,
-  deltaPositive = true,
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
-            {value}
-          </p>
+  const bookings = state.bookings || [];
+  const upcomingBookings = bookings.filter((item) => !["COMPLETED", "CANCELLED", "NO_SHOW"].includes(item.bookingStatus));
+  const recentBookings = bookings.slice(0, 3);
+  const unreadCount = notifications.filter((item) => !item.read).length;
+  const tierName = loyalty.tierName || tierLabels[loyalty.tier] || loyalty.tier;
 
-          {delta && (
-            <p
-              className={`mt-3 text-sm font-semibold ${
-                deltaPositive ? "text-emerald-600" : "text-red-600"
-              }`}
-            >
-              {delta}{" "}
-              {hint && (
-                <span className="font-normal text-slate-500">{hint}</span>
-              )}
-            </p>
-          )}
-        </div>
-
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-100 text-slate-900">
-          <Icon size={22} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Progress({ value }) {
-  return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-      <div
-        className="h-full rounded-full bg-blue-600"
-        style={{ width: `${value}%` }}
-      />
-    </div>
-  );
-}
-
-function Card({ children, className = "" }) {
-  return (
-    <div
-      className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
-
-function BookingStatusBadge({ status }) {
-  const labelMap = {
-    CONFIRMED: "Đã xác nhận",
-    CHECKED_IN: "Đã check-in",
-    WASHING: "Đang rửa",
-    COMPLETED: "Hoàn tất",
-  };
-
-  const colorMap = {
-    CONFIRMED: "bg-blue-50 text-blue-700 border-blue-200",
-    CHECKED_IN: "bg-cyan-50 text-cyan-700 border-cyan-200",
-    WASHING: "bg-indigo-50 text-indigo-700 border-indigo-200",
-    COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  };
-
-  return (
-    <span
-      className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-        colorMap[status] || "bg-slate-50 text-slate-700 border-slate-200"
-      }`}
-    >
-      {labelMap[status] || status}
-    </span>
-  );
-}
-
-function RevenueChart() {
-  const maxValue = Math.max(...revenueData.map((item) => item.value));
-
-  return (
-    <Card className="p-6">
-      <h2 className="text-xl font-bold text-slate-950">Doanh thu theo ngày</h2>
-      <p className="mt-1 text-sm text-slate-500">7 ngày gần nhất</p>
-
-      <div className="mt-6 flex h-72 items-end gap-4 border-b border-slate-200 px-4">
-        {revenueData.map((item) => {
-          const height = Math.round((item.value / maxValue) * 100);
-
-          return (
-            <div
-              key={item.day}
-              className="flex flex-1 flex-col items-center gap-2"
-            >
-              <div className="flex h-60 w-full items-end">
-                <div
-                  className="w-full rounded-t-lg bg-blue-600"
-                  style={{ height: `${height}%` }}
-                  title={formatVnd(item.value)}
-                />
-              </div>
-              <span className="text-xs font-semibold text-slate-500">
-                {item.day}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </Card>
-  );
-}
-
-function CustomerHomePage() {
-  const activeBookings = bookings.filter((booking) =>
-    ["CONFIRMED", "CHECKED_IN", "WASHING"].includes(booking.status),
-  );
-
-  const completedToday = bookings.filter(
-    (booking) => booking.status === "COMPLETED",
-  ).length;
-
-  const revenueToday = bookings
-    .filter((booking) => ["PAID", "ISSUED"].includes(booking.payment))
-    .reduce((sum, booking) => sum + booking.amount, 0);
-
-  const totalCapacity = slotBoard.reduce((sum, slot) => sum + slot.capacity, 0);
-  const totalReserved = slotBoard.reduce((sum, slot) => sum + slot.reserved, 0);
-  const occupancy = Math.round((totalReserved / totalCapacity) * 100);
+  const metrics = [
+    [CalendarDays, "Lịch sắp tới", upcomingBookings.length, "lịch"],
+    [CheckCircle2, "Đã hoàn tất", summary.completedBookings || 0, "lịch"],
+    [Sparkles, "Điểm khả dụng", loyalty.availablePoints || 0, "điểm"],
+    [Gift, "Ưu đãi đang có", promotions.length, "ưu đãi"],
+  ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-          Tổng quan vận hành
-        </h1>
-        <p className="mt-2 text-slate-500">
-          Theo dõi đặt lịch, công suất, doanh thu và tiến độ phục vụ theo thời
-          gian thực.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Booking hôm nay"
-          value={bookings.length.toString()}
-          delta="+12%"
-          hint="so với hôm qua"
-          icon={CalendarCheck}
-        />
-        <StatCard
-          label="Doanh thu hôm nay"
-          value={formatVnd(revenueToday)}
-          delta="+8.4%"
-          hint="so với hôm qua"
-          icon={CircleDollarSign}
-        />
-        <StatCard
-          label="Đang phục vụ"
-          value={activeBookings.length.toString()}
-          delta={`${completedToday} đã hoàn tất`}
-          icon={Droplets}
-        />
-        <StatCard
-          label="Công suất khung giờ"
-          value={`${occupancy}%`}
-          delta="Giờ cao điểm 08:00 - 10:00"
-          deltaPositive={occupancy < 80}
-          icon={Users}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <RevenueChart />
+      <section className="relative overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-white via-blue-50 to-cyan-50 p-7 md:p-9">
+        <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-blue-200/40 blur-3xl" />
+        <div className="relative flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-3 py-1.5 text-[10px] font-extrabold text-white"><Award size={13} /> THÀNH VIÊN {tierName?.toUpperCase()}</span>
+            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">Xin chào, {customerName}!</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">Mọi thông tin đặt lịch, điểm thưởng và ưu đãi của bạn được tổng hợp tại đây.</p>
+          </div>
+          <Link to="/customer/booking" className="inline-flex items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 text-sm font-extrabold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700">Đặt lịch nhanh <ArrowRight size={18} /></Link>
         </div>
+      </section>
+      
 
-        <Card className="p-6">
-          <h2 className="text-xl font-bold text-slate-950">
-            Hàng đợi đang phục vụ
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Tiến độ vòng đời dịch vụ
-          </p>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {metrics.map(([Icon, label, value, unit]) => (
+          <article key={label} className="rounded-2xl border border-slate-200 bg-white p-5">
+            <div className="flex items-center justify-between"><span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-600"><Icon size={19} /></span><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{unit}</span></div>
+            <p className="mt-4 text-xs text-slate-500">{label}</p>
+            <strong className="mt-1 block text-2xl text-slate-950">{Number(value || 0).toLocaleString("vi-VN")}</strong>
+          </article>
+        ))}
+      </section>
 
-          <div className="mt-6 space-y-5">
-            {activeBookings.map((booking) => (
-              <div key={booking.id} className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-100 text-slate-900">
-                      <Car size={18} />
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-slate-950">
-                        {booking.customer}
-                      </p>
-                      <p className="truncate text-xs text-slate-500">
-                        {booking.vehicle} · {booking.packageName}
-                      </p>
-                    </div>
-                  </div>
-
-                  <BookingStatusBadge status={booking.status} />
-                </div>
-
-                <Progress value={booking.progress} />
-              </div>
+      <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="flex items-center justify-between"><div><h2 className="font-extrabold">Lịch đặt gần đây</h2><p className="mt-1 text-xs text-slate-500">Theo dõi nhanh các lịch của bạn.</p></div><Link to="/customer/bookings" className="text-xs font-bold text-blue-600">Xem tất cả</Link></div>
+          <div className="mt-4 space-y-3">
+            {recentBookings.length === 0 ? <p className="rounded-xl bg-slate-50 py-10 text-center text-sm text-slate-500">Chưa có lịch đặt.</p> : recentBookings.map((booking) => (
+              <Link key={booking.id} to={`/customer/bookings/${booking.id}`} className="flex flex-col gap-3 rounded-xl border border-slate-100 p-4 transition hover:border-blue-200 hover:bg-blue-50/30 sm:flex-row sm:items-center">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600"><CalendarDays size={18} /></span>
+                <div className="min-w-0 flex-1"><b className="text-sm">{booking.serviceName || "Dịch vụ chăm sóc xe"}</b><p className="mt-1 text-[11px] text-slate-500">{booking.bookingDate || "Chưa có ngày"} · {booking.slotTime || "Chưa có giờ"} · {booking.vehicle || booking.plate}</p></div>
+                <div className="text-left sm:text-right"><span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">{booking.paymentStatus === "PAID" ? "Đã thanh toán" : "Chờ thanh toán"}</span><p className="mt-2 text-xs font-bold">{currency(booking.finalAmount || booking.amount)}</p></div>
+              </Link>
             ))}
           </div>
-        </Card>
-      </div>
+        </article>
 
-      <Card className="p-6">
-        <h2 className="text-xl font-bold text-slate-950">
-          Công suất khung giờ hôm nay
-        </h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Số slot đã đặt trên tổng sức chứa mỗi khung giờ
-        </p>
+        <article className="rounded-2xl bg-gradient-to-br from-blue-700 to-blue-500 p-6 text-white">
+          <div className="flex items-center justify-between"><div><p className="text-xs text-blue-100">Điểm hiện có</p><p className="mt-1 text-4xl font-black">{Number(loyalty.availablePoints || 0).toLocaleString("vi-VN")}</p></div><Award size={34} className="text-blue-200" /></div>
+          <p className="mt-6 text-xs font-semibold">Tiến độ đến hạng {loyalty.nextTierName || tierLabels[loyalty.nextTier] || "tiếp theo"}</p>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/20"><div className="h-full rounded-full bg-white" style={{ width: `${Math.min(loyalty.progressPercent || 0, 100)}%` }} /></div>
+          <p className="mt-2 text-[11px] text-blue-100">{Number(loyalty.pointsToNextTier || 0).toLocaleString("vi-VN")} điểm nữa</p>
+          <Link to="/customer/loyalty" className="mt-6 inline-flex items-center gap-2 text-xs font-extrabold">Xem chi tiết <ArrowRight size={14} /></Link>
+        </article>
+      </section>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-          {slotBoard.map((slot) => {
-            const ratio = slot.reserved / slot.capacity;
-            const full = slot.reserved >= slot.capacity;
+      <section className="grid gap-5 lg:grid-cols-3">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="flex items-center gap-2"><Star className="text-blue-600" size={18} /><h2 className="font-extrabold">Dịch vụ yêu thích</h2></div>
+          <p className="mt-5 text-xl font-black">{summary.favoriteService || "Chưa có dữ liệu"}</p>
+          <p className="mt-2 text-xs text-slate-500">Tổng chi tiêu ghi nhận: <b>{currency(summary.totalSpent)}</b></p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="flex items-center gap-2"><Lightbulb className="text-amber-500" size={18} /><h2 className="font-extrabold">Gợi ý chăm sóc</h2></div>
+          <p className="mt-4 text-xs leading-6 text-slate-600">{summary.careSuggestion || "Bạn nên kiểm tra định kỳ và rửa xe 2 tuần/lần."}</p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="flex items-center justify-between"><div className="flex items-center gap-2"><Bell className="text-blue-600" size={18} /><h2 className="font-extrabold">Thông báo</h2></div><span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700">{unreadCount} mới</span></div>
+          <p className="mt-4 line-clamp-2 text-xs leading-5 text-slate-600">{notifications[0]?.message || "Bạn chưa có thông báo mới."}</p>
+          <Link to="/customer/notifications" className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-blue-600">Mở trung tâm thông báo <ArrowRight size={13} /></Link>
+        </article>
+      </section>
 
-            return (
-              <div
-                key={slot.time}
-                className="rounded-xl border border-slate-200 bg-white p-4"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-900">
-                    {slot.time}
-                  </span>
-                  <Clock size={15} className="text-slate-400" />
-                </div>
-
-                <div className="mt-3">
-                  <Progress value={ratio * 100} />
-                </div>
-
-                <p
-                  className={`mt-2 text-xs font-medium ${
-                    full ? "text-red-600" : "text-slate-500"
-                  }`}
-                >
-                  {full
-                    ? "Hết slot"
-                    : `${slot.capacity - slot.reserved} slot trống`}
-                </p>
-              </div>
-            );
-          })}
+      <section>
+        <div className="flex items-end justify-between"><div><h2 className="text-lg font-extrabold">Ưu đãi dành cho bạn</h2><p className="mt-1 text-xs text-slate-500">Các chương trình nổi bật đang có.</p></div><Link to="/customer/promotions" className="text-xs font-bold text-blue-600">Xem tất cả</Link></div>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          {promotions.slice(0, 3).map((item) => (
+            <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-5">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-600"><CircleDollarSign size={19} /></span>
+              <p className="mt-4 text-xs font-bold text-blue-600">{item.discountLabel}</p><h3 className="mt-1 font-extrabold">{item.title}</h3><p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">{item.description}</p>
+            </article>
+          ))}
         </div>
-      </Card>
+      </section>
     </div>
   );
 }
-
-export default CustomerHomePage;

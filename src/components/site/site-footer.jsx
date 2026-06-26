@@ -32,9 +32,9 @@ const columns = [
     title: "Khám phá",
     links: [
       { label: "Trang chủ", href: "/" },
-      { label: "Dịch vụ", href: "/services" },
-      { label: "Bảng giá", href: "/pricing" },
-      { label: "Hạng thành viên", href: "/tiers" },
+      { label: "Dịch vụ", href: "/dich-vu" },
+      { label: "Bảng giá", href: "/bang-gia" },
+      { label: "Hạng thành viên", href: "/hang-thanh-vien" },
     ],
   },
   {
@@ -42,8 +42,8 @@ const columns = [
     links: [
       { label: "Quy trình sử dụng", href: "/#quy-trinh" },
       { label: "Câu hỏi thường gặp", href: "/#lien-he" },
-      { label: "Đăng nhập", href: "/login" },
-      { label: "Tạo tài khoản", href: "/register" },
+      { label: "Đăng nhập", href: "/dang-nhap" },
+      { label: "Tạo tài khoản", href: "/dang-ky" },
     ],
   },
 ];

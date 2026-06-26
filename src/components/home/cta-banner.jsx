@@ -15,10 +15,10 @@ export function CtaBanner() {
                 chúng tôi.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <LinkButton href="/register" variant="white" size="lg">
+                <LinkButton href="/dang-nhap" variant="white" size="lg">
                   Đặt lịch ngay
                 </LinkButton>
-                <LinkButton href="/services" variant="ghostWhite" size="lg">
+                <LinkButton href="/dich-vu" variant="ghostWhite" size="lg">
                   Xem dịch vụ
                 </LinkButton>
               </div>

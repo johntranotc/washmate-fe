@@ -30,7 +30,7 @@ export default function TiersPage() {
       <PageHero
         breadcrumb="Hạng thành viên"
         eyebrow="Chương trình thành viên"
-        title="Tích điểm, thăng hạng, nhận đặc quyền"
+        title="Hạng thành viên WashMate"
         description="Năm hạng thành viên với hệ thống huy hiệu đồng bộ và quyền lợi tăng dần. Càng gắn bó, bạn càng được chăm sóc đặc biệt hơn."
       />
 

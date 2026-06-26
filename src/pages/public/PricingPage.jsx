@@ -11,7 +11,7 @@ export default function PricingPage() {
       <PageHero
         breadcrumb="Bảng giá"
         eyebrow="Bảng giá minh bạch"
-        title="Chọn gói dịch vụ phù hợp với bạn"
+        title="Bảng giá dịch vụ"
         description="Mức giá rõ ràng, không phát sinh. Càng sử dụng nhiều, bạn càng tích lũy điểm và mở khóa nhiều ưu đãi hấp dẫn."
       />
 
