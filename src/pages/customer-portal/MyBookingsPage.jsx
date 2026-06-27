@@ -3,8 +3,10 @@ import { CalendarDays, ClipboardList, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { StatusBadge } from "@/components/customer/BookingStatusBadge";
 import {
+  bookingStatusLabels,
   formatBookingDate,
   formatMoney,
+  paymentStatusLabels,
 } from "@/lib/customer-booking-data";
 import { loadCustomerBookingList } from "@/lib/customer-bookings";
 
@@ -74,7 +76,11 @@ export default function MyBookingsPage() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <StatusBadge status={booking.bookingStatus} />
-                      <StatusBadge status={booking.paymentStatus} type="payment" />
+                      {booking.paymentStatus &&
+                        bookingStatusLabels[booking.bookingStatus] !==
+                          paymentStatusLabels[booking.paymentStatus] && (
+                          <StatusBadge status={booking.paymentStatus} type="payment" />
+                        )}
                     </div>
                   </div>
                   <div className="mt-4 grid gap-3 text-sm text-[var(--text-muted)] sm:grid-cols-3">
