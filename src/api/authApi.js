@@ -43,6 +43,7 @@ export const authApi = {
   },
   forgotPassword: (payload) => axiosClient.post("/auth/password/forgot", payload),
   resetPassword: (payload) => axiosClient.post("/auth/password/reset", payload),
+  changePassword: (payload) => axiosClient.put("/auth/password/change", payload),
 
   // API làm mới session token khi hết hạn
   refresh: () => axiosClient.post("/auth/refresh"),

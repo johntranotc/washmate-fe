@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Shield, Eye, EyeOff, CheckCircle, XCircle, KeyRound, Lock } from "lucide-react";
+import { Shield, Eye, EyeOff, CheckCircle, XCircle, KeyRound, Lock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { authApi } from "@/api/authApi";
 
 export default function ChangePasswordPage() {
   const [form, setForm] = useState({ current: "", newPw: "", confirm: "" });
   const [show, setShow] = useState({ current: false, newPw: false, confirm: false });
+  const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
   const [message, setMessage] = useState("");
 
@@ -27,10 +29,27 @@ export default function ChangePasswordPage() {
       setMessage(err);
       return;
     }
-    setStatus("success");
-    setMessage("Mật khẩu của bạn đã được cập nhật thành công!");
-    setForm({ current: "", newPw: "", confirm: "" });
-    setTimeout(() => setStatus(null), 4000);
+    try {
+      setLoading(true);
+      setStatus(null);
+      await authApi.changePassword({
+        oldPassword: form.current,
+        newPassword: form.newPw,
+      });
+      setStatus("success");
+      setMessage("Mật khẩu của bạn đã được cập nhật thành công!");
+      setForm({ current: "", newPw: "", confirm: "" });
+      setTimeout(() => setStatus(null), 4000);
+    } catch (error) {
+      setStatus("error");
+      setMessage(
+        error?.response?.data?.message ||
+        error?.message ||
+        "Mật khẩu hiện tại không đúng hoặc lỗi kết nối máy chủ."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   const pwFields = [
@@ -100,10 +119,11 @@ export default function ChangePasswordPage() {
           <div className="pt-4">
             <button
               type="submit"
-              className="h-12 w-full sm:w-auto px-8 rounded-2xl bg-primary font-bold text-white shadow-lg shadow-primary/25 transition hover:bg-brand-dark flex items-center justify-center gap-2"
+              disabled={loading}
+              className="h-12 w-full sm:w-auto px-8 rounded-2xl bg-primary font-bold text-white shadow-lg shadow-primary/25 transition hover:bg-brand-dark flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <Lock size={18} />
-              Cập nhật mật khẩu ngay
+              {loading ? <Loader2 size={18} className="animate-spin" /> : <Lock size={18} />}
+              {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu ngay"}
             </button>
           </div>
         </form>
