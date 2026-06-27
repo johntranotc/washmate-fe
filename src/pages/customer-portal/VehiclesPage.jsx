@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { vehicleApi } from "@/api/vehicleApi";
+import { CAR_BRANDS } from "@/lib/car-models";
 
-const emptyForm = { licensePlate: "", brand: "", model: "", color: "" };
+const emptyForm = { licensePlate: "", brand: "", customBrand: "", model: "", customModel: "", color: "" };
+
 
 function StatusBadge({ status }) {
   if (status === "ACTIVE" || !status) {
@@ -81,9 +83,30 @@ export default function VehiclesPage() {
     return withService ? withService.lastServiceDate : "Chưa có";
   }, [vehicles]);
 
+  const availableModels = useMemo(() => {
+    const found = CAR_BRANDS.find((b) => b.brand === formData.brand);
+    return found ? found.models : [];
+  }, [formData.brand]);
+
   function handleFormChange(event) {
     const { name, value } = event.target;
-    setFormData((current) => ({ ...current, [name]: value }));
+    if (name === "brand") {
+      setFormData((current) => ({
+        ...current,
+        brand: value,
+        model: "",
+        customBrand: "",
+        customModel: "",
+      }));
+    } else if (name === "model") {
+      setFormData((current) => ({
+        ...current,
+        model: value,
+        customModel: "",
+      }));
+    } else {
+      setFormData((current) => ({ ...current, [name]: value }));
+    }
   }
 
   function openAddModal() {
@@ -94,10 +117,24 @@ export default function VehiclesPage() {
 
   function openEditModal(vehicle) {
     setSelectedVehicle(vehicle);
+    const vBrand = vehicle.brand || "";
+    const vModel = vehicle.model || "";
+
+    const matchedBrandObj = CAR_BRANDS.find((b) => b.brand.toLowerCase() === vBrand.toLowerCase());
+    const brandValue = matchedBrandObj ? matchedBrandObj.brand : vBrand ? "Khác (Hãng khác)" : "";
+    const customBrandValue = matchedBrandObj ? "" : vBrand;
+
+    const matchedModels = matchedBrandObj ? matchedBrandObj.models : (CAR_BRANDS.find(b => b.brand === "Khác (Hãng khác)")?.models || []);
+    const isModelMatched = matchedModels.some(m => m.toLowerCase() === vModel.toLowerCase());
+    const modelValue = isModelMatched ? matchedModels.find(m => m.toLowerCase() === vModel.toLowerCase()) : vModel ? "Khác" : "";
+    const customModelValue = isModelMatched ? "" : vModel;
+
     setFormData({
       licensePlate: vehicle.licensePlate || "",
-      brand: vehicle.brand || "",
-      model: vehicle.model || "",
+      brand: brandValue,
+      customBrand: customBrandValue,
+      model: modelValue,
+      customModel: customModelValue,
       color: vehicle.color || "",
     });
     setErrorMessage("");
@@ -110,24 +147,24 @@ export default function VehiclesPage() {
   }
 
   async function handleAddVehicle() {
+    const finalBrand = formData.brand === "Khác (Hãng khác)" ? (formData.customBrand || "Hãng khác").trim() : formData.brand.trim();
+    const finalModel = formData.model === "Khác" ? (formData.customModel || "Dòng khác").trim() : formData.model.trim();
     const licensePlate = formData.licensePlate.trim().toUpperCase();
-    const brand = formData.brand.trim();
-    const model = formData.model.trim();
     const color = formData.color.trim();
 
     setSuccessMessage("");
     setErrorMessage("");
 
-    if (!licensePlate || !brand || !model) {
-      setErrorMessage("Vui lòng nhập biển số, hãng xe và dòng xe.");
+    if (!licensePlate || !finalBrand || !finalModel) {
+      setErrorMessage("Vui lòng nhập biển số, chọn hãng xe và dòng xe.");
       return;
     }
 
     try {
       await vehicleApi.createVehicle({
         licensePlate,
-        brand,
-        model,
+        brand: finalBrand,
+        model: finalModel,
         color: color || "Chưa cập nhật",
       });
 
@@ -143,16 +180,16 @@ export default function VehiclesPage() {
   async function handleUpdateVehicle() {
     if (!selectedVehicle) return;
 
+    const finalBrand = formData.brand === "Khác (Hãng khác)" ? (formData.customBrand || "Hãng khác").trim() : formData.brand.trim();
+    const finalModel = formData.model === "Khác" ? (formData.customModel || "Dòng khác").trim() : formData.model.trim();
     const licensePlate = formData.licensePlate.trim().toUpperCase();
-    const brand = formData.brand.trim();
-    const model = formData.model.trim();
     const color = formData.color.trim();
 
     setSuccessMessage("");
     setErrorMessage("");
 
-    if (!licensePlate || !brand || !model) {
-      setErrorMessage("Vui lòng nhập biển số, hãng xe và dòng xe.");
+    if (!licensePlate || !finalBrand || !finalModel) {
+      setErrorMessage("Vui lòng nhập biển số, chọn hãng xe và dòng xe.");
       return;
     }
 
@@ -162,8 +199,8 @@ export default function VehiclesPage() {
       await vehicleApi.updateVehicle(vehicleId, {
         ...selectedVehicle,
         licensePlate,
-        brand,
-        model,
+        brand: finalBrand,
+        model: finalModel,
         color: color || "Chưa cập nhật",
       });
 
@@ -376,36 +413,75 @@ export default function VehiclesPage() {
 
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <Card className="w-full max-w-md rounded-3xl bg-white p-8">
+          <Card className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-2xl font-bold leading-tight text-foreground">Thêm xe mới</h2>
               <button type="button" onClick={() => setShowAddModal(false)}>
-                <X size={24} className="text-muted-foreground" />
+                <X size={24} className="text-muted-foreground transition hover:text-foreground" />
               </button>
             </div>
             <div className="mb-6 space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Hãng xe</label>
-                <Input name="brand" value={formData.brand} onChange={handleFormChange} placeholder="VD: Toyota" className="rounded-lg border-border" />
+                <label className="mb-2 block text-sm font-semibold text-foreground">Hãng xe <span className="text-red-500">*</span></label>
+                <select
+                  name="brand"
+                  value={formData.brand}
+                  onChange={handleFormChange}
+                  className="w-full h-11 rounded-xl border border-border bg-white px-3.5 font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="">-- Chọn hãng xe --</option>
+                  {CAR_BRANDS.map((item) => (
+                    <option key={item.brand} value={item.brand}>{item.brand}</option>
+                  ))}
+                </select>
+                {formData.brand === "Khác (Hãng khác)" && (
+                  <Input
+                    name="customBrand"
+                    value={formData.customBrand || ""}
+                    onChange={handleFormChange}
+                    placeholder="Nhập tên hãng xe của bạn..."
+                    className="mt-2.5 h-11 rounded-xl border-border"
+                  />
+                )}
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Dòng xe</label>
-                <Input name="model" value={formData.model} onChange={handleFormChange} placeholder="VD: Vios" className="rounded-lg border-border" />
+                <label className="mb-2 block text-sm font-semibold text-foreground">Dòng xe <span className="text-red-500">*</span></label>
+                <select
+                  name="model"
+                  value={formData.model}
+                  onChange={handleFormChange}
+                  disabled={!formData.brand}
+                  className="w-full h-11 rounded-xl border border-border bg-white px-3.5 font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-slate-100 disabled:text-muted-foreground"
+                >
+                  <option value="">{formData.brand ? "-- Chọn dòng xe --" : "-- Vui lòng chọn hãng xe trước --"}</option>
+                  {availableModels.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+                {formData.model === "Khác" && (
+                  <Input
+                    name="customModel"
+                    value={formData.customModel || ""}
+                    onChange={handleFormChange}
+                    placeholder="Nhập tên dòng xe của bạn..."
+                    className="mt-2.5 h-11 rounded-xl border-border"
+                  />
+                )}
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Biển số xe</label>
-                <Input name="licensePlate" value={formData.licensePlate} onChange={handleFormChange} placeholder="VD: 51A-238.88" className="rounded-lg border-border" />
+                <label className="mb-2 block text-sm font-semibold text-foreground">Biển số xe <span className="text-red-500">*</span></label>
+                <Input name="licensePlate" value={formData.licensePlate} onChange={handleFormChange} placeholder="VD: 51A-238.88" className="h-11 rounded-xl border-border font-mono font-semibold" />
               </div>
               <div>
                 <label className="mb-2 block text-sm font-semibold text-foreground">Màu sơn</label>
-                <Input name="color" value={formData.color} onChange={handleFormChange} placeholder="VD: Trắng" className="rounded-lg border-border" />
+                <Input name="color" value={formData.color} onChange={handleFormChange} placeholder="VD: Trắng" className="h-11 rounded-xl border-border" />
               </div>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowAddModal(false)} className="flex-1 rounded-lg border-border font-semibold">
+              <Button variant="outline" onClick={() => setShowAddModal(false)} className="h-11 flex-1 rounded-xl border-border font-semibold hover:bg-slate-50">
                 Hủy
               </Button>
-              <Button onClick={handleAddVehicle} className="flex-1 rounded-lg bg-primary font-bold text-primary-foreground hover:bg-brand-dark">
+              <Button onClick={handleAddVehicle} className="h-11 flex-1 rounded-xl bg-primary font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary/90">
                 Thêm xe
               </Button>
             </div>
@@ -415,36 +491,75 @@ export default function VehiclesPage() {
 
       {showEditModal && selectedVehicle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <Card className="w-full max-w-md rounded-3xl bg-white p-8">
+          <Card className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-2xl font-bold leading-tight text-foreground">Sửa thông tin xe</h2>
               <button type="button" onClick={() => setShowEditModal(false)}>
-                <X size={24} className="text-muted-foreground" />
+                <X size={24} className="text-muted-foreground transition hover:text-foreground" />
               </button>
             </div>
             <div className="mb-6 space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Hãng xe</label>
-                <Input name="brand" value={formData.brand} onChange={handleFormChange} className="rounded-lg border-border" />
+                <label className="mb-2 block text-sm font-semibold text-foreground">Hãng xe <span className="text-red-500">*</span></label>
+                <select
+                  name="brand"
+                  value={formData.brand}
+                  onChange={handleFormChange}
+                  className="w-full h-11 rounded-xl border border-border bg-white px-3.5 font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="">-- Chọn hãng xe --</option>
+                  {CAR_BRANDS.map((item) => (
+                    <option key={item.brand} value={item.brand}>{item.brand}</option>
+                  ))}
+                </select>
+                {formData.brand === "Khác (Hãng khác)" && (
+                  <Input
+                    name="customBrand"
+                    value={formData.customBrand || ""}
+                    onChange={handleFormChange}
+                    placeholder="Nhập tên hãng xe của bạn..."
+                    className="mt-2.5 h-11 rounded-xl border-border"
+                  />
+                )}
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Dòng xe</label>
-                <Input name="model" value={formData.model} onChange={handleFormChange} className="rounded-lg border-border" />
+                <label className="mb-2 block text-sm font-semibold text-foreground">Dòng xe <span className="text-red-500">*</span></label>
+                <select
+                  name="model"
+                  value={formData.model}
+                  onChange={handleFormChange}
+                  disabled={!formData.brand}
+                  className="w-full h-11 rounded-xl border border-border bg-white px-3.5 font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-slate-100 disabled:text-muted-foreground"
+                >
+                  <option value="">{formData.brand ? "-- Chọn dòng xe --" : "-- Vui lòng chọn hãng xe trước --"}</option>
+                  {availableModels.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+                {formData.model === "Khác" && (
+                  <Input
+                    name="customModel"
+                    value={formData.customModel || ""}
+                    onChange={handleFormChange}
+                    placeholder="Nhập tên dòng xe của bạn..."
+                    className="mt-2.5 h-11 rounded-xl border-border"
+                  />
+                )}
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Biển số xe</label>
-                <Input name="licensePlate" value={formData.licensePlate} onChange={handleFormChange} className="rounded-lg border-border" />
+                <label className="mb-2 block text-sm font-semibold text-foreground">Biển số xe <span className="text-red-500">*</span></label>
+                <Input name="licensePlate" value={formData.licensePlate} onChange={handleFormChange} className="h-11 rounded-xl border-border font-mono font-semibold" />
               </div>
               <div>
                 <label className="mb-2 block text-sm font-semibold text-foreground">Màu sơn</label>
-                <Input name="color" value={formData.color} onChange={handleFormChange} className="rounded-lg border-border" />
+                <Input name="color" value={formData.color} onChange={handleFormChange} className="h-11 rounded-xl border-border" />
               </div>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowEditModal(false)} className="flex-1 rounded-lg border-border font-semibold">
+              <Button variant="outline" onClick={() => setShowEditModal(false)} className="h-11 flex-1 rounded-xl border-border font-semibold hover:bg-slate-50">
                 Hủy
               </Button>
-              <Button onClick={handleUpdateVehicle} className="flex-1 rounded-lg bg-primary font-bold text-primary-foreground hover:bg-brand-dark">
+              <Button onClick={handleUpdateVehicle} className="h-11 flex-1 rounded-xl bg-primary font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary/90">
                 Cập nhật
               </Button>
             </div>
