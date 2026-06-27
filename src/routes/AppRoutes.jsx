@@ -38,6 +38,7 @@ import RewardsPage from "../pages/customer-portal/RewardsPage";
 import PromotionsPage from "../pages/customer-portal/PromotionsPage";
 import NotificationsPage from "../pages/customer-portal/NotificationsPage";
 import AccountPage from "../pages/customer-portal/AccountPage";
+import ChangePasswordPage from "../pages/customer-portal/ChangePasswordPage";
 import StaffBookingSearchPage from "../pages/staff/StaffBookingSearchPage";
 import StaffWorkflowPage from "../pages/staff/StaffWorkflowPage";
 import StaffDashboardPage from "../pages/staff/StaffDashboardPage";
@@ -109,6 +110,7 @@ function AppRoutes() {
           <Route path="/khach-hang/uu-dai" element={<PromotionsPage />} />
           <Route path="/khach-hang/thong-bao" element={<NotificationsPage />} />
           <Route path="/khach-hang/tai-khoan" element={<AccountPage />} />
+          <Route path="/khach-hang/doi-mat-khau" element={<ChangePasswordPage />} />
         </Route>
 
         <Route element={<StaffLayout />}>
