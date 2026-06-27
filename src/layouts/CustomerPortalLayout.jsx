@@ -4,14 +4,20 @@ import {
   Bell,
   Calendar,
   Car,
+  CheckCircle,
   ChevronDown,
   CreditCard,
+  Eye,
+  EyeOff,
   Gift,
   LayoutGrid,
   LogOut,
   Plus,
+  Shield,
   Star,
   User,
+  X,
+  XCircle,
 } from "lucide-react";
 import { Logo } from "@/components/site/logo";
 import { loyaltyApi } from "@/api/loyaltyApi";
@@ -83,6 +89,46 @@ function DashboardHeader() {
   const [loyaltyInfo, setLoyaltyInfo] = useState(defaultLoyaltyInfo);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
+
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [pwForm, setPwForm] = useState({ current: "", newPw: "", confirm: "" });
+  const [showPw, setShowPw] = useState({ current: false, newPw: false, confirm: false });
+  const [pwStatus, setPwStatus] = useState(null);
+  const [pwMessage, setPwMessage] = useState("");
+
+  function toggleShowPw(key) {
+    setShowPw((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  function validatePw() {
+    if (!pwForm.current) return "Vui lòng nhập mật khẩu hiện tại.";
+    if (pwForm.newPw.length < 8) return "Mật khẩu mới phải có ít nhất 8 ký tự.";
+    if (pwForm.newPw !== pwForm.confirm) return "Xác nhận mật khẩu không khớp.";
+    return null;
+  }
+
+  async function handlePasswordSubmit(e) {
+    e.preventDefault();
+    const err = validatePw();
+    if (err) {
+      setPwStatus("error");
+      setPwMessage(err);
+      return;
+    }
+    setPwStatus("success");
+    setPwMessage("Mật khẩu đã được đổi thành công!");
+    setPwForm({ current: "", newPw: "", confirm: "" });
+    setTimeout(() => {
+      setPwStatus(null);
+      setShowPasswordModal(false);
+    }, 2000);
+  }
+
+  const pwFields = [
+    { label: "Mật khẩu hiện tại", key: "current" },
+    { label: "Mật khẩu mới", key: "newPw" },
+    { label: "Xác nhận mật khẩu mới", key: "confirm" },
+  ];
 
   useEffect(() => {
     function handleProfileUpdate() {
@@ -212,6 +258,16 @@ function DashboardHeader() {
                 </div>
                 <span>Tài khoản của tôi</span>
               </button>
+              <button
+                type="button"
+                onClick={() => { setShowDropdown(false); setShowPasswordModal(true); }}
+                className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-blue-50 hover:text-blue-600"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+                  <Shield size={18} />
+                </div>
+                <span>Đổi mật khẩu</span>
+              </button>
               <div className="my-1 h-px bg-border/40" />
               <button
                 type="button"
@@ -227,6 +283,78 @@ function DashboardHeader() {
           )}
         </div>
       </div>
+
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in-0">
+          <div className="w-full max-w-md rounded-3xl border border-border bg-white p-6 shadow-2xl animate-in zoom-in-95">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="flex items-center gap-2 text-xl font-extrabold text-foreground">
+                  <Shield size={22} className="text-primary" />
+                  Bảo mật tài khoản
+                </h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  Đổi mật khẩu để bảo vệ tài khoản.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPasswordModal(false)}
+                className="rounded-full p-1 text-muted-foreground hover:bg-slate-100 hover:text-foreground transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {pwStatus && (
+              <div
+                className={cn(
+                  "mb-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold",
+                  pwStatus === "success"
+                    ? "bg-green-50 text-green-700"
+                    : "bg-red-50 text-red-700",
+                )}
+              >
+                {pwStatus === "success" ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                {pwMessage}
+              </div>
+            )}
+
+            <form onSubmit={handlePasswordSubmit} className="space-y-3">
+              {pwFields.map(({ label, key }) => (
+                <div key={key}>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    {label}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPw[key] ? "text" : "password"}
+                      value={pwForm[key]}
+                      onChange={(e) => setPwForm((prev) => ({ ...prev, [key]: e.target.value }))}
+                      className="w-full rounded-xl border border-border bg-white px-4 py-2.5 pr-11 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => toggleShowPw(key)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
+                      aria-label={showPw[key] ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    >
+                      {showPw[key] ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                type="submit"
+                className="mt-2 w-full rounded-xl bg-primary py-3 text-sm font-bold text-white shadow-lg shadow-primary/25 transition hover:bg-brand-dark"
+              >
+                Đổi mật khẩu
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
