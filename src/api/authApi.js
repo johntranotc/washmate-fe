@@ -5,11 +5,18 @@ export const authApi = {
   login: async (payload) => {
     const response = await axiosClient.post("/auth/login", payload);
 
-    // Kiểm tra cấu hình trả về từ API của Hoàng để tự động lưu token vào localStorage
     if (response && response.token) {
       localStorage.setItem("token", response.token);
+      localStorage.setItem("accessToken", response.token);
     } else if (response && response.accessToken) {
       localStorage.setItem("token", response.accessToken);
+      localStorage.setItem("accessToken", response.accessToken);
+    }
+    if (response && response.refreshToken) {
+      localStorage.setItem("refreshToken", response.refreshToken);
+    }
+    if (response && response.user) {
+      localStorage.setItem("currentUser", JSON.stringify(response.user));
     }
 
     return response;
@@ -20,7 +27,20 @@ export const authApi = {
 
   // Các API xử lý OTP và Quên mật khẩu
   requestOtp: (payload) => axiosClient.post("/auth/otp/request", payload),
-  verifyOtp: (payload) => axiosClient.post("/auth/otp/verify", payload),
+  verifyOtp: async (payload) => {
+    const response = await axiosClient.post("/auth/otp/verify", payload);
+    if (response && response.accessToken) {
+      localStorage.setItem("token", response.accessToken);
+      localStorage.setItem("accessToken", response.accessToken);
+    }
+    if (response && response.refreshToken) {
+      localStorage.setItem("refreshToken", response.refreshToken);
+    }
+    if (response && response.user) {
+      localStorage.setItem("currentUser", JSON.stringify(response.user));
+    }
+    return response;
+  },
   forgotPassword: (payload) => axiosClient.post("/auth/password/forgot", payload),
   resetPassword: (payload) => axiosClient.post("/auth/password/reset", payload),
 
@@ -29,7 +49,9 @@ export const authApi = {
 
   // Luồng đăng xuất dọn dẹp sạch token cũ tránh lưu đè tên tài khoản cũ
   logout: () => {
-    localStorage.removeItem("token");
+    ["token", "accessToken", "refreshToken", "currentUser", "roles", "garageIds", "userEmail"].forEach((key) =>
+      localStorage.removeItem(key)
+    );
     return axiosClient.post("/auth/logout");
   },
 };

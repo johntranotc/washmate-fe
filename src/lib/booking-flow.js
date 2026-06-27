@@ -40,11 +40,22 @@ export function normalizeVehicle(item) {
 }
 
 export function normalizeService(item) {
+  let rawName = item.name || item.serviceName || "Gói chăm sóc xe";
+  let rawDesc = item.description || "Dịch vụ chăm sóc xe chuyên nghiệp tại WashMate.";
+
+  if (rawName.includes("Basic Wash") || rawName.includes("Basic")) {
+    rawName = "Rửa Xe Bọt Tuyết Tiêu Chuẩn";
+    rawDesc = "Rửa vỏ bọt tuyết, hút bụi nội thất cơ bản, xịt gầm.";
+  } else if (rawName.includes("Premium Detail") || rawName.includes("Premium")) {
+    rawName = "Chăm Sóc Chi Tiết & Phủ Bóng VIP";
+    rawDesc = "Vệ sinh khoang máy, hút bụi chuyên sâu, phủ bóng sơn nhanh.";
+  }
+
   return {
     ...item,
     id: getId(item, ["serviceId", "servicePackageId"]),
-    name: item.name || item.serviceName || "Gói chăm sóc xe",
-    description: item.description || "Dịch vụ chăm sóc xe chuyên nghiệp tại WashMate.",
+    name: rawName,
+    description: rawDesc,
     price: Number(item.price ?? item.basePrice ?? item.amount ?? 0),
     duration: Number(item.duration ?? item.durationMinutes ?? item.estimatedDuration ?? 0),
     status: item.status || "ACTIVE",
@@ -65,7 +76,7 @@ export function normalizeGarage(item) {
     status: item.status || "ACTIVE",
     rating: Number(item.rating ?? 4.5),
     reviewCount: Number(item.reviewCount ?? 0),
-    availableSlots: Number(item.availableSlots ?? 0),
+    availableSlots: Number(item.availableSlots ?? 12),
     distanceKm: item.distanceKm ?? null,
     isOpen: item.isOpen !== false,
     district: item.district || "",
@@ -77,10 +88,11 @@ export function normalizeGarage(item) {
 }
 
 export function normalizeSlot(item) {
-  const maxCapacity = Number(item.maxCapacity ?? item.capacity ?? 1);
+  const maxCapacity = Number(item.maxCapacity ?? item.capacity ?? 10);
   const bookedCount = Number(item.bookedCount ?? item.currentBookings ?? 0);
-  const status = item.status || (bookedCount >= maxCapacity ? "FULL" : "OPEN");
-  const disabled = status !== "OPEN" || bookedCount >= maxCapacity;
+  const isFull = bookedCount >= maxCapacity || ["FULL", "CLOSED"].includes(item.status);
+  const status = isFull ? "FULL" : "OPEN";
+  const disabled = isFull;
   const almostFull = !disabled && maxCapacity > 0 && bookedCount >= Math.ceil(maxCapacity * 0.5);
   return {
     ...item,
@@ -112,9 +124,13 @@ export function normalizeBookingResponse(response) {
 }
 
 export function bookingErrorMessage(error) {
-  if (["SLOT_FULL", "BOOKING_SLOT_FULL"].includes(error?.errorCode)) return "Khung giờ này đã đầy.";
-  if (error?.status === 400 || error?.errorCode === "VALIDATION_ERROR") return error?.message || "Dữ liệu đặt lịch không hợp lệ.";
-  return error?.message || "Không thể tạo lịch đặt.";
+  const msg = error?.message || "";
+  if (msg.includes("Service package does not belong")) return "Gói dịch vụ bạn chọn không thuộc về gara này. Vui lòng chọn lại dịch vụ ở Bước 2.";
+  if (msg.includes("Slot does not belong")) return "Khung giờ bạn chọn không thuộc về gara này.";
+  if (msg.includes("full") || ["SLOT_FULL", "BOOKING_SLOT_FULL"].includes(error?.errorCode)) return "Khung giờ này vừa có khách đặt đầy.";
+  if (msg.includes("not active")) return "Gara hoặc gói dịch vụ hiện đang tạm ngưng nhận lịch.";
+  if (error?.status === 400 || error?.errorCode === "VALIDATION_ERROR") return "Thông tin đặt lịch chưa chính xác.";
+  return "Không thể gửi yêu cầu đặt lịch lúc này. Vui lòng thử lại.";
 }
 
 export function formatCurrency(value) {
@@ -145,7 +161,10 @@ export function nextDates(count = 7) {
   return Array.from({ length: count }, (_, index) => {
     const date = new Date();
     date.setDate(date.getDate() + index);
-    const value = date.toISOString().slice(0, 10);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const dayStr = String(date.getDate()).padStart(2, "0");
+    const value = `${year}-${month}-${dayStr}`;
     return {
       value,
       day: new Intl.DateTimeFormat("vi-VN", { day: "2-digit" }).format(date),

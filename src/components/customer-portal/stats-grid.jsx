@@ -1,5 +1,9 @@
+import { useEffect, useState } from "react";
 import { Calendar, Car, Star, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { vehicleApi } from "@/api/vehicleApi";
+import { loyaltyApi } from "@/api/loyaltyApi";
+import { loadCustomerBookingList } from "@/lib/customer-bookings";
 
 const variantStyles = {
   default: "bg-gradient-to-br from-primary/10 to-brand-dark/10",
@@ -24,32 +28,70 @@ export function StatCard({ icon, value, label, description, variant = "default" 
 }
 
 export function DashboardStatsGrid() {
+  const [stats, setStats] = useState({
+    bookingCount: 0,
+    vehicleCount: 0,
+    points: 0,
+    tierName: "Thành viên mới",
+  });
+
+  useEffect(() => {
+    async function fetchAll() {
+      let bCount = 0;
+      let vCount = 0;
+      let pts = 0;
+      let tier = "Thành viên mới";
+
+      try {
+        const bRes = await loadCustomerBookingList();
+        if (bRes?.bookings) bCount = bRes.bookings.length;
+      } catch {}
+
+      try {
+        const vRes = await vehicleApi.getMyVehicles();
+        if (Array.isArray(vRes)) vCount = vRes.length;
+        else if (vRes?.data && Array.isArray(vRes.data)) vCount = vRes.data.length;
+      } catch {}
+
+      try {
+        const lRes = await loyaltyApi.getMyLoyalty();
+        if (lRes) {
+          pts = Number(lRes.availablePoints ?? lRes.points ?? 0) || 0;
+          tier = lRes.tierName || lRes.tier || "Thành viên mới";
+        }
+      } catch {}
+
+      setStats({ bookingCount: bCount, vehicleCount: vCount, points: pts, tierName: tier });
+    }
+    fetchAll();
+  }, []);
+
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
       <StatCard
         icon={<Calendar size={32} />}
-        value="2"
-        label="Lịch sắp tới"
-        description="Đang chờ bạn xác nhận hoặc đến gara"
+        value={stats.bookingCount}
+        label="Lịch đặt của tôi"
+        description="Tổng số lịch đặt rửa xe của bạn"
         variant="blue"
       />
       <StatCard
         icon={<Car size={32} />}
-        value="3"
+        value={stats.vehicleCount}
         label="Xe đã lưu"
         description="Phương tiện trong tài khoản của bạn"
         variant="teal"
       />
       <StatCard
         icon={<Star size={32} />}
-        value="1.250"
+        value={(Number(stats.points) || 0).toLocaleString("vi-VN")}
         label="Điểm hiện tại"
         description="Có thể dùng để đổi ưu đãi"
         variant="gold"
       />
       <StatCard
         icon={<Award size={32} />}
-        value="Vàng"
+        value={stats.tierName}
         label="Hạng thành viên"
         description="Bạn đang nhận nhiều quyền lợi hơn"
         variant="default"

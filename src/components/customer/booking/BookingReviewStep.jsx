@@ -1,7 +1,7 @@
-import { Info, CalendarDays, Car, MapPin, Sparkles } from "lucide-react";
+import { Info, CalendarDays, Car, MapPin, Sparkles, Wallet, CreditCard } from "lucide-react";
 import { formatCurrency, formatDate, getGarageId } from "@/lib/booking-flow";
 
-export function BookingReviewStep({ selection, note, onNoteChange }) {
+export function BookingReviewStep({ selection, note, onNoteChange, paymentMethod = "CASH", onPaymentMethodChange }) {
   const { vehicle, service, garage, date, slot } = selection;
   const items = [
     {
@@ -32,7 +32,7 @@ export function BookingReviewStep({ selection, note, onNoteChange }) {
   ];
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+    <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
       <div className="grid gap-4 md:grid-cols-2">
         {items.map(({ icon: Icon, title, lines, debug }) => (
           <article key={title} className="rounded-3xl border border-border bg-card p-6 shadow-sm">
@@ -54,23 +54,57 @@ export function BookingReviewStep({ selection, note, onNoteChange }) {
         ))}
       </div>
 
-      <aside className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-        <label className="text-sm font-bold text-foreground">
+      <aside className="space-y-6 rounded-3xl border border-border bg-card p-6 shadow-sm">
+        {/* Payment Method Selection */}
+        <div>
+          <label className="text-sm font-extrabold text-foreground uppercase tracking-wider block mb-3">
+            Phương thức thanh toán
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => onPaymentMethodChange?.("CASH")}
+              className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+                paymentMethod === "CASH"
+                  ? "border-primary bg-primary/5 text-primary font-bold shadow-sm"
+                  : "border-border bg-muted/30 text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              <Wallet className="size-6 mb-1.5" />
+              <span className="text-xs">Tiền mặt</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onPaymentMethodChange?.("TRANSFER")}
+              className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+                paymentMethod === "TRANSFER"
+                  ? "border-primary bg-primary/5 text-primary font-bold shadow-sm"
+                  : "border-border bg-muted/30 text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              <CreditCard className="size-6 mb-1.5" />
+              <span className="text-xs">Chuyển khoản</span>
+            </button>
+          </div>
+        </div>
+
+        <label className="text-sm font-bold text-foreground block">
           Ghi chú cho gara
           <textarea
             value={note}
             onChange={(e) => onNoteChange(e.target.value)}
-            rows={6}
+            rows={4}
             placeholder="Ví dụ: xe có vết bẩn ở bánh trước, cần vệ sinh kỹ nội thất..."
-            className="mt-3 w-full resize-none rounded-2xl border border-border bg-muted p-4 text-sm font-normal text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+            className="mt-2 w-full resize-none rounded-2xl border border-border bg-muted p-4 text-sm font-normal text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
           />
         </label>
-        <div className="mt-5 flex gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-800">
+
+        <div className="flex gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-800">
           <Info className="mt-0.5 size-5 shrink-0" />
           <p>
-            Sau khi gửi, lịch đặt sẽ ở trạng thái{" "}
-            <strong>Chờ gara xác nhận</strong>. Bạn chỉ cần thanh toán sau khi
-            gara xác nhận lịch hẹn.
+            {paymentMethod === "CASH"
+              ? "Bạn sẽ thanh toán trực tiếp bằng tiền mặt tại quầy sau khi gara xác nhận lịch và rửa xong."
+              : "Gara sẽ xác nhận lịch hẹn. Bạn có thể chuyển khoản trực tiếp qua mã QR VNPay tiện lợi."}
           </p>
         </div>
       </aside>

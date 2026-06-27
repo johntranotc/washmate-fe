@@ -13,6 +13,7 @@ export default function ForgotPasswordPage() {
   const [form, setForm] = useState({ identifier: "", otp: "", password: "", confirmPassword: "" });
   const [message, setMessage] = useState({ error: "", success: "" });
   const [loading, setLoading] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
   const update = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
 
   async function handleSubmit(event) {
@@ -27,11 +28,12 @@ export default function ForgotPasswordPage() {
         setStep(2);
       } else if (step === 2) {
         await authApi.verifyOtp({ identifier: form.identifier, otp: form.otp });
-        setMessage({ error: "", success: "Mã xác thực hợp lệ." });
+        setMessage({ error: "", success: "Xác thực OTP thành công. Vui lòng tạo mật khẩu mới bên dưới." });
         setStep(3);
       } else {
         await authApi.resetPassword({ identifier: form.identifier, otp: form.otp, newPassword: form.password });
-        setMessage({ error: "", success: "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập ngay." });
+        setMessage({ error: "", success: "Đổi mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới ngay bây giờ." });
+        setResetDone(true);
       }
     } catch (err) {
       setMessage({ error: err?.errorCode === "INVALID_OTP" ? "Mã xác thực không hợp lệ." : err?.message || "Không thể hoàn tất yêu cầu.", success: "" });
@@ -46,18 +48,18 @@ export default function ForgotPasswordPage() {
       <ol className="mb-8 grid grid-cols-3 gap-2">
         {labels.map((label, index) => {
           const number = index + 1;
-          const done = step > number;
+          const done = step > number || (step === 3 && resetDone);
           return <li key={label} className="text-center"><span className={cn("mx-auto grid size-9 place-items-center rounded-full border text-sm font-bold", step >= number ? "border-primary bg-primary text-white" : "border-border text-muted-foreground")}>{done ? <Check className="size-4" /> : number}</span><span className="mt-2 hidden text-xs font-semibold text-muted-foreground sm:block">{label}</span></li>;
         })}
       </ol>
       {message.error && <div role="alert" className="mb-5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">{message.error}</div>}
       {message.success && <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{message.success}</div>}
-      {!(step === 3 && message.success) ? (
+      {!resetDone ? (
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {step === 1 && <Field id="identifier" label="Email hoặc số điện thoại" placeholder="ban@email.com hoặc 09xx xxx xxx" icon="mail" value={form.identifier} onChange={update("identifier")} />}
           {step === 2 && <Field id="otp" label="Mã xác thực" placeholder="Nhập mã gồm 6 chữ số" icon="shield" inputMode="numeric" maxLength={6} value={form.otp} onChange={update("otp")} />}
           {step === 3 && <><Field id="password" label="Mật khẩu mới" type="password" placeholder="Tối thiểu 8 ký tự" icon="lock" minLength={8} value={form.password} onChange={update("password")} /><Field id="confirmPassword" label="Xác nhận mật khẩu mới" type="password" placeholder="Nhập lại mật khẩu" icon="lock" value={form.confirmPassword} onChange={update("confirmPassword")} /></>}
-          <button type="submit" disabled={loading} className="h-12 rounded-xl bg-primary font-bold text-white hover:bg-brand-dark disabled:opacity-60">{loading ? "Đang xử lý..." : step === 1 ? "Gửi mã xác thực" : step === 2 ? "Xác thực mã" : "Tạo mật khẩu mới"}</button>
+          <button type="submit" disabled={loading} className="h-12 rounded-xl bg-primary font-bold text-white hover:bg-brand-dark disabled:opacity-60">{loading ? "Đang xử lý..." : step === 1 ? "Gửi mã xác thực" : step === 2 ? "Xác thực mã" : "Lưu mật khẩu mới"}</button>
         </form>
       ) : <Link to="/dang-nhap" className="flex h-12 items-center justify-center rounded-xl bg-primary font-bold text-white">Đăng nhập ngay</Link>}
       <Link to="/dang-nhap" className="mt-7 flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground hover:text-primary"><ArrowLeft className="size-4" /> Quay lại đăng nhập</Link>

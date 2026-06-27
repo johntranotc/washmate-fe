@@ -29,6 +29,9 @@ export default function LoginPage() {
       if (data?.refreshToken) {
         localStorage.setItem("refreshToken", data.refreshToken);
       }
+      if (data?.user) {
+        localStorage.setItem("currentUser", JSON.stringify(data.user));
+      }
       localStorage.setItem("userEmail", email);
 
       navigate("/chon-khong-gian-lam-viec");

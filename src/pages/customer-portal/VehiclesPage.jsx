@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Plus, X } from "lucide-react";
+import { Car, Plus, X, Sparkles, Calendar, Edit2, Trash2, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +10,14 @@ import { vehicleApi } from "@/api/vehicleApi";
 const emptyForm = { licensePlate: "", brand: "", model: "", color: "" };
 
 function StatusBadge({ status }) {
-  if (status === "ACTIVE") {
-    return <Badge className="rounded-full bg-green-100 text-green-800">Đang sử dụng</Badge>;
+  if (status === "ACTIVE" || !status) {
+    return (
+      <Badge className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 shadow-sm">
+        <CheckCircle2 size={13} className="text-emerald-600" /> Đang sử dụng
+      </Badge>
+    );
   }
-  if (status === "INACTIVE") {
-    return <Badge className="rounded-full bg-yellow-100 text-yellow-800">Tạm ẩn</Badge>;
-  }
-  return <Badge className="rounded-full bg-red-100 text-red-800">Đã xóa</Badge>;
+  return <Badge className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-800">Đã ngừng sử dụng</Badge>;
 }
 
 export default function VehiclesPage() {
@@ -61,8 +62,7 @@ export default function VehiclesPage() {
     return vehicles.filter((vehicle) => {
       const matchesStatus =
         filterStatus === "all" ||
-        (filterStatus === "using" && vehicle.status === "ACTIVE") ||
-        (filterStatus === "hidden" && vehicle.status === "INACTIVE");
+        (filterStatus === "using" && (vehicle.status === "ACTIVE" || !vehicle.status));
 
       const matchesSearch =
         !keyword ||
@@ -74,7 +74,7 @@ export default function VehiclesPage() {
     });
   }, [vehicles, searchTerm, filterStatus]);
 
-  const activeCount = vehicles.filter((vehicle) => vehicle.status === "ACTIVE").length;
+  const activeCount = vehicles.filter((vehicle) => vehicle.status === "ACTIVE" || !vehicle.status).length;
 
   const lastServiceLabel = useMemo(() => {
     const withService = vehicles.find((vehicle) => vehicle.lastServiceDate);
@@ -176,25 +176,6 @@ export default function VehiclesPage() {
     }
   }
 
-  async function handleToggleStatus(vehicle) {
-    const vehicleId = vehicle.vehicleId || vehicle.id;
-    const newStatus = vehicle.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-
-    setSuccessMessage("");
-    setErrorMessage("");
-
-    try {
-      await vehicleApi.updateVehicle(vehicleId, { ...vehicle, status: newStatus });
-      await fetchVehicles();
-      setSuccessMessage(
-        newStatus === "ACTIVE" ? "Đã kích hoạt lại phương tiện." : "Đã tạm ẩn phương tiện.",
-      );
-    } catch (error) {
-      console.error(error);
-      setErrorMessage(error.message || "Không thể cập nhật trạng thái xe.");
-    }
-  }
-
   async function handleDeleteVehicle() {
     if (!selectedVehicle) return;
     const vehicleId = selectedVehicle.vehicleId || selectedVehicle.id;
@@ -214,162 +195,181 @@ export default function VehiclesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl p-8">
-      <div className="mb-8">
-        <h1 className="mb-3 text-4xl font-extrabold leading-tight text-foreground">Xe của tôi</h1>
-        <p className="mb-6 text-lg font-medium text-muted-foreground">
-          Lưu thông tin xe để đặt lịch nhanh hơn và theo dõi lịch sử chăm sóc từng phương tiện.
-        </p>
-
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-border bg-white p-4">
-            <p className="mb-1 text-sm font-medium text-muted-foreground">Tổng số xe</p>
-            <p className="text-2xl font-extrabold leading-tight text-foreground">{vehicles.length} xe</p>
-          </div>
-          <div className="rounded-xl border border-border bg-white p-4">
-            <p className="mb-1 text-sm font-medium text-muted-foreground">Xe đang sử dụng</p>
-            <p className="text-2xl font-extrabold leading-tight text-foreground">{activeCount} xe</p>
-          </div>
-          <div className="rounded-xl border border-border bg-white p-4">
-            <p className="mb-1 text-sm font-medium text-muted-foreground">Lịch gần nhất</p>
-            <p className="text-2xl font-extrabold leading-tight text-foreground">{lastServiceLabel}</p>
-          </div>
+    <div className="mx-auto max-w-7xl p-6 sm:p-8">
+      <div className="mb-8 flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="mb-2 text-3xl font-extrabold leading-tight tracking-tight text-foreground sm:text-4xl">Xe của tôi</h1>
+          <p className="text-base font-medium text-muted-foreground sm:text-lg">
+            Quản lý danh sách phương tiện để trải nghiệm đặt lịch nhanh và thuận tiện hơn.
+          </p>
         </div>
-
-        <Button onClick={openAddModal} className="rounded-xl bg-primary font-bold text-primary-foreground hover:bg-brand-dark">
-          <Plus size={20} />
+        <Button onClick={openAddModal} className="h-12 rounded-2xl bg-primary px-6 font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 hover:shadow-xl">
+          <Plus size={20} className="mr-2" />
           Thêm xe mới
         </Button>
       </div>
 
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+        <div className="flex items-center gap-4 rounded-2xl border border-border/80 bg-gradient-to-br from-white to-slate-50/50 p-5 shadow-sm">
+          <div className="rounded-2xl bg-blue-500/10 p-3.5 text-blue-600">
+            <Car size={26} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-muted-foreground">Tổng phương tiện</p>
+            <p className="text-2xl font-black text-foreground">{vehicles.length} xe</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 rounded-2xl border border-border/80 bg-gradient-to-br from-white to-slate-50/50 p-5 shadow-sm">
+          <div className="rounded-2xl bg-emerald-500/10 p-3.5 text-emerald-600">
+            <CheckCircle2 size={26} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-muted-foreground">Đang sử dụng</p>
+            <p className="text-2xl font-black text-foreground">{activeCount} xe</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 rounded-2xl border border-border/80 bg-gradient-to-br from-white to-slate-50/50 p-5 shadow-sm">
+          <div className="rounded-2xl bg-amber-500/10 p-3.5 text-amber-600">
+            <Calendar size={26} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-muted-foreground">Lịch gần nhất</p>
+            <p className="text-xl font-black text-foreground">{lastServiceLabel}</p>
+          </div>
+        </div>
+      </div>
+
       {successMessage && (
-        <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 text-center text-sm text-green-700">
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50/80 p-4 font-semibold text-green-800 shadow-sm">
+          <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
           {successMessage}
         </div>
       )}
 
       {errorMessage && (
-        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-700">
+        <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-center font-semibold text-red-700 shadow-sm">
           {errorMessage}
         </div>
       )}
 
-      <div className="mb-8 space-y-4">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Input
-          placeholder="Tìm theo biển số, hãng xe hoặc dòng xe"
+          placeholder="🔍 Tìm theo biển số, hãng xe hoặc dòng xe..."
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
-          className="h-12 rounded-xl border-border focus-visible:border-primary"
+          className="h-12 max-w-md rounded-2xl border-border bg-white px-4 font-medium shadow-sm focus-visible:border-primary focus-visible:ring-primary/20"
         />
 
-        <div className="flex gap-2">
-          {["all", "using", "hidden"].map((status) => (
+        <div className="flex gap-2 rounded-2xl border border-border bg-slate-100/80 p-1.5">
+          {["all", "using"].map((status) => (
             <button
               key={status}
               type="button"
               onClick={() => setFilterStatus(status)}
-              className={`rounded-lg px-4 py-2 font-semibold transition-all ${
+              className={`rounded-xl px-5 py-2 font-bold text-sm transition-all ${
                 filterStatus === status
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-border bg-white text-muted-foreground hover:border-primary"
+                  ? "bg-white text-primary shadow-md"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {status === "all" ? "Tất cả" : status === "using" ? "Đang sử dụng" : "Tạm ẩn"}
+              {status === "all" ? "Tất cả phương tiện" : "Đang sử dụng"}
             </button>
           ))}
         </div>
       </div>
 
       {loading ? (
-        <Card className="rounded-3xl border border-border p-12 text-center">
-          <p className="text-lg font-semibold text-foreground">Đang tải danh sách phương tiện...</p>
+        <Card className="rounded-3xl border border-border p-12 text-center shadow-sm">
+          <p className="text-lg font-bold text-foreground">Đang tải danh sách xe...</p>
           <p className="mt-2 text-sm text-muted-foreground">Vui lòng chờ trong giây lát.</p>
         </Card>
       ) : filteredVehicles.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {filteredVehicles.map((vehicle) => {
             const vehicleId = vehicle.vehicleId || vehicle.id;
+            const formattedBrand = vehicle.brand ? vehicle.brand.toUpperCase() : "XE";
+            const formattedModel = vehicle.model ? vehicle.model.charAt(0).toUpperCase() + vehicle.model.slice(1) : "";
 
             return (
-              <Card key={vehicleId} className="rounded-3xl border border-border p-6 transition-all hover:shadow-lg">
-                <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+              <Card key={vehicleId} className="group relative overflow-hidden rounded-3xl border border-border/80 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl">
+                <div className="mb-6 flex items-start justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="rounded-2xl bg-primary/10 p-4">
-                      <Car size={32} className="text-primary" />
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-blue-600 text-white shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
+                      <Car size={30} />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold leading-tight text-foreground">{vehicle.brand}</p>
-                      <p className="text-sm font-medium text-muted-foreground">{vehicle.model}</p>
+                      <h3 className="text-2xl font-black tracking-tight text-foreground">
+                        {formattedBrand} <span className="font-bold text-muted-foreground">{formattedModel}</span>
+                      </h3>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="inline-block rounded-lg border border-slate-300 bg-slate-100 px-3 py-0.5 font-mono text-sm font-bold tracking-wider text-slate-800 shadow-inner">
+                          {vehicle.licensePlate}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <StatusBadge status={vehicle.status} />
                 </div>
 
-                <div className="mb-6 grid grid-cols-1 gap-4 border-y border-border py-4 sm:grid-cols-3">
+                <div className="mb-6 grid grid-cols-3 gap-3 rounded-2xl bg-slate-50 p-4 border border-slate-100">
                   <div>
-                    <p className="mb-1 text-xs font-medium text-muted-foreground">Biển số xe</p>
-                    <p className="font-semibold leading-tight text-foreground">{vehicle.licensePlate}</p>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Màu sơn</p>
+                    <p className="font-bold text-foreground">{vehicle.color || "Trắng"}</p>
                   </div>
                   <div>
-                    <p className="mb-1 text-xs font-medium text-muted-foreground">Màu sơn</p>
-                    <p className="font-semibold leading-tight text-foreground">{vehicle.color || "Chưa cập nhật"}</p>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Lần chăm sóc</p>
+                    <p className="font-bold text-foreground">{vehicle.lastServiceDate || "Chưa có"}</p>
                   </div>
                   <div>
-                    <p className="mb-1 text-xs font-medium text-muted-foreground">Tổng booking</p>
-                    <p className="font-semibold leading-tight text-foreground">{vehicle.totalBookings || 0}</p>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tổng đặt lịch</p>
+                    <p className="font-black text-primary">{vehicle.totalBookings || 0} lần</p>
                   </div>
                 </div>
 
-                <div className="mb-4">
-                  <p className="mb-1 text-xs font-medium text-muted-foreground">Lịch gần nhất</p>
-                  <p className="text-sm font-medium text-muted-foreground">{vehicle.lastServiceDate || "Chưa có"}</p>
-                </div>
-
-                <div className="flex flex-wrap gap-3">
+                <div className="flex items-center justify-between gap-3 pt-2">
                   <Button
-                    variant="outline"
-                    onClick={() => openEditModal(vehicle)}
-                    className="flex-1 rounded-lg border-border font-semibold text-primary"
-                  >
-                    Sửa
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleToggleStatus(vehicle)}
-                    className="flex-1 rounded-lg border-border font-semibold text-primary"
-                  >
-                    {vehicle.status === "ACTIVE" ? "Tạm ẩn" : "Kích hoạt lại"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => openDeleteModal(vehicle)}
-                    className="flex-1 rounded-lg border-red-200 font-semibold text-red-600 hover:bg-red-50"
-                  >
-                    Xóa
-                  </Button>
-                  <Button
-                    disabled={vehicle.status !== "ACTIVE"}
                     onClick={() => navigate("/khach-hang/dat-lich-moi")}
-                    className="flex-1 rounded-lg bg-primary font-bold text-primary-foreground hover:bg-brand-dark"
+                    className="h-11 flex-1 rounded-xl bg-primary font-bold text-white shadow-md transition-all hover:bg-primary/90 hover:shadow-lg"
                   >
-                    Đặt lịch
+                    <Sparkles size={16} className="mr-1.5" /> Đặt lịch rửa xe ngay
                   </Button>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => openEditModal(vehicle)}
+                      title="Sửa thông tin xe"
+                      className="h-11 w-11 rounded-xl border-border bg-white text-muted-foreground hover:border-primary hover:bg-primary/5 hover:text-primary"
+                    >
+                      <Edit2 size={18} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => openDeleteModal(vehicle)}
+                      title="Xóa xe"
+                      className="h-11 w-11 rounded-xl border-red-200 bg-white text-red-500 hover:border-red-400 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 size={18} />
+                    </Button>
+                  </div>
                 </div>
               </Card>
             );
           })}
         </div>
       ) : (
-        <Card className="rounded-3xl border border-border p-12 text-center">
-          <div className="mb-4 inline-block rounded-full bg-primary/10 p-4">
-            <Car size={40} className="text-primary" />
+        <Card className="rounded-3xl border border-border p-12 text-center shadow-sm">
+          <div className="mb-4 inline-block rounded-3xl bg-primary/10 p-5">
+            <Car size={48} className="text-primary" />
           </div>
-          <h2 className="mb-2 text-2xl font-bold leading-tight text-foreground">Bạn chưa thêm xe nào</h2>
+          <h2 className="mb-2 text-2xl font-bold leading-tight text-foreground">Bạn chưa có phương tiện nào</h2>
           <p className="mb-6 font-medium text-muted-foreground">
             Thêm xe để đặt lịch rửa xe nhanh hơn và theo dõi lịch sử chăm sóc dễ dàng.
           </p>
-          <Button onClick={openAddModal} className="rounded-xl bg-primary font-bold text-primary-foreground hover:bg-brand-dark">
-            Thêm xe mới
+          <Button onClick={openAddModal} className="h-12 rounded-2xl bg-primary px-8 font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary/90">
+            <Plus size={20} className="mr-2" /> Thêm xe mới ngay
           </Button>
         </Card>
       )}

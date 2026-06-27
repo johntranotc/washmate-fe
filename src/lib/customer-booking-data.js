@@ -44,6 +44,15 @@ function unwrap(value) {
   return value;
 }
 
+function formatSafeString(val, fallback) {
+  if (typeof val === "string" && val.trim() !== "") return val;
+  if (val && typeof val === "object") {
+    const str = val.name || `${val.brand || ""} ${val.model || ""}`.trim() || val.title || val.packageName || val.serviceName || val.garageName || val.licensePlate;
+    if (str && typeof str === "string") return str;
+  }
+  return fallback;
+}
+
 export function normalizeBookingList(value) {
   return asList(value).map(normalizeBooking);
 }
@@ -57,8 +66,6 @@ export function normalizeBooking(value) {
     method: item.paymentMethod,
   });
   const backendStatus = item.bookingStatus || item.status || "PENDING_STAFF_CONFIRMATION";
-  // Trust the stored status from the backend/localStorage.
-  // Only auto-promote PENDING→CONFIRMED when payment is already PAID (legacy compat).
   const bookingStatus =
     backendStatus === "PENDING" && payment.status === "PAID"
       ? "CONFIRMED"
@@ -71,11 +78,11 @@ export function normalizeBooking(value) {
     bookingStatus,
     paymentStatus: payment.status,
     payment,
-    vehicle: item.vehicle?.name || item.vehicleName || item.vehicle || "Xe của khách hàng",
-    plate: item.vehicle?.licensePlate || item.licensePlate || item.plate || "Chưa cập nhật",
-    serviceName: item.service?.name || item.serviceName || item.servicePackage?.name || "Dịch vụ WashMate",
-    garageName: item.garage?.name || item.garageName || "Gara WashMate",
-    garageAddress: item.garage?.address || item.garageAddress || item.address || "Đang cập nhật",
+    vehicle: formatSafeString(item.vehicle || item.vehicleName, "Xe của khách hàng"),
+    plate: formatSafeString(item.vehicle?.licensePlate || item.licensePlate || item.plate, "Chưa cập nhật"),
+    serviceName: formatSafeString(item.service || item.serviceName || item.servicePackage, "Dịch vụ WashMate"),
+    garageName: formatSafeString(item.garage || item.garageName, "Gara WashMate"),
+    garageAddress: formatSafeString(item.garage?.address || item.garageAddress || item.address, "Đang cập nhật"),
     bookingDate: item.bookingDate || item.slot?.slotDate || item.date || "",
     slotTime: item.slotTime || item.slot?.startTime || item.startTime || "",
     endTime: item.endTime || item.slot?.endTime || "",

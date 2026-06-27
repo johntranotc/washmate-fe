@@ -30,10 +30,10 @@ export default function MembershipPointsPage() {
       const transactionResponse = normalizedAccount.id
         ? await loyaltyApi.getLoyaltyTransactions(normalizedAccount.id)
         : [];
-      setAccount(normalizedAccount);
-      setTransactions(normalizeTransactions(transactionResponse));
-      setAccount({});
-      setTransactions([]);
+      setAccount(normalizedAccount || {});
+      setTransactions(normalizeTransactions(transactionResponse) || []);
+    } catch (error) {
+      console.error("Lỗi tải dữ liệu điểm:", error);
     } finally {
       setLoading(false);
     }
@@ -43,10 +43,10 @@ export default function MembershipPointsPage() {
     loadData();
   }, [loadData]);
 
-  const currentTierName = account.tierName || tierLabels[account.tier] || account.tier;
-  const nextTierName = account.nextTierName || tierLabels[account.nextTier] || account.nextTier;
+  const currentTierName = account.tierName || tierLabels[account.tier] || account.tier || "Thành viên mới";
+  const nextTierName = account.nextTierName || tierLabels[account.nextTier] || account.nextTier || "Bạc";
   const currentBadgeName = tierCodeToBadgeName[account.tier] || currentTierName;
-  const currentTier = membershipTiers.find((tier) => tier.name === currentBadgeName);
+  const currentTier = membershipTiers.find((tier) => tier.name === currentBadgeName) || membershipTiers[0];
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-8">

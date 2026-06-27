@@ -44,6 +44,7 @@ export default function CustomerBookingFlowPage() {
     slot: null,
   });
   const [note, setNote] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [loading, setLoading] = useState(true);
   const [slotLoading, setSlotLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -64,6 +65,7 @@ export default function CustomerBookingFlowPage() {
       const apiVehicles = vehicleResult.status === "fulfilled" ? asList(vehicleResult.value).map(normalizeVehicle).filter((v) => v.status === "ACTIVE") : [];
       const apiServices = serviceResult.status === "fulfilled" ? asList(serviceResult.value).map(normalizeService).filter((s) => s.status === "ACTIVE") : [];
       const apiGarages = garageResult.status === "fulfilled" ? asList(garageResult.value).map(normalizeGarage).filter((g) => g.status === "ACTIVE") : [];
+
       setVehicles(apiVehicles);
       setAllServices(apiServices);
       setGarages(apiGarages);
@@ -85,11 +87,9 @@ export default function CustomerBookingFlowPage() {
     if (!selection.garage) return [];
     const garageId = getGarageId(selection.garage);
 
-    // From API: filter by garageId or show all if API doesn't have garageId on services
-    const filtered = allServices.filter(
+    return allServices.filter(
       (s) => !s.garageId || String(s.garageId) === String(garageId),
     );
-    return filtered.length ? filtered : allServices;
   }, [allServices, selection.garage]);
 
   // Load slots when garage + date change
@@ -109,11 +109,11 @@ export default function CustomerBookingFlowPage() {
         return;
       }
       try {
-
         const data = await bookingSlotApi.getAvailable({ garageId, date: selection.date });
         const normalized = asList(data)
           .map(normalizeSlot)
           .filter((slot) => !slot.garageId || String(slot.garageId) === String(garageId));
+
         if (active) setSlots(normalized);
       } catch {
         if (active) setSlots([]);
@@ -188,10 +188,9 @@ export default function CustomerBookingFlowPage() {
       garageId,
       slotId: selection.slot.id,
       bookingDate,
+      paymentMethod,
       bookingNote: note.trim(),
     };
-
-
 
     try {
       const response = await bookingApi.createBooking(payload);
@@ -258,10 +257,18 @@ export default function CustomerBookingFlowPage() {
     }
     // Step 5: Xác nhận
     if (step === 5) {
-      return <BookingReviewStep selection={selection} note={note} onNoteChange={setNote} />;
+      return (
+        <BookingReviewStep
+          selection={selection}
+          note={note}
+          onNoteChange={setNote}
+          paymentMethod={paymentMethod}
+          onPaymentMethodChange={setPaymentMethod}
+        />
+      );
     }
     // Step 6: Hoàn tất
-    return <BookingSuccessStep result={result} selection={selection} />;
+    return <BookingSuccessStep result={result} selection={selection} paymentMethod={paymentMethod} />;
   }
 
   return (

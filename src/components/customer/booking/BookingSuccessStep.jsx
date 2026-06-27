@@ -1,14 +1,15 @@
-import { ArrowRight, CalendarDays, Car, Clock3, MapPin, SendHorizonal, Sparkles } from "lucide-react";
+import { ArrowRight, CalendarDays, Car, Clock3, MapPin, SendHorizonal, Sparkles, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatDate, formatCurrency } from "@/lib/booking-flow";
 
-export function BookingSuccessStep({ result, selection }) {
+export function BookingSuccessStep({ result, selection, paymentMethod = "CASH" }) {
   const summaryRows = [
     { icon: MapPin, label: "Gara", value: selection.garage?.name },
     { icon: Sparkles, label: "Dịch vụ", value: `${selection.service?.name} — ${formatCurrency(selection.service?.price)}` },
     { icon: Car, label: "Xe", value: `${selection.vehicle?.licensePlate} · ${[selection.vehicle?.brand, selection.vehicle?.model].filter(Boolean).join(" ")}` },
     { icon: CalendarDays, label: "Ngày", value: formatDate(selection.date) },
     { icon: Clock3, label: "Giờ", value: `${selection.slot?.startTime} – ${selection.slot?.endTime || ""}` },
+    { icon: Wallet, label: "Thanh toán", value: paymentMethod === "CASH" ? "Tiền mặt tại gara" : "Chuyển khoản VNPay" },
   ];
 
   return (
@@ -76,7 +77,9 @@ export function BookingSuccessStep({ result, selection }) {
         {/* Payment note */}
         <div className="border-t border-border bg-amber-50/60 px-8 py-4 sm:px-10">
           <p className="text-xs text-amber-700 text-center font-semibold">
-            Thanh toán sẽ được thực hiện sau khi gara xác nhận lịch hẹn.
+            {paymentMethod === "CASH"
+              ? "Vui lòng chuẩn bị tiền mặt thanh toán sau khi gara hoàn tất rửa xe."
+              : "Lịch hẹn đang xử lý. Bạn sẽ tiến hành quét mã chuyển khoản sau khi gara xác nhận."}
           </p>
         </div>
 

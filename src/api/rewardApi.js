@@ -2,7 +2,7 @@ import axiosClient from "./axiosClient";
 
 export const rewardApi = {
   getRewards: (garageId) =>
-    axiosClient.get("/loyalty/rewards", { params: { garageId } }),
+    axiosClient.get("/v1/rewards", { params: { garageId } }),
   redeemReward: (rewardId, payload = {}) =>
-    axiosClient.post(`/loyalty/rewards/${rewardId}/redeem`, payload),
+    axiosClient.post(`/v1/rewards/${rewardId}/redeem`, payload),
 };

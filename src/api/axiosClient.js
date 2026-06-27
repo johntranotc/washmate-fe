@@ -22,7 +22,8 @@ axiosClient.interceptors.response.use(
   (error) => {
     const status = error.response?.status;
     const body = error.response?.data;
-    if (status === 401) {
+    const reqUrl = error.config?.url || "";
+    if (status === 401 && !reqUrl.includes("/auth/")) {
       ["accessToken", "refreshToken", "currentUser", "roles", "garageIds"].forEach((key) => localStorage.removeItem(key));
       if (window.location.pathname !== "/dang-nhap") window.location.assign("/dang-nhap");
     }
