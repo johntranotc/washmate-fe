@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { vehicleApi } from "@/api/vehicleApi";
 import { loyaltyApi } from "@/api/loyaltyApi";
 import { loadCustomerBookingList } from "@/lib/customer-bookings";
+import { resolveTierInfo } from "@/lib/customer-engagement-data";
 
 const variantStyles = {
   default: "bg-gradient-to-br from-primary/10 to-brand-dark/10",
@@ -32,7 +33,7 @@ export function DashboardStatsGrid() {
     bookingCount: 0,
     vehicleCount: 0,
     points: 0,
-    tierName: "Thành viên mới",
+    tierName: "Đồng",
   });
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export function DashboardStatsGrid() {
       let bCount = 0;
       let vCount = 0;
       let pts = 0;
-      let tier = "Thành viên mới";
+      let tier = "Đồng";
 
       try {
         const bRes = await loadCustomerBookingList();
@@ -57,7 +58,8 @@ export function DashboardStatsGrid() {
         const lRes = await loyaltyApi.getMyLoyalty();
         if (lRes) {
           pts = Number(lRes.availablePoints ?? lRes.points ?? 0) || 0;
-          tier = lRes.tierName || lRes.tier || "Thành viên mới";
+          const calc = resolveTierInfo(pts, lRes.tierName || lRes.tier);
+          tier = calc.tierName;
         }
       } catch {}
 

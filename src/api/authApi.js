@@ -22,6 +22,26 @@ export const authApi = {
     return response;
   },
 
+  // Đăng nhập bằng Google ID Token
+  loginWithGoogle: async (payload) => {
+    const response = await axiosClient.post("/auth/google", payload);
+    if (response && response.token) {
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("accessToken", response.token);
+    } else if (response && response.accessToken) {
+      localStorage.setItem("token", response.accessToken);
+      localStorage.setItem("accessToken", response.accessToken);
+    }
+    if (response && response.refreshToken) {
+      localStorage.setItem("refreshToken", response.refreshToken);
+    }
+    if (response && response.user) {
+      localStorage.setItem("currentUser", JSON.stringify(response.user));
+      if (response.user.email) localStorage.setItem("userEmail", response.user.email);
+    }
+    return response;
+  },
+
   // API Đăng ký tài khoản mới
   register: (payload) => axiosClient.post("/auth/register", payload),
 
@@ -43,6 +63,7 @@ export const authApi = {
   },
   forgotPassword: (payload) => axiosClient.post("/auth/password/forgot", payload),
   resetPassword: (payload) => axiosClient.post("/auth/password/reset", payload),
+  changePassword: (payload) => axiosClient.put("/auth/password/change", payload),
 
   // API làm mới session token khi hết hạn
   refresh: () => axiosClient.post("/auth/refresh"),

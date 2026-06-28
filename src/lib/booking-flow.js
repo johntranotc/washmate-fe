@@ -129,8 +129,11 @@ export function bookingErrorMessage(error) {
   if (msg.includes("Slot does not belong")) return "Khung giờ bạn chọn không thuộc về gara này.";
   if (msg.includes("full") || ["SLOT_FULL", "BOOKING_SLOT_FULL"].includes(error?.errorCode)) return "Khung giờ này vừa có khách đặt đầy.";
   if (msg.includes("not active")) return "Gara hoặc gói dịch vụ hiện đang tạm ngưng nhận lịch.";
-  if (error?.status === 400 || error?.errorCode === "VALIDATION_ERROR") return "Thông tin đặt lịch chưa chính xác.";
-  return "Không thể gửi yêu cầu đặt lịch lúc này. Vui lòng thử lại.";
+  if (error?.status === 400 || error?.errorCode === "VALIDATION_ERROR") {
+    if (msg && msg !== "Validation failed" && !msg.includes("Invalid request")) return msg;
+    return "Thông tin đặt lịch chưa chính xác hoặc khung giờ/dịch vụ không hợp lệ.";
+  }
+  return msg || "Không thể gửi yêu cầu đặt lịch lúc này. Vui lòng thử lại.";
 }
 
 export function formatCurrency(value) {
