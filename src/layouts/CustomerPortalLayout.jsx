@@ -18,9 +18,10 @@ import { Logo } from "@/components/site/logo";
 import { loyaltyApi } from "@/api/loyaltyApi";
 import { cn } from "@/lib/utils";
 import { jwtDecode } from "jwt-decode";
+import { resolveTierInfo } from "@/lib/customer-engagement-data";
 
 const defaultLoyaltyInfo = {
-  tierName: "Thành viên mới",
+  tierName: "Đồng",
   availablePoints: 0,
 };
 
@@ -98,9 +99,11 @@ function DashboardHeader() {
       try {
         const res = await loyaltyApi.getMyLoyalty();
         if (res) {
+          const pts = Number(res.availablePoints ?? res.points ?? 0) || 0;
+          const calc = resolveTierInfo(pts, res.tierName || res.tier);
           setLoyaltyInfo({
-            tierName: res.tierName || res.tier || "Thành viên mới",
-            availablePoints: Number(res.availablePoints ?? res.points ?? 0) || 0
+            tierName: calc.tierName,
+            availablePoints: pts
           });
         }
       } catch {

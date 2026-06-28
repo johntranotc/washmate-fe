@@ -43,10 +43,10 @@ export default function MembershipPointsPage() {
     loadData();
   }, [loadData]);
 
-  const currentTierName = account.tierName || tierLabels[account.tier] || account.tier || "Thành viên mới";
+  const currentTierName = account.tierName || tierLabels[account.tier] || account.tier || "Đồng";
   const nextTierName = account.nextTierName || tierLabels[account.nextTier] || account.nextTier || "Bạc";
   const currentBadgeName = tierCodeToBadgeName[account.tier] || currentTierName;
-  const currentTier = membershipTiers.find((tier) => tier.name === currentBadgeName) || membershipTiers[0];
+  const currentTier = membershipTiers.find((tier) => tier.name.toLowerCase() === currentBadgeName?.toLowerCase()) || membershipTiers[0];
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-8">

@@ -35,16 +35,16 @@ const PROFILE_KEY = "washmate_user_profile";
 const NOTIF_KEY = "washmate_notifications";
 
 const loyaltyData = {
-  tier: "NEW",
-  tierName: "Thành viên mới",
+  tier: "BRONZE",
+  tierName: "Đồng",
   nextTierName: "Bạc",
   availablePoints: 0,
-  pointsToNextTier: 0,
+  pointsToNextTier: 500,
   progressPercent: 0,
 };
 
 const currentTierBadgeName = tierCodeToBadgeName[loyaltyData.tier] ?? loyaltyData.tierName;
-const currentTier = membershipTiers.find((t) => t.name === currentTierBadgeName) ?? membershipTiers[0];
+const currentTier = membershipTiers.find((t) => t.name.toLowerCase() === currentTierBadgeName?.toLowerCase()) ?? membershipTiers[0];
 
 // ── Helpers ────────────────────────────────────────────────────
 function getStoredProfile() {
