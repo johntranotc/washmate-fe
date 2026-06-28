@@ -80,7 +80,13 @@ function AppRoutes() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         </Route>
 
-        <Route element={<CustomerLayout />}>
+        <Route
+          element={
+            <RequireRole role={ROLES.CUSTOMER}>
+              <CustomerLayout />
+            </RequireRole>
+          }
+        >
           <Route path="/customer" element={<CustomerHomePage />} />
           <Route path="/customer/vehicles" element={<VehiclePage />} />
           <Route path="/customer/bookings/create" element={<BookingCreatePage />} />
@@ -90,7 +96,13 @@ function AppRoutes() {
           <Route path="/customer/loyalty" element={<LoyaltyPage />} />
         </Route>
 
-        <Route element={<CustomerPortalLayout />}>
+        <Route
+          element={
+            <RequireRole role={ROLES.CUSTOMER}>
+              <CustomerPortalLayout />
+            </RequireRole>
+          }
+        >
           <Route path="/khach-hang" element={<DashboardPage />} />
           <Route path="/khach-hang/xe-cua-toi" element={<VehiclesPage />} />
           <Route path="/khach-hang/dat-lich-moi" element={<CustomerBookingFlowPage />} />
