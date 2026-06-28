@@ -20,16 +20,39 @@ const configs = {
   },
   bookings: {
     title: "Tổng quan lịch đặt", description: "Theo dõi booking trên toàn hệ thống.", method: "getBookings",
-    columns: [["code", "Mã booking"], ["customer", "Khách hàng"], ["garage", "Gara"], ["service", "Dịch vụ"], ["dateTime", "Ngày giờ"], ["bookingStatus", "Trạng thái"], ["paymentStatus", "Thanh toán"]],
+    columns: [
+      ["code", "Mã booking", (v, row) => v || row.bookingCode],
+      ["customer", "Khách hàng", (v, row) => v?.fullName || v?.name || v?.email || row.customerName || "Khách"],
+      ["garage", "Gara", (v, row) => v?.name || v?.garageName || row.garageName || `Gara #${row.garageId}`],
+      ["service", "Dịch vụ", (v, row) => v?.name || v?.serviceName || row.serviceName || "Dịch vụ"],
+      ["dateTime", "Ngày giờ", (v, row) => v || row.bookingDate || "Chưa cập nhật"],
+      ["bookingStatus", "Trạng thái"],
+      ["paymentStatus", "Thanh toán"]
+    ],
     filters: true,
   },
   payments: {
     title: "Tổng quan thanh toán", description: "Danh sách giao dịch đã được hệ thống ghi nhận.", method: "getPayments",
-    columns: [["id", "Mã payment"], ["bookingCode", "Mã booking"], ["customer", "Khách hàng"], ["amount", "Số tiền", money], ["method", "Phương thức"], ["status", "Trạng thái"], ["paidAt", "Ngày thanh toán"]],
+    columns: [
+      ["id", "Mã payment"],
+      ["bookingCode", "Mã booking"],
+      ["customer", "Khách hàng", (v, row) => v?.fullName || v?.name || v?.email || row.customerName || "Khách"],
+      ["amount", "Số tiền", money],
+      ["method", "Phương thức"],
+      ["status", "Trạng thái"],
+      ["paidAt", "Ngày thanh toán"]
+    ],
   },
   invoices: {
     title: "Tổng quan hóa đơn", description: "Theo dõi hóa đơn đã phát hành từ backend.", method: "getInvoices",
-    columns: [["id", "Mã hóa đơn"], ["bookingCode", "Mã booking"], ["customer", "Khách hàng"], ["total", "Tổng tiền", money], ["status", "Trạng thái"], ["issuedAt", "Ngày phát hành"]],
+    columns: [
+      ["id", "Mã hóa đơn"],
+      ["bookingCode", "Mã booking"],
+      ["customer", "Khách hàng", (v, row) => v?.fullName || v?.name || v?.email || row.customerName || "Khách"],
+      ["total", "Tổng tiền", money],
+      ["status", "Trạng thái"],
+      ["issuedAt", "Ngày phát hành"]
+    ],
   },
 };
 
