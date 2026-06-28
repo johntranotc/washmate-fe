@@ -49,7 +49,7 @@ export default function StaffBookingWorkflowPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Chi tiết vận hành</p><h1 className="mt-2 text-3xl font-extrabold">{booking.code}</h1><p className="mt-2 text-sm text-slate-500">{booking.customerName} · {booking.vehicle} · {booking.plate}</p></div><span className="w-fit rounded-full bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700">{bookingStatusLabels[booking.bookingStatus]}</span></header>
 
-      {booking.bookingStatus === "PENDING" && <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"><CircleAlert size={19} />Lịch này chưa thanh toán nên chưa thể check-in.</div>}
+      {booking.bookingStatus === "PENDING" && <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"><CircleAlert size={19} />Lịch này đang chờ gara xác nhận nên chưa thể check-in.</div>}
       <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
           <h2 className="font-extrabold">Thông tin booking</h2>

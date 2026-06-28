@@ -48,6 +48,19 @@ export default function CustomerBookingDetailPage() {
     loadDetail();
   }, [loadDetail]);
 
+  useEffect(() => {
+    function refreshOnFocus() {
+      if (document.visibilityState === "visible") loadDetail();
+    }
+
+    window.addEventListener("focus", loadDetail);
+    document.addEventListener("visibilitychange", refreshOnFocus);
+    return () => {
+      window.removeEventListener("focus", loadDetail);
+      document.removeEventListener("visibilitychange", refreshOnFocus);
+    };
+  }, [loadDetail]);
+
   if (loading) {
     return <div className="mx-auto max-w-5xl p-8"><div className="rounded-3xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải chi tiết lịch đặt...</div></div>;
   }

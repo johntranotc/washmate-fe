@@ -8,7 +8,7 @@ export function PaymentStatusCard({ booking }) {
   const paymentPath = `/khach-hang/thanh-toan/${booking.id}`;
   const invoicePath = `/khach-hang/thanh-toan/${booking.id}/hoa-don`;
 
-  if (bookingStatus === "PENDING_STAFF_CONFIRMATION") {
+  if (bookingStatus === "PENDING") {
     return (
       <aside className="rounded-3xl border border-orange-200 bg-orange-50 p-6 shadow-sm">
         <div className="flex items-start justify-between gap-4">

@@ -15,17 +15,26 @@ export function saveSession(data, fallbackUser = {}) {
   const currentUser = data?.currentUser || data?.user || fallbackUser;
   const roles = normalizeRoles(data);
   const garageIds = data?.garageIds || currentUser?.garageIds || [];
-  if (data?.accessToken) localStorage.setItem("accessToken", data.accessToken);
-  if (data?.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+  if (data?.accessToken) {
+    sessionStorage.setItem("accessToken", data.accessToken);
+    localStorage.setItem("accessToken", data.accessToken);
+  }
+  if (data?.refreshToken) {
+    sessionStorage.setItem("refreshToken", data.refreshToken);
+    localStorage.setItem("refreshToken", data.refreshToken);
+  }
+  sessionStorage.setItem("currentUser", JSON.stringify(currentUser));
   localStorage.setItem("currentUser", JSON.stringify(currentUser));
+  sessionStorage.setItem("roles", JSON.stringify(roles));
   localStorage.setItem("roles", JSON.stringify(roles));
+  sessionStorage.setItem("garageIds", JSON.stringify(garageIds));
   localStorage.setItem("garageIds", JSON.stringify(garageIds));
   return { currentUser, roles, garageIds };
 }
 
 export function getStoredRoles() {
   try {
-    return JSON.parse(localStorage.getItem("roles") || "[]");
+    return JSON.parse(sessionStorage.getItem("roles") || localStorage.getItem("roles") || "[]");
   } catch {
     return [];
   }
@@ -36,5 +45,8 @@ export function destinationForRole(role) {
 }
 
 export function clearSession() {
-  ["accessToken", "refreshToken", "currentUser", "roles", "garageIds"].forEach((key) => localStorage.removeItem(key));
+  ["token", "accessToken", "refreshToken", "currentUser", "roles", "garageIds", "userEmail"].forEach((key) => {
+    sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
+  });
 }

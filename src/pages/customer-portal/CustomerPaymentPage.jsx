@@ -171,6 +171,7 @@ export default function CustomerPaymentPage() {
       setBooking(normalizeBooking({ ...bookingData, payment: paymentData, paymentStatus: paymentData.status }));
       setPayment(paymentData);
       setMethod(paymentData.method && paymentData.method !== "BANK_TRANSFER" ? paymentData.method : "VNPAY");
+    } catch (e) {
       setError("Không thể tải thông tin thanh toán.");
       setBooking(null);
     } finally {
@@ -214,7 +215,9 @@ export default function CustomerPaymentPage() {
       const updatedBooking = normalizeBooking({ ...booking, payment: merged, paymentStatus: "PAID" });
       setPayment(merged);
       setBooking(updatedBooking);
-      throw error;
+    } catch (e) {
+      console.error("Failed to confirm payment:", e);
+      setError(e?.message || "Không thể xác nhận thanh toán.");
     } finally {
       setProcessing(false);
     }
@@ -249,7 +252,7 @@ export default function CustomerPaymentPage() {
     );
   }
 
-  if (booking.bookingStatus === "PENDING_STAFF_CONFIRMATION") {
+  if (booking.bookingStatus === "PENDING") {
     return (
       <div className="mx-auto max-w-5xl p-8">
         <div className="rounded-3xl border border-orange-200 bg-orange-50 p-10 text-center">
@@ -398,7 +401,7 @@ export default function CustomerPaymentPage() {
 
           {error && (
             <p className="mt-4 rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">
-              Không thể xác nhận thanh toán. Vui lòng thử lại.
+              {error}
             </p>
           )}
         </section>

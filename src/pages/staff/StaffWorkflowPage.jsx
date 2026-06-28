@@ -68,7 +68,7 @@ export default function StaffWorkflowPage() {
 
       {booking.bookingStatus === "PENDING" && (
         <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          <CircleAlert size={19} />Lịch này chưa thanh toán nên chưa thể check-in.
+          <CircleAlert size={19} />Lịch này đang chờ gara xác nhận nên chưa thể check-in.
         </div>
       )}
 

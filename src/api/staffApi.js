@@ -7,6 +7,8 @@ export const staffApi = {
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     return axiosClient.get("/bookings", { params: { fromDate: dateStr, toDate: dateStr } });
   },
+  // GET /api/bookings (all bookings)
+  getAllBookings: () => axiosClient.get("/bookings"),
   // GET /api/bookings/{id}
   getStaffBookingById: (bookingId) => axiosClient.get(`/bookings/${bookingId}`),
   // POST /api/bookings/{id}/confirm

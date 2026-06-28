@@ -9,7 +9,11 @@ const axiosClient = axios.create({
 });
 
 axiosClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
+  const token =
+    sessionStorage.getItem("accessToken") ||
+    sessionStorage.getItem("token") ||
+    localStorage.getItem("accessToken") ||
+    localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -24,7 +28,10 @@ axiosClient.interceptors.response.use(
     const body = error.response?.data;
     const reqUrl = error.config?.url || "";
     if (status === 401 && !reqUrl.includes("/auth/")) {
-      ["accessToken", "refreshToken", "currentUser", "roles", "garageIds"].forEach((key) => localStorage.removeItem(key));
+      ["token", "accessToken", "refreshToken", "currentUser", "roles", "garageIds"].forEach((key) => {
+        sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
+      });
       if (window.location.pathname !== "/dang-nhap") window.location.assign("/dang-nhap");
     }
     return Promise.reject({

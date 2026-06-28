@@ -9,7 +9,6 @@ import { formatBookingDate, formatMoney } from "@/lib/customer-booking-data";
 
 const statusColors = {
   "Chờ thanh toán": "bg-yellow-100 text-yellow-800",
-  "PENDING_STAFF_CONFIRMATION": "bg-yellow-100 text-yellow-800",
   "PENDING": "bg-yellow-100 text-yellow-800",
   "Đã xác nhận": "bg-blue-100 text-blue-800",
   "CONFIRMED": "bg-blue-100 text-blue-800",
@@ -25,8 +24,7 @@ const statusColors = {
 };
 
 const statusLabels = {
-  "PENDING_STAFF_CONFIRMATION": "Chờ xác nhận",
-  "PENDING": "Chờ xử lý",
+  "PENDING": "Chờ xác nhận",
   "CONFIRMED": "Đã xác nhận",
   "CHECKED_IN": "Đã đến gara",
   "IN_PROGRESS": "Đang rửa xe",

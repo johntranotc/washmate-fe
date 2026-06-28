@@ -13,20 +13,35 @@ import { loadCustomerBookingList } from "@/lib/customer-bookings";
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const { bookings: list } = await loadCustomerBookingList();
       setBookings(list);
     } catch {
       setBookings([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     load();
+  }, [load]);
+
+  useEffect(() => {
+    function refreshOnFocus() {
+      if (document.visibilityState === "visible") load({ silent: true });
+    }
+
+    const timer = window.setInterval(() => load({ silent: true }), 15000);
+    window.addEventListener("focus", refreshOnFocus);
+    document.addEventListener("visibilitychange", refreshOnFocus);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refreshOnFocus);
+      document.removeEventListener("visibilitychange", refreshOnFocus);
+    };
   }, [load]);
 
   return (
@@ -56,7 +71,7 @@ export default function MyBookingsPage() {
       ) : (
         <div className="grid gap-4">
           {bookings.map((booking) => {
-            const isPendingConfirm = booking.bookingStatus === "PENDING_STAFF_CONFIRMATION";
+            const isPendingConfirm = booking.bookingStatus === "PENDING";
             const isConfirmedUnpaid =
               booking.bookingStatus === "CONFIRMED" &&
               (booking.paymentStatus === "PENDING" || !booking.paymentStatus);

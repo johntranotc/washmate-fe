@@ -95,6 +95,7 @@ export default function PaymentPage() {
   if (!booking) return <div className="rounded-3xl border border-red-200 bg-red-50 p-10 text-center"><XCircle className="mx-auto text-red-500" /><h1 className="mt-4 text-xl font-extrabold text-red-700">Không thể tải dữ liệu lịch đặt</h1><p className="mt-2 text-sm text-red-600">{error}</p><button onClick={loadPayment} className="mt-5 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white">Thử lại</button></div>;
 
   const paid = payment?.status === "PAID";
+  const isMock = booking?.isMock || payment?.isMock;
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <header className="text-center"><p className="text-sm font-extrabold uppercase tracking-[0.16em] text-[var(--brand-blue)]">Thanh toán an toàn</p><h1 className="mt-2 text-3xl font-extrabold">Thanh toán lịch đặt</h1><p className="mt-2 text-sm text-[var(--text-muted)]">Thanh toán thành công sẽ xác nhận lịch và tạo hóa đơn.</p></header>

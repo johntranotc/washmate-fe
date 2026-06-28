@@ -1,5 +1,5 @@
 import { ArrowRight, Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { staffApi } from "@/api/staffApi";
 
@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 const STATUS_FILTERS = [
   "ALL",
-  "PENDING_STAFF_CONFIRMATION",
+  "PENDING",
   "CONFIRMED",
   "CHECKED_IN",
   "WASHING",
@@ -36,10 +36,10 @@ export default function StaffBookingListPage() {
   const [status, setStatus] = useState(searchParams.get("status") || "ALL");
   const [loading, setLoading] = useState(true);
 
-
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true);
     staffApi
-      .getTodayBookings()
+      .getAllBookings()
       .then((response) => {
         setBookings(normalizeBookingList(response).map(normalizeStaffBooking));
       })
@@ -49,6 +49,23 @@ export default function StaffBookingListPage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    function refreshOnFocus() {
+      if (document.visibilityState === "visible") load();
+    }
+
+    window.addEventListener("focus", load);
+    document.addEventListener("visibilitychange", refreshOnFocus);
+    return () => {
+      window.removeEventListener("focus", load);
+      document.removeEventListener("visibilitychange", refreshOnFocus);
+    };
+  }, [load]);
 
   const visibleBookings = useMemo(
     () =>
@@ -64,7 +81,7 @@ export default function StaffBookingListPage() {
   );
 
   const pendingCount = bookings.filter(
-    (b) => b.bookingStatus === "PENDING_STAFF_CONFIRMATION",
+    (b) => b.bookingStatus === "PENDING",
   ).length;
 
   return (
@@ -89,7 +106,7 @@ export default function StaffBookingListPage() {
           </p>
           <button
             type="button"
-            onClick={() => setStatus("PENDING_STAFF_CONFIRMATION")}
+            onClick={() => setStatus("PENDING")}
             className="rounded-xl bg-orange-500 px-3 py-1.5 text-xs font-bold text-white"
           >
             Xem ngay
@@ -119,14 +136,14 @@ export default function StaffBookingListPage() {
                 status === item
                   ? "bg-blue-600 text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200",
-                item === "PENDING_STAFF_CONFIRMATION" &&
+                item === "PENDING" &&
                   status !== item &&
                   pendingCount > 0 &&
                   "border border-orange-300 bg-orange-50 text-orange-700",
               )}
             >
               {filterLabels[item]}
-              {item === "PENDING_STAFF_CONFIRMATION" && pendingCount > 0 && (
+              {item === "PENDING" && pendingCount > 0 && (
                 <span className="ml-1 inline-flex size-4 items-center justify-center rounded-full bg-orange-500 text-[9px] font-extrabold text-white">
                   {pendingCount}
                 </span>
@@ -165,7 +182,7 @@ export default function StaffBookingListPage() {
                   <tr
                     key={booking.id}
                     className={cn(
-                      booking.bookingStatus === "PENDING_STAFF_CONFIRMATION" &&
+                      booking.bookingStatus === "PENDING" &&
                         "bg-orange-50/50",
                     )}
                   >

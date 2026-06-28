@@ -1,8 +1,7 @@
 import { asList } from "./booking-flow";
 
 export const bookingStatusLabels = {
-  PENDING_STAFF_CONFIRMATION: "Chờ gara xác nhận",
-  PENDING: "Chờ thanh toán",
+  PENDING: "Chờ gara xác nhận",
   CONFIRMED: "Đã được gara xác nhận",
   PAYMENT_PENDING: "Chờ thanh toán",
   PAID: "Đã thanh toán",
@@ -65,7 +64,7 @@ export function normalizeBooking(value) {
     status: item.paymentStatus,
     method: item.paymentMethod,
   });
-  const backendStatus = item.bookingStatus || item.status || "PENDING_STAFF_CONFIRMATION";
+  const backendStatus = item.bookingStatus || item.status || "PENDING";
   const bookingStatus =
     backendStatus === "PENDING" && payment.status === "PAID"
       ? "CONFIRMED"

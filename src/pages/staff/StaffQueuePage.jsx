@@ -2,6 +2,7 @@ import { CheckCircle2, Clock3, Droplets, MessageSquare, TimerReset, UsersRound, 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { staffApi } from "@/api/staffApi";
+import { getCurrentRole, ROLES } from "@/lib/auth-role";
 
 import {
   bookingStatusLabels,
@@ -14,17 +15,19 @@ import { cn } from "@/lib/utils";
 export default function StaffQueuePage() {
   const [bookings, setBookings] = useState([]);
 
+  const [confirmingId, setConfirmingId] = useState(null);
+  const [confirmError, setConfirmError] = useState(null);
   const [rejectingId, setRejectingId] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
 
   function load() {
     staffApi
-      .getTodayBookings()
+      .getAllBookings()
       .then((data) => {
         setBookings(normalizeBookingList(data).map(normalizeStaffBooking));
       })
       .catch((error) => {
-        console.error("Failed to load today bookings:", error);
+        console.error("Failed to load all bookings:", error);
         setBookings([]);
       });
   }
@@ -33,13 +36,53 @@ export default function StaffQueuePage() {
     load();
   }, []);
 
+  useEffect(() => {
+    function refreshOnFocus() {
+      if (document.visibilityState === "visible") load();
+    }
+
+    window.addEventListener("focus", load);
+    document.addEventListener("visibilitychange", refreshOnFocus);
+    return () => {
+      window.removeEventListener("focus", load);
+      document.removeEventListener("visibilitychange", refreshOnFocus);
+    };
+  }, []);
+
   async function handleConfirm(bookingId) {
+    if (getCurrentRole() !== ROLES.STAFF) {
+      setConfirmError({
+        bookingId,
+        message:
+          "Phiên đăng nhập hiện tại không phải STAFF. Hãy đăng nhập staff ở tab riêng hoặc tải lại trang này.",
+      });
+      return;
+    }
+
+    setConfirmingId(bookingId);
+    setConfirmError(null);
     try {
-      await staffApi.confirmBooking(bookingId);
+      const response = await staffApi.confirmBooking(bookingId);
+      const updated = response ? normalizeStaffBooking(response) : {};
+      setBookings((items) =>
+        items.map((item) =>
+          String(item.id) === String(bookingId)
+            ? { ...item, ...updated, id: item.id, bookingStatus: updated.bookingStatus || "CONFIRMED" }
+            : item,
+        ),
+      );
       load();
     } catch (error) {
       console.error("Failed to confirm booking:", error);
-      alert(error?.message || "Không thể xác nhận lịch. Vui lòng thử lại.");
+      setConfirmError({
+        bookingId,
+        message:
+          error?.status === 409
+            ? "Máy chủ đang từ chối xác nhận lịch (409). Vui lòng tải lại danh sách và thử lại."
+            : error?.message || "Không thể xác nhận lịch. Vui lòng thử lại.",
+      });
+    } finally {
+      setConfirmingId(null);
     }
   }
 
@@ -57,7 +100,7 @@ export default function StaffQueuePage() {
   }
 
   const pending = bookings.filter(
-    (b) => b.bookingStatus === "PENDING_STAFF_CONFIRMATION",
+    (b) => b.bookingStatus === "PENDING",
   );
   const queue = bookings.filter((b) =>
     ["CONFIRMED", "CHECKED_IN", "WASHING"].includes(b.bookingStatus),
@@ -152,7 +195,7 @@ export default function StaffQueuePage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <b className="text-sm">{item.code}</b>
                         <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[10px] font-extrabold text-orange-700">
-                          {bookingStatusLabels.PENDING_STAFF_CONFIRMATION}
+                          {bookingStatusLabels.PENDING}
                         </span>
                       </div>
                       <p className="mt-1 text-xs text-slate-600">
@@ -164,6 +207,11 @@ export default function StaffQueuePage() {
                       <p className="mt-0.5 text-xs font-semibold text-slate-500">
                         {item.garageName} · {item.bookingDate} {item.slotTime && `lúc ${item.slotTime}`}
                       </p>
+                      {confirmError?.bookingId === item.id && (
+                        <p className="mt-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-600">
+                          {confirmError.message}
+                        </p>
+                      )}
                       {item.note && (
                         <p className="mt-1 flex items-start gap-1 text-xs italic text-slate-400">
                           <MessageSquare size={11} className="mt-0.5 shrink-0" />
@@ -177,9 +225,10 @@ export default function StaffQueuePage() {
                       <button
                         type="button"
                         onClick={() => handleConfirm(item.id)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
+                        disabled={confirmingId === item.id}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
                       >
-                        <CheckCircle2 size={14} /> Xác nhận lịch
+                        <CheckCircle2 size={14} /> {confirmingId === item.id ? "Đang xác nhận..." : "Xác nhận lịch"}
                       </button>
                       <button
                         type="button"

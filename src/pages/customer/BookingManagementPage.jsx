@@ -47,6 +47,7 @@ export default function BookingManagementPage() {
     () => bookings.filter((item) => filter === "ALL" || item.bookingStatus === filter),
     [bookings, filter],
   );
+  const isMock = bookings.some((item) => item.isMock);
 
   return (
     <div className="space-y-6">

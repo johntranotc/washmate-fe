@@ -13,15 +13,15 @@ import { loadCustomerBookingList } from "@/lib/customer-bookings";
 export default function PaymentInvoicePage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const { bookings: list } = await loadCustomerBookingList();
       setBookings(list);
     } catch {
       setBookings([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
@@ -29,7 +29,27 @@ export default function PaymentInvoicePage() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    function refreshOnFocus() {
+      if (document.visibilityState === "visible") load({ silent: true });
+    }
+
+    const timer = window.setInterval(() => load({ silent: true }), 15000);
+    window.addEventListener("focus", refreshOnFocus);
+    document.addEventListener("visibilitychange", refreshOnFocus);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refreshOnFocus);
+      document.removeEventListener("visibilitychange", refreshOnFocus);
+    };
+  }, [load]);
+
   const pendingPayments = bookings.filter((booking) =>
+    booking.bookingStatus === "CONFIRMED" &&
+    ["PENDING", "FAILED", "CANCELLED"].includes(booking.paymentStatus),
+  );
+  const waitingConfirmations = bookings.filter((booking) =>
+    booking.bookingStatus === "PENDING" &&
     ["PENDING", "FAILED", "CANCELLED"].includes(booking.paymentStatus),
   );
   const paidInvoices = bookings.filter((booking) => booking.paymentStatus === "PAID");
@@ -75,6 +95,13 @@ export default function PaymentInvoicePage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+            {waitingConfirmations.length > 0 && (
+              <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 px-5 py-4">
+                <p className="text-sm font-bold text-orange-700">
+                  {waitingConfirmations.length} lịch đặt đang chờ gara xác nhận trước khi thanh toán.
+                </p>
               </div>
             )}
           </section>

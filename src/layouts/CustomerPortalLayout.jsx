@@ -19,6 +19,7 @@ import { loyaltyApi } from "@/api/loyaltyApi";
 import { cn } from "@/lib/utils";
 import { jwtDecode } from "jwt-decode";
 import { resolveTierInfo } from "@/lib/customer-engagement-data";
+import { getAuthItem } from "@/utils/authUtils";
 
 const defaultLoyaltyInfo = {
   tierName: "Đồng",
@@ -37,7 +38,7 @@ const menuItems = [
 
 function resolveDisplayName() {
   try {
-    const token = localStorage.getItem("token");
+    const token = getAuthItem("token") || getAuthItem("accessToken");
     if (token) {
       const decoded = jwtDecode(token);
 
@@ -124,13 +125,11 @@ function DashboardHeader() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userEmail");
+    ["token", "accessToken", "refreshToken", "currentUser", "roles", "garageIds", "userEmail"].forEach((key) => {
+      sessionStorage.removeItem(key);
+      localStorage.removeItem(key);
+    });
     localStorage.removeItem("washmate_user_profile");
-    sessionStorage.removeItem("accessToken");
-    sessionStorage.removeItem("userEmail");
     navigate("/dang-nhap");
   };
 

@@ -60,6 +60,7 @@ export default function BookingDetailPage() {
   if (loading) return <div className="rounded-3xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải chi tiết lịch đặt...</div>;
   if (!booking) return <div className="rounded-3xl border border-red-200 bg-red-50 p-10 text-center"><h1 className="text-xl font-extrabold text-red-700">Không tìm thấy lịch đặt</h1><p className="mt-2 text-sm text-red-600">{error}</p><button onClick={loadDetail} className="mt-5 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white">Thử lại</button></div>;
 
+  const isMock = booking?.isMock;
   const details = [
     [Car, "Xe", booking.vehicle],
     [Car, "Biển số", booking.plate],

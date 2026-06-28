@@ -19,6 +19,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
+import { getAuthItem } from "@/utils/authUtils";
 
 const navItems = [
   { label: "Tổng quan", path: "/customer", icon: LayoutDashboard, end: true },
@@ -42,7 +43,7 @@ export default function CustomerLayout() {
   const customerName =
     (() => {
       try {
-        const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
+        const user = JSON.parse(getAuthItem("currentUser") || "{}");
         return user.fullName || user.name || user.email;
       } catch {
         return "";
@@ -52,8 +53,11 @@ export default function CustomerLayout() {
   const avatarInitial = customerName.trim().charAt(0).toUpperCase() || "K";
 
   const handleLogout = () => {
-    ["accessToken", "refreshToken", "currentUser", "roles", "garageIds"].forEach(
-      (key) => localStorage.removeItem(key),
+    ["token", "accessToken", "refreshToken", "currentUser", "roles", "garageIds", "userEmail"].forEach(
+      (key) => {
+        sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
+      },
     );
     navigate("/dang-nhap");
   };

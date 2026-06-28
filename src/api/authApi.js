@@ -1,22 +1,34 @@
 import axiosClient from "./axiosClient"; // Sửa từ { axiosClient } thành axiosClient để chống crash màn hình trắng
 
+const AUTH_KEYS = ["token", "accessToken", "refreshToken", "currentUser", "roles", "garageIds", "userEmail"];
+
+function setAuthValue(key, value) {
+  sessionStorage.setItem(key, value);
+  localStorage.setItem(key, value);
+}
+
+function removeAuthValue(key) {
+  sessionStorage.removeItem(key);
+  localStorage.removeItem(key);
+}
+
 export const authApi = {
   // Luồng đăng nhập xử lý bất đồng bộ (async/await)
   login: async (payload) => {
     const response = await axiosClient.post("/auth/login", payload);
 
     if (response && response.token) {
-      localStorage.setItem("token", response.token);
-      localStorage.setItem("accessToken", response.token);
+      setAuthValue("token", response.token);
+      setAuthValue("accessToken", response.token);
     } else if (response && response.accessToken) {
-      localStorage.setItem("token", response.accessToken);
-      localStorage.setItem("accessToken", response.accessToken);
+      setAuthValue("token", response.accessToken);
+      setAuthValue("accessToken", response.accessToken);
     }
     if (response && response.refreshToken) {
-      localStorage.setItem("refreshToken", response.refreshToken);
+      setAuthValue("refreshToken", response.refreshToken);
     }
     if (response && response.user) {
-      localStorage.setItem("currentUser", JSON.stringify(response.user));
+      setAuthValue("currentUser", JSON.stringify(response.user));
     }
 
     return response;
@@ -26,18 +38,18 @@ export const authApi = {
   loginWithGoogle: async (payload) => {
     const response = await axiosClient.post("/auth/google", payload);
     if (response && response.token) {
-      localStorage.setItem("token", response.token);
-      localStorage.setItem("accessToken", response.token);
+      setAuthValue("token", response.token);
+      setAuthValue("accessToken", response.token);
     } else if (response && response.accessToken) {
-      localStorage.setItem("token", response.accessToken);
-      localStorage.setItem("accessToken", response.accessToken);
+      setAuthValue("token", response.accessToken);
+      setAuthValue("accessToken", response.accessToken);
     }
     if (response && response.refreshToken) {
-      localStorage.setItem("refreshToken", response.refreshToken);
+      setAuthValue("refreshToken", response.refreshToken);
     }
     if (response && response.user) {
-      localStorage.setItem("currentUser", JSON.stringify(response.user));
-      if (response.user.email) localStorage.setItem("userEmail", response.user.email);
+      setAuthValue("currentUser", JSON.stringify(response.user));
+      if (response.user.email) setAuthValue("userEmail", response.user.email);
     }
     return response;
   },
@@ -50,14 +62,14 @@ export const authApi = {
   verifyOtp: async (payload) => {
     const response = await axiosClient.post("/auth/otp/verify", payload);
     if (response && response.accessToken) {
-      localStorage.setItem("token", response.accessToken);
-      localStorage.setItem("accessToken", response.accessToken);
+      setAuthValue("token", response.accessToken);
+      setAuthValue("accessToken", response.accessToken);
     }
     if (response && response.refreshToken) {
-      localStorage.setItem("refreshToken", response.refreshToken);
+      setAuthValue("refreshToken", response.refreshToken);
     }
     if (response && response.user) {
-      localStorage.setItem("currentUser", JSON.stringify(response.user));
+      setAuthValue("currentUser", JSON.stringify(response.user));
     }
     return response;
   },
@@ -70,9 +82,7 @@ export const authApi = {
 
   // Luồng đăng xuất dọn dẹp sạch token cũ tránh lưu đè tên tài khoản cũ
   logout: () => {
-    ["token", "accessToken", "refreshToken", "currentUser", "roles", "garageIds", "userEmail"].forEach((key) =>
-      localStorage.removeItem(key)
-    );
+    AUTH_KEYS.forEach(removeAuthValue);
     return axiosClient.post("/auth/logout");
   },
 };

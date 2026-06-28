@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const steps = ["PENDING", "CONFIRMED", "CHECKED_IN", "WASHING", "COMPLETED"];
 
 export function BookingTimeline({ booking }) {
-  if (booking.bookingStatus === "PENDING_STAFF_CONFIRMATION") {
+  if (booking.bookingStatus === "PENDING") {
     return (
       <div className="mt-6 flex items-center gap-4 rounded-2xl border border-orange-200 bg-orange-50 p-5 text-orange-700">
         <span className="grid size-11 place-items-center rounded-2xl bg-white"><Clock size={22} /></span>

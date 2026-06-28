@@ -5,6 +5,7 @@ import {
   Package, Receipt, Search, Settings, Sparkles, UserRound, X,
 } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { getAuthItem } from "@/utils/authUtils";
 
 const navigation = {
   staff: [
@@ -37,7 +38,7 @@ export default function PortalLayout({ role }) {
   const copy = roleCopy[role];
   const userName = (() => {
     try {
-      const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      const user = JSON.parse(getAuthItem("currentUser") || "{}");
       return user.fullName || user.name || copy.title;
     } catch {
       return copy.title;
@@ -45,7 +46,10 @@ export default function PortalLayout({ role }) {
   })();
 
   const logout = () => {
-    ["accessToken", "refreshToken", "currentUser", "roles", "garageIds"].forEach((key) => localStorage.removeItem(key));
+    ["token", "accessToken", "refreshToken", "currentUser", "roles", "garageIds", "userEmail"].forEach((key) => {
+      sessionStorage.removeItem(key);
+      localStorage.removeItem(key);
+    });
     navigate("/dang-nhap");
   };
 

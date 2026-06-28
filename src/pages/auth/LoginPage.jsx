@@ -8,6 +8,11 @@ import { GoogleLogin } from "@react-oauth/google";
 import { authApi } from "@/api/authApi";
 import { getCurrentRole, ROLES } from "@/lib/auth-role";
 
+function setAuthValue(key, value) {
+  sessionStorage.setItem(key, value);
+  localStorage.setItem(key, value);
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
 
@@ -26,15 +31,16 @@ export default function LoginPage() {
       const data = await authApi.login({ email, password });
 
       if (data?.accessToken) {
-        localStorage.setItem("accessToken", data.accessToken);
+        setAuthValue("token", data.accessToken);
+        setAuthValue("accessToken", data.accessToken);
       }
       if (data?.refreshToken) {
-        localStorage.setItem("refreshToken", data.refreshToken);
+        setAuthValue("refreshToken", data.refreshToken);
       }
       if (data?.user) {
-        localStorage.setItem("currentUser", JSON.stringify(data.user));
+        setAuthValue("currentUser", JSON.stringify(data.user));
       }
-      localStorage.setItem("userEmail", email);
+      setAuthValue("userEmail", email);
 
       const role = getCurrentRole();
       if (role === ROLES.ADMIN) {
@@ -114,16 +120,19 @@ export default function LoginPage() {
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      <div className="mt-1 flex w-full justify-center [&>div]:!w-full [&>div>div]:!w-full [&_iframe]:!w-full">
+      <div className="mt-1 flex w-full justify-center">
         <GoogleLogin
           onSuccess={async (credentialResponse) => {
             setError("");
             setLoading(true);
             try {
               const data = await authApi.loginWithGoogle({ idToken: credentialResponse.credential });
-              if (data?.accessToken) localStorage.setItem("accessToken", data.accessToken);
-              if (data?.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
-              if (data?.user) localStorage.setItem("currentUser", JSON.stringify(data.user));
+              if (data?.accessToken) {
+                setAuthValue("token", data.accessToken);
+                setAuthValue("accessToken", data.accessToken);
+              }
+              if (data?.refreshToken) setAuthValue("refreshToken", data.refreshToken);
+              if (data?.user) setAuthValue("currentUser", JSON.stringify(data.user));
               const role = getCurrentRole();
               if (role === ROLES.ADMIN) {
                 navigate("/quan-tri");
@@ -145,7 +154,6 @@ export default function LoginPage() {
           size="large"
           text="continue_with"
           shape="pill"
-          width="400"
         />
       </div>
 

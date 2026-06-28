@@ -19,10 +19,11 @@ export function getCurrentRole() {
   }
   
   // Fallback for testing while BE is not ready:
-  return localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY) || null;
+  return sessionStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY) || null;
 }
 
 export function setCurrentRole(role) {
+  sessionStorage.setItem(STORAGE_KEY, role);
   localStorage.setItem(STORAGE_KEY, role);
 }
 

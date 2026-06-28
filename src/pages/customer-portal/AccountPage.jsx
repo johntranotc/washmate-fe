@@ -523,11 +523,10 @@ function SessionCard() {
   const [cleared, setCleared] = useState(false);
 
   function handleLogout() {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userEmail");
-    sessionStorage.removeItem("accessToken");
-    sessionStorage.removeItem("userEmail");
+    ["token", "accessToken", "refreshToken", "currentUser", "roles", "garageIds", "userEmail"].forEach((key) => {
+      sessionStorage.removeItem(key);
+      localStorage.removeItem(key);
+    });
     navigate("/dang-nhap");
   }
 

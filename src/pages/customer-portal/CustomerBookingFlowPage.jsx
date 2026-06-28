@@ -227,7 +227,7 @@ export default function CustomerBookingFlowPage() {
       const normalizedResult = normalizeBookingResponse(response);
       setResult({
         ...normalizedResult,
-        bookingStatus: "PENDING_STAFF_CONFIRMATION",
+        bookingStatus: "PENDING",
       });
       setStep(6);
     } catch (error) {

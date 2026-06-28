@@ -1,14 +1,17 @@
 import { jwtDecode } from "jwt-decode";
 
+export const getAuthItem = (key) =>
+    sessionStorage.getItem(key) || localStorage.getItem(key);
+
 export const getCurrentUser = () => {
-    const token = localStorage.getItem("token");
+    const token = getAuthItem("token") || getAuthItem("accessToken");
     if (!token) return null;
 
     try {
         const decoded = jwtDecode(token);
         let currentUser = null;
         try {
-            const stored = localStorage.getItem("currentUser");
+            const stored = getAuthItem("currentUser");
             if (stored) currentUser = JSON.parse(stored);
         } catch (e) {
             console.error("Lỗi parse currentUser:", e);

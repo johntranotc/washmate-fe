@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, LogOut, User } from "lucide-react";
 import { authApi } from "../../api/authApi";
+import { getAuthItem } from "@/utils/authUtils";
 
 /**
  * AccountDropdown — dùng chung cho AdminLayout và StaffLayout.
@@ -18,7 +19,7 @@ export default function AccountDropdown({ profilePath, colorScheme = "light" }) 
   // Đọc currentUser từ localStorage (đã lưu lúc login)
   const [user, setUser] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("currentUser") || "{}");
+      return JSON.parse(getAuthItem("currentUser") || "{}");
     } catch {
       return {};
     }
@@ -29,7 +30,7 @@ export default function AccountDropdown({ profilePath, colorScheme = "light" }) 
   const roles = (() => {
     let r = [];
     try {
-      const stored = JSON.parse(localStorage.getItem("roles"));
+      const stored = JSON.parse(getAuthItem("roles"));
       if (Array.isArray(stored)) r = stored;
     } catch {}
     if (!r.length) {
@@ -61,7 +62,10 @@ export default function AccountDropdown({ profilePath, colorScheme = "light" }) 
         "token", "accessToken", "refreshToken",
         "currentUser", "roles", "garageIds",
         "userEmail", "washmate_user_role",
-      ].forEach((k) => localStorage.removeItem(k));
+      ].forEach((k) => {
+        sessionStorage.removeItem(k);
+        localStorage.removeItem(k);
+      });
     }
     navigate("/dang-nhap");
   }
