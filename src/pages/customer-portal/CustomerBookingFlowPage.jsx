@@ -48,6 +48,7 @@ export default function CustomerBookingFlowPage() {
   const [promotion, setPromotion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [slotLoading, setSlotLoading] = useState(false);
+  const [serviceLoading, setServiceLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -57,18 +58,15 @@ export default function CustomerBookingFlowPage() {
     setLoading(true);
     setLoadError("");
     try {
-      const [vehicleResult, serviceResult, garageResult] = await Promise.allSettled([
+      const [vehicleResult, garageResult] = await Promise.allSettled([
         vehicleApi.getMyVehicles(),
-        servicePackageApi.getAll(),
         garageApi.getAll(),
       ]);
 
       const apiVehicles = vehicleResult.status === "fulfilled" ? asList(vehicleResult.value).map(normalizeVehicle).filter((v) => v.status === "ACTIVE") : [];
-      const apiServices = serviceResult.status === "fulfilled" ? asList(serviceResult.value).map(normalizeService).filter((s) => s.status === "ACTIVE") : [];
       const apiGarages = garageResult.status === "fulfilled" ? asList(garageResult.value).map(normalizeGarage).filter((g) => g.status === "ACTIVE") : [];
 
       setVehicles(apiVehicles);
-      setAllServices(apiServices);
       setGarages(apiGarages);
 
       if (!apiGarages.length) {
@@ -83,15 +81,34 @@ export default function CustomerBookingFlowPage() {
     loadFoundationData();
   }, [loadFoundationData]);
 
+  // Load services when garage changes
+  useEffect(() => {
+    if (!selection.garage) {
+      setAllServices([]);
+      return;
+    }
+    let active = true;
+    async function loadServices() {
+      const garageId = getGarageId(selection.garage);
+      setServiceLoading(true);
+      try {
+        const data = await servicePackageApi.getAll(garageId);
+        const normalized = asList(data).map(normalizeService).filter((s) => s.status === "ACTIVE");
+        if (active) setAllServices(normalized);
+      } catch {
+        if (active) setAllServices([]);
+      } finally {
+        if (active) setServiceLoading(false);
+      }
+    }
+    loadServices();
+    return () => { active = false; };
+  }, [selection.garage]);
+
   // Services filtered for the selected garage
   const servicesForGarage = useMemo(() => {
-    if (!selection.garage) return [];
-    const garageId = getGarageId(selection.garage);
-
-    return allServices.filter(
-      (s) => !s.garageId || String(s.garageId) === String(garageId),
-    );
-  }, [allServices, selection.garage]);
+    return allServices;
+  }, [allServices]);
 
   // Load slots when garage + date change
   useEffect(() => {

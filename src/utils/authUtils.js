@@ -6,12 +6,31 @@ export const getCurrentUser = () => {
 
     try {
         const decoded = jwtDecode(token);
+        let currentUser = null;
+        try {
+            const stored = localStorage.getItem("currentUser");
+            if (stored) currentUser = JSON.parse(stored);
+        } catch (e) {
+            console.error("Lỗi parse currentUser:", e);
+        }
 
-        // Hoàng BE thường trả về tên trong field 'full_name', 'name' hoặc 'sub'
-        // Logic này giúp lấy ra tên hiển thị, nếu không có sẽ fallback về "Lê Đạt"
+        // Lấy role từ currentUser (ưu tiên) hoặc từ token
+        let extractedRole = "CUSTOMER";
+        const roles = currentUser?.roles || decoded.roles;
+        const roleStr = currentUser?.role || decoded.role;
+
+        if (roles && Array.isArray(roles) && roles.length > 0) {
+            extractedRole = roles[0];
+        } else if (roleStr) {
+            extractedRole = roleStr;
+        }
+
+        const garageIds = currentUser?.garageIds || decoded.garageIds || [];
+
         return {
-            name: decoded.full_name || decoded.name || decoded.sub || "Lê Đạt",
-            role: decoded.role,
+            name: currentUser?.name || currentUser?.full_name || decoded.full_name || decoded.name || decoded.sub || "Người dùng",
+            role: extractedRole,
+            garageIds: garageIds,
         };
     } catch (error) {
         console.error("Lỗi giải mã token:", error);
