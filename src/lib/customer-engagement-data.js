@@ -1,6 +1,8 @@
 export const unwrapObject = (payload) => {
   if (!payload || typeof payload !== "object") return {};
-  return payload.data || payload.result || payload.content || payload;
+  const unwrapped = payload.data || payload.result || payload.content || payload;
+  if (Array.isArray(unwrapped)) return unwrapped[0] || {};
+  return unwrapped;
 };
 
 export const unwrapList = (payload) => {
