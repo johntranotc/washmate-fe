@@ -11,9 +11,9 @@ export const paymentApi = {
     axiosClient.get(`/payments/${paymentId}/transactions`),
 
   confirmPayment: (paymentId, payload) =>
-    axiosClient.post(`/payments/${paymentId}/mark-paid`, payload),
+    axiosClient.post(`/payments/${paymentId}/confirm`, payload),
   markPaid: (paymentId, payload) =>
-    axiosClient.post(`/payments/${paymentId}/mark-paid`, payload),
+    axiosClient.post(`/payments/${paymentId}/confirm`, payload),
   refund: (paymentId, payload) =>
     axiosClient.post(`/payments/${paymentId}/refund`, payload),
   cancel: (paymentId) => axiosClient.post(`/payments/${paymentId}/cancel`),

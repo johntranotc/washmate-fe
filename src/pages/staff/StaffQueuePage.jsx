@@ -35,23 +35,24 @@ export default function StaffQueuePage() {
 
   async function handleConfirm(bookingId) {
     try {
-      // TODO: Replace with real API call
-      // await staffApi.confirmBooking(bookingId);
+      await staffApi.confirmBooking(bookingId);
       load();
     } catch (error) {
-      console.error(error);
+      console.error("Failed to confirm booking:", error);
+      alert(error?.message || "Không thể xác nhận lịch. Vui lòng thử lại.");
     }
   }
 
   async function handleReject(bookingId) {
     try {
-      // TODO: Replace with real API call
-      // await staffApi.rejectBooking(bookingId, rejectReason.trim());
+      // Reject endpoint not yet available in BE — show message
+      console.warn("Reject endpoint not yet available in BE for booking", bookingId);
+      alert("Chức năng từ chối lịch chưa có endpoint tại BE. Vui lòng liên hệ kỹ thuật.");
+    } catch (error) {
+      console.error("Failed to reject booking:", error);
+    } finally {
       setRejectingId(null);
       setRejectReason("");
-      load();
-    } catch (error) {
-      console.error(error);
     }
   }
 

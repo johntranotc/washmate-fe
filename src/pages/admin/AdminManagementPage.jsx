@@ -1,66 +1,91 @@
 import { Building2, PackagePlus, ScrollText, UsersRound } from "lucide-react";
-import { useState } from "react";
-import { useAppStore } from "../../state/AppStore";
+import { useEffect, useState } from "react";
+import { garageApi } from "../../api/garageApi";
+import { adminApi } from "../../api/adminApi";
+import { servicePackageApi } from "../../api/servicePackageApi";
 
 const tabs = [
-  ["USERS", "Người dùng và vai trò", UsersRound],
+  ["USERS", "Người dùng", UsersRound],
   ["GARAGES", "Cơ sở", Building2],
   ["SERVICES", "Gói dịch vụ", PackagePlus],
-  ["AUDIT", "Nhật ký kiểm toán", ScrollText],
+  ["AUDIT", "Nhật ký", ScrollText],
 ];
 
-const roleLabels = {
-  CUSTOMER: "Khách hàng",
-  STAFF: "Nhân viên",
-  ADMIN: "Quản trị viên",
-};
-
-const actionLabels = {
-  CREATE: "Tạo mới",
-  UPDATE: "Cập nhật",
-  DELETE: "Xóa",
-  PAYMENT: "Thanh toán",
-  PAY: "Thanh toán",
-  CANCEL: "Hủy lịch",
-  STATUS_CHANGE: "Đổi trạng thái",
-  ROLE_CHANGE: "Đổi vai trò",
-  REDEEM: "Đổi quà",
-};
-
-const entityLabels = {
-  BOOKING: "Lịch đặt",
-  USER: "Người dùng",
-  GARAGE: "Cơ sở",
-  SERVICE: "Dịch vụ",
-  LOYALTY: "Điểm thưởng",
-};
-
 function AdminManagementPage() {
-  const { state, actions } = useAppStore();
   const [tab, setTab] = useState("USERS");
-  const [garage, setGarage] = useState({ name: "", address: "" });
-  const [service, setService] = useState({
-    name: "",
-    price: "",
-    duration: "",
-  });
 
-  function submitGarage(event) {
-    event.preventDefault();
-    if (!garage.name) return;
-    actions.addGarage(garage);
-    setGarage({ name: "", address: "" });
+  // Users
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Garages
+  const [garages, setGarages] = useState([]);
+  const [loadingGarages, setLoadingGarages] = useState(false);
+  const [newGarage, setNewGarage] = useState({ name: "", address: "" });
+  const [savingGarage, setSavingGarage] = useState(false);
+
+  // Services
+  const [services, setServices] = useState([]);
+  const [loadingServices, setLoadingServices] = useState(false);
+  const [selectedGarageId, setSelectedGarageId] = useState("");
+
+  useEffect(() => {
+    if (tab === "USERS" && users.length === 0) {
+      setLoadingUsers(true);
+      adminApi.getAllUsers({ page: 0, size: 50 })
+        .then((data) => {
+          const list = Array.isArray(data) ? data : data?.content ?? [];
+          setUsers(list);
+        })
+        .catch(() => setUsers([]))
+        .finally(() => setLoadingUsers(false));
+    }
+    if (tab === "GARAGES" && garages.length === 0) {
+      setLoadingGarages(true);
+      garageApi.getAll()
+        .then((data) => setGarages(Array.isArray(data) ? data : []))
+        .catch(() => setGarages([]))
+        .finally(() => setLoadingGarages(false));
+    }
+    if (tab === "SERVICES") {
+      setLoadingServices(true);
+      // load garages first if needed, then load services for first garage
+      const doLoad = garages.length > 0
+        ? Promise.resolve(garages)
+        : garageApi.getAll().then((d) => { const g = Array.isArray(d) ? d : []; setGarages(g); return g; });
+      doLoad.then((g) => {
+        const gid = selectedGarageId || g[0]?.id;
+        if (!gid) { setServices([]); return; }
+        if (!selectedGarageId && g[0]?.id) setSelectedGarageId(String(g[0].id));
+        return servicePackageApi.getAll(gid).then((s) => setServices(Array.isArray(s) ? s : []));
+      }).catch(() => setServices([]))
+        .finally(() => setLoadingServices(false));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
+  function loadServices(garageId) {
+    setLoadingServices(true);
+    setSelectedGarageId(String(garageId));
+    servicePackageApi.getAll(garageId)
+      .then((s) => setServices(Array.isArray(s) ? s : []))
+      .catch(() => setServices([]))
+      .finally(() => setLoadingServices(false));
   }
 
-  function submitService(event) {
+  async function submitGarage(event) {
     event.preventDefault();
-    if (!service.name) return;
-    actions.addService({
-      ...service,
-      price: Number(service.price),
-      duration: Number(service.duration),
-    });
-    setService({ name: "", price: "", duration: "" });
+    if (!newGarage.name.trim()) return;
+    setSavingGarage(true);
+    try {
+      const created = await garageApi.create(newGarage);
+      setGarages((prev) => [...prev, created]);
+      setNewGarage({ name: "", address: "" });
+    } catch (err) {
+      alert(err?.message || "Không thể tạo gara. Vui lòng thử lại.");
+    } finally {
+      setSavingGarage(false);
+    }
   }
 
   return (
@@ -68,7 +93,7 @@ function AdminManagementPage() {
       <header>
         <h1 className="text-2xl font-extrabold">Quản trị hệ thống</h1>
         <p className="mt-2 text-xs text-slate-500">
-          Quản lý người dùng, phạm vi cơ sở, danh mục dịch vụ và lịch sử kiểm toán.
+          Quản lý người dùng, phạm vi cơ sở, danh mục dịch vụ.
         </p>
       </header>
 
@@ -87,167 +112,125 @@ function AdminManagementPage() {
         ))}
       </nav>
 
+      {/* USERS */}
       {tab === "USERS" && (
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-[9px] uppercase text-slate-500">
-              <tr>
-                <th className="p-4">Người dùng</th>
-                <th className="p-4">Thư điện tử</th>
-                <th className="p-4">Vai trò</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {state.users.map((user) => (
-                <tr key={user.id}>
-                  <td className="p-4 font-bold">{user.name}</td>
-                  <td className="p-4 text-slate-500">{user.email}</td>
-                  <td className="p-4">
-                    <select
-                      value={user.role}
-                      onChange={(event) =>
-                        actions.toggleUserRole(user.id, event.target.value)
-                      }
-                      className="rounded-lg border border-slate-200 px-3 py-2 text-[10px]"
-                    >
-                      {Object.entries(roleLabels).map(([value, label]) => (
-                        <option key={value} value={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
+          {loadingUsers ? (
+            <p className="py-12 text-center text-sm text-slate-500">Đang tải danh sách người dùng...</p>
+          ) : users.length === 0 ? (
+            <p className="py-12 text-center text-sm text-slate-400">Chưa có dữ liệu người dùng.</p>
+          ) : (
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 text-[9px] uppercase text-slate-500">
+                <tr>
+                  <th className="p-4">Người dùng</th>
+                  <th className="p-4">Email</th>
+                  <th className="p-4">Vai trò</th>
+                  <th className="p-4">Trạng thái</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {users.map((user) => (
+                  <tr key={user.id}>
+                    <td className="p-4 font-bold">{user.fullName ?? user.name ?? "–"}</td>
+                    <td className="p-4 text-slate-500">{user.email}</td>
+                    <td className="p-4">{(user.roles ?? []).join(", ") || "–"}</td>
+                    <td className="p-4">{user.status ?? "–"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </section>
       )}
 
+      {/* GARAGES */}
       {tab === "GARAGES" && (
         <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
           <section className="space-y-3">
-            {state.garages.map((item) => (
-              <article
-                key={item.id}
-                className="rounded-xl border border-slate-200 bg-white p-5"
-              >
-                <b>{item.name}</b>
-                <p className="mt-2 text-xs text-slate-500">{item.address}</p>
-              </article>
-            ))}
+            {loadingGarages ? (
+              <p className="py-10 text-center text-sm text-slate-500">Đang tải danh sách gara...</p>
+            ) : garages.length === 0 ? (
+              <p className="py-10 text-center text-sm text-slate-400">Chưa có gara nào.</p>
+            ) : (
+              garages.map((item) => (
+                <article key={item.id} className="rounded-xl border border-slate-200 bg-white p-5">
+                  <b>{item.name ?? item.garageName}</b>
+                  <p className="mt-2 text-xs text-slate-500">{item.address ?? item.location ?? "–"}</p>
+                  {item.phone && <p className="mt-1 text-xs text-slate-400">📞 {item.phone}</p>}
+                </article>
+              ))
+            )}
           </section>
-          <form
-            onSubmit={submitGarage}
-            className="h-fit rounded-xl border border-slate-200 bg-white p-5"
-          >
-            <h2 className="font-extrabold">Thêm cơ sở</h2>
+          <form onSubmit={submitGarage} className="h-fit rounded-xl border border-slate-200 bg-white p-5">
+            <h2 className="font-extrabold">Thêm cơ sở mới</h2>
             <input
-              value={garage.name}
-              onChange={(event) =>
-                setGarage({ ...garage, name: event.target.value })
-              }
+              value={newGarage.name}
+              onChange={(e) => setNewGarage({ ...newGarage, name: e.target.value })}
               placeholder="Tên cơ sở"
+              required
               className="mt-4 h-10 w-full rounded-lg border border-slate-200 px-3 text-xs"
             />
             <input
-              value={garage.address}
-              onChange={(event) =>
-                setGarage({ ...garage, address: event.target.value })
-              }
+              value={newGarage.address}
+              onChange={(e) => setNewGarage({ ...newGarage, address: e.target.value })}
               placeholder="Địa chỉ"
               className="mt-3 h-10 w-full rounded-lg border border-slate-200 px-3 text-xs"
             />
-            <button className="mt-4 h-10 w-full rounded-lg bg-blue-600 text-xs font-bold text-white">
-              Tạo cơ sở
+            <button
+              disabled={savingGarage}
+              className="mt-4 h-10 w-full rounded-lg bg-blue-600 text-xs font-bold text-white disabled:bg-slate-300"
+            >
+              {savingGarage ? "Đang tạo..." : "Tạo cơ sở"}
             </button>
           </form>
         </div>
       )}
 
+      {/* SERVICES */}
       {tab === "SERVICES" && (
-        <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-          <section className="grid gap-3 sm:grid-cols-2">
-            {state.services.map((item) => (
-              <article
-                key={item.id}
-                className="rounded-xl border border-slate-200 bg-white p-5"
+        <div className="space-y-4">
+          {garages.length > 0 && (
+            <div className="flex items-center gap-3">
+              <label className="text-xs font-bold text-slate-600">Lọc theo gara:</label>
+              <select
+                value={selectedGarageId}
+                onChange={(e) => loadServices(e.target.value)}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-xs"
               >
-                <b>{item.name}</b>
-                <p className="mt-3 text-xl font-extrabold text-blue-600">
-                  {new Intl.NumberFormat("vi-VN").format(item.price)} đ
-                </p>
-                <p className="mt-2 text-xs text-slate-500">
-                  {item.duration} phút
-                </p>
-              </article>
-            ))}
-          </section>
-          <form
-            onSubmit={submitService}
-            className="h-fit rounded-xl border border-slate-200 bg-white p-5"
-          >
-            <h2 className="font-extrabold">Thêm gói dịch vụ</h2>
-            <input
-              value={service.name}
-              onChange={(event) =>
-                setService({ ...service, name: event.target.value })
-              }
-              placeholder="Tên gói dịch vụ"
-              className="mt-3 h-10 w-full rounded-lg border border-slate-200 px-3 text-xs"
-            />
-            <input
-              type="number"
-              value={service.price}
-              onChange={(event) =>
-                setService({ ...service, price: event.target.value })
-              }
-              placeholder="Giá dịch vụ"
-              className="mt-3 h-10 w-full rounded-lg border border-slate-200 px-3 text-xs"
-            />
-            <input
-              type="number"
-              value={service.duration}
-              onChange={(event) =>
-                setService({ ...service, duration: event.target.value })
-              }
-              placeholder="Thời lượng (phút)"
-              className="mt-3 h-10 w-full rounded-lg border border-slate-200 px-3 text-xs"
-            />
-            <button className="mt-4 h-10 w-full rounded-lg bg-blue-600 text-xs font-bold text-white">
-              Tạo gói dịch vụ
-            </button>
-          </form>
-        </div>
-      )}
-
-      {tab === "AUDIT" && (
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <div className="divide-y divide-slate-100">
-            {state.auditLogs.length ? (
-              state.auditLogs.map((log) => (
-                <article
-                  key={log.id}
-                  className="grid gap-2 p-4 text-xs md:grid-cols-[130px_110px_1fr_180px]"
-                >
-                  <b className="text-blue-600">
-                    {actionLabels[log.action] || log.action}
-                  </b>
-                  <span>
-                    {entityLabels[log.entity] || log.entity} #{log.entityId}
-                  </span>
-                  <span className="text-slate-500">{log.detail}</span>
-                  <time className="text-[9px] text-slate-400">
-                    {new Date(log.createdAt).toLocaleString("vi-VN")}
-                  </time>
+                {garages.map((g) => (
+                  <option key={g.id} value={g.id}>{g.name ?? g.garageName}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <section className="grid gap-3 sm:grid-cols-2">
+            {loadingServices ? (
+              <p className="col-span-2 py-10 text-center text-sm text-slate-500">Đang tải gói dịch vụ...</p>
+            ) : services.length === 0 ? (
+              <p className="col-span-2 py-10 text-center text-sm text-slate-400">Chưa có gói dịch vụ nào.</p>
+            ) : (
+              services.map((item) => (
+                <article key={item.id ?? item.serviceId} className="rounded-xl border border-slate-200 bg-white p-5">
+                  <b>{item.name ?? item.serviceName}</b>
+                  <p className="mt-3 text-xl font-extrabold text-blue-600">
+                    {new Intl.NumberFormat("vi-VN").format(item.price ?? 0)} đ
+                  </p>
+                  <p className="mt-2 text-xs text-slate-500">{item.duration ?? item.durationMinutes ?? 0} phút</p>
+                  {item.description && <p className="mt-2 text-xs text-slate-400">{item.description}</p>}
                 </article>
               ))
-            ) : (
-              <p className="p-8 text-center text-xs text-slate-400">
-                Chưa có sự kiện kiểm toán.
-              </p>
             )}
-          </div>
+          </section>
+        </div>
+      )}
+
+      {/* AUDIT */}
+      {tab === "AUDIT" && (
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <p className="p-8 text-center text-xs text-slate-400">
+            Nhật ký kiểm toán chưa có endpoint tại BE.
+          </p>
         </section>
       )}
     </div>

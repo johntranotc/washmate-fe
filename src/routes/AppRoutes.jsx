@@ -38,14 +38,27 @@ import RewardsPage from "../pages/customer-portal/RewardsPage";
 import PromotionsPage from "../pages/customer-portal/PromotionsPage";
 import NotificationsPage from "../pages/customer-portal/NotificationsPage";
 import AccountPage from "../pages/customer-portal/AccountPage";
+
+// Staff pages
 import StaffBookingSearchPage from "../pages/staff/StaffBookingSearchPage";
 import StaffWorkflowPage from "../pages/staff/StaffWorkflowPage";
 import StaffDashboardPage from "../pages/staff/StaffDashboardPage";
 import StaffQueuePage from "../pages/staff/StaffQueuePage";
 import StaffBookingListPage from "../pages/staff/StaffBookingListPage";
 import StaffBookingWorkflowPage from "../pages/staff/StaffBookingWorkflowPage";
+import StaffProfilePage from "../pages/staff/StaffProfilePage";
 
+// Admin pages
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
+import AdminGaragePage from "../pages/admin/AdminGaragePage";
+import AdminServicePage from "../pages/admin/AdminServicePage";
+import AdminUserPage from "../pages/admin/AdminUserPage";
+import AdminBookingPage from "../pages/admin/AdminBookingPage";
+import AdminInvoicePage from "../pages/admin/AdminInvoicePage";
+import AdminReportPage from "../pages/admin/AdminReportPage";
+import AdminInsightPage from "../pages/admin/AdminInsightPage";
+import AdminProfilePage from "../pages/admin/AdminProfilePage";
+
 import ScrollToHash from "./ScrollToHash";
 import { RequireRole } from "../components/auth/RequireRole";
 import { ROLES } from "../lib/auth-role";
@@ -75,22 +88,10 @@ function AppRoutes() {
         <Route element={<CustomerLayout />}>
           <Route path="/customer" element={<CustomerHomePage />} />
           <Route path="/customer/vehicles" element={<VehiclePage />} />
-          <Route
-            path="/customer/bookings/create"
-            element={<BookingCreatePage />}
-          />
-          <Route
-            path="/customer/bookings/:bookingId"
-            element={<BookingDetailPage />}
-          />
-          <Route
-            path="/customer/bookings/:bookingId/payment"
-            element={<PaymentPage />}
-          />
-          <Route
-            path="/customer/bookings/:bookingId/invoice"
-            element={<InvoicePage />}
-          />
+          <Route path="/customer/bookings/create" element={<BookingCreatePage />} />
+          <Route path="/customer/bookings/:bookingId" element={<BookingDetailPage />} />
+          <Route path="/customer/bookings/:bookingId/payment" element={<PaymentPage />} />
+          <Route path="/customer/bookings/:bookingId/invoice" element={<InvoicePage />} />
           <Route path="/customer/loyalty" element={<LoyaltyPage />} />
         </Route>
 
@@ -111,14 +112,13 @@ function AppRoutes() {
           <Route path="/khach-hang/tai-khoan" element={<AccountPage />} />
         </Route>
 
+        {/* Staff — public (no role check) for /staff/* */}
         <Route element={<StaffLayout />}>
           <Route path="/staff/bookings" element={<StaffBookingSearchPage />} />
-          <Route
-            path="/staff/bookings/:bookingId/workflow"
-            element={<StaffWorkflowPage />}
-          />
+          <Route path="/staff/bookings/:bookingId/workflow" element={<StaffWorkflowPage />} />
         </Route>
 
+        {/* Staff — role-protected */}
         <Route
           element={
             <RequireRole role={ROLES.STAFF}>
@@ -130,12 +130,15 @@ function AppRoutes() {
           <Route path="/nhan-vien/hang-doi" element={<StaffQueuePage />} />
           <Route path="/nhan-vien/danh-sach" element={<StaffBookingListPage />} />
           <Route path="/nhan-vien/danh-sach/:bookingId" element={<StaffBookingWorkflowPage />} />
+          <Route path="/nhan-vien/profile" element={<StaffProfilePage />} />
         </Route>
 
+        {/* Admin — unprotected for /admin/* */}
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         </Route>
 
+        {/* Admin — role-protected */}
         <Route
           element={
             <RequireRole role={ROLES.ADMIN}>
@@ -144,9 +147,17 @@ function AppRoutes() {
           }
         >
           <Route path="/quan-tri" element={<AdminDashboardPage />} />
+          <Route path="/quan-tri/garages" element={<AdminGaragePage />} />
+          <Route path="/quan-tri/services" element={<AdminServicePage />} />
+          <Route path="/quan-tri/users" element={<AdminUserPage />} />
+          <Route path="/quan-tri/bookings" element={<AdminBookingPage />} />
+          <Route path="/quan-tri/invoices" element={<AdminInvoicePage />} />
+          <Route path="/quan-tri/reports" element={<AdminReportPage />} />
+          <Route path="/quan-tri/ai-insights" element={<AdminInsightPage />} />
+          <Route path="/quan-tri/profile" element={<AdminProfilePage />} />
         </Route>
 
-        <Route path="*" element={<div>404 - Không tìm thấy trang</div>} />
+        <Route path="*" element={<div className="flex min-h-screen items-center justify-center text-slate-500">404 — Không tìm thấy trang</div>} />
       </Routes>
     </BrowserRouter>
   );

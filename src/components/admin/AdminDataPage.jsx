@@ -1,7 +1,6 @@
 import { Eye, RefreshCcw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { adminApi } from "../../api/adminApi";
-import DemoDataNotice from "../customer/DemoDataNotice";
 
 const unwrap = (payload) => Array.isArray(payload) ? payload : payload?.content || payload?.items || payload?.data || payload?.result || [];
 const money = (value) => `${Number(value || 0).toLocaleString("vi-VN")}đ`;
