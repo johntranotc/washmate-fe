@@ -29,6 +29,7 @@ import { tierCodeToBadgeName } from "@/lib/customer-engagement-data";
 
 import { TierBadge } from "@/components/site/tier-badge";
 import { cn } from "@/lib/utils";
+import { jwtDecode } from "jwt-decode";
 
 // ── Shared constants ───────────────────────────────────────────
 const PROFILE_KEY = "washmate_user_profile";
@@ -65,17 +66,21 @@ function getStoredNotifications() {
   }
 }
 
-const defaultProfile = {
-  name: "Khách hàng WashMate",
-  email: "khachhang@washmate.vn",
-  phone: "0901 234 567",
-  dob: "1995-03-15",
-  gender: "Nam",
-  address: "123 Nguyễn Trãi",
-  district: "Quận 5",
-  city: "TP. Hồ Chí Minh",
-  carNote: "Xe nhạy cảm với chất tẩy mạnh, ưu tiên dung dịch trung tính",
-};
+function getEmptyProfile() {
+  let name = "";
+  let email = "";
+  try {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decoded = jwtDecode(token);
+      email = decoded.email || decoded.sub || "";
+      name = decoded.full_name || decoded.fullName || decoded.name || email.split("@")[0] || "";
+    }
+  } catch (e) {}
+  return {
+    name, email, phone: "", dob: "", gender: "Nam", address: "", district: "", city: "", carNote: ""
+  };
+}
 
 const defaultNotifications = {
   reminderWash: true,
@@ -494,13 +499,13 @@ function NotificationsCard() {
               aria-checked={prefs[key]}
               onClick={() => toggle(key)}
               className={cn(
-                "relative h-6 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30",
+                "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30",
                 prefs[key] ? "bg-primary" : "bg-border",
               )}
             >
               <span
                 className={cn(
-                  "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform",
+                  "inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform",
                   prefs[key] ? "translate-x-5" : "translate-x-0.5",
                 )}
               />
@@ -578,19 +583,58 @@ function SessionCard() {
   );
 }
 
+import { userApi } from "@/api/userApi";
+
 // ── Main AccountPage ───────────────────────────────────────────
 export default function AccountPage() {
   const [profile, setProfile] = useState(() => {
-    const stored = getStoredProfile();
+    let stored = getStoredProfile();
+    // Bỏ qua dữ liệu ảo cũ nếu người dùng chưa xoá local storage
+    if (stored && stored.email === "khachhang@washmate.vn" && stored.phone === "0901 234 567") {
+      stored = null;
+    }
     if (stored) return stored;
     // Write on first visit so header immediately reads the same name
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(defaultProfile));
+    const initial = getEmptyProfile();
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(initial));
     window.dispatchEvent(new CustomEvent("washmate-profile-updated"));
-    return defaultProfile;
+    return initial;
   });
 
-  const handleProfileSave = useCallback((newProfile) => {
-    setProfile(newProfile);
+  useEffect(() => {
+    userApi.getMe().then((res) => {
+      if (res) {
+        setProfile((prev) => {
+          const next = {
+            ...prev,
+            name: res.fullName || res.name || prev.name,
+            email: res.email || prev.email,
+            phone: res.phone || prev.phone,
+          };
+          localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
+          window.dispatchEvent(new CustomEvent("washmate-profile-updated"));
+          return next;
+        });
+      }
+    }).catch((err) => console.error("Lấy thông tin cá nhân lỗi:", err));
+  }, []);
+
+  const handleProfileSave = useCallback(async (newProfile) => {
+    try {
+      await userApi.updateMe({
+        fullName: newProfile.name,
+        phone: newProfile.phone || "",
+      });
+      setProfile(newProfile);
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(newProfile));
+      window.dispatchEvent(new CustomEvent("washmate-profile-updated"));
+    } catch (err) {
+      console.error("Lỗi cập nhật API:", err);
+      // Vẫn lưu local nếu muốn
+      setProfile(newProfile);
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(newProfile));
+      window.dispatchEvent(new CustomEvent("washmate-profile-updated"));
+    }
   }, []);
 
   return (
