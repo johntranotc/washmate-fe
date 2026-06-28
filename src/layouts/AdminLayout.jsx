@@ -6,14 +6,14 @@ import { NavLink, Outlet } from "react-router-dom";
 import AccountDropdown from "../components/portal/AccountDropdown";
 
 const navLinks = [
-  [LayoutDashboard, "Dashboard", "/quan-tri", true],
+  [LayoutDashboard, "Tổng quan", "/quan-tri", true],
   [Building2, "Gara", "/quan-tri/garages", false],
-  [CalendarDays, "Bookings", "/quan-tri/bookings", false],
+  [CalendarDays, "Lịch hẹn", "/quan-tri/bookings", false],
   [PackagePlus, "Dịch vụ", "/quan-tri/services", false],
   [FileText, "Hóa đơn", "/quan-tri/invoices", false],
   [UsersRound, "Người dùng", "/quan-tri/users", false],
   [BarChart3, "Báo cáo", "/quan-tri/reports", false],
-  [BrainCircuit, "AI Insight", "/quan-tri/ai-insights", false],
+  [BrainCircuit, "Phân tích AI", "/quan-tri/ai-insights", false],
 ];
 
 function AdminLayout() {
@@ -26,7 +26,7 @@ function AdminLayout() {
           </div>
           <div>
             <p className="text-sm font-extrabold text-slate-900 leading-none">WashMate</p>
-            <p className="text-[10px] text-slate-500 leading-none mt-0.5">Admin Portal</p>
+            <p className="text-[10px] text-slate-500 leading-none mt-0.5">Cổng quản trị</p>
           </div>
         </div>
 

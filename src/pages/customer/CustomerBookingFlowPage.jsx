@@ -45,6 +45,8 @@ export default function CustomerBookingFlowPage() {
     slot: null,
   });
   const [note, setNote] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("CASH");
+  const [promotion, setPromotion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [slotLoading, setSlotLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -237,13 +239,26 @@ export default function CustomerBookingFlowPage() {
     }
     setSubmitting(true);
     setSubmitError("");
+
+    let discountAmount = 0;
+    if (promotion && selection.service?.price) {
+      if (promotion.discountType === "PERCENT") {
+        const disc = (selection.service.price * promotion.discountValue) / 100;
+        discountAmount = promotion.maxDiscount ? Math.min(disc, promotion.maxDiscount) : disc;
+      } else {
+        discountAmount = Math.min(promotion.discountValue || 0, selection.service.price);
+      }
+    }
+
     const payload = {
       vehicleId: selection.vehicle.id,
       serviceId: selection.service.id,
       garageId,
       slotId: selection.slot.id,
       bookingDate,
-      bookingNote: note.trim(),
+      paymentMethod,
+      discountAmount,
+      bookingNote: (note.trim() + (promotion ? ` [Mã ưu đãi: ${promotion.code} - Giảm ${discountAmount}đ]` : "")).trim(),
     };
     try {
       let response;
@@ -257,9 +272,9 @@ export default function CustomerBookingFlowPage() {
           bookingDate,
           slotTime: selection.slot.startTime,
           amount: selection.service.price,
-          discount: 0,
-          finalAmount: selection.service.price,
-          note: note.trim(),
+          discount: discountAmount,
+          finalAmount: Math.max(0, selection.service.price - discountAmount),
+          note: payload.bookingNote,
         });
       } else {
         response = await bookingApi.createBooking(payload);
@@ -277,9 +292,9 @@ export default function CustomerBookingFlowPage() {
     } catch (error) {
       const isDemoFlow =
         usingMockData ||
-        selection.garage.isMock ||
-        selection.service.isMock ||
-        selection.slot.isMock;
+        selection.garage?.isMock ||
+        selection.service?.isMock ||
+        selection.slot?.isMock;
       if (isDemoFlow) {
         const demoBooking = actions.createBooking({
           ...payload,
@@ -290,9 +305,9 @@ export default function CustomerBookingFlowPage() {
           bookingDate,
           slotTime: selection.slot.startTime,
           amount: selection.service.price,
-          discount: 0,
-          finalAmount: selection.service.price,
-          note: note.trim(),
+          discount: discountAmount,
+          finalAmount: Math.max(0, selection.service.price - discountAmount),
+          note: payload.bookingNote,
         });
         setResult({
           bookingId: demoBooking.id,
@@ -318,7 +333,7 @@ export default function CustomerBookingFlowPage() {
     if (step === 2) return <ServiceStep services={services} selectedId={selection.service?.id} onSelect={selectService} />;
     if (step === 3) return <GarageStep garages={compatibleGarages} selectedId={getGarageId(selection.garage)} onSelect={(garage) => setSelection((current) => ({ ...current, garage, slot: null }))} />;
     if (step === 4) return <SlotStep date={selection.date} onDateChange={(date) => setSelection((current) => ({ ...current, date, slot: null }))} slots={slots} selectedId={selection.slot?.id} onSelect={(slot) => setSelection((current) => ({ ...current, slot }))} loading={slotLoading} />;
-    if (step === 5) return <BookingReviewStep selection={selection} note={note} onNoteChange={setNote} />;
+    if (step === 5) return <BookingReviewStep selection={selection} note={note} onNoteChange={setNote} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} promotion={promotion} onSelectPromotion={setPromotion} />;
     return <BookingSuccessStep result={result} selection={selection} />;
   }
 

@@ -14,7 +14,10 @@ export default function AdminGaragePage() {
     setLoading(true);
     garageApi
       .getAll()
-      .then((d) => setGarages(Array.isArray(d) ? d : []))
+      .then((d) => {
+        const actualData = d?.data ? d.data : d;
+        setGarages(Array.isArray(actualData) ? actualData : [])
+      })
       .catch(() => setGarages([]))
       .finally(() => setLoading(false));
   }
@@ -87,10 +90,10 @@ export default function AdminGaragePage() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {garages.map((g) => (
-              <article key={g.id} className="rounded-2xl border border-slate-200 bg-white p-5 hover:shadow-md transition-shadow">
+              <article key={g.id ?? g.garageId} className="rounded-2xl border border-slate-200 bg-white p-5 hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between gap-2">
                   <b className="text-sm font-extrabold text-slate-900 leading-tight">{g.name ?? g.garageName ?? "–"}</b>
-                  <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">#{g.id}</span>
+                  <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">#{g.id ?? g.garageId}</span>
                 </div>
                 {(g.address || g.location) && (
                   <p className="mt-2 text-xs text-slate-500">📍 {g.address ?? g.location}</p>

@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   LogOut,
   Plus,
+  Shield,
   Star,
   User,
 } from "lucide-react";
@@ -17,9 +18,10 @@ import { Logo } from "@/components/site/logo";
 import { loyaltyApi } from "@/api/loyaltyApi";
 import { cn } from "@/lib/utils";
 import { jwtDecode } from "jwt-decode";
+import { resolveTierInfo } from "@/lib/customer-engagement-data";
 
 const defaultLoyaltyInfo = {
-  tierName: "Thành viên mới",
+  tierName: "Đồng",
   availablePoints: 0,
 };
 
@@ -97,9 +99,11 @@ function DashboardHeader() {
       try {
         const res = await loyaltyApi.getMyLoyalty();
         if (res) {
+          const pts = Number(res.availablePoints ?? res.points ?? 0) || 0;
+          const calc = resolveTierInfo(pts, res.tierName || res.tier);
           setLoyaltyInfo({
-            tierName: res.tierName || res.tier || "Thành viên mới",
-            availablePoints: Number(res.availablePoints ?? res.points ?? 0) || 0
+            tierName: calc.tierName,
+            availablePoints: pts
           });
         }
       } catch {
@@ -211,6 +215,16 @@ function DashboardHeader() {
                   <User size={18} />
                 </div>
                 <span>Tài khoản của tôi</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowDropdown(false); navigate("/khach-hang/doi-mat-khau"); }}
+                className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-blue-50 hover:text-blue-600"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+                  <Shield size={18} />
+                </div>
+                <span>Đổi mật khẩu</span>
               </button>
               <div className="my-1 h-px bg-border/40" />
               <button

@@ -45,6 +45,7 @@ export default function CustomerBookingFlowPage() {
   });
   const [note, setNote] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("CASH");
+  const [promotion, setPromotion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [slotLoading, setSlotLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -182,6 +183,16 @@ export default function CustomerBookingFlowPage() {
     setSubmitting(true);
     setSubmitError("");
 
+    let discountAmount = 0;
+    if (promotion && selection.service?.price) {
+      if (promotion.discountType === "PERCENT") {
+        const disc = (selection.service.price * promotion.discountValue) / 100;
+        discountAmount = promotion.maxDiscount ? Math.min(disc, promotion.maxDiscount) : disc;
+      } else {
+        discountAmount = Math.min(promotion.discountValue || 0, selection.service.price);
+      }
+    }
+
     const payload = {
       vehicleId: selection.vehicle.id,
       serviceId: selection.service.id,
@@ -189,7 +200,8 @@ export default function CustomerBookingFlowPage() {
       slotId: selection.slot.id,
       bookingDate,
       paymentMethod,
-      bookingNote: note.trim(),
+      discountAmount,
+      bookingNote: (note.trim() + (promotion ? ` [Mã ưu đãi: ${promotion.code} - Giảm ${discountAmount}đ]` : "")).trim(),
     };
 
     try {
@@ -264,6 +276,8 @@ export default function CustomerBookingFlowPage() {
           onNoteChange={setNote}
           paymentMethod={paymentMethod}
           onPaymentMethodChange={setPaymentMethod}
+          promotion={promotion}
+          onSelectPromotion={setPromotion}
         />
       );
     }

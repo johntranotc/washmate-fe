@@ -8,11 +8,11 @@ const money = (value) => `${Number(value || 0).toLocaleString("vi-VN")}đ`;
 const configs = {
   garages: {
     title: "Quản lý gara", description: "Theo dõi thông tin và trạng thái các cơ sở WashMate.", method: "getGarages",
-    columns: [["name", "Tên gara"], ["address", "Địa chỉ"], ["phone", "Số điện thoại"], ["status", "Trạng thái"], ["slotsPerDay", "Slot/ngày"]],
+    columns: [["name", "Tên gara", (v, row) => v ?? row.garageName], ["address", "Địa chỉ"], ["phone", "Số điện thoại"], ["status", "Trạng thái"], ["slotsPerDay", "Slot/ngày"]],
   },
   services: {
     title: "Gói dịch vụ", description: "Danh mục dịch vụ đang cung cấp tại các gara.", method: "getServicePackages",
-    columns: [["name", "Tên dịch vụ"], ["price", "Giá", money], ["duration", "Thời lượng", (v) => `${v} phút`], ["garage", "Gara áp dụng"], ["status", "Trạng thái"]],
+    columns: [["name", "Tên dịch vụ", (v, row) => v ?? row.serviceName ?? row.servicePackageName], ["price", "Giá", money], ["duration", "Thời lượng", (v, row) => `${v ?? row.durationMinutes ?? 0} phút`], ["garage", "Gara áp dụng", (v, row) => v ?? row.garageName ?? (row.garageId ? `Gara #${row.garageId}` : null)], ["status", "Trạng thái"]],
   },
   slots: {
     title: "Khung giờ phục vụ", description: "Theo dõi sức chứa và tình trạng đặt chỗ.", method: "getSlots",
@@ -65,7 +65,7 @@ export default function AdminDataPage({ type }) {
       
       {config.filters && <section className="flex flex-wrap gap-3 rounded-2xl border border-slate-200 bg-white p-4"><select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs"><option value="ALL">Tất cả trạng thái</option>{["PENDING","CONFIRMED","CHECKED_IN","WASHING","COMPLETED","CANCELLED","NO_SHOW"].map((value) => <option key={value}>{value}</option>)}</select><select value={payment} onChange={(e) => setPayment(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs"><option value="ALL">Tất cả thanh toán</option><option value="PENDING">Chờ thanh toán</option><option value="PAID">Đã thanh toán</option><option value="REFUNDED">Đã hoàn tiền</option></select></section>}
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        {loading ? <p className="py-16 text-center text-sm text-slate-500">Đang tải dữ liệu...</p> : visible.length === 0 ? <p className="py-16 text-center text-sm text-slate-500">Chưa có dữ liệu để hiển thị.</p> : <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-xs"><thead className="bg-slate-50 text-[10px] uppercase text-slate-500"><tr>{config.columns.map(([, label]) => <th key={label} className="p-4">{label}</th>)}<th className="p-4">Thao tác</th></tr></thead><tbody className="divide-y divide-slate-100">{visible.map((row, index) => <tr key={row.id ?? index}>{config.columns.map(([key, label, format]) => <td key={label} className="p-4">{format ? format(row[key], row) : row[key] ?? "Chưa cập nhật"}</td>)}<td className="p-4"><button className="inline-flex items-center gap-1 font-bold text-blue-600"><Eye size={13} />Xem</button></td></tr>)}</tbody></table></div>}
+        {loading ? <p className="py-16 text-center text-sm text-slate-500">Đang tải dữ liệu...</p> : visible.length === 0 ? <p className="py-16 text-center text-sm text-slate-500">Chưa có dữ liệu để hiển thị.</p> : <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-xs"><thead className="bg-slate-50 text-[10px] uppercase text-slate-500"><tr>{config.columns.map(([, label]) => <th key={label} className="p-4">{label}</th>)}<th className="p-4">Thao tác</th></tr></thead><tbody className="divide-y divide-slate-100">{visible.map((row, index) => <tr key={row.id ?? row.servicePackageId ?? row.serviceId ?? row.garageId ?? index}>{config.columns.map(([key, label, format]) => <td key={label} className="p-4">{format ? format(row[key], row) : row[key] ?? "Chưa cập nhật"}</td>)}<td className="p-4"><button className="inline-flex items-center gap-1 font-bold text-blue-600"><Eye size={13} />Xem</button></td></tr>)}</tbody></table></div>}
       </section>
     </div>
   );

@@ -5,7 +5,7 @@ export function RequireRole({ role, children }) {
   const currentRole = getCurrentRole();
 
   if (currentRole !== role) {
-    return <Navigate to="/chon-khong-gian-lam-viec" replace />;
+    return <Navigate to="/dang-nhap" replace />;
   }
 
   return children;

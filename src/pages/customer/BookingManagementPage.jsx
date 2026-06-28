@@ -10,6 +10,7 @@ import {
   formatMoney,
   normalizeBooking,
   normalizeBookingList,
+  paymentStatusLabels,
 } from "@/lib/customer-booking-data";
 import { cn } from "@/lib/utils";
 
@@ -62,7 +63,7 @@ export default function BookingManagementPage() {
       ) : <div className="grid gap-5">{filtered.map((booking) => (
         <article key={booking.id} className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center">
-            <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><strong className="text-lg">{booking.code}</strong><StatusBadge status={booking.bookingStatus} /><StatusBadge status={booking.paymentStatus} type="payment" /></div><h2 className="mt-4 font-extrabold">{booking.vehicle} · {booking.plate}</h2><p className="mt-1 text-sm text-[var(--text-muted)]">{booking.serviceName} tại {booking.garageName}</p></div>
+            <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><strong className="text-lg">{booking.code}</strong><StatusBadge status={booking.bookingStatus} />{booking.paymentStatus && bookingStatusLabels[booking.bookingStatus] !== paymentStatusLabels[booking.paymentStatus] && <StatusBadge status={booking.paymentStatus} type="payment" />}</div><h2 className="mt-4 font-extrabold">{booking.vehicle} · {booking.plate}</h2><p className="mt-1 text-sm text-[var(--text-muted)]">{booking.serviceName} tại {booking.garageName}</p></div>
             <div className="grid gap-2 text-sm sm:grid-cols-2 lg:w-72 lg:grid-cols-1"><span>{formatBookingDate(booking.bookingDate)} · {booking.slotTime}</span><strong className="text-[var(--brand-blue)]">{formatMoney(booking.finalAmount)}</strong></div>
             <div className="flex flex-wrap gap-2"><Link to={`/customer/bookings/${booking.id}`} className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-soft)] px-4 py-2.5 text-sm font-bold"><Eye size={16} /> Xem chi tiết</Link>{booking.paymentStatus !== "PAID" && <Link to={`/customer/bookings/${booking.id}/payment`} className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand-blue)] px-4 py-2.5 text-sm font-bold text-white"><CreditCard size={16} /> Thanh toán</Link>}</div>
           </div>

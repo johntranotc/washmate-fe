@@ -5,6 +5,8 @@ import { StatusBadge } from "@/components/customer/BookingStatusBadge";
 import {
   formatBookingDate,
   formatMoney,
+  bookingStatusLabels,
+  paymentStatusLabels,
 } from "@/lib/customer-booking-data";
 import { loadCustomerBookingList } from "@/lib/customer-bookings";
 
@@ -58,7 +60,11 @@ export default function PaymentInvoicePage() {
                       <div className="flex items-center gap-2">
                         <strong>{booking.code}</strong>
                         <StatusBadge status={booking.bookingStatus} />
-                        <StatusBadge status={booking.paymentStatus} type="payment" />
+                        {booking.paymentStatus &&
+                          bookingStatusLabels[booking.bookingStatus] !==
+                            paymentStatusLabels[booking.paymentStatus] && (
+                            <StatusBadge status={booking.paymentStatus} type="payment" />
+                          )}
                       </div>
                       <p className="mt-2 text-sm text-[var(--text-muted)]">{booking.serviceName} · {booking.garageName}</p>
                       <p className="mt-1 inline-flex items-center gap-2 text-sm text-[var(--text-muted)]"><CalendarDays size={14} /> {formatBookingDate(booking.bookingDate)} · {booking.slotTime}</p>
@@ -85,7 +91,11 @@ export default function PaymentInvoicePage() {
                       <div className="flex items-center gap-2">
                         <strong>{booking.code}</strong>
                         <StatusBadge status={booking.bookingStatus} />
-                        <StatusBadge status={booking.paymentStatus} type="payment" />
+                        {booking.paymentStatus &&
+                          bookingStatusLabels[booking.bookingStatus] !==
+                            paymentStatusLabels[booking.paymentStatus] && (
+                            <StatusBadge status={booking.paymentStatus} type="payment" />
+                          )}
                       </div>
                       <p className="mt-2 text-sm text-[var(--text-muted)]">{booking.serviceName} · {booking.garageName}</p>
                       <p className="mt-1 inline-flex items-center gap-2 text-sm text-[var(--text-muted)]"><CalendarDays size={14} /> {formatBookingDate(booking.bookingDate)} · {booking.slotTime}</p>

@@ -1,9 +1,12 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import AppRoutes from "./routes/AppRoutes.jsx";
 import { AppStoreProvider } from "./state/AppStore.jsx";
 import "./styles/theme.css";
 import "./index.css";
+
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "833728967316-qe96dimj7jlcr07asavus1rb109shv67.apps.googleusercontent.com";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -46,8 +49,10 @@ class ErrorBoundary extends React.Component {
 
 createRoot(document.getElementById("root")).render(
   <ErrorBoundary>
-    <AppStoreProvider>
-      <AppRoutes />
-    </AppStoreProvider>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <AppStoreProvider>
+        <AppRoutes />
+      </AppStoreProvider>
+    </GoogleOAuthProvider>
   </ErrorBoundary>,
 );

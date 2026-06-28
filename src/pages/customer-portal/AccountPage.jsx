@@ -35,16 +35,16 @@ const PROFILE_KEY = "washmate_user_profile";
 const NOTIF_KEY = "washmate_notifications";
 
 const loyaltyData = {
-  tier: "NEW",
-  tierName: "Thành viên mới",
+  tier: "BRONZE",
+  tierName: "Đồng",
   nextTierName: "Bạc",
   availablePoints: 0,
-  pointsToNextTier: 0,
+  pointsToNextTier: 500,
   progressPercent: 0,
 };
 
 const currentTierBadgeName = tierCodeToBadgeName[loyaltyData.tier] ?? loyaltyData.tierName;
-const currentTier = membershipTiers.find((t) => t.name === currentTierBadgeName) ?? membershipTiers[0];
+const currentTier = membershipTiers.find((t) => t.name.toLowerCase() === currentTierBadgeName?.toLowerCase()) ?? membershipTiers[0];
 
 // ── Helpers ────────────────────────────────────────────────────
 function getStoredProfile() {
@@ -422,106 +422,6 @@ function PersonalInfoCard({ profile, onSave }) {
   );
 }
 
-// ── Security Card ──────────────────────────────────────────────
-function SecurityCard() {
-  const [form, setForm] = useState({ current: "", newPw: "", confirm: "" });
-  const [show, setShow] = useState({ current: false, newPw: false, confirm: false });
-  const [status, setStatus] = useState(null); // "success" | "error"
-  const [message, setMessage] = useState("");
-
-  function toggleShow(key) {
-    setShow((prev) => ({ ...prev, [key]: !prev[key] }));
-  }
-
-  function validate() {
-    if (!form.current) return "Vui lòng nhập mật khẩu hiện tại.";
-    if (form.newPw.length < 8) return "Mật khẩu mới phải có ít nhất 8 ký tự.";
-    if (form.newPw !== form.confirm) return "Xác nhận mật khẩu không khớp.";
-    return null;
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    const err = validate();
-    if (err) {
-      setStatus("error");
-      setMessage(err);
-      return;
-    }
-    // API-ready: await authApi.changePassword({ currentPassword: form.current, newPassword: form.newPw });
-    setStatus("success");
-    setMessage("Mật khẩu đã được đổi thành công!");
-    setForm({ current: "", newPw: "", confirm: "" });
-    setTimeout(() => setStatus(null), 4000);
-  }
-
-  const pwFields = [
-    { label: "Mật khẩu hiện tại", key: "current" },
-    { label: "Mật khẩu mới", key: "newPw" },
-    { label: "Xác nhận mật khẩu mới", key: "confirm" },
-  ];
-
-  return (
-    <div className="rounded-3xl border border-border bg-white p-5 shadow-sm">
-      <div className="mb-4">
-        <h2 className="flex items-center gap-2 text-lg font-extrabold text-foreground">
-          <Shield size={19} className="text-primary" />
-          Bảo mật tài khoản
-        </h2>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Đổi mật khẩu để bảo vệ tài khoản.
-        </p>
-      </div>
-
-      {status && (
-        <div
-          className={cn(
-            "mb-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold",
-            status === "success"
-              ? "bg-green-50 text-green-700"
-              : "bg-red-50 text-red-700",
-          )}
-        >
-          {status === "success" ? <CheckCircle size={16} /> : <XCircle size={16} />}
-          {message}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-3">
-        {pwFields.map(({ label, key }) => (
-          <div key={key}>
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              {label}
-            </label>
-            <div className="relative">
-              <input
-                type={show[key] ? "text" : "password"}
-                value={form[key]}
-                onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                className="w-full rounded-xl border border-border bg-white px-4 py-2.5 pr-11 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-              />
-              <button
-                type="button"
-                onClick={() => toggleShow(key)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
-                aria-label={show[key] ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-              >
-                {show[key] ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-          </div>
-        ))}
-
-        <button
-          type="submit"
-          className="mt-1 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-white transition hover:bg-brand-dark"
-        >
-          Đổi mật khẩu
-        </button>
-      </form>
-    </div>
-  );
-}
 
 // ── Notifications Card ─────────────────────────────────────────
 const notifItems = [
@@ -719,7 +619,6 @@ export default function AccountPage() {
           <NotificationsCard />
         </div>
         <div className="space-y-4">
-          <SecurityCard />
           <SessionCard />
         </div>
       </div>
