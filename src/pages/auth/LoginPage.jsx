@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { GoogleLogin } from "@react-oauth/google";
 import { authApi } from "@/api/authApi";
+import { getCurrentRole, ROLES } from "@/lib/auth-role";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -35,7 +36,14 @@ export default function LoginPage() {
       }
       localStorage.setItem("userEmail", email);
 
-      navigate("/chon-khong-gian-lam-viec");
+      const role = getCurrentRole();
+      if (role === ROLES.ADMIN) {
+        navigate("/quan-tri");
+      } else if (role === ROLES.STAFF) {
+        navigate("/nhan-vien");
+      } else {
+        navigate("/khach-hang");
+      }
     } catch (err) {
       setError(err?.message || "Đăng nhập thất bại. Vui lòng thử lại.");
     } finally {
@@ -116,7 +124,14 @@ export default function LoginPage() {
               if (data?.accessToken) localStorage.setItem("accessToken", data.accessToken);
               if (data?.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
               if (data?.user) localStorage.setItem("currentUser", JSON.stringify(data.user));
-              navigate("/chon-khong-gian-lam-viec");
+              const role = getCurrentRole();
+              if (role === ROLES.ADMIN) {
+                navigate("/quan-tri");
+              } else if (role === ROLES.STAFF) {
+                navigate("/nhan-vien");
+              } else {
+                navigate("/khach-hang");
+              }
             } catch (err) {
               setError(err?.message || "Đăng nhập Google thất bại. Vui lòng thử lại.");
             } finally {

@@ -14,11 +14,14 @@ export default function AdminServicePage() {
     garageApi
       .getAll()
       .then((d) => {
-        const list = Array.isArray(d) ? d : [];
+        // API có thể trả về array trực tiếp hoặc bọc trong { data: [...] }
+        const actualData = d?.data ? d.data : d;
+        const list = Array.isArray(actualData) ? actualData : [];
         setGarages(list);
-        if (list[0]?.id) {
-          setSelectedGarageId(String(list[0].id));
-          loadServices(list[0].id);
+        const firstId = list[0]?.id ?? list[0]?.garageId;
+        if (firstId) {
+          setSelectedGarageId(String(firstId));
+          loadServices(firstId);
         }
       })
       .catch(() => setGarages([]))
@@ -30,7 +33,10 @@ export default function AdminServicePage() {
     setLoadingServices(true);
     servicePackageApi
       .getAll(garageId)
-      .then((s) => setServices(Array.isArray(s) ? s : []))
+      .then((s) => {
+        const actualServices = s?.data ? s.data : s;
+        setServices(Array.isArray(actualServices) ? actualServices : []);
+      })
       .catch(() => setServices([]))
       .finally(() => setLoadingServices(false));
   }
@@ -74,8 +80,8 @@ export default function AdminServicePage() {
               className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
             >
               {garages.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name ?? g.garageName ?? `Gara #${g.id}`}
+                <option key={g.id ?? g.garageId} value={g.id ?? g.garageId}>
+                  {g.name ?? g.garageName ?? `Gara #${g.id ?? g.garageId}`}
                 </option>
               ))}
             </select>
@@ -90,8 +96,8 @@ export default function AdminServicePage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {services.map((s) => (
-                <article key={s.id ?? s.serviceId} className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <b className="text-sm font-extrabold text-slate-900">{s.name ?? s.serviceName ?? "–"}</b>
+                <article key={s.id ?? s.serviceId ?? s.servicePackageId} className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <b className="text-sm font-extrabold text-slate-900">{s.name ?? s.serviceName ?? s.servicePackageName ?? "–"}</b>
                   <p className="mt-3 text-xl font-extrabold text-blue-600">
                     {new Intl.NumberFormat("vi-VN").format(s.price ?? 0)} đ
                   </p>

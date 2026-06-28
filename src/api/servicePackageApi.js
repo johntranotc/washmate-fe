@@ -2,7 +2,7 @@ import axiosClient from "./axiosClient";
 
 export const servicePackageApi = {
   getAll: (garageId) =>
-    axiosClient.get(`/v1/services/garage/${garageId}`),
+    garageId ? axiosClient.get(`/v1/services/garage/${garageId}`) : axiosClient.get(`/v1/services`),
   getById: (id) => axiosClient.get(`/v1/services/${id}`),
   create: (payload) => axiosClient.post("/v1/services", payload),
   update: (id, payload) =>

@@ -43,7 +43,10 @@ function AdminManagementPage() {
     if (tab === "GARAGES" && garages.length === 0) {
       setLoadingGarages(true);
       garageApi.getAll()
-        .then((data) => setGarages(Array.isArray(data) ? data : []))
+        .then((data) => {
+          const actualData = data?.data ? data.data : data;
+          setGarages(Array.isArray(actualData) ? actualData : [])
+        })
         .catch(() => setGarages([]))
         .finally(() => setLoadingGarages(false));
     }
@@ -52,12 +55,21 @@ function AdminManagementPage() {
       // load garages first if needed, then load services for first garage
       const doLoad = garages.length > 0
         ? Promise.resolve(garages)
-        : garageApi.getAll().then((d) => { const g = Array.isArray(d) ? d : []; setGarages(g); return g; });
+        : garageApi.getAll().then((d) => { 
+            const actualData = d?.data ? d.data : d;
+            const g = Array.isArray(actualData) ? actualData : []; 
+            setGarages(g); 
+            return g; 
+          });
       doLoad.then((g) => {
-        const gid = selectedGarageId || g[0]?.id;
+        const firstId = g[0]?.id ?? g[0]?.garageId;
+        const gid = selectedGarageId || firstId;
         if (!gid) { setServices([]); return; }
-        if (!selectedGarageId && g[0]?.id) setSelectedGarageId(String(g[0].id));
-        return servicePackageApi.getAll(gid).then((s) => setServices(Array.isArray(s) ? s : []));
+        if (!selectedGarageId && firstId) setSelectedGarageId(String(firstId));
+        return servicePackageApi.getAll(gid).then((s) => {
+          const actualS = s?.data ? s.data : s;
+          setServices(Array.isArray(actualS) ? actualS : [])
+        });
       }).catch(() => setServices([]))
         .finally(() => setLoadingServices(false));
     }
@@ -68,7 +80,10 @@ function AdminManagementPage() {
     setLoadingServices(true);
     setSelectedGarageId(String(garageId));
     servicePackageApi.getAll(garageId)
-      .then((s) => setServices(Array.isArray(s) ? s : []))
+      .then((s) => {
+        const actualS = s?.data ? s.data : s;
+        setServices(Array.isArray(actualS) ? actualS : [])
+      })
       .catch(() => setServices([]))
       .finally(() => setLoadingServices(false));
   }
@@ -154,7 +169,7 @@ function AdminManagementPage() {
               <p className="py-10 text-center text-sm text-slate-400">Chưa có gara nào.</p>
             ) : (
               garages.map((item) => (
-                <article key={item.id} className="rounded-xl border border-slate-200 bg-white p-5">
+                <article key={item.id ?? item.garageId} className="rounded-xl border border-slate-200 bg-white p-5">
                   <b>{item.name ?? item.garageName}</b>
                   <p className="mt-2 text-xs text-slate-500">{item.address ?? item.location ?? "–"}</p>
                   {item.phone && <p className="mt-1 text-xs text-slate-400">📞 {item.phone}</p>}
@@ -199,7 +214,7 @@ function AdminManagementPage() {
                 className="rounded-lg border border-slate-200 px-3 py-2 text-xs"
               >
                 {garages.map((g) => (
-                  <option key={g.id} value={g.id}>{g.name ?? g.garageName}</option>
+                  <option key={g.id ?? g.garageId} value={g.id ?? g.garageId}>{g.name ?? g.garageName}</option>
                 ))}
               </select>
             </div>
@@ -211,8 +226,8 @@ function AdminManagementPage() {
               <p className="col-span-2 py-10 text-center text-sm text-slate-400">Chưa có gói dịch vụ nào.</p>
             ) : (
               services.map((item) => (
-                <article key={item.id ?? item.serviceId} className="rounded-xl border border-slate-200 bg-white p-5">
-                  <b>{item.name ?? item.serviceName}</b>
+                <article key={item.id ?? item.serviceId ?? item.servicePackageId} className="rounded-xl border border-slate-200 bg-white p-5">
+                  <b>{item.name ?? item.serviceName ?? item.servicePackageName}</b>
                   <p className="mt-3 text-xl font-extrabold text-blue-600">
                     {new Intl.NumberFormat("vi-VN").format(item.price ?? 0)} đ
                   </p>

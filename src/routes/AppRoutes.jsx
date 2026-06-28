@@ -3,8 +3,6 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
-import SelectWorkspacePage from "../pages/auth/SelectWorkspacePage";
-
 import HomePage from "../pages/public/HomePage";
 import ServicesPage from "../pages/public/ServicesPage";
 import PricingPage from "../pages/public/PricingPage";
@@ -39,6 +37,7 @@ import PromotionsPage from "../pages/customer-portal/PromotionsPage";
 import NotificationsPage from "../pages/customer-portal/NotificationsPage";
 import AccountPage from "../pages/customer-portal/AccountPage";
 import ChangePasswordPage from "../pages/customer-portal/ChangePasswordPage";
+// Staff pages
 import StaffBookingSearchPage from "../pages/staff/StaffBookingSearchPage";
 import StaffWorkflowPage from "../pages/staff/StaffWorkflowPage";
 import StaffDashboardPage from "../pages/staff/StaffDashboardPage";
@@ -80,9 +79,6 @@ function AppRoutes() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         </Route>
-
-        <Route path="/select-workspace" element={<SelectWorkspacePage />} />
-        <Route path="/chon-khong-gian-lam-viec" element={<SelectWorkspacePage />} />
 
         <Route element={<CustomerLayout />}>
           <Route path="/customer" element={<CustomerHomePage />} />

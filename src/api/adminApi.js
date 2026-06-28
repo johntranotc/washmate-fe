@@ -19,10 +19,15 @@ export const adminApi = {
   // No reports endpoint yet
   getReports: () => Promise.resolve({}),
   // Compat aliases for AdminDataPage component
-  getServicePackages: () => axiosClient.get("/v1/garages").then((garages) => {
-    const list = Array.isArray(garages) ? garages : [];
+  getServicePackages: () => axiosClient.get("/v1/garages").then((res) => {
+    const actualData = res?.data ? res.data : res;
+    const list = Array.isArray(actualData) ? actualData : [];
     if (list.length === 0) return [];
-    return axiosClient.get(`/v1/services/garage/${list[0].id}`).catch(() => []);
+    const firstId = list[0].id ?? list[0].garageId;
+    if (!firstId) return [];
+    return axiosClient.get(`/v1/services/garage/${firstId}`)
+      .then(sRes => (sRes?.data ? sRes.data : sRes))
+      .catch(() => []);
   }),
   getSlots: () => Promise.resolve([]),
 };
