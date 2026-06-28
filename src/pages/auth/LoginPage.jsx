@@ -4,6 +4,7 @@ import { AuthHeading } from "@/components/auth/auth-heading";
 import { Field } from "@/components/auth/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { GoogleLogin } from "@react-oauth/google";
 import { authApi } from "@/api/authApi";
 
 export default function LoginPage() {
@@ -105,14 +106,33 @@ export default function LoginPage() {
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      <button
-        type="button"
-        onClick={() => navigate("/chon-khong-gian-lam-viec")}
-        className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-border bg-card text-[15px] font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
-      >
-        <GoogleIcon className="size-5" />
-        Tiếp tục với Google
-      </button>
+      <div className="mt-1 flex w-full justify-center [&>div]:!w-full [&>div>div]:!w-full [&_iframe]:!w-full">
+        <GoogleLogin
+          onSuccess={async (credentialResponse) => {
+            setError("");
+            setLoading(true);
+            try {
+              const data = await authApi.loginWithGoogle({ idToken: credentialResponse.credential });
+              if (data?.accessToken) localStorage.setItem("accessToken", data.accessToken);
+              if (data?.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+              if (data?.user) localStorage.setItem("currentUser", JSON.stringify(data.user));
+              navigate("/chon-khong-gian-lam-viec");
+            } catch (err) {
+              setError(err?.message || "Đăng nhập Google thất bại. Vui lòng thử lại.");
+            } finally {
+              setLoading(false);
+            }
+          }}
+          onError={() => {
+            setError("Đăng nhập bằng Google thất bại. Vui lòng kiểm tra lại kết nối mạng hoặc cấu hình Client ID.");
+          }}
+          theme="outline"
+          size="large"
+          text="continue_with"
+          shape="pill"
+          width="400"
+        />
+      </div>
 
       <p className="mt-8 text-center text-[15px] text-muted-foreground">
         Chưa có tài khoản?{" "}
