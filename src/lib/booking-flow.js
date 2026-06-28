@@ -89,8 +89,14 @@ export function normalizeGarage(item) {
 
 export function normalizeSlot(item) {
   const maxCapacity = Number(item.maxCapacity ?? item.capacity ?? 10);
-  const bookedCount = Number(item.bookedCount ?? item.currentBookings ?? 0);
-  const isFull = bookedCount >= maxCapacity || ["FULL", "CLOSED"].includes(item.status);
+  const bookedCount = Number(item.bookedCapacity ?? item.bookedCount ?? item.currentBookings ?? 0);
+  const availableCapacity = item.availableCapacity;
+  
+  // Nếu BE có field availableCapacity thì ưu tiên dùng, nếu không thì tự trừ
+  const isFull = availableCapacity !== undefined 
+      ? availableCapacity <= 0 
+      : (bookedCount >= maxCapacity || ["FULL", "CLOSED"].includes(item.status));
+      
   const status = isFull ? "FULL" : "OPEN";
   const disabled = isFull;
   const almostFull = !disabled && maxCapacity > 0 && bookedCount >= Math.ceil(maxCapacity * 0.5);

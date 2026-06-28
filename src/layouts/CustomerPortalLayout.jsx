@@ -181,9 +181,6 @@ function DashboardHeader() {
                 {renderCustomerName()}
                 <ChevronDown size={16} className={cn("text-muted-foreground transition-transform duration-200", showDropdown && "rotate-180")} />
               </p>
-              <p className="text-xs text-muted-foreground">
-                Hạng {loyaltyInfo.tierName} • {Number(loyaltyInfo.availablePoints || 0).toLocaleString("vi-VN")} điểm
-              </p>
             </div>
           </button>
 
@@ -191,9 +188,6 @@ function DashboardHeader() {
             <div className="absolute right-0 top-14 mt-1 w-64 rounded-2xl border border-white/80 bg-white/95 p-2 shadow-2xl backdrop-blur-2xl animate-in fade-in-0 zoom-in-95 z-50">
               <div className="px-3 py-2.5 border-b border-border/40 mb-1 md:hidden">
                 <p className="text-sm font-semibold text-foreground">{renderCustomerName()}</p>
-                <p className="text-xs text-muted-foreground">
-                  Hạng {loyaltyInfo.tierName} • {Number(loyaltyInfo.availablePoints || 0).toLocaleString("vi-VN")} điểm
-                </p>
               </div>
               <button
                 type="button"

@@ -1,10 +1,10 @@
 import axiosClient from "./axiosClient";
 
 export const bookingSlotApi = {
-  getAvailable: (params) => axiosClient.get("/booking-slots", { params }),
+  getAvailable: ({ garageId, date }) => axiosClient.get(`/v1/garages/${garageId}/slots`, { params: { date } }),
   getByGarage: (garageId, params) =>
-    axiosClient.get(`/garages/${garageId}/booking-slots`, { params }),
-  create: (payload) => axiosClient.post("/booking-slots", payload),
-  update: (id, payload) => axiosClient.put(`/booking-slots/${id}`, payload),
-  release: (id) => axiosClient.post(`/booking-slots/${id}/release`),
+    axiosClient.get(`/v1/garages/${garageId}/slots`, { params }),
+  create: (garageId, payload) => axiosClient.post(`/v1/garages/${garageId}/slots`, payload),
+  update: (id, payload) => axiosClient.put(`/v1/slots/${id}/capacity`, payload),
+  delete: (id) => axiosClient.delete(`/v1/slots/${id}`),
 };
