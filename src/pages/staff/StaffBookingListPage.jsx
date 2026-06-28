@@ -41,10 +41,13 @@ export default function StaffBookingListPage() {
     staffApi
       .getAllBookings()
       .then((response) => {
-        setBookings(normalizeBookingList(response).map(normalizeStaffBooking));
+        console.log("[StaffBookingList] getAllBookings raw response:", response);
+        const list = normalizeBookingList(response).map(normalizeStaffBooking);
+        console.log("[StaffBookingList] normalized count:", list.length);
+        setBookings(list);
       })
       .catch((error) => {
-        console.error("Failed to load today bookings:", error);
+        console.error("Failed to load bookings:", error);
         setBookings([]);
       })
       .finally(() => setLoading(false));

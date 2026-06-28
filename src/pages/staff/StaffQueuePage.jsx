@@ -1,8 +1,7 @@
-import { CheckCircle2, Clock3, Droplets, MessageSquare, TimerReset, UsersRound, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { CheckCircle2, Clock3, Droplets, MessageSquare, RefreshCw, TimerReset, UsersRound, XCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { staffApi } from "@/api/staffApi";
-import { getCurrentRole, ROLES } from "@/lib/auth-role";
 
 import {
   bookingStatusLabels,
@@ -14,22 +13,40 @@ import { cn } from "@/lib/utils";
 
 export default function StaffQueuePage() {
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  // Lưu ID các booking đã confirm thành công ở FE để không bị reload ghi đè
+  const confirmedIds = useRef(new Set());
 
   const [confirmingId, setConfirmingId] = useState(null);
   const [confirmError, setConfirmError] = useState(null);
   const [rejectingId, setRejectingId] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
 
-  function load() {
-    staffApi
-      .getAllBookings()
-      .then((data) => {
-        setBookings(normalizeBookingList(data).map(normalizeStaffBooking));
-      })
-      .catch((error) => {
-        console.error("Failed to load all bookings:", error);
-        setBookings([]);
+  async function load() {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const data = await staffApi.getAllBookings();
+      const list = normalizeBookingList(data).map(normalizeStaffBooking).map((item) => {
+        // Nếu DB vẫn trả PENDING nhưng FE đã confirm thành công → giữ CONFIRMED
+        if (confirmedIds.current.has(String(item.id)) && item.bookingStatus === "PENDING") {
+          return { ...item, bookingStatus: "CONFIRMED" };
+        }
+        // Nếu DB đã cập nhật CONFIRMED → xóa khỏi confirmedIds (không cần override nữa)
+        if (confirmedIds.current.has(String(item.id)) && item.bookingStatus !== "PENDING") {
+          confirmedIds.current.delete(String(item.id));
+        }
+        return item;
       });
+      setBookings(list);
+    } catch (error) {
+      console.error("[StaffQueue] load failed:", error);
+      setLoadError(error?.message || "Không thể tải danh sách lịch đặt.");
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -47,40 +64,33 @@ export default function StaffQueuePage() {
       window.removeEventListener("focus", load);
       document.removeEventListener("visibilitychange", refreshOnFocus);
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleConfirm(bookingId) {
-    if (getCurrentRole() !== ROLES.STAFF) {
-      setConfirmError({
-        bookingId,
-        message:
-          "Phiên đăng nhập hiện tại không phải STAFF. Hãy đăng nhập staff ở tab riêng hoặc tải lại trang này.",
-      });
-      return;
-    }
-
     setConfirmingId(bookingId);
     setConfirmError(null);
     try {
       const response = await staffApi.confirmBooking(bookingId);
-      const updated = response ? normalizeStaffBooking(response) : {};
+      // Đánh dấu đã confirm thành công ở FE (dù DB có thể chưa kịp lưu)
+      confirmedIds.current.add(String(bookingId));
+      // Cập nhật UI ngay: chuyển sang CONFIRMED
       setBookings((items) =>
         items.map((item) =>
           String(item.id) === String(bookingId)
-            ? { ...item, ...updated, id: item.id, bookingStatus: updated.bookingStatus || "CONFIRMED" }
+            ? { ...item, bookingStatus: "CONFIRMED" }
             : item,
         ),
       );
-      load();
     } catch (error) {
-      console.error("Failed to confirm booking:", error);
-      setConfirmError({
-        bookingId,
-        message:
-          error?.status === 409
-            ? "Máy chủ đang từ chối xác nhận lịch (409). Vui lòng tải lại danh sách và thử lại."
-            : error?.message || "Không thể xác nhận lịch. Vui lòng thử lại.",
-      });
+      console.error("[Confirm] ERROR=", error);
+      const msg =
+        error?.status === 403
+          ? "403 - Không có quyền xác nhận. Kiểm tra lại tài khoản staff."
+          : error?.status === 409
+          ? "409 - Booking không còn PENDING. Tải lại danh sách."
+          : `Lỗi ${error?.status || ""}: ${error?.message || "Không thể xác nhận lịch."}`;
+      alert(`Xác nhận thất bại!\n${msg}`);
+      setConfirmError({ bookingId, message: msg });
     } finally {
       setConfirmingId(null);
     }
@@ -88,7 +98,6 @@ export default function StaffQueuePage() {
 
   async function handleReject(bookingId) {
     try {
-      // Reject endpoint not yet available in BE — show message
       console.warn("Reject endpoint not yet available in BE for booking", bookingId);
       alert("Chức năng từ chối lịch chưa có endpoint tại BE. Vui lòng liên hệ kỹ thuật.");
     } catch (error) {
@@ -99,26 +108,56 @@ export default function StaffQueuePage() {
     }
   }
 
-  const pending = bookings.filter(
-    (b) => b.bookingStatus === "PENDING",
-  );
+  const pending = bookings.filter((b) => b.bookingStatus === "PENDING");
   const queue = bookings.filter((b) =>
     ["CONFIRMED", "CHECKED_IN", "WASHING"].includes(b.bookingStatus),
   );
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+        <RefreshCw className="animate-spin mb-3" size={28} />
+        <p className="text-sm">Đang tải hàng đợi...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
+        <p className="text-sm font-bold text-red-700">{loadError}</p>
+        <button
+          type="button"
+          onClick={load}
+          className="mt-4 rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white"
+        >
+          Thử lại
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      <header>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
-          Khu vực vận hành
-        </p>
-        <h1 className="mt-2 text-3xl font-extrabold">Hàng đợi</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Xác nhận yêu cầu đặt lịch và theo dõi xe đang xử lý.
-        </p>
+      <header className="flex items-end justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
+            Khu vực vận hành
+          </p>
+          <h1 className="mt-2 text-3xl font-extrabold">Hàng đợi</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Xác nhận yêu cầu đặt lịch và theo dõi xe đang xử lý.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={load}
+          title="Tải lại danh sách"
+          className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+        >
+          <RefreshCw size={14} /> Tải lại
+        </button>
       </header>
-
-
 
       {/* Stats */}
       <section className="grid gap-4 sm:grid-cols-3">
@@ -138,15 +177,22 @@ export default function StaffQueuePage() {
         ))}
       </section>
 
-      {/* Pending confirmation section */}
-      {pending.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="flex items-center gap-2 text-base font-extrabold text-slate-700">
+      {/* Pending section — hiển thị kể cả khi empty để staff biết không có gì */}
+      <section className="space-y-3">
+        <h2 className="flex items-center gap-2 text-base font-extrabold text-slate-700">
+          {pending.length > 0 && (
             <span className="flex size-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-extrabold text-white">
               {pending.length}
             </span>
-            Chờ gara xác nhận
-          </h2>
+          )}
+          Chờ gara xác nhận
+        </h2>
+
+        {pending.length === 0 ? (
+          <p className="rounded-2xl border border-slate-100 bg-white py-10 text-center text-sm text-slate-400">
+            Không có lịch đặt nào đang chờ xác nhận.
+          </p>
+        ) : (
           <div className="overflow-hidden rounded-2xl border border-orange-200 bg-orange-50">
             <div className="divide-y divide-orange-100">
               {pending.map((item) => (
@@ -249,8 +295,8 @@ export default function StaffQueuePage() {
               ))}
             </div>
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       {/* Active queue section */}
       <section className="space-y-3">

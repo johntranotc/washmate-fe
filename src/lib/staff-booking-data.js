@@ -1,3 +1,5 @@
+import { extractBookingArray } from "@/api/staffApi";
+
 export const bookingStatusLabels = {
   PENDING: "Chờ gara xác nhận",
   CONFIRMED: "Đã xác nhận",
@@ -26,27 +28,60 @@ function formatSafeString(val, fallback) {
 
 
 export const normalizeBookingList = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  return payload?.content || payload?.items || payload?.data || payload?.result || [];
+  const arr = extractBookingArray(payload);
+  if (arr.length === 0 && payload !== undefined && payload !== null) {
+    // Debug: log when we get unexpected shape so devs can inspect in console
+    console.debug("[normalizeBookingList] could not extract array from payload:", payload);
+  }
+  return arr;
 };
 
+
 export const normalizeStaffBooking = (value = {}) => {
+  // BE trả về: { id, bookingCode, status, bookingDate, customer:{fullName,phone}, garage:{name},
+  //              slot:{startTime,endTime}, service:{name}, vehicle:{licensePlate,brand,model},
+  //              payment:{id,status,method} }
   const item = value?.booking || value;
+
+  const customer = item.customer || {};
+  const garage   = item.garage   || {};
+  const slot     = item.slot     || {};
+  const service  = item.service  || {};
+  const vehicle  = item.vehicle  || {};
+  const payment  = item.payment  || {};
 
   return {
     ...item,
-    id: item.bookingId ?? item.id,
+    id: item.id ?? item.bookingId,
     code: item.bookingCode ?? item.code,
-    customerName: item.customerName ?? item.customer?.fullName ?? "Khách hàng",
-    phone: item.phone ?? item.customer?.phone ?? "Chưa cập nhật",
-    vehicle: formatSafeString(item.vehicleName || item.vehicle, "Xe của khách hàng"),
-    plate: formatSafeString(item.licensePlate || item.plate || item.vehicle?.licensePlate, "Chưa cập nhật"),
-    serviceName: formatSafeString(item.serviceName || item.service, "Dịch vụ chăm sóc xe"),
-    garageName: formatSafeString(item.garageName || item.garage, "Gara WashMate"),
-    bookingStatus: item.bookingStatus ?? item.status ?? "PENDING",
-    paymentStatus: item.paymentStatus ?? item.payment?.status ?? "PENDING",
-    bookingDate: item.bookingDate ?? item.slotDate,
-    slotTime: item.slotTime ?? item.startTime ?? item.slot?.startTime,
+
+    // Customer
+    customerName: customer.fullName ?? item.customerName ?? "Khách hàng",
+    phone: customer.phone ?? item.phone ?? "Chưa cập nhật",
+
+    // Vehicle — BE: { licensePlate, brand, model }
+    vehicle: formatSafeString(
+      item.vehicleName || (vehicle.brand || vehicle.model ? `${vehicle.brand || ""} ${vehicle.model || ""}`.trim() : null),
+      "Xe của khách hàng"
+    ),
+    plate: vehicle.licensePlate ?? item.licensePlate ?? item.plate ?? "Chưa cập nhật",
+
+    // Service — BE: { name, price, duration }
+    serviceName: service.name ?? item.serviceName ?? "Dịch vụ chăm sóc xe",
+
+    // Garage — BE: { id, name }
+    garageName: garage.name ?? item.garageName ?? "Gara WashMate",
+
+    // Status — BE dùng field "status" (không phải bookingStatus)
+    bookingStatus: item.status ?? item.bookingStatus ?? "PENDING",
+
+    // Payment — BE: { id, amount, method, status }
+    paymentStatus: payment.status ?? item.paymentStatus ?? "PENDING",
+
+    // Date & time — BE: bookingDate (LocalDate), slot.startTime (LocalTime)
+    bookingDate: item.bookingDate ?? item.slotDate ?? "",
+    slotTime: slot.startTime ?? item.slotTime ?? item.startTime ?? "",
+
     finalAmount: Number(item.finalAmount ?? item.totalAmount ?? item.amount ?? 0),
     note: item.bookingNote ?? item.note ?? "",
   };

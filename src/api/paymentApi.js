@@ -10,6 +10,9 @@ export const paymentApi = {
   getPaymentTransactions: (paymentId) =>
     axiosClient.get(`/payments/${paymentId}/transactions`),
 
+  createVnpayUrl: (paymentId) =>
+    axiosClient.post(`/payments/${paymentId}/vnpay/create-url`),
+
   confirmPayment: (paymentId, payload) =>
     axiosClient.post(`/payments/${paymentId}/confirm`, payload),
   markPaid: (paymentId, payload) =>

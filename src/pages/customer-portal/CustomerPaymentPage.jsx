@@ -189,36 +189,24 @@ export default function CustomerPaymentPage() {
     return generateTransferContent(booking.code, booking.customerName || "");
   }, [booking]);
 
-  async function confirmPayment() {
+  async function processPayment() {
     if (!booking) return;
     setProcessing(true);
     setError("");
 
-    const bankExtra =
-      method === "VNPAY"
-        ? {
-            bankName: WASHMATE_BANK.bankName,
-            bankCode: WASHMATE_BANK.bankCode,
-            accountNumber: WASHMATE_BANK.accountNumber,
-            accountName: WASHMATE_BANK.accountName,
-            transferContent,
-          }
-        : {};
-
     try {
-      if (!payment?.id) throw new Error("PAYMENT_API_NOT_READY");
-      const mappedMethod = method === "CASH" ? "CASH" : "VNPAY";
-      const response = await paymentApi.confirmPayment(payment.id, { paymentMethod: mappedMethod });
-      const paidPayment = normalizePayment(response);
-      if (paidPayment.status !== "PAID") throw new Error("PAYMENT_NOT_PAID");
-      const merged = normalizePayment({ ...paidPayment, ...bankExtra });
-      const updatedBooking = normalizeBooking({ ...booking, payment: merged, paymentStatus: "PAID" });
-      setPayment(merged);
-      setBooking(updatedBooking);
+      if (!payment?.id) throw new Error("Thanh toán chưa sẵn sàng.");
+      if (method === "VNPAY") {
+        const response = await paymentApi.createVnpayUrl(payment.id);
+        if (response?.paymentUrl) {
+          window.location.assign(response.paymentUrl);
+        } else {
+          throw new Error("Không thể tạo URL thanh toán VNPay.");
+        }
+      }
     } catch (e) {
-      console.error("Failed to confirm payment:", e);
-      setError(e?.message || "Không thể xác nhận thanh toán.");
-    } finally {
+      console.error("Failed to process payment:", e);
+      setError(e?.message || "Không thể xử lý thanh toán.");
       setProcessing(false);
     }
   }
@@ -373,13 +361,22 @@ export default function CustomerPaymentPage() {
 
           {/* ── Confirm / paid result ── */}
           {!paid ? (
-            <button
-              onClick={confirmPayment}
-              disabled={processing}
-              className="mt-6 w-full rounded-2xl bg-[var(--brand-blue)] py-3.5 font-bold text-white disabled:opacity-60"
-            >
-              {processing ? "Đang xử lý thanh toán..." : "Xác nhận thanh toán"}
-            </button>
+            method === "VNPAY" ? (
+              <button
+                onClick={processPayment}
+                disabled={processing}
+                className="mt-6 w-full rounded-2xl bg-[var(--brand-blue)] py-3.5 font-bold text-white disabled:opacity-60"
+              >
+                {processing ? "Đang tạo URL thanh toán..." : "Thanh toán qua VNPAY"}
+              </button>
+            ) : (
+              <Link
+                to={`/khach-hang/lich-dat/${booking.id}`}
+                className="mt-6 block w-full rounded-2xl border border-[var(--border-soft)] bg-white py-3.5 text-center font-bold text-[var(--brand-blue)] hover:bg-slate-50 transition"
+              >
+                Quay lại chi tiết lịch đặt
+              </Link>
+            )
           ) : (
             <div className="mt-6 rounded-3xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-700">
               <p className="flex items-center gap-2 text-lg font-extrabold">
