@@ -178,6 +178,7 @@ export default function CustomerBookingFlowPage() {
   }
 
   async function createBooking() {
+    if (submitting) return;
     if (!selection.garage || !selection.service || !selection.vehicle || !selection.slot) {
       setSubmitError("Vui lòng chọn đầy đủ thông tin đặt lịch.");
       return;
@@ -216,7 +217,7 @@ export default function CustomerBookingFlowPage() {
       garageId,
       slotId: selection.slot.id,
       bookingDate,
-      paymentMethod,
+      paymentMethod: paymentMethod === "CASH" ? "CASH" : "VNPAY",
       discountAmount,
       bookingNote: (note.trim() + (promotion ? ` [Mã ưu đãi: ${promotion.code} - Giảm ${discountAmount}đ]` : "")).trim(),
     };

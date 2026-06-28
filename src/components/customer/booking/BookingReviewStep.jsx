@@ -233,7 +233,7 @@ export function BookingReviewStep({
           <label className="text-sm font-extrabold text-foreground uppercase tracking-wider block mb-3">
             Phương thức thanh toán
           </label>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => onPaymentMethodChange?.("CASH")}
@@ -248,18 +248,6 @@ export function BookingReviewStep({
             </button>
             <button
               type="button"
-              onClick={() => onPaymentMethodChange?.("BANK_TRANSFER")}
-              className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
-                paymentMethod === "BANK_TRANSFER"
-                  ? "border-primary bg-primary/5 text-primary font-bold shadow-sm"
-                  : "border-border bg-muted/30 text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              <CreditCard className="size-6 mb-1.5" />
-              <span className="text-xs">Chuyển khoản</span>
-            </button>
-            <button
-              type="button"
               onClick={() => onPaymentMethodChange?.("VNPAY")}
               className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
                 paymentMethod === "VNPAY"
@@ -268,7 +256,7 @@ export function BookingReviewStep({
               }`}
             >
               <QrCode className="size-6 mb-1.5" />
-              <span className="text-xs">Mã QR</span>
+              <span className="text-xs">Chuyển khoản / VNPAY</span>
             </button>
           </div>
         </div>
@@ -289,9 +277,7 @@ export function BookingReviewStep({
           <p>
             {paymentMethod === "CASH"
               ? "Bạn sẽ thanh toán trực tiếp bằng tiền mặt tại quầy sau khi gara xác nhận lịch và rửa xong."
-              : paymentMethod === "BANK_TRANSFER"
-              ? "Gara sẽ xác nhận lịch hẹn. Bạn có thể chuyển khoản trực tiếp qua ngân hàng hoặc VNPay tiện lợi."
-              : "Bạn có thể quét mã QR bằng ứng dụng ngân hàng hoặc ví điện tử để thanh toán nhanh chóng."}
+              : "Bạn có thể thanh toán bằng Mã QR VNPay tiện lợi."}
           </p>
         </div>
       </aside>

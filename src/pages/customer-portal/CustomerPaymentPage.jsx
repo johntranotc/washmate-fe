@@ -2,9 +2,7 @@ import {
   CheckCircle2,
   Clock,
   Copy,
-  CreditCard,
-  Landmark,
-  Smartphone,
+  QrCode,
   Wallet,
   XCircle,
 } from "lucide-react";
@@ -33,9 +31,7 @@ import { cn } from "@/lib/utils";
 
 const methods = [
   ["CASH", "Tiền mặt tại gara", Wallet],
-  ["BANK_TRANSFER", "Chuyển khoản", Landmark],
-  ["DOMESTIC_CARD", "Thẻ nội địa", CreditCard],
-  ["E_WALLET", "Ví điện tử", Smartphone],
+  ["VNPAY", "Thanh toán qua VNPAY", QrCode],
 ];
 
 function CopyButton({ value, label }) {
@@ -159,7 +155,7 @@ export default function CustomerPaymentPage() {
   const { bookingId } = useParams();
   const [booking, setBooking] = useState(null);
   const [payment, setPayment] = useState(null);
-  const [method, setMethod] = useState("DOMESTIC_CARD");
+  const [method, setMethod] = useState("VNPAY");
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
@@ -174,7 +170,7 @@ export default function CustomerPaymentPage() {
       ]);
       setBooking(normalizeBooking({ ...bookingData, payment: paymentData, paymentStatus: paymentData.status }));
       setPayment(paymentData);
-      setMethod(paymentData.method || "DOMESTIC_CARD");
+      setMethod(paymentData.method && paymentData.method !== "BANK_TRANSFER" ? paymentData.method : "VNPAY");
       setError("Không thể tải thông tin thanh toán.");
       setBooking(null);
     } finally {
@@ -198,7 +194,7 @@ export default function CustomerPaymentPage() {
     setError("");
 
     const bankExtra =
-      method === "BANK_TRANSFER"
+      method === "VNPAY"
         ? {
             bankName: WASHMATE_BANK.bankName,
             bankCode: WASHMATE_BANK.bankCode,
@@ -210,7 +206,8 @@ export default function CustomerPaymentPage() {
 
     try {
       if (!payment?.id) throw new Error("PAYMENT_API_NOT_READY");
-      const response = await paymentApi.confirmPayment(payment.id, { paymentMethod: method });
+      const mappedMethod = method === "CASH" ? "CASH" : "VNPAY";
+      const response = await paymentApi.confirmPayment(payment.id, { paymentMethod: mappedMethod });
       const paidPayment = normalizePayment(response);
       if (paidPayment.status !== "PAID") throw new Error("PAYMENT_NOT_PAID");
       const merged = normalizePayment({ ...paidPayment, ...bankExtra });
@@ -355,7 +352,7 @@ export default function CustomerPaymentPage() {
           )}
 
           {/* ── Per-method supplementary content ── */}
-          {!paid && method === "BANK_TRANSFER" && (
+          {!paid && method === "VNPAY" && (
             <BankTransferBlock booking={booking} transferContent={transferContent} />
           )}
 
@@ -369,17 +366,7 @@ export default function CustomerPaymentPage() {
             </div>
           )}
 
-          {!paid && (method === "DOMESTIC_CARD" || method === "E_WALLET") && (
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
-              <strong className="block font-extrabold text-slate-700">
-                {method === "DOMESTIC_CARD" ? "Thẻ nội địa" : "Ví điện tử"} — Demo
-              </strong>
-              <p className="mt-2 leading-6">
-                Tích hợp cổng thanh toán đang được hoàn thiện. Bấm xác nhận bên dưới để ghi nhận
-                thanh toán thử nghiệm.
-              </p>
-            </div>
-          )}
+
 
           {/* ── Confirm / paid result ── */}
           {!paid ? (
