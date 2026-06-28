@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const apiRoot = (import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/$/, "");
+const apiRoot = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, "") : "";
 
 const axiosClient = axios.create({
   baseURL: apiRoot.endsWith("/api") ? apiRoot : `${apiRoot}/api`,
