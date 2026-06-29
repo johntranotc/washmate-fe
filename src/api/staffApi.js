@@ -44,6 +44,8 @@ export const staffApi = {
   getStaffBookingById: (bookingId) => axiosClient.get(`/bookings/${bookingId}`),
   // POST /api/bookings/{id}/confirm
   confirmBooking: (bookingId) => axiosClient.post(`/bookings/${bookingId}/confirm`),
+  // POST /api/bookings/{id}/reject
+  rejectBooking: (bookingId, payload) => axiosClient.post(`/bookings/${bookingId}/reject`, payload),
   // POST /api/bookings/{id}/check-in
   checkInBooking: (bookingId) => axiosClient.post(`/bookings/${bookingId}/check-in`),
   // POST /api/bookings/{id}/start-washing

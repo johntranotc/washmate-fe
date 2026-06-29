@@ -23,11 +23,11 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       if (step === 1) {
-        await authApi.forgotPassword({ identifier: form.identifier });
+        await authApi.forgotPassword({ emailOrPhone: form.identifier });
         setMessage({ error: "", success: "Mã xác thực đã được gửi." });
         setStep(2);
       } else if (step === 2) {
-        await authApi.verifyOtp({ identifier: form.identifier, otp: form.otp });
+        await authApi.verifyOtp({ emailOrPhone: form.identifier, otp: form.otp });
         setMessage({ error: "", success: "Xác thực OTP thành công. Vui lòng tạo mật khẩu mới bên dưới." });
         setStep(3);
       } else {

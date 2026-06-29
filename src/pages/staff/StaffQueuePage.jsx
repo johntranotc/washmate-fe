@@ -39,6 +39,9 @@ export default function StaffQueuePage() {
         }
         return item;
       });
+      if (list.length > 0) {
+        console.log("SAMPLE BOOKING DATA:", list[list.length - 1]);
+      }
       setBookings(list);
     } catch (error) {
       console.error("[StaffQueue] load failed:", error);
@@ -97,21 +100,46 @@ export default function StaffQueuePage() {
   }
 
   async function handleReject(bookingId) {
+    if (!rejectReason.trim()) {
+      alert("Vui lòng nhập lý do từ chối (bắt buộc)!");
+      return;
+    }
+    
+    if (!window.confirm("Bạn có chắc chắn muốn từ chối lịch đặt này không?")) {
+      return;
+    }
+
     try {
-      console.warn("Reject endpoint not yet available in BE for booking", bookingId);
-      alert("Chức năng từ chối lịch chưa có endpoint tại BE. Vui lòng liên hệ kỹ thuật.");
+      await staffApi.rejectBooking(bookingId, { reason: rejectReason });
+      alert("Đã từ chối lịch đặt thành công.");
+      setBookings((items) =>
+        items.map((item) =>
+          String(item.id) === String(bookingId)
+            ? { ...item, bookingStatus: "REJECTED" }
+            : item
+        )
+      );
     } catch (error) {
       console.error("Failed to reject booking:", error);
+      alert(`Từ chối thất bại: ${error?.message || "Lỗi không xác định"}`);
     } finally {
       setRejectingId(null);
       setRejectReason("");
     }
   }
 
-  const pending = bookings.filter((b) => b.bookingStatus === "PENDING");
-  const queue = bookings.filter((b) =>
-    ["CONFIRMED", "CHECKED_IN", "WASHING"].includes(b.bookingStatus),
-  );
+  const sortByNewest = (a, b) => {
+    // Sort by id descending (highest id = newest)
+    return Number(b.id) - Number(a.id);
+  };
+
+  const pending = bookings
+    .filter((b) => b.bookingStatus === "PENDING")
+    .sort(sortByNewest);
+    
+  const queue = bookings
+    .filter((b) => ["CONFIRMED", "CHECKED_IN", "WASHING"].includes(b.bookingStatus))
+    .sort(sortByNewest);
 
   if (loading) {
     return (
@@ -195,13 +223,13 @@ export default function StaffQueuePage() {
         ) : (
           <div className="overflow-hidden rounded-2xl border border-orange-200 bg-orange-50">
             <div className="divide-y divide-orange-100">
-              {pending.map((item) => (
+              {pending.map((item, index) => (
                 <article key={item.id} className="p-5">
                   {/* Reject modal */}
                   {rejectingId === item.id && (
                     <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4">
                       <p className="mb-2 text-sm font-bold text-red-700">
-                        Nhập lý do từ chối (không bắt buộc)
+                        Nhập lý do từ chối (bắt buộc)
                       </p>
                       <textarea
                         value={rejectReason}
@@ -239,6 +267,7 @@ export default function StaffQueuePage() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-bold text-slate-400">#{index + 1}</span>
                         <b className="text-sm">{item.code}</b>
                         <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[10px] font-extrabold text-orange-700">
                           {bookingStatusLabels.PENDING}
@@ -308,7 +337,7 @@ export default function StaffQueuePage() {
             </p>
           ) : (
             <div className="divide-y divide-slate-100">
-              {queue.map((item) => (
+              {queue.map((item, index) => (
                 <article
                   key={item.id}
                   className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center"
@@ -318,8 +347,9 @@ export default function StaffQueuePage() {
                   </span>
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold text-slate-400">#{index + 1}</span>
                       <b className="text-sm">
-                        {item.slotTime} · {item.customerName}
+                        {item.code} · {item.slotTime} · {item.customerName}
                       </b>
                       <span
                         className={cn(
