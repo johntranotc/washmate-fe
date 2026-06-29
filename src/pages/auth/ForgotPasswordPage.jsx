@@ -27,8 +27,12 @@ export default function ForgotPasswordPage() {
         setMessage({ error: "", success: "Mã xác thực đã được gửi." });
         setStep(2);
       } else if (step === 2) {
-        await authApi.verifyOtp({ emailOrPhone: form.identifier, otp: form.otp });
-        setMessage({ error: "", success: "Xác thực OTP thành công. Vui lòng tạo mật khẩu mới bên dưới." });
+        // Không gọi verifyOtp ở đây vì OTP sẽ bị xóa sau khi verify.
+        // Việc xác thực OTP sẽ được thực hiện một lần duy nhất ở bước 3 (resetPassword).
+        if (!form.otp || form.otp.trim().length !== 6) {
+          return setMessage({ error: "Vui lòng nhập mã OTP gồm 6 chữ số.", success: "" });
+        }
+        setMessage({ error: "", success: "Vui lòng tạo mật khẩu mới bên dưới." });
         setStep(3);
       } else {
         await authApi.resetPassword({ identifier: form.identifier, otp: form.otp, newPassword: form.password });
