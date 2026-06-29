@@ -21,6 +21,7 @@ import CustomerLayout from "../layouts/CustomerLayout";
 import CustomerPortalLayout from "../layouts/CustomerPortalLayout";
 import StaffLayout from "../layouts/StaffLayout";
 import AdminLayout from "../layouts/AdminLayout";
+import VnpayReturnPage from "../pages/customer/VnpayReturnPage";
 
 import DashboardPage from "../pages/customer-portal/DashboardPage";
 import VehiclesPage from "../pages/customer-portal/VehiclesPage";
@@ -71,6 +72,7 @@ function AppRoutes() {
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/tiers" element={<TiersPage />} />
+          <Route path="/payment/vnpay-return" element={<VnpayReturnPage />} />
         </Route>
 
         <Route element={<AuthLayout />}>
