@@ -58,9 +58,10 @@ export const authApi = {
   register: (payload) => axiosClient.post("/auth/register", payload),
 
   // Các API xử lý OTP và Quên mật khẩu
-  requestOtp: (payload) => axiosClient.post("/auth/otp/request", payload),
+  requestOtp: (payload) => axiosClient.post("/auth/otp/request", { ...payload, emailOrPhone: payload?.identifier || payload?.emailOrPhone }),
   verifyOtp: async (payload) => {
-    const response = await axiosClient.post("/auth/otp/verify", payload);
+    const reqPayload = { ...payload, emailOrPhone: payload?.identifier || payload?.emailOrPhone };
+    const response = await axiosClient.post("/auth/otp/verify", reqPayload);
     if (response && response.accessToken) {
       setAuthValue("token", response.accessToken);
       setAuthValue("accessToken", response.accessToken);
@@ -73,7 +74,7 @@ export const authApi = {
     }
     return response;
   },
-  forgotPassword: (payload) => axiosClient.post("/auth/password/forgot", payload),
+  forgotPassword: (payload) => axiosClient.post("/auth/password/forgot", { ...payload, emailOrPhone: payload?.identifier || payload?.emailOrPhone }),
   resetPassword: (payload) => axiosClient.post("/auth/password/reset", payload),
   changePassword: (payload) => axiosClient.put("/auth/password/change", payload),
 
