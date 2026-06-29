@@ -83,7 +83,7 @@ export default function CustomerBookingDetailPage() {
     [Sparkles, "Dịch vụ", booking.serviceName],
     [MapPin, "Gara", booking.garageName],
     [MapPin, "Địa chỉ gara", booking.garageAddress],
-    [CalendarDays, "Ngày đặt", formatBookingDate(booking.bookingDate)],
+    [CalendarDays, "Ngày hẹn", formatBookingDate(booking.bookingDate)],
     [CalendarDays, "Khung giờ", `${booking.slotTime}${booking.endTime ? ` - ${booking.endTime}` : ""}`],
     [NotebookText, "Ghi chú", booking.note || "Không có ghi chú"],
   ];

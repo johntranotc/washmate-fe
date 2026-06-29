@@ -318,11 +318,11 @@ export default function CustomerPaymentPage() {
           )}
           {payment?.status === "CANCELLED" && (
             <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-700">
-              Thanh toán đã bị hủy. Bạn có thể chọn phương thức và thử lại.
+              Giao dịch thanh toán đã bị hủy. Lịch đặt này không thể thanh toán tiếp. Vui lòng đặt lịch mới.
             </p>
           )}
 
-          {!paid && (
+          {!paid && payment?.status !== "CANCELLED" && (
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {methods.map(([value, label, Icon]) => (
                 <button
@@ -343,11 +343,11 @@ export default function CustomerPaymentPage() {
           )}
 
           {/* ── Per-method supplementary content ── */}
-          {!paid && method === "VNPAY" && (
+          {!paid && payment?.status !== "CANCELLED" && method === "VNPAY" && (
             <BankTransferBlock booking={booking} transferContent={transferContent} />
           )}
 
-          {!paid && method === "CASH" && (
+          {!paid && payment?.status !== "CANCELLED" && method === "CASH" && (
             <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-700">
               <strong className="block font-extrabold">Thanh toán tại gara</strong>
               <p className="mt-2 leading-6">
@@ -361,7 +361,13 @@ export default function CustomerPaymentPage() {
 
           {/* ── Confirm / paid result ── */}
           {!paid ? (
-            method === "VNPAY" ? (
+            payment?.status === "CANCELLED" ? (
+              <div className="mt-6 flex justify-center gap-3">
+                <Link to="/khach-hang/dat-lich-moi" className="w-full rounded-2xl bg-[var(--brand-blue)] py-3.5 text-center font-bold text-white">
+                  Đặt lịch mới
+                </Link>
+              </div>
+            ) : method === "VNPAY" ? (
               <button
                 onClick={processPayment}
                 disabled={processing}

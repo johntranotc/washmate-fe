@@ -4,9 +4,11 @@ export const adminApi = {
   // GET /api/v1/garages
   getGarages: () => axiosClient.get("/v1/garages"),
   // GET /api/admin/users (paginated)
-  getAllUsers: (params) => axiosClient.get("/admin/users", { params }),
+  getAllUsers: (params = {}) => axiosClient.get("/admin/users", { params: { size: 1000, sort: 'id,desc', ...params } }),
   // GET /api/bookings (paginated, all roles)
-  getBookings: (params) => axiosClient.get("/bookings", { params }),
+  getBookings: (params = {}) => axiosClient.get("/bookings", { params: { size: 1000, sort: 'id,desc', ...params } }),
+  // POST /api/bookings/{id}/cancel
+  cancelBooking: (id) => axiosClient.post(`/bookings/${id}/cancel`),
   // PUT /api/admin/users/{userId}/status
   updateUserStatus: (userId, payload) => axiosClient.put(`/admin/users/${userId}/status`, payload),
   // DELETE /api/admin/users/{userId}
@@ -16,7 +18,7 @@ export const adminApi = {
   // No admin-level analytics summary endpoint yet — return empty
   getAdminSummary: () => Promise.resolve({}),
   // GET /api/admin/invoices (paginated)
-  getInvoices: (params) => axiosClient.get("/admin/invoices", { params }),
+  getInvoices: (params = {}) => axiosClient.get("/admin/invoices", { params: { size: 1000, sort: 'id,desc', ...params } }),
   // No list-all payments endpoint yet — return empty
   getPayments: () => Promise.resolve([]),
   // No reports endpoint yet
