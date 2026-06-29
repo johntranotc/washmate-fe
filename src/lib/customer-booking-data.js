@@ -70,6 +70,16 @@ export function normalizeBooking(value) {
       ? "CONFIRMED"
       : backendStatus;
 
+  let savedNote = item.bookingNote || item.note || "";
+  if (!savedNote) {
+    try {
+      const notesMap = JSON.parse(localStorage.getItem("washmate_booking_notes") || "{}");
+      const bid = item.bookingId ?? item.id;
+      const bcode = item.bookingCode || item.code;
+      savedNote = notesMap[bid] || notesMap[bcode] || localStorage.getItem("washmate_latest_booking_note") || "";
+    } catch {}
+  }
+
   return {
     ...item,
     id: item.bookingId ?? item.id,
@@ -85,7 +95,7 @@ export function normalizeBooking(value) {
     bookingDate: item.bookingDate || item.slot?.slotDate || item.date || "",
     slotTime: (item.slotTime || item.slot?.startTime || item.startTime || "").slice(0, 5),
     endTime: (item.endTime || item.slot?.endTime || "").slice(0, 5),
-    note: item.bookingNote || item.note || "",
+    note: savedNote,
     amount: Number(item.amount ?? item.service?.price ?? item.price ?? 0),
     discount: Number(item.discount ?? item.discountAmount ?? 0),
     finalAmount: Number(item.finalAmount ?? item.totalAmount ?? item.amount ?? item.price ?? 0),

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Info, CalendarDays, Car, MapPin, Sparkles, Wallet, CreditCard, QrCode, Tag, BadgePercent, CheckCircle2, X } from "lucide-react";
 import { formatCurrency, formatDate, getGarageId } from "@/lib/booking-flow";
+import { promotionApi } from "@/api/promotionApi";
 
 const VIETNAMESE_PROMOTIONS = [
   {
@@ -39,12 +40,23 @@ export function BookingReviewStep({
   const { vehicle, service, garage, date, slot } = selection;
   const [inputCode, setInputCode] = useState("");
   const [promoError, setPromoError] = useState("");
+  const [apiPromotions, setApiPromotions] = useState([]);
+
+  useEffect(() => {
+    const garageId = getGarageId(selection?.garage) || selection?.service?.garageId || 1;
+    promotionApi.getAvailablePromotions(garageId).then((list) => {
+      setApiPromotions(Array.isArray(list) ? list : []);
+    }).catch(() => {
+      setApiPromotions([]);
+    });
+  }, [selection?.garage, selection?.service]);
 
   const basePrice = service?.price || 0;
 
   function calculateDiscount(promo) {
     if (!promo || !basePrice) return 0;
-    if (promo.discountType === "PERCENT") {
+    const isPercent = String(promo.discountType || "").toUpperCase().includes("PERCENT");
+    if (isPercent) {
       const disc = (basePrice * promo.discountValue) / 100;
       return promo.maxDiscount ? Math.min(disc, promo.maxDiscount) : disc;
     }
@@ -61,21 +73,12 @@ export function BookingReviewStep({
       setPromoError("Vui lòng nhập mã ưu đãi.");
       return;
     }
-    const found = VIETNAMESE_PROMOTIONS.find((p) => p.code === code);
+    const found = apiPromotions.find((p) => p.code === code);
     if (found) {
       onSelectPromotion?.(found);
       setInputCode("");
     } else {
-      const customPromo = {
-        code,
-        title: `Mã ưu đãi ${code}`,
-        description: "Giảm 10% phí dịch vụ WashMate",
-        discountType: "PERCENT",
-        discountValue: 10,
-        maxDiscount: 30000,
-      };
-      onSelectPromotion?.(customPromo);
-      setInputCode("");
+      setPromoError("Mã khuyến mãi không tồn tại, đã hết hạn hoặc không áp dụng cho Gara này.");
     }
   }
 
@@ -170,7 +173,10 @@ export function BookingReviewStep({
           <div className="space-y-2 mt-3">
             <p className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Hoặc chọn ưu đãi khả dụng:</p>
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              {VIETNAMESE_PROMOTIONS.map((p) => {
+              {apiPromotions.length === 0 ? (
+                <p className="text-xs text-slate-400 italic py-2">Chưa có mã khuyến mãi nào đang áp dụng cho Gara này.</p>
+              ) : (
+                apiPromotions.map((p) => {
                 const isSelected = promotion?.code === p.code;
                 return (
                   <div
@@ -205,7 +211,7 @@ export function BookingReviewStep({
                     </div>
                   </div>
                 );
-              })}
+              }))}
             </div>
           </div>
         </div>

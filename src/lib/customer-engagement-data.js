@@ -76,18 +76,26 @@ export const normalizeTransactions = (payload) =>
   }));
 
 export const normalizePromotions = (payload) =>
-  unwrapList(payload).map((item, index) => ({
-    id: item.promotionId ?? item.id ?? `promotion-${index}`,
-    code: item.code ?? item.promotionCode ?? "",
-    title: item.title ?? item.name ?? "Ưu đãi WashMate",
-    description: item.description ?? item.content ?? "",
-    discountLabel:
-      item.discountLabel ??
-      (item.discountPercent ? `Giảm ${item.discountPercent}%` : item.discountAmount ? `Giảm ${Number(item.discountAmount).toLocaleString("vi-VN")}đ` : "Ưu đãi"),
-    status: item.status ?? (item.memberOnly ? "MEMBER" : "ACTIVE"),
-    memberOnly: Boolean(item.memberOnly ?? item.loyaltyOnly),
-    expiresAt: item.expiresAt ?? item.endDate ?? item.validTo,
-  }));
+  unwrapList(payload).map((item, index) => {
+    const code = item.code ?? item.promoCode ?? item.promotionCode ?? "";
+    const discountVal = Number(item.discountValue ?? item.discountAmount ?? item.discountPercent ?? 0);
+    const rawType = String(item.discountType ?? "").toUpperCase();
+    const isPercent = rawType.includes("PERCENT") || Boolean(item.discountPercent);
+    const discType = isPercent ? "PERCENTAGE" : "FIXED_AMOUNT";
+    return {
+      ...item,
+      id: item.promotionId ?? item.id ?? `promotion-${index}`,
+      code: code.toUpperCase(),
+      title: item.title ?? item.name ?? (isPercent ? `Giảm ${discountVal}% phí dịch vụ` : `Giảm trực tiếp ${discountVal.toLocaleString("vi-VN")}đ`),
+      description: item.description ?? item.content ?? (item.minOrderValue > 0 ? `Đơn tối thiểu ${Number(item.minOrderValue).toLocaleString("vi-VN")}đ` : "Áp dụng tại hệ thống WashMate"),
+      discountLabel:
+        item.discountLabel ??
+        (isPercent ? `Giảm ${discountVal}%` : discountVal > 0 ? `Giảm ${discountVal.toLocaleString("vi-VN")}đ` : "Ưu đãi"),
+      status: item.status ?? (item.memberOnly ? "MEMBER" : "ACTIVE"),
+      memberOnly: Boolean(item.memberOnly ?? item.loyaltyOnly),
+      expiresAt: item.expiresAt ?? item.endDate ?? item.validTo,
+    };
+  });
 
 export const normalizeRewards = (payload) =>
   unwrapList(payload).map((item, index) => ({

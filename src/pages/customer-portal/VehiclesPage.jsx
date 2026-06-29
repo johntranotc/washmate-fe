@@ -202,6 +202,7 @@ export default function VehiclesPage() {
         brand: finalBrand,
         model: finalModel,
         color: color || "Chưa cập nhật",
+        status: selectedVehicle.status || "ACTIVE",
       });
 
       await fetchVehicles();
@@ -209,7 +210,12 @@ export default function VehiclesPage() {
       setSuccessMessage("Đã cập nhật thông tin xe.");
     } catch (error) {
       console.error(error);
-      setErrorMessage(error.message || "Không thể cập nhật phương tiện.");
+      const msg = error?.message || "";
+      if (msg.toLowerCase().includes("internal server error") || error?.status === 500) {
+        setErrorMessage("Máy chủ gặp lỗi với bản ghi xe cũ này. Bạn vui lòng bấm Xóa xe này, sau đó bấm 'Thêm phương tiện' để tạo lại xe mới là sẽ hoàn tất đặt lịch 100%!");
+      } else {
+        setErrorMessage(msg || "Không thể cập nhật phương tiện.");
+      }
     }
   }
 
@@ -348,7 +354,11 @@ export default function VehiclesPage() {
                   <StatusBadge status={vehicle.status} />
                 </div>
 
-                <div className="mb-6 grid grid-cols-3 gap-3 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+                <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+                  <div>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dòng xe</p>
+                    <p className="font-bold text-foreground">{formattedModel || "Sedan/SUV"}</p>
+                  </div>
                   <div>
                     <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Màu sơn</p>
                     <p className="font-bold text-foreground">{vehicle.color || "Trắng"}</p>

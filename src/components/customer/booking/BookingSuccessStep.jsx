@@ -1,11 +1,32 @@
-import { ArrowRight, CalendarDays, Car, Clock3, MapPin, SendHorizonal, Sparkles, Wallet } from "lucide-react";
+import { ArrowRight, CalendarDays, Car, Clock3, MapPin, SendHorizonal, Sparkles, Wallet, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatDate, formatCurrency } from "@/lib/booking-flow";
 
-export function BookingSuccessStep({ result, selection, paymentMethod = "CASH" }) {
+export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", promotion, discountAmount }) {
+  const promo = promotion || selection?.promotion || result?.promotion;
+  const disc = Number(discountAmount ?? selection?.discountAmount ?? result?.discountAmount ?? result?.discount ?? 0);
+  const basePrice = Number(selection.service?.price || 0);
+  const finalPrice = Math.max(0, basePrice - disc);
+
   const summaryRows = [
     { icon: MapPin, label: "Gara", value: selection.garage?.name },
-    { icon: Sparkles, label: "Dịch vụ", value: `${selection.service?.name} — ${formatCurrency(selection.service?.price)}` },
+    { icon: Sparkles, label: "Dịch vụ", value: `${selection.service?.name} — ${formatCurrency(basePrice)}` },
+    ...(promo || disc > 0 ? [
+      {
+        icon: Tag,
+        label: "Mã giảm giá",
+        value: promo?.code ? `${promo.code} (-${formatCurrency(disc)})` : `Giảm giá (-${formatCurrency(disc)})`,
+        highlight: true,
+      }
+    ] : []),
+    ...(disc > 0 ? [
+      {
+        icon: Wallet,
+        label: "Thành tiền",
+        value: formatCurrency(finalPrice),
+        isTotal: true,
+      }
+    ] : []),
     { icon: Car, label: "Xe", value: `${selection.vehicle?.licensePlate} · ${[selection.vehicle?.brand, selection.vehicle?.model].filter(Boolean).join(" ")}` },
     { icon: CalendarDays, label: "Ngày", value: formatDate(selection.date) },
     { icon: Clock3, label: "Giờ", value: `${selection.slot?.startTime} – ${selection.slot?.endTime || ""}` },
@@ -62,12 +83,12 @@ export function BookingSuccessStep({ result, selection, paymentMethod = "CASH" }
             Thông tin đặt lịch
           </h3>
           <dl className="space-y-3">
-            {summaryRows.map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex items-start gap-3">
-                <Icon size={15} className="mt-0.5 shrink-0 text-primary" />
+            {summaryRows.map(({ icon: Icon, label, value, highlight, isTotal }) => (
+              <div key={label} className={`flex items-start gap-3 ${isTotal ? "border-t border-dashed border-border pt-3 font-extrabold" : ""}`}>
+                <Icon size={15} className={`mt-0.5 shrink-0 ${highlight ? "text-emerald-600" : "text-primary"}`} />
                 <div className="flex-1 flex items-start justify-between gap-2 text-sm">
                   <dt className="text-muted-foreground shrink-0">{label}</dt>
-                  <dd className="font-semibold text-foreground text-right">{value || "—"}</dd>
+                  <dd className={`font-semibold text-right ${highlight ? "text-emerald-600 font-extrabold bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200" : isTotal ? "text-primary font-black text-base" : "text-foreground"}`}>{value || "—"}</dd>
                 </div>
               </div>
             ))}

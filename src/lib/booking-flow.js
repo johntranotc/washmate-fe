@@ -134,7 +134,11 @@ export function bookingErrorMessage(error) {
   if (msg.includes("Service package does not belong")) return "Gói dịch vụ bạn chọn không thuộc về gara này. Vui lòng chọn lại dịch vụ ở Bước 2.";
   if (msg.includes("Slot does not belong")) return "Khung giờ bạn chọn không thuộc về gara này.";
   if (msg.includes("full") || ["SLOT_FULL", "BOOKING_SLOT_FULL"].includes(error?.errorCode)) return "Khung giờ này vừa có khách đặt đầy.";
-  if (msg.includes("not active")) return "Gara hoặc gói dịch vụ hiện đang tạm ngưng nhận lịch.";
+  if (msg.includes("Garage is not active")) return "Gara này hiện đang tạm ngưng hoạt động trên hệ thống.";
+  if (msg.includes("Booking slot is not active")) return "Khung giờ này hiện đã bị tạm khóa hoặc ngừng nhận lịch.";
+  if (msg.includes("Service package is not active")) return "Gói dịch vụ này hiện đang tạm ngừng phục vụ tại gara.";
+  if (msg.includes("Vehicle is not active")) return "Xe của bạn đang ở trạng thái không hoạt động.";
+  if (msg.includes("not active")) return `Gara hoặc gói dịch vụ hiện đang tạm ngưng nhận lịch. (Chi tiết lỗi: ${msg})`;
   if (error?.status === 400 || error?.errorCode === "VALIDATION_ERROR") {
     if (msg && msg !== "Validation failed" && !msg.includes("Invalid request")) return msg;
     return "Thông tin đặt lịch chưa chính xác hoặc khung giờ/dịch vụ không hợp lệ.";

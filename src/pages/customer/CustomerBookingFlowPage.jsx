@@ -258,6 +258,7 @@ export default function CustomerBookingFlowPage() {
       slotId: selection.slot.id,
       bookingDate,
       paymentMethod,
+      promotionId: (promotion && !isNaN(Number(promotion.id))) ? Number(promotion.id) : null,
       discountAmount,
       bookingNote: (note.trim() + (promotion ? ` [Mã ưu đãi: ${promotion.code} - Giảm ${discountAmount}đ]` : "")).trim(),
     };
@@ -281,6 +282,17 @@ export default function CustomerBookingFlowPage() {
         response = await bookingApi.createBooking(payload);
       }
       const normalizedResult = normalizeBookingResponse(response);
+      if (payload.bookingNote) {
+        try {
+          const notesMap = JSON.parse(localStorage.getItem("washmate_booking_notes") || "{}");
+          const bid = normalizedResult?.id || normalizedResult?.bookingId || response?.id;
+          const bcode = normalizedResult?.code || normalizedResult?.bookingCode || response?.bookingCode;
+          if (bid) notesMap[bid] = payload.bookingNote;
+          if (bcode) notesMap[bcode] = payload.bookingNote;
+          localStorage.setItem("washmate_booking_notes", JSON.stringify(notesMap));
+          localStorage.setItem("washmate_latest_booking_note", payload.bookingNote);
+        } catch {}
+      }
       const isDemoResult = demoMode || usingMockData;
       setResult({
         ...normalizedResult,
@@ -288,40 +300,12 @@ export default function CustomerBookingFlowPage() {
           normalizedResult.paymentId ||
           (isDemoResult ? normalizedResult.bookingId : null),
         isDemo: isDemoResult,
+        promotion,
+        discountAmount,
       });
       setStep(6);
     } catch (error) {
-      const isDemoFlow =
-        usingMockData ||
-        selection.garage?.isMock ||
-        selection.service?.isMock ||
-        selection.slot?.isMock;
-      if (isDemoFlow) {
-        const demoBooking = actions.createBooking({
-          ...payload,
-          garageName: selection.garage.name,
-          vehicle: `${selection.vehicle.brand} ${selection.vehicle.model}`.trim(),
-          plate: selection.vehicle.licensePlate,
-          serviceName: selection.service.name,
-          bookingDate,
-          slotTime: selection.slot.startTime,
-          amount: selection.service.price,
-          discount: discountAmount,
-          finalAmount: Math.max(0, selection.service.price - discountAmount),
-          note: payload.bookingNote,
-        });
-        setResult({
-          bookingId: demoBooking.id,
-          bookingCode: demoBooking.code,
-          paymentId: demoBooking.id,
-          bookingStatus: "PENDING",
-          paymentStatus: "PENDING",
-          isDemo: true,
-        });
-        setStep(6);
-      } else {
-        setSubmitError(bookingErrorMessage(error));
-      }
+      setSubmitError(bookingErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
@@ -335,7 +319,7 @@ export default function CustomerBookingFlowPage() {
     if (step === 3) return <GarageStep garages={compatibleGarages} selectedId={getGarageId(selection.garage)} onSelect={(garage) => setSelection((current) => ({ ...current, garage, slot: null }))} />;
     if (step === 4) return <SlotStep date={selection.date} onDateChange={(date) => setSelection((current) => ({ ...current, date, slot: null }))} slots={slots} selectedId={selection.slot?.id} onSelect={(slot) => setSelection((current) => ({ ...current, slot }))} loading={slotLoading} />;
     if (step === 5) return <BookingReviewStep selection={selection} note={note} onNoteChange={setNote} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} promotion={promotion} onSelectPromotion={setPromotion} />;
-    return <BookingSuccessStep result={result} selection={selection} />;
+    return <BookingSuccessStep result={result} selection={selection} paymentMethod={paymentMethod} promotion={result?.promotion || promotion} discountAmount={result?.discountAmount || 0} />;
   }
 
   return (
