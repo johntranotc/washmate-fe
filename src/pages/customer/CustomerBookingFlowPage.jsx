@@ -167,7 +167,8 @@ export default function CustomerBookingFlowPage() {
           .filter(
             (slot) =>
               !slot.garageId || String(slot.garageId) === String(garageId),
-          );
+          )
+          .sort((a, b) => a.startTime.localeCompare(b.startTime));
         if (active) setSlots(normalized);
       } catch {
         if (active) {

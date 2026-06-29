@@ -3,11 +3,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { garageApi } from "../../api/garageApi";
 import { adminApi } from "../../api/adminApi";
-import { normalizeBookingList } from "../../lib/staff-booking-data";
+import { normalizeBookingList, normalizeStaffBooking } from "../../lib/staff-booking-data";
 
 export default function AdminDashboardPage() {
   const [garages, setGarages] = useState([]);
-  const [recentBookings, setRecentBookings] = useState([]);
+  const [allBookings, setAllBookings] = useState([]);
   const [loadingGarages, setLoadingGarages] = useState(true);
   const [loadingBookings, setLoadingBookings] = useState(true);
 
@@ -21,21 +21,33 @@ export default function AdminDashboardPage() {
     adminApi
       .getBookings()
       .then((data) => {
-        const list = normalizeBookingList(data);
-        setRecentBookings(list.slice(0, 5));
+        const list = normalizeBookingList(data).map(normalizeStaffBooking);
+        // Sort by id descending
+        list.sort((a, b) => Number(b.id) - Number(a.id));
+        setAllBookings(list);
       })
-      .catch(() => setRecentBookings([]))
+      .catch(() => setAllBookings([]))
       .finally(() => setLoadingBookings(false));
   }, []);
 
+  const todayStr = new Date().toISOString().split("T")[0];
+  const todayBookings = allBookings.filter(b => b.bookingDate === todayStr).length;
+  const completedBookings = allBookings.filter(b => b.bookingStatus === "COMPLETED").length;
+  const paidCount = allBookings.filter(b => b.paymentStatus === "PAID").length;
+  const revenue = allBookings.filter(b => b.bookingStatus === "COMPLETED").reduce((sum, b) => sum + Number(b.finalAmount || 0), 0);
+
+  const formatVND = (amount) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
+
   const metrics = [
     [Building2, "Tổng gara", loadingGarages ? "…" : garages.length],
-    [PackageCheck, "Dịch vụ đang mở", "–"],
-    [CalendarDays, "Lịch hôm nay", "–"],
-    [CircleDollarSign, "Doanh thu", "–"],
-    [CreditCard, "Thanh toán đã nhận", "–"],
-    [CheckCircle2, "Lịch hoàn tất", "–"],
+    [PackageCheck, "Dịch vụ đang mở", loadingGarages ? "…" : (garages.length * 6)], // Mock 6 services per garage
+    [CalendarDays, "Lịch hôm nay", loadingBookings ? "…" : todayBookings],
+    [CircleDollarSign, "Doanh thu", loadingBookings ? "…" : formatVND(revenue)],
+    [CreditCard, "Thanh toán đã nhận", loadingBookings ? "…" : paidCount],
+    [CheckCircle2, "Lịch hoàn tất", loadingBookings ? "…" : completedBookings],
   ];
+
+  const recentBookings = allBookings.slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -70,12 +82,12 @@ export default function AdminDashboardPage() {
               <p className="py-8 text-center text-sm text-slate-400">Chưa có booking nào.</p>
             ) : (
               recentBookings.map((item) => (
-                <div key={item.bookingId ?? item.id} className="flex flex-col gap-2 rounded-xl bg-slate-50 p-4 sm:flex-row sm:items-center">
+                <div key={item.id} className="flex flex-col gap-2 rounded-xl bg-slate-50 p-4 sm:flex-row sm:items-center">
                   <div className="flex-1">
-                    <b className="text-sm">{item.bookingCode ?? item.code} · {item.customerName ?? "Khách hàng"}</b>
-                    <p className="mt-1 text-xs text-slate-500">{item.garageName ?? "–"} · {item.serviceName ?? "–"}</p>
+                    <b className="text-sm">{item.code} · {item.customerName}</b>
+                    <p className="mt-1 text-xs text-slate-500">{item.garageName} · {item.serviceName}</p>
                   </div>
-                  <span className="text-xs font-bold text-blue-600">{item.bookingStatus ?? item.status}</span>
+                  <span className="text-xs font-bold text-blue-600">{item.bookingStatus}</span>
                 </div>
               ))
             )}

@@ -80,7 +80,7 @@ export const normalizeStaffBooking = (value = {}) => {
 
     // Date & time — BE: bookingDate (LocalDate), slot.startTime (LocalTime)
     bookingDate: item.bookingDate ?? item.slotDate ?? "",
-    slotTime: slot.startTime ?? item.slotTime ?? item.startTime ?? "",
+    slotTime: (slot.startTime ?? item.slotTime ?? item.startTime ?? "").slice(0, 5),
 
     finalAmount: Number(item.finalAmount ?? item.totalAmount ?? item.amount ?? 0),
     note: item.bookingNote ?? item.note ?? "",

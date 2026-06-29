@@ -122,21 +122,25 @@ export default function AdminUserPage() {
                       {u.roles?.includes("ADMIN") ? (
                         <span className="text-slate-400 italic text-[10px]">Không thể sửa</span>
                       ) : (
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleToggleStatus(u)}
-                            className={`inline-flex items-center gap-1 font-bold ${
-                              u.status === "ACTIVE" ? "text-orange-600 hover:text-orange-700" : "text-emerald-600 hover:text-emerald-700"
+                            title={u.status === "ACTIVE" ? "Khóa tài khoản" : "Mở khóa tài khoản"}
+                            className={`rounded-lg p-1.5 transition-colors ${
+                              u.status === "ACTIVE" 
+                                ? "bg-orange-50 text-orange-600 hover:bg-orange-100" 
+                                : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
                             }`}
                           >
-                            {u.status === "ACTIVE" ? <><Lock size={13} /> Khóa</> : <><Unlock size={13} /> Mở khóa</>}
+                            {u.status === "ACTIVE" ? <Lock size={14} /> : <Unlock size={14} />}
                           </button>
                           
                           <button
                             onClick={() => handleDelete(u)}
-                            className="inline-flex items-center gap-1 font-bold text-red-600 hover:text-red-700"
+                            title="Xóa tài khoản"
+                            className="rounded-lg bg-red-50 p-1.5 text-red-600 transition-colors hover:bg-red-100"
                           >
-                            <Trash2 size={13} /> Xóa
+                            <Trash2 size={14} />
                           </button>
                         </div>
                       )}

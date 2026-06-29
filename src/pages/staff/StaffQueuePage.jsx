@@ -141,6 +141,17 @@ export default function StaffQueuePage() {
     .filter((b) => ["CONFIRMED", "CHECKED_IN", "WASHING"].includes(b.bookingStatus))
     .sort(sortByNewest);
 
+  const rejected = bookings
+    .filter((b) => b.bookingStatus === "REJECTED")
+    .sort(sortByNewest);
+
+  const cancelled = bookings
+    .filter((b) => b.bookingStatus === "CANCELLED")
+    .sort(sortByNewest);
+
+  const rejectedCount = bookings.filter((b) => b.bookingStatus === "REJECTED").length;
+  const cancelledCount = bookings.filter((b) => b.bookingStatus === "CANCELLED").length;
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-slate-500">
@@ -188,11 +199,12 @@ export default function StaffQueuePage() {
       </header>
 
       {/* Stats */}
-      <section className="grid gap-4 sm:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-4">
         {[
           [UsersRound, "Chờ xác nhận", pending.length, "text-orange-500"],
           [Droplets, "Đang xử lý", queue.length, "text-blue-600"],
-          [TimerReset, "Thời gian trung bình", "31 phút", "text-emerald-600"],
+          [XCircle, "Từ chối", rejectedCount, "text-red-600"],
+          [XCircle, "Hủy", cancelledCount, "text-slate-500"],
         ].map(([Icon, label, value, color]) => (
           <article
             key={label}
@@ -205,8 +217,8 @@ export default function StaffQueuePage() {
         ))}
       </section>
 
-      {/* Pending section — hiển thị kể cả khi empty để staff biết không có gì */}
-      <section className="space-y-3">
+      {/* Pending section */}
+      <section id="pending" className="space-y-3 scroll-mt-20">
         <h2 className="flex items-center gap-2 text-base font-extrabold text-slate-700">
           {pending.length > 0 && (
             <span className="flex size-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-extrabold text-white">
@@ -328,7 +340,7 @@ export default function StaffQueuePage() {
       </section>
 
       {/* Active queue section */}
-      <section className="space-y-3">
+      <section id="queue" className="space-y-3 scroll-mt-20">
         <h2 className="text-base font-extrabold text-slate-700">Đang xử lý</h2>
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           {queue.length === 0 ? (
@@ -377,6 +389,99 @@ export default function StaffQueuePage() {
           )}
         </div>
       </section>
+      {/* Rejected section */}
+      {rejected.length > 0 && (
+        <section id="rejected" className="space-y-3 mt-8 opacity-80 scroll-mt-20">
+          <h2 className="text-base font-extrabold text-red-500">Lịch bị từ chối</h2>
+          <div className="overflow-hidden rounded-2xl border border-red-200 bg-white">
+            <div className="divide-y divide-red-100">
+              {rejected.map((item, index) => (
+                <article
+                  key={item.id}
+                  className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center"
+                >
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-red-50 text-red-400">
+                    <XCircle size={18} />
+                  </span>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold text-slate-300">#{index + 1}</span>
+                      <b className="text-sm text-slate-600">
+                        {item.code} · {item.slotTime} · {item.customerName}
+                      </b>
+                      <span
+                        className={cn(
+                          "rounded-full px-2.5 py-0.5 text-[10px] font-extrabold",
+                          bookingStatusTone[item.bookingStatus] ||
+                            "bg-slate-100 text-slate-600",
+                        )}
+                      >
+                        {bookingStatusLabels[item.bookingStatus]}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {item.vehicle} · {item.plate} · {item.serviceName}
+                    </p>
+                  </div>
+                  <Link
+                    to={`/nhan-vien/danh-sach/${item.id}`}
+                    className="rounded-xl border border-red-200 bg-white px-4 py-2.5 text-center text-xs font-bold text-red-600 hover:bg-red-50"
+                  >
+                    Chi tiết
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Cancelled section */}
+      {cancelled.length > 0 && (
+        <section id="cancelled" className="space-y-3 mt-8 opacity-70 scroll-mt-20">
+          <h2 className="text-base font-extrabold text-slate-500">Lịch khách hủy</h2>
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <div className="divide-y divide-slate-100">
+              {cancelled.map((item, index) => (
+                <article
+                  key={item.id}
+                  className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center"
+                >
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-slate-50 text-slate-400">
+                    <XCircle size={18} />
+                  </span>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold text-slate-300">#{index + 1}</span>
+                      <b className="text-sm text-slate-600">
+                        {item.code} · {item.slotTime} · {item.customerName}
+                      </b>
+                      <span
+                        className={cn(
+                          "rounded-full px-2.5 py-0.5 text-[10px] font-extrabold",
+                          bookingStatusTone[item.bookingStatus] ||
+                            "bg-slate-100 text-slate-600",
+                        )}
+                      >
+                        {bookingStatusLabels[item.bookingStatus]}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {item.vehicle} · {item.plate} · {item.serviceName}
+                    </p>
+                  </div>
+                  <Link
+                    to={`/nhan-vien/danh-sach/${item.id}`}
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-center text-xs font-bold text-slate-600 hover:bg-slate-50"
+                  >
+                    Chi tiết
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
