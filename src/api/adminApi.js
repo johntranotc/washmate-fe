@@ -9,12 +9,15 @@ export const adminApi = {
   getBookings: (params) => axiosClient.get("/bookings", { params }),
   // PUT /api/admin/users/{userId}/status
   updateUserStatus: (userId, payload) => axiosClient.put(`/admin/users/${userId}/status`, payload),
+  // DELETE /api/admin/users/{userId}
+  deleteUser: (userId) => axiosClient.delete(`/admin/users/${userId}`),
   // GET /api/v1/services/garage/{garageId}
   getServicesByGarage: (garageId) => axiosClient.get(`/v1/services/garage/${garageId}`),
   // No admin-level analytics summary endpoint yet — return empty
   getAdminSummary: () => Promise.resolve({}),
-  // No list-all invoices or payments endpoint yet — return empty
-  getInvoices: () => Promise.resolve([]),
+  // GET /api/admin/invoices (paginated)
+  getInvoices: (params) => axiosClient.get("/admin/invoices", { params }),
+  // No list-all payments endpoint yet — return empty
   getPayments: () => Promise.resolve([]),
   // No reports endpoint yet
   getReports: () => Promise.resolve({}),

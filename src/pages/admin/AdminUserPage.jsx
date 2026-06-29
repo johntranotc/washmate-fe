@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { RefreshCcw } from "lucide-react";
+import { RefreshCcw, Lock, Unlock, Trash2 } from "lucide-react";
 import { adminApi } from "../../api/adminApi";
 
 const roleColors = {
@@ -34,6 +34,32 @@ export default function AdminUserPage() {
 
   useEffect(() => { load(0); }, []);
 
+  async function handleToggleStatus(user) {
+    const newStatus = user.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    const actionName = newStatus === "ACTIVE" ? "Mở khóa" : "Khóa";
+    if (!window.confirm(`Bạn có chắc chắn muốn ${actionName} tài khoản ${user.email}?`)) return;
+
+    try {
+      await adminApi.updateUserStatus(user.id, { status: newStatus });
+      alert(`Đã ${actionName.toLowerCase()} tài khoản thành công!`);
+      load(page);
+    } catch (err) {
+      alert(`Không thể thực hiện thao tác: ${err?.message || "Lỗi không xác định"}`);
+    }
+  }
+
+  async function handleDelete(user) {
+    if (!window.confirm(`XÓA TÀI KHOẢN VĨNH VIỄN!\nBạn có chắc chắn muốn xóa tài khoản ${user.email} không?\n(Lưu ý: Nếu người dùng có lịch đặt hoặc hóa đơn, thao tác này sẽ thất bại).`)) return;
+
+    try {
+      await adminApi.deleteUser(user.id);
+      alert("Đã xóa tài khoản thành công!");
+      load(page);
+    } catch (err) {
+      alert(err?.message || "Không thể xóa tài khoản. Lỗi không xác định.");
+    }
+  }
+
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between">
@@ -65,6 +91,7 @@ export default function AdminUserPage() {
                   <th className="p-4">Số điện thoại</th>
                   <th className="p-4">Vai trò</th>
                   <th className="p-4">Trạng thái</th>
+                  <th className="p-4">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -90,6 +117,29 @@ export default function AdminUserPage() {
                       }`}>
                         {u.status || "–"}
                       </span>
+                    </td>
+                    <td className="p-4">
+                      {u.roles?.includes("ADMIN") ? (
+                        <span className="text-slate-400 italic text-[10px]">Không thể sửa</span>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleToggleStatus(u)}
+                            className={`inline-flex items-center gap-1 font-bold ${
+                              u.status === "ACTIVE" ? "text-orange-600 hover:text-orange-700" : "text-emerald-600 hover:text-emerald-700"
+                            }`}
+                          >
+                            {u.status === "ACTIVE" ? <><Lock size={13} /> Khóa</> : <><Unlock size={13} /> Mở khóa</>}
+                          </button>
+                          
+                          <button
+                            onClick={() => handleDelete(u)}
+                            className="inline-flex items-center gap-1 font-bold text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 size={13} /> Xóa
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
