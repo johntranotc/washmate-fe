@@ -226,6 +226,9 @@ function GarageCard({ garage, selected, onSelect, onHover, onLeave }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate font-extrabold text-foreground">{garage.name}</h3>
+            <span className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
+              Mã gara: {garage.id ?? garage.garageId ?? "?"}
+            </span>
             {!garage.isOpen && (
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
                 Tạm đóng

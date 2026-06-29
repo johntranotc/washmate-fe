@@ -83,7 +83,16 @@ export const normalizeStaffBooking = (value = {}) => {
     slotTime: (slot.startTime ?? item.slotTime ?? item.startTime ?? "").slice(0, 5),
 
     finalAmount: Number(item.finalAmount ?? item.totalAmount ?? item.amount ?? 0),
-    note: item.bookingNote ?? item.note ?? "",
+    note: (() => {
+      let n = item.bookingNote ?? item.note ?? "";
+      if (!n) {
+        try {
+          const notesMap = JSON.parse(localStorage.getItem("washmate_booking_notes") || "{}");
+          n = notesMap[item.id] || notesMap[item.bookingCode] || localStorage.getItem("washmate_latest_booking_note") || "";
+        } catch {}
+      }
+      return n;
+    })(),
   };
 };
 

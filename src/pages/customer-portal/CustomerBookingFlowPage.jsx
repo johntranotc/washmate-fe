@@ -203,7 +203,7 @@ export default function CustomerBookingFlowPage() {
 
     let discountAmount = 0;
     if (promotion && selection.service?.price) {
-      if (promotion.discountType === "PERCENT") {
+      if (String(promotion.discountType || "").toUpperCase().includes("PERCENT")) {
         const disc = (selection.service.price * promotion.discountValue) / 100;
         discountAmount = promotion.maxDiscount ? Math.min(disc, promotion.maxDiscount) : disc;
       } else {
@@ -218,16 +218,51 @@ export default function CustomerBookingFlowPage() {
       slotId: selection.slot.id,
       bookingDate,
       paymentMethod: paymentMethod === "CASH" ? "CASH" : "VNPAY",
+      promotionId: (promotion && !isNaN(Number(promotion.id))) ? Number(promotion.id) : null,
       discountAmount,
       bookingNote: (note.trim() + (promotion ? ` [Mã ưu đãi: ${promotion.code} - Giảm ${discountAmount}đ]` : "")).trim(),
     };
 
+    const cleanStr = (str, def) => (str && typeof str === "string" && str.trim() ? str.trim() : def);
+    const vid = selection.vehicle.id || selection.vehicle.vehicleId;
     try {
+      try {
+        await vehicleApi.updateVehicle(vid, {
+          ...selection.vehicle,
+          licensePlate: cleanStr(selection.vehicle.licensePlate, "CHƯA CẬP NHẬT").toUpperCase(),
+          brand: cleanStr(selection.vehicle.brand, "Khác"),
+          model: cleanStr(selection.vehicle.model, "Tiêu chuẩn"),
+          color: cleanStr(selection.vehicle.color, "Trắng"),
+          status: "ACTIVE",
+        });
+      } catch (err) {
+        console.error("Sync error:", err);
+        const errStr = err?.message || "";
+        const guide = (errStr.toLowerCase().includes("internal server error") || err?.status === 500)
+          ? `Bản ghi xe cũ "${selection.vehicle.licensePlate}" bị lỗi dữ liệu trên máy chủ Backend. Bạn vui lòng vào tab "Xe của tôi", bấm Xóa xe này đi rồi bấm "Thêm phương tiện" tạo lại xe này là đặt lịch thành công 100%!`
+          : `Lỗi đồng bộ xe (${selection.vehicle.licensePlate}): ${errStr || "Máy chủ từ chối cập nhật"}. Vui lòng sang tab "Xe của tôi" bấm Chỉnh sửa và Lưu lại xe này.`;
+        setSubmitError(guide);
+        setSubmitting(false);
+        return;
+      }
       const response = await bookingApi.createBooking(payload);
       const normalizedResult = normalizeBookingResponse(response);
+      if (payload.bookingNote) {
+        try {
+          const notesMap = JSON.parse(localStorage.getItem("washmate_booking_notes") || "{}");
+          const bid = normalizedResult?.id || normalizedResult?.bookingId || response?.id;
+          const bcode = normalizedResult?.code || normalizedResult?.bookingCode || response?.bookingCode;
+          if (bid) notesMap[bid] = payload.bookingNote;
+          if (bcode) notesMap[bcode] = payload.bookingNote;
+          localStorage.setItem("washmate_booking_notes", JSON.stringify(notesMap));
+          localStorage.setItem("washmate_latest_booking_note", payload.bookingNote);
+        } catch {}
+      }
       setResult({
         ...normalizedResult,
         bookingStatus: "PENDING",
+        promotion,
+        discountAmount,
       });
       setStep(6);
     } catch (error) {
@@ -247,7 +282,7 @@ export default function CustomerBookingFlowPage() {
         <GarageStep
           garages={garages}
           selectedId={getGarageId(selection.garage)}
-          onSelect={selectGarage}
+          onSelect={(garage) => setSelection((current) => ({ ...current, garage, slot: null }))}
         />
       );
     }
@@ -268,7 +303,19 @@ export default function CustomerBookingFlowPage() {
         <VehicleStep
           vehicles={vehicles}
           selectedId={selection.vehicle?.id}
-          onSelect={(vehicle) => setSelection((cur) => ({ ...cur, vehicle }))}
+          onSelect={(vehicle) => {
+            setSelection((cur) => ({ ...cur, vehicle }));
+            const cleanStr = (str, def) => (str && typeof str === "string" && str.trim() ? str.trim() : def);
+            const vid = vehicle.id || vehicle.vehicleId;
+            vehicleApi.updateVehicle(vid, {
+              ...vehicle,
+              licensePlate: cleanStr(vehicle.licensePlate, "CHƯA CẬP NHẬT").toUpperCase(),
+              brand: cleanStr(vehicle.brand, "Khác"),
+              model: cleanStr(vehicle.model, "Tiêu chuẩn"),
+              color: cleanStr(vehicle.color, "Trắng"),
+              status: "ACTIVE",
+            }).catch((err) => console.warn("onSelect sync error:", err));
+          }}
         />
       );
     }
@@ -300,11 +347,11 @@ export default function CustomerBookingFlowPage() {
       );
     }
     // Step 6: Hoàn tất
-    return <BookingSuccessStep result={result} selection={selection} paymentMethod={paymentMethod} />;
+    return <BookingSuccessStep result={result} selection={selection} paymentMethod={paymentMethod} promotion={result?.promotion || promotion} discountAmount={result?.discountAmount || 0} />;
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-7 p-8">
+    <div className="mx-auto max-w-7xl space-y-7 p-8 pb-32">
       <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-primary">
@@ -338,7 +385,7 @@ export default function CustomerBookingFlowPage() {
       {content()}
 
       {step < 6 && !loading && !loadError && (
-        <div className="flex flex-col-reverse justify-between gap-3 border-t border-border pt-6 sm:flex-row">
+        <div className="sticky bottom-6 z-50 mx-auto mt-8 flex max-w-fit items-center justify-between gap-6 rounded-full border border-white/60 bg-white/30 px-6 py-3 shadow-[0_8px_32px_0_rgba(31,38,135,0.18)] backdrop-blur-2xl transition-all duration-300">
           <button
             type="button"
             onClick={() => {
@@ -346,28 +393,28 @@ export default function CustomerBookingFlowPage() {
               setStep((cur) => Math.max(1, cur - 1));
             }}
             disabled={step === 1 || submitting}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-card px-6 py-3 font-bold text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/80 bg-white/50 px-5 py-2 text-sm font-bold text-slate-800 shadow-sm backdrop-blur-md transition-all hover:bg-white/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <ArrowLeft size={18} /> Quay lại
+            <ArrowLeft size={16} /> Quay lại
           </button>
 
           {step < 5 ? (
             <button
               type="button"
               onClick={goNext}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)]"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600/90 to-primary/90 px-7 py-2 text-sm font-extrabold text-white shadow-[0_4px_15px_rgba(11,140,255,0.4)] backdrop-blur-md transition-all hover:scale-105 hover:from-blue-600 hover:to-primary active:scale-95"
             >
-              Tiếp tục <ArrowRight size={18} />
+              Tiếp tục <ArrowRight size={16} />
             </button>
           ) : (
             <button
               type="button"
               onClick={createBooking}
               disabled={submitting}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)] disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600/90 to-primary/90 px-7 py-2 text-sm font-extrabold text-white shadow-[0_4px_15px_rgba(11,140,255,0.4)] backdrop-blur-md transition-all hover:scale-105 hover:from-blue-600 hover:to-primary active:scale-95 disabled:opacity-60"
             >
-              {submitting ? "Đang gửi yêu cầu..." : "Gửi yêu cầu đặt lịch"}
-              <ArrowRight size={18} />
+              {submitting ? "Đang gửi..." : "Hoàn tất đặt lịch"}
+              <ArrowRight size={16} />
             </button>
           )}
         </div>
