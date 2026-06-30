@@ -6,6 +6,6 @@ export const bookingApi = {
   getBookingById: (id) => axiosClient.get(`/bookings/${id}`),
   cancelBooking: (id) => axiosClient.post(`/bookings/${id}/cancel`),
   checkIn: (id) => axiosClient.post(`/bookings/${id}/check-in`),
-  startWashing: (id) => axiosClient.post(`/bookings/${id}/start`),
+  startWashing: (id) => axiosClient.post(`/bookings/${id}/start-washing`),
   completeBooking: (id) => axiosClient.post(`/bookings/${id}/complete`),
 };
