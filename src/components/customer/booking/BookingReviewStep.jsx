@@ -114,7 +114,7 @@ export function BookingReviewStep({
     <div className="grid gap-6 xl:grid-cols-[1fr_400px]">
       <div className="grid gap-4 md:grid-cols-2 self-start">
         {items.map(({ icon: Icon, title, lines, debug }) => (
-          <article key={title} className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+          <article key={title} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <span className="grid size-11 place-items-center rounded-2xl bg-primary/10 text-primary">
               <Icon size={21} />
             </span>
@@ -133,7 +133,7 @@ export function BookingReviewStep({
         ))}
       </div>
 
-      <aside className="space-y-6 rounded-3xl border border-border bg-card p-6 shadow-sm self-start">
+      <aside className="space-y-6 rounded-2xl border border-border bg-card p-6 shadow-sm self-start">
         {/* Ưu đãi & Khuyến mãi */}
         <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/70 to-indigo-50/50 p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">

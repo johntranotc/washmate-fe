@@ -28,11 +28,18 @@ const defaultLoyaltyInfo = {
   availablePoints: 0,
 };
 
+const TIER_COLORS = {
+  "Đồng": "#CD7F32",
+  "Bạc": "#94A3B8",
+  "Vàng": "#F59E0B",
+  "Bạch Kim": "#3B82F6",
+  "Kim Cương": "#8B5CF6",
+};
+
 const menuItems = [
   { href: "/khach-hang", label: "Tổng quan", icon: LayoutGrid, end: true },
   { href: "/khach-hang/lich-dat", label: "Lịch đặt của tôi", icon: Calendar },
   { href: "/khach-hang/xe-cua-toi", label: "Xe của tôi", icon: Car },
-  { href: "/khach-hang/dat-lich-moi", label: "Đặt lịch mới", icon: Plus },
   { href: "/khach-hang/thanh-toan", label: "Thanh toán & hóa đơn", icon: CreditCard },
   { href: "/khach-hang/diem-thanh-vien", label: "Điểm thành viên", icon: Star },
   { href: "/khach-hang/uu-dai", label: "Ưu đãi", icon: Gift },
@@ -43,8 +50,6 @@ function resolveDisplayName() {
     const token = getAuthItem("token") || getAuthItem("accessToken");
     if (token) {
       const decoded = jwtDecode(token);
-
-      console.log("=== TOKEN PAYLOAD (HEADER) ===", decoded);
 
       let name =
         decoded.full_name ||
@@ -82,10 +87,29 @@ function resolveDisplayName() {
   return "Khách hàng";
 }
 
+function useLoyaltyInfo() {
+  const [loyaltyInfo, setLoyaltyInfo] = useState(defaultLoyaltyInfo);
+  useEffect(() => {
+    async function fetchLoyalty() {
+      try {
+        const res = await loyaltyApi.getMyLoyalty();
+        if (res) {
+          const pts = Number(res.availablePoints ?? res.points ?? 0) || 0;
+          const calc = resolveTierInfo(pts, res.tierName || res.tier);
+          setLoyaltyInfo({ tierName: calc.tierName, availablePoints: pts });
+        }
+      } catch {
+        // Giữ giá trị mặc định nếu API lỗi — không chặn layout
+      }
+    }
+    fetchLoyalty();
+  }, []);
+  return loyaltyInfo;
+}
+
 function DashboardHeader() {
   const navigate = useNavigate();
   const [customerName, setCustomerName] = useState(resolveDisplayName);
-  const [loyaltyInfo, setLoyaltyInfo] = useState(defaultLoyaltyInfo);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -95,25 +119,6 @@ function DashboardHeader() {
     }
     window.addEventListener("washmate-profile-updated", handleProfileUpdate);
     return () => window.removeEventListener("washmate-profile-updated", handleProfileUpdate);
-  }, []);
-
-  useEffect(() => {
-    async function fetchLoyalty() {
-      try {
-        const res = await loyaltyApi.getMyLoyalty();
-        if (res) {
-          const pts = Number(res.availablePoints ?? res.points ?? 0) || 0;
-          const calc = resolveTierInfo(pts, res.tierName || res.tier);
-          setLoyaltyInfo({
-            tierName: calc.tierName,
-            availablePoints: pts
-          });
-        }
-      } catch {
-        // Fallback im lặng nếu lỗi
-      }
-    }
-    fetchLoyalty();
   }, []);
 
   useEffect(() => {
@@ -140,10 +145,10 @@ function DashboardHeader() {
       return customerName.charAt(0).toUpperCase();
     }
     if (customerName && typeof customerName === "object") {
-      const str = customerName.name || customerName.full_name || "D";
+      const str = customerName.name || customerName.full_name || "K";
       return String(str).charAt(0).toUpperCase();
     }
-    return "D";
+    return "K";
   };
 
   const renderCustomerName = () => {
@@ -155,95 +160,142 @@ function DashboardHeader() {
   };
 
   return (
-    <header className="border-b border-white/40 bg-white/40 backdrop-blur-xl shadow-sm z-30">
-      <div className="flex h-16 items-center justify-between px-4 sm:px-6">
-        <div className="flex items-center gap-3">
-          <button 
-            type="button" 
-            onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-menu'))}
-            className="md:hidden p-2 -ml-2 rounded-xl text-slate-700 hover:bg-white/60"
-          >
-            <Menu size={24} />
-          </button>
-          <Logo />
-          <div className="hidden sm:block h-6 w-px bg-border" />
-          <span className="hidden sm:inline-block text-sm font-medium text-muted-foreground">Khu vực khách hàng</span>
-        </div>
+    <header className="z-30 flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-8">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent("toggle-mobile-menu"))}
+          className="-ml-2 rounded-xl p-2 text-slate-700 hover:bg-slate-100 md:hidden"
+        >
+          <Menu size={22} />
+        </button>
+        <span className="hidden text-sm font-semibold text-slate-500 sm:inline-block">Khu vực khách hàng</span>
+      </div>
 
-        <div className="flex items-center gap-4 relative" ref={dropdownRef}>
-          <button
-            type="button"
-            onClick={() => setShowDropdown(!showDropdown)}
-            className={cn(
-              "flex items-center gap-3 rounded-full py-1.5 px-3 transition-all duration-200 border cursor-pointer select-none",
-              showDropdown
-                ? "bg-white/80 border-blue-500/40 shadow-md shadow-blue-500/10"
-                : "bg-white/40 border-white/60 hover:bg-white/70 hover:shadow-sm"
-            )}
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-brand-dark font-bold text-white text-sm shadow-md">
-              {getAvatarLetter()}
-            </div>
-            <div className="text-left hidden md:block">
-              <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                {renderCustomerName()}
-                <ChevronDown size={16} className={cn("text-muted-foreground transition-transform duration-200", showDropdown && "rotate-180")} />
-              </p>
-            </div>
-          </button>
-
-          {showDropdown && (
-            <div className="absolute right-0 top-14 mt-1 w-64 rounded-2xl border border-white/80 bg-white/95 p-2 shadow-2xl backdrop-blur-2xl animate-in fade-in-0 zoom-in-95 z-50">
-              <div className="px-3 py-2.5 border-b border-border/40 mb-1 md:hidden">
-                <p className="text-sm font-semibold text-foreground">{renderCustomerName()}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => { setShowDropdown(false); navigate("/khach-hang/thong-bao"); }}
-                className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-blue-50 hover:text-blue-600"
-              >
-                <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
-                  <Bell size={18} />
-                  <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-gold" />
-                </div>
-                <span>Thông báo</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setShowDropdown(false); navigate("/khach-hang/tai-khoan"); }}
-                className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-blue-50 hover:text-blue-600"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
-                  <User size={18} />
-                </div>
-                <span>Tài khoản của tôi</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setShowDropdown(false); navigate("/khach-hang/doi-mat-khau"); }}
-                className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-blue-50 hover:text-blue-600"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
-                  <Shield size={18} />
-                </div>
-                <span>Đổi mật khẩu</span>
-              </button>
-              <div className="my-1 h-px bg-border/40" />
-              <button
-                type="button"
-                onClick={() => { setShowDropdown(false); handleLogout(); }}
-                className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-destructive transition-all hover:bg-destructive/10"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
-                  <LogOut size={18} />
-                </div>
-                <span>Đăng xuất</span>
-              </button>
-            </div>
+      <div className="relative flex items-center gap-2" ref={dropdownRef}>
+        <button
+          type="button"
+          onClick={() => navigate("/khach-hang/thong-bao")}
+          title="Thông báo"
+          className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+        >
+          <Bell size={18} />
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowDropdown(!showDropdown)}
+          className={cn(
+            "flex cursor-pointer select-none items-center gap-2.5 rounded-xl border px-2 py-1.5 transition",
+            showDropdown ? "border-blue-200 bg-blue-50" : "border-slate-200 bg-white hover:bg-slate-50",
           )}
-        </div>
+        >
+          <div className="grid h-8 w-8 place-items-center rounded-lg bg-blue-600 text-sm font-bold text-white">
+            {getAvatarLetter()}
+          </div>
+          <p className="hidden items-center gap-1.5 text-sm font-bold text-slate-800 md:flex">
+            {renderCustomerName()}
+            <ChevronDown size={15} className={cn("text-slate-400 transition-transform", showDropdown && "rotate-180")} />
+          </p>
+        </button>
+
+        {showDropdown && (
+          <div className="absolute right-0 top-12 z-50 w-60 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+            <div className="mb-1 border-b border-slate-100 px-3 py-2.5 md:hidden">
+              <p className="text-sm font-bold text-slate-800">{renderCustomerName()}</p>
+            </div>
+            {[
+              [Bell, "Thông báo", "/khach-hang/thong-bao"],
+              [User, "Tài khoản của tôi", "/khach-hang/tai-khoan"],
+              [Shield, "Đổi mật khẩu", "/khach-hang/doi-mat-khau"],
+            ].map(([Icon, label, to]) => (
+              <button
+                key={to}
+                type="button"
+                onClick={() => { setShowDropdown(false); navigate(to); }}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-blue-50 hover:text-blue-700"
+              >
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-50 text-blue-600"><Icon size={16} /></span>
+                {label}
+              </button>
+            ))}
+            <div className="my-1 h-px bg-slate-100" />
+            <button
+              type="button"
+              onClick={() => { setShowDropdown(false); handleLogout(); }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+            >
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-600"><LogOut size={16} /></span>
+              Đăng xuất
+            </button>
+          </div>
+        )}
       </div>
     </header>
+  );
+}
+
+function SidebarContent({ onNavigate }) {
+  const loyalty = useLoyaltyInfo();
+  const tierColor = TIER_COLORS[loyalty.tierName] || "#CD7F32";
+
+  return (
+    <>
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4 no-scrollbar">
+        {/* CTA đặt lịch — hành động chính của khách */}
+        <NavLink
+          to="/khach-hang/dat-lich-moi"
+          onClick={onNavigate}
+          className="mb-3 flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
+        >
+          <Plus size={18} /> Đặt lịch rửa xe
+        </NavLink>
+
+        {menuItems.map((item) => (
+          <NavLink
+            key={item.href}
+            to={item.href}
+            end={item.end}
+            onClick={onNavigate}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
+                isActive
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+              )
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} className="shrink-0" />
+                {item.label}
+              </>
+            )}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Hạng thành viên — dữ liệu thật từ /api/loyalty/me */}
+      <div className="shrink-0 border-t border-slate-100 p-4">
+        <NavLink
+          to="/khach-hang/diem-thanh-vien"
+          onClick={onNavigate}
+          className="block rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-200 hover:bg-blue-50/50"
+        >
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white" style={{ backgroundColor: tierColor }}>
+              <Star size={18} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-extrabold text-slate-900">Hạng {loyalty.tierName}</p>
+              <p className="text-xs font-semibold text-slate-500">
+                {new Intl.NumberFormat("vi-VN").format(loyalty.availablePoints)} điểm khả dụng
+              </p>
+            </div>
+          </div>
+        </NavLink>
+      </div>
+    </>
   );
 }
 
@@ -253,67 +305,26 @@ function DashboardSidebar({ mobileOpen, onClose }) {
       {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-          <aside className="absolute left-0 top-0 h-full w-72 bg-white shadow-2xl flex flex-col animate-in slide-in-from-left">
-            <div className="flex items-center justify-between p-4 border-b border-border/40">
+          <div className="absolute inset-0 bg-slate-900/40" onClick={onClose} />
+          <aside className="absolute left-0 top-0 flex h-full w-72 flex-col bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 p-4">
               <Logo />
-              <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 text-slate-600">
+              <button onClick={onClose} className="rounded-xl p-2 text-slate-600 hover:bg-slate-100">
                 <X size={20} />
               </button>
             </div>
-            <nav className="p-4 space-y-2 flex-1 overflow-y-auto no-scrollbar">
-              {menuItems.map((item) => (
-                <NavLink
-                  key={item.href}
-                  to={item.href}
-                  end={item.end}
-                  onClick={onClose}
-                  className={({ isActive }) =>
-                    cn(
-                      "rounded-2xl p-3.5 flex items-center gap-4 transition-all duration-200",
-                      isActive
-                        ? "bg-blue-500/15 text-blue-800 shadow-sm border border-blue-500/20 font-semibold"
-                        : "text-slate-600 hover:bg-slate-100",
-                    )
-                  }
-                >
-                  <item.icon size={22} className="shrink-0" />
-                  <span className="font-medium">{item.label}</span>
-                </NavLink>
-              ))}
-            </nav>
+            <SidebarContent onNavigate={onClose} />
           </aside>
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <div className="relative hidden md:block w-[88px] shrink-0 z-30">
-        <aside className="absolute top-0 left-0 h-full w-[88px] hover:w-64 group transition-all duration-300 ease-in-out border-r border-white/40 bg-white/40 hover:bg-white/60 hover:shadow-2xl backdrop-blur-2xl font-sans overflow-hidden flex flex-col">
-          <nav className="p-4 space-y-2 flex-1 overflow-y-auto no-scrollbar">
-            {menuItems.map((item) => (
-              <NavLink
-                key={item.href}
-                to={item.href}
-                end={item.end}
-                title={item.label}
-                className={({ isActive }) =>
-                  cn(
-                    "rounded-2xl p-3.5 flex items-center gap-4 transition-all duration-200",
-                    isActive
-                      ? "bg-blue-500/15 text-blue-800 shadow-md shadow-blue-500/20 border border-blue-500/30 backdrop-blur-md font-semibold"
-                      : "text-slate-500 hover:bg-white/60 hover:text-slate-900",
-                  )
-                }
-              >
-                <item.icon size={22} className="shrink-0" />
-                <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium">
-                  {item.label}
-                </span>
-              </NavLink>
-            ))}
-          </nav>
-        </aside>
-      </div>
+      {/* Desktop sidebar — cố định, nhãn luôn hiển thị, đồng bộ nhịp với Staff/Admin */}
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
+        <div className="flex h-16 shrink-0 items-center border-b border-slate-100 px-5">
+          <Logo />
+        </div>
+        <SidebarContent />
+      </aside>
     </>
   );
 }
@@ -321,32 +332,25 @@ function DashboardSidebar({ mobileOpen, onClose }) {
 function CustomerPortalLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Tiêu đề tab trình duyệt theo khu vực — như một web thật
   useEffect(() => {
-    const handleToggle = () => setMobileMenuOpen(prev => !prev);
-    window.addEventListener('toggle-mobile-menu', handleToggle);
-    return () => window.removeEventListener('toggle-mobile-menu', handleToggle);
+    document.title = "WashMate — Khách hàng";
+  }, []);
+
+  useEffect(() => {
+    const handleToggle = () => setMobileMenuOpen((prev) => !prev);
+    window.addEventListener("toggle-mobile-menu", handleToggle);
+    return () => window.removeEventListener("toggle-mobile-menu", handleToggle);
   }, []);
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden">
-      {/* Background Image for the whole portal */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <img
-          src="/images/hero-carwash.png"
-          alt="Portal Background"
-          className="size-full object-cover opacity-40 grayscale"
-        />
-        <div className="absolute inset-0 bg-slate-100/70 backdrop-blur-[40px]" />
-      </div>
-
-      <div className="relative z-10 flex flex-col h-full w-full">
+    <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-900">
+      <DashboardSidebar mobileOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+      <div className="flex min-w-0 flex-1 flex-col">
         <DashboardHeader />
-        <div className="flex flex-1 overflow-hidden">
-          <DashboardSidebar mobileOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
-          <main className="flex-1 overflow-auto no-scrollbar">
-            <Outlet />
-          </main>
-        </div>
+        <main className="flex-1 overflow-auto">
+          <Outlet />
+        </main>
       </div>
     </div>
   );

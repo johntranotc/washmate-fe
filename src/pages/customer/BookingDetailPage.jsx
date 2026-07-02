@@ -57,8 +57,8 @@ export default function BookingDetailPage() {
     loadDetail();
   }, [loadDetail]);
 
-  if (loading) return <div className="rounded-3xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải chi tiết lịch đặt...</div>;
-  if (!booking) return <div className="rounded-3xl border border-red-200 bg-red-50 p-10 text-center"><h1 className="text-xl font-extrabold text-red-700">Không tìm thấy lịch đặt</h1><p className="mt-2 text-sm text-red-600">{error}</p><button onClick={loadDetail} className="mt-5 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white">Thử lại</button></div>;
+  if (loading) return <div className="rounded-2xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải chi tiết lịch đặt...</div>;
+  if (!booking) return <div className="rounded-2xl border border-red-200 bg-red-50 p-10 text-center"><h1 className="text-xl font-extrabold text-red-700">Không tìm thấy lịch đặt</h1><p className="mt-2 text-sm text-red-600">{error}</p><button onClick={loadDetail} className="mt-5 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white">Thử lại</button></div>;
 
   const isMock = booking?.isMock;
   const details = [
@@ -80,13 +80,13 @@ export default function BookingDetailPage() {
       </header>
       {isMock && <p className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-700">Dữ liệu này dùng để demo giao diện. API thật sẽ được kết nối sau.</p>}
 
-      <section className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4"><div><h2 className="text-xl font-extrabold">Tiến trình lịch đặt</h2><p className="mt-1 text-sm text-[var(--text-muted)]">Trạng thái được cập nhật theo quá trình thanh toán và chăm sóc xe.</p></div></div>
         <BookingTimeline booking={booking} />
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
-        <section className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
           <h2 className="text-xl font-extrabold">Thông tin lịch đặt</h2>
           <dl className="mt-6 grid gap-5 sm:grid-cols-2">
             {details.map(([Icon, label, value]) => <div key={label} className="flex gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--brand-blue)]/10 text-[var(--brand-blue)]"><Icon size={18} /></span><div><dt className="text-xs font-semibold text-[var(--text-muted)]">{label}</dt><dd className="mt-1 font-bold">{value}</dd></div></div>)}

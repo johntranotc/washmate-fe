@@ -21,7 +21,7 @@ export function ProcessSteps() {
                 <li key={step.title} className="relative lg:grid lg:grid-cols-2 lg:items-center lg:gap-16">
                   <span className="absolute left-7 top-7 z-10 grid size-14 -translate-x-1/2 place-items-center rounded-2xl bg-primary text-white shadow-lg lg:left-1/2 lg:top-1/2 lg:-translate-y-1/2"><Icon className="size-6" /></span>
                   <div className={cn("ml-16 lg:ml-0", left ? "lg:col-start-1 lg:pr-16 lg:text-right" : "lg:col-start-2 lg:pl-16")}>
-                    <article className="rounded-3xl border border-border bg-card p-6 shadow-[0_18px_44px_-30px_rgba(16,32,51,.4)] transition hover:-translate-y-1 hover:border-primary/40">
+                    <article className="rounded-3xl border border-border bg-card p-6 shadow-[0_18px_44px_-30px_rgba(15,23,42,.4)] transition hover:-translate-y-1 hover:border-primary/40">
                       <span className="text-sm font-bold text-primary">Bước {index + 1}</span>
                       <h3 className="mt-2 text-xl font-bold">{step.title}</h3>
                       <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{step.description}</p>

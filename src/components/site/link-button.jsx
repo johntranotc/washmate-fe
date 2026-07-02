@@ -11,7 +11,7 @@ const sizes = {
 
 const variants = {
   primary:
-    "bg-primary text-primary-foreground shadow-[0_12px_28px_-10px_rgba(11,140,255,0.75)] hover:-translate-y-0.5 hover:bg-brand-dark",
+    "bg-primary text-primary-foreground shadow-[0_12px_28px_-10px_rgba(37,99,235,0.75)] hover:-translate-y-0.5 hover:bg-brand-dark",
   secondary:
     "bg-secondary text-primary hover:bg-accent hover:text-accent-foreground",
   outline:

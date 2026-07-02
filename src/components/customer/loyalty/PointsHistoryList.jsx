@@ -4,7 +4,7 @@ import { loyaltyTransactionLabels } from "@/lib/customer-engagement-data";
 
 export function PointsHistoryList({ transactions, loading }) {
   return (
-    <Card className="rounded-3xl border border-border p-6">
+    <Card className="rounded-2xl border border-border p-6">
       <div className="flex items-center gap-2">
         <span className="grid size-10 place-items-center rounded-2xl bg-primary/10 text-primary"><History size={18} /></span>
         <h2 className="text-lg font-extrabold text-foreground">Lịch sử điểm</h2>

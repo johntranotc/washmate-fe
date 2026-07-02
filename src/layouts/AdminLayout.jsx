@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   BarChart3, Building2, CalendarDays, Car, CircleDollarSign,
   LayoutDashboard, Megaphone, Settings, Star, Users, UsersRound, BrainCircuit
@@ -21,8 +22,13 @@ const navLinks = [
 ];
 
 function AdminLayout() {
+  // Tiêu đề tab trình duyệt theo khu vực — như một web thật
+  useEffect(() => {
+    document.title = "WashMate — Quản trị";
+  }, []);
+
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-900">
+    <div className="wm-admin flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-900">
       {/* Sidebar - Dark theme */}
       <aside className="flex flex-col w-64 shrink-0 bg-[#0F172A] text-slate-300 transition-all duration-300">
         <div className="flex h-16 items-center px-6 gap-3 shrink-0">

@@ -56,6 +56,7 @@ export const normalizeStaffBooking = (value = {}) => {
     code: item.bookingCode ?? item.code,
 
     // Customer
+    customerId: customer.id ?? item.customerId ?? null,
     customerName: customer.fullName ?? item.customerName ?? "Khách hàng",
     phone: customer.phone ?? item.phone ?? "Chưa cập nhật",
 
@@ -70,6 +71,7 @@ export const normalizeStaffBooking = (value = {}) => {
     serviceName: service.name ?? item.serviceName ?? "Dịch vụ chăm sóc xe",
 
     // Garage — BE: { id, name }
+    garageId: garage.id ?? item.garageId ?? null,
     garageName: garage.name ?? item.garageName ?? "Gara WashMate",
 
     // Status — BE dùng field "status" (không phải bookingStatus)
@@ -132,7 +134,7 @@ export function getNextStaffAction(booking) {
 
 // Badge color for each status
 export const bookingStatusTone = {
-  PENDING: "bg-orange-100 text-orange-700",
+  PENDING: "bg-amber-100 text-amber-700",
   CONFIRMED: "bg-blue-100 text-blue-700",
   CHECKED_IN: "bg-cyan-100 text-cyan-700",
   WASHING: "bg-violet-100 text-violet-700",

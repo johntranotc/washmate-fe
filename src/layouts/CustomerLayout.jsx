@@ -72,7 +72,7 @@ export default function CustomerLayout() {
   const sidebarContent = (
     <>
       <Link to="/customer" className="flex items-center gap-3 px-2 pb-6">
-        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--brand-blue)] text-white shadow-[0_12px_28px_rgba(11,140,255,0.28)]">
+        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--brand-blue)] text-white shadow-[0_12px_28px_rgba(37,99,235,0.28)]">
           <Sparkles size={22} />
         </span>
         <span>
@@ -121,7 +121,7 @@ export default function CustomerLayout() {
         )}
 
         <div className="flex min-h-screen w-full flex-1 flex-col">
-          <header className="sticky top-0 z-30 border-b border-[var(--border-soft)] bg-white/95 backdrop-blur">
+          <header className="sticky top-0 z-30 border-b border-[var(--border-soft)] bg-white">
             <div className="flex items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
               <button type="button" onClick={() => setMobileNavOpen(true)} className="rounded-xl border border-[var(--border-soft)] p-2 text-[var(--text-main)] lg:hidden" aria-label="Mở menu">
                 <Menu size={20} />

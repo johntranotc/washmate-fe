@@ -15,8 +15,10 @@ export const adminApi = {
   deleteUser: (userId) => axiosClient.delete(`/admin/users/${userId}`),
   // GET /api/v1/services/garage/{garageId}
   getServicesByGarage: (garageId) => axiosClient.get(`/v1/services/garage/${garageId}`),
-  // No admin-level analytics summary endpoint yet — return empty
-  getAdminSummary: () => Promise.resolve({}),
+  // GET /api/analytics/summary (ADMIN/OWNER) — số liệu tổng hợp thật từ BE
+  getAnalyticsSummary: () => axiosClient.get("/analytics/summary"),
+  // Giữ alias cũ để tương thích (trỏ về endpoint thật)
+  getAdminSummary: () => axiosClient.get("/analytics/summary"),
   // GET /api/admin/invoices (paginated)
   getInvoices: (params = {}) => axiosClient.get("/admin/invoices", { params: { size: 1000, sort: 'id,desc', ...params } }),
   // No list-all payments endpoint yet — return empty

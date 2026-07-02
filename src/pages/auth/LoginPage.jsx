@@ -108,7 +108,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex h-12 items-center justify-center rounded-xl bg-primary text-[15px] font-bold text-primary-foreground shadow-[0_12px_28px_-10px_rgba(11,140,255,0.75)] transition-all hover:-translate-y-0.5 hover:bg-brand-dark disabled:opacity-60"
+          className="inline-flex h-12 items-center justify-center rounded-xl bg-primary text-[15px] font-bold text-primary-foreground shadow-[0_12px_28px_-10px_rgba(37,99,235,0.75)] transition-all hover:-translate-y-0.5 hover:bg-brand-dark disabled:opacity-60"
         >
           {loading ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>

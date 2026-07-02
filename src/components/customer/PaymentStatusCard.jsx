@@ -10,7 +10,7 @@ export function PaymentStatusCard({ booking }) {
 
   if (bookingStatus === "PENDING") {
     return (
-      <aside className="rounded-3xl border border-orange-200 bg-orange-50 p-6 shadow-sm">
+      <aside className="rounded-2xl border border-orange-200 bg-orange-50 p-6 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <span className="grid size-12 place-items-center rounded-2xl bg-orange-100 text-orange-600"><Clock size={22} /></span>
         </div>
@@ -27,7 +27,7 @@ export function PaymentStatusCard({ booking }) {
 
   if (bookingStatus === "REJECTED") {
     return (
-      <aside className="rounded-3xl border border-red-200 bg-red-50 p-6 shadow-sm">
+      <aside className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <span className="grid size-12 place-items-center rounded-2xl bg-red-100 text-red-600"><XCircle size={22} /></span>
         </div>
@@ -50,7 +50,7 @@ export function PaymentStatusCard({ booking }) {
         : { label: "Tiếp tục thanh toán", path: paymentPath };
 
   return (
-    <aside className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+    <aside className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <span className="grid size-12 place-items-center rounded-2xl bg-[var(--brand-blue)]/10 text-[var(--brand-blue)]"><CreditCard /></span>
         <StatusBadge status={status} type="payment" />

@@ -62,7 +62,7 @@ export default function LoyaltyPage() {
 
       
 
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-400 p-7 text-white shadow-lg shadow-blue-200/60">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-400 p-7 text-white shadow-lg shadow-blue-200/60">
         <Sparkles className="absolute -right-4 -top-4 opacity-20" size={150} />
         <div className="relative grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
           <div>

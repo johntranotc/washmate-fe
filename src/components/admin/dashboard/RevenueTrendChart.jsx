@@ -1,62 +1,158 @@
+import { useMemo, useState } from "react";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import { cn } from "@/lib/utils";
-import { formatMoney, formatMoneyCompact } from "@/lib/format";
+import { formatMoney, formatMoneyCompact, formatMoneyShort } from "@/lib/format";
 
-const RANGES = [
-  { key: "today", label: "Ngày" },
+/** Grouping granularity for the chart (independent from the page's period filter). */
+const GROUPS = [
+  { key: "day", label: "Ngày" },
   { key: "week", label: "Tuần" },
   { key: "month", label: "Tháng" },
 ];
 
+function isoWeekLabel(dateISO) {
+  // Bucket by Monday of the week, label "Tuần dd/MM".
+  const d = new Date(dateISO + "T00:00:00");
+  const day = (d.getDay() + 6) % 7; // 0 = Monday
+  d.setDate(d.getDate() - day);
+  return `Tuần ${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function labelFor(dateISO, group) {
+  if (group === "month") {
+    const [y, m] = dateISO.split("-");
+    return `${m}/${y}`;
+  }
+  if (group === "week") return isoWeekLabel(dateISO);
+  const [, m, d] = dateISO.split("-");
+  return `${d}/${m}`;
+}
+
 /**
- * Doanh thu theo thời gian (line). Toggle Ngày/Tuần/Tháng điều khiển bộ lọc kỳ ở trang.
- * Đường "kỳ trước" chỉ hiện khi có dữ liệu thật.
+ * Doanh thu theo thời gian (area chart).
+ *
+ * data: daily points [{ dateISO: "yyyy-MM-dd", revenue, previousRevenue }] — real data only.
+ * The Ngày/Tuần/Tháng toggle re-groups the SAME real data (no interpolation, no fake points).
+ * A summary strip (tổng kỳ, TB/ngày, ngày cao nhất) gives the chart business meaning.
  */
-export function RevenueTrendChart({ data = [], showPrevious = false, range = "month", onRangeChange }) {
+export function RevenueTrendChart({ data = [], showPrevious = false }) {
+  const [group, setGroup] = useState("day");
+
+  const grouped = useMemo(() => {
+    if (group === "day") {
+      return data.map((d) => ({ label: labelFor(d.dateISO, "day"), revenue: d.revenue, previousRevenue: d.previousRevenue }));
+    }
+    const buckets = new Map();
+    data.forEach((d) => {
+      const key = labelFor(d.dateISO, group);
+      const cur = buckets.get(key) || { label: key, revenue: 0, previousRevenue: 0 };
+      cur.revenue += d.revenue || 0;
+      cur.previousRevenue += d.previousRevenue || 0;
+      buckets.set(key, cur);
+    });
+    return Array.from(buckets.values());
+  }, [data, group]);
+
+  const stats = useMemo(() => {
+    const total = data.reduce((s, d) => s + (d.revenue || 0), 0);
+    const days = data.length || 1;
+    let peak = null;
+    data.forEach((d) => { if (d.revenue > 0 && (!peak || d.revenue > peak.revenue)) peak = d; });
+    return { total, avg: total / days, peak };
+  }, [data]);
+
+  const hasRevenue = stats.total > 0;
+  const fewPoints = grouped.length <= 14;
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-extrabold text-slate-800">Doanh thu theo thời gian</h3>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="font-extrabold text-slate-800">Doanh thu theo thời gian</h3>
+          <p className="mt-0.5 text-[11px] font-semibold text-slate-400">Chỉ tính lịch hẹn đã hoàn thành trong kỳ đã chọn</p>
+        </div>
         <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
-          {RANGES.map((r) => (
+          {GROUPS.map((g) => (
             <button
-              key={r.key}
+              key={g.key}
               type="button"
-              onClick={() => onRangeChange?.(r.key)}
+              onClick={() => setGroup(g.key)}
               className={cn(
                 "rounded-md px-3 py-1 text-xs font-bold transition",
-                range === r.key ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-800",
+                group === g.key ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-800",
               )}
             >
-              {r.label}
+              {g.label}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="mb-4 flex items-center gap-4">
-        <span className="flex items-center gap-1.5"><span className="h-1 w-4 rounded-full bg-blue-500" /><span className="text-xs font-semibold text-slate-500">Doanh thu (đ)</span></span>
-        {showPrevious && (
-          <span className="flex items-center gap-1.5"><span className="h-0 w-4 border-t-2 border-dashed border-slate-400" /><span className="text-xs font-semibold text-slate-500">Kỳ trước (đ)</span></span>
-        )}
+      {/* Summary strip — real numbers so the chart has business context */}
+      <div className="mb-4 grid grid-cols-3 gap-3 rounded-xl bg-slate-50 p-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tổng doanh thu kỳ</p>
+          <p className="mt-0.5 text-sm font-black text-slate-900">{formatMoneyShort(stats.total)}</p>
+        </div>
+        <div className="border-l border-slate-200 pl-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Trung bình / ngày</p>
+          <p className="mt-0.5 text-sm font-black text-slate-900">{formatMoneyShort(stats.avg)}</p>
+        </div>
+        <div className="border-l border-slate-200 pl-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Cao nhất</p>
+          <p className="mt-0.5 text-sm font-black text-slate-900">
+            {stats.peak ? formatMoneyShort(stats.peak.revenue) : "—"}
+            {stats.peak && <span className="ml-1 text-[10px] font-semibold text-slate-400">({labelFor(stats.peak.dateISO, "day")})</span>}
+          </p>
+        </div>
       </div>
 
       <div className="h-[280px] w-full">
-        {data.length > 0 ? (
+        {grouped.length > 0 && hasRevenue ? (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 5, right: 8, left: 10, bottom: 0 }}>
+            <AreaChart data={grouped} margin={{ top: 5, right: 8, left: 10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="revFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.25} />
+                  <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748B" }} dy={10} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748B" }} tickFormatter={formatMoneyCompact} />
-              <RechartsTooltip formatter={(v) => formatMoney(v)} />
-              <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
-              {showPrevious && <Line type="monotone" dataKey="previousRevenue" stroke="#94A3B8" strokeWidth={2} strokeDasharray="5 5" dot={false} />}
-            </LineChart>
+              <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748B" }} dy={10} interval="preserveStartEnd" minTickGap={24} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748B" }} tickFormatter={formatMoneyCompact} width={52} />
+              <RechartsTooltip
+                formatter={(v, name) => [formatMoney(v), name === "revenue" ? "Doanh thu" : "Kỳ trước"]}
+                labelStyle={{ fontWeight: 700, color: "#0F172A" }}
+                contentStyle={{ borderRadius: 12, border: "1px solid #E2E8F0", fontSize: 12 }}
+              />
+              <Legend
+                verticalAlign="top"
+                height={28}
+                formatter={(value) => (
+                  <span className="text-xs font-semibold text-slate-500">{value === "revenue" ? "Doanh thu (đ)" : "Kỳ trước (đ)"}</span>
+                )}
+              />
+              {showPrevious && (
+                <Area type="monotone" dataKey="previousRevenue" stroke="#94A3B8" strokeWidth={2} strokeDasharray="5 5" fill="none" dot={false} />
+              )}
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="#3B82F6"
+                strokeWidth={3}
+                fill="url(#revFill)"
+                dot={fewPoints ? { r: 4, fill: "#3B82F6", strokeWidth: 2, stroke: "#fff" } : false}
+                activeDot={{ r: 6 }}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-slate-400">Chưa có dữ liệu doanh thu trong kỳ đã chọn.</div>
+          <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
+            <p className="text-sm font-bold text-slate-500">Chưa có doanh thu trong kỳ đã chọn</p>
+            <p className="text-xs text-slate-400">Doanh thu được ghi nhận khi lịch hẹn chuyển sang trạng thái Hoàn thành.</p>
+          </div>
         )}
       </div>
     </div>

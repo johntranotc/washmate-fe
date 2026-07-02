@@ -32,7 +32,7 @@ function Cell({ value }) {
 
 export function ComparisonTable() {
   return (
-    <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_18px_44px_-30px_rgba(16,32,51,0.4)]">
+    <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_18px_44px_-30px_rgba(15,23,42,0.4)]">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] border-collapse text-left">
           <thead>

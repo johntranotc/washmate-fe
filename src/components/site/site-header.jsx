@@ -56,7 +56,7 @@ export function SiteHeader() {
           </Link>
           <Link
             to="/register"
-            className="inline-flex items-center gap-1.5 rounded-2xl bg-primary px-5 py-2.5 text-[15px] font-bold text-white shadow-[0_10px_24px_-8px_rgba(11,140,255,0.7)] transition-all hover:-translate-y-0.5 hover:bg-blue-600"
+            className="inline-flex items-center gap-1.5 rounded-2xl bg-primary px-5 py-2.5 text-[15px] font-bold text-white shadow-[0_10px_24px_-8px_rgba(37,99,235,0.7)] transition-all hover:-translate-y-0.5 hover:bg-blue-600"
           >
             Đăng ký ngay
             <ArrowRight className="size-4" />

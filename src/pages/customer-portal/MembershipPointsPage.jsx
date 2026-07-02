@@ -50,7 +50,7 @@ export default function MembershipPointsPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-8">
-      <header className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between bg-white/40 backdrop-blur-xl border border-white/50 p-6 sm:p-8 rounded-[2rem] shadow-sm mb-6">
+      <header className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between bg-white border border-white/50 p-6 sm:p-8 rounded-2xl shadow-sm mb-6">
         <div>
           <span className="inline-block rounded-full bg-blue-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 mb-3">WashMate Rewards</span>
           <h1 className="text-3xl font-extrabold leading-tight text-slate-900">Điểm thưởng của tôi</h1>
@@ -62,7 +62,7 @@ export default function MembershipPointsPage() {
               <Gift size={18} /> Đổi điểm lấy quà
             </Link>
           </Button>
-          <Button variant="outline" onClick={loadData} className="h-11 rounded-2xl border border-white/60 bg-white/50 backdrop-blur-md font-bold text-slate-700 hover:bg-white/80 hover:text-slate-900 shadow-sm transition-all duration-300 flex items-center gap-2 px-5">
+          <Button variant="outline" onClick={loadData} className="h-11 rounded-2xl border border-slate-200 bg-white font-bold text-slate-700 hover:bg-white hover:text-slate-900 shadow-sm transition-all duration-300 flex items-center gap-2 px-5">
             <RotateCcw size={18} /> Tải lại
           </Button>
         </div>

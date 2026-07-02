@@ -347,9 +347,9 @@ export default function CustomerBookingFlowPage() {
         <div className="flex flex-col-reverse justify-between gap-3 border-t border-[var(--border-soft)] pt-6 sm:flex-row">
           <button type="button" onClick={() => setStep((current) => Math.max(1, current - 1))} disabled={step === 1 || submitting} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-white px-6 py-3 font-bold text-[var(--text-main)] disabled:cursor-not-allowed disabled:opacity-40"><ArrowLeft size={18} /> Quay lại</button>
           {step < 5 ? (
-            <button type="button" onClick={goNext} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--brand-blue)] px-6 py-3 font-bold text-white shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)]">Tiếp tục <ArrowRight size={18} /></button>
+            <button type="button" onClick={goNext} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--brand-blue)] px-6 py-3 font-bold text-white shadow-[0_12px_28px_-10px_rgba(37,99,235,.75)]">Tiếp tục <ArrowRight size={18} /></button>
           ) : (
-            <button type="button" onClick={createBooking} disabled={submitting} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--brand-blue)] px-6 py-3 font-bold text-white shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)] disabled:opacity-60">{submitting ? "Đang tạo lịch đặt..." : "Tạo lịch đặt"} <ArrowRight size={18} /></button>
+            <button type="button" onClick={createBooking} disabled={submitting} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--brand-blue)] px-6 py-3 font-bold text-white shadow-[0_12px_28px_-10px_rgba(37,99,235,.75)] disabled:opacity-60">{submitting ? "Đang tạo lịch đặt..." : "Tạo lịch đặt"} <ArrowRight size={18} /></button>
           )}
         </div>
       )}

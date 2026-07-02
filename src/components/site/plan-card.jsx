@@ -8,8 +8,8 @@ export function PlanCard({ plan }) {
       className={cn(
         "relative flex flex-col rounded-3xl border p-7 transition-all",
         plan.featured
-          ? "border-primary bg-primary text-primary-foreground shadow-[0_30px_60px_-24px_rgba(11,140,255,0.6)] lg:-translate-y-4"
-          : "border-border bg-card text-foreground shadow-[0_18px_44px_-26px_rgba(16,32,51,0.3)]",
+          ? "border-primary bg-primary text-primary-foreground shadow-[0_30px_60px_-24px_rgba(37,99,235,0.6)] lg:-translate-y-4"
+          : "border-border bg-card text-foreground shadow-[0_18px_44px_-26px_rgba(15,23,42,0.3)]",
       )}
     >
       {plan.badge && (

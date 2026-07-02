@@ -3,7 +3,7 @@ import { tiers } from "@/lib/site-data";
 
 export function TierShowcase() {
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-white via-surface to-accent/30 p-8 shadow-[0_30px_70px_-40px_rgba(11,140,255,.55)] sm:p-12">
+    <div className="relative overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-white via-surface to-accent/30 p-8 shadow-[0_30px_70px_-40px_rgba(37,99,235,.55)] sm:p-12">
       <div className="absolute left-1/2 top-0 size-96 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
       <div className="relative grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
         {tiers.map((tier) => (

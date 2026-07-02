@@ -36,13 +36,13 @@ export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", 
   return (
     <div className="mx-auto max-w-2xl">
       {/* Card */}
-      <div className="rounded-[2rem] border border-border bg-card shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         {/* Top accent */}
         <div className="h-2 bg-gradient-to-r from-primary to-cyan-500" />
 
         <div className="p-8 sm:p-10 text-center">
           {/* Icon */}
-          <span className="mx-auto grid size-20 place-items-center rounded-3xl bg-emerald-100 text-emerald-600">
+          <span className="mx-auto grid size-20 place-items-center rounded-2xl bg-emerald-100 text-emerald-600">
             <SendHorizonal size={36} />
           </span>
 
@@ -109,7 +109,7 @@ export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", 
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
               to="/khach-hang/lich-dat"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow-[0_8px_20px_-8px_rgba(11,140,255,.6)]"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow-[0_8px_20px_-8px_rgba(37,99,235,.6)]"
             >
               Xem lịch đặt <ArrowRight size={17} />
             </Link>

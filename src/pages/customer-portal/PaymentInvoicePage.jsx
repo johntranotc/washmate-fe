@@ -65,10 +65,10 @@ export default function PaymentInvoicePage() {
 
 
       {loading ? (
-        <div className="rounded-3xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải dữ liệu thanh toán...</div>
+        <div className="rounded-2xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải dữ liệu thanh toán...</div>
       ) : (
         <>
-          <section className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+          <section className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
             <h2 className="flex items-center gap-2 text-xl font-extrabold"><Wallet className="text-[var(--brand-blue)]" /> Cần thanh toán</h2>
             {!pendingPayments.length ? (
               <p className="mt-4 text-sm text-[var(--text-muted)]">Bạn không có lịch đặt nào đang chờ thanh toán.</p>
@@ -106,7 +106,7 @@ export default function PaymentInvoicePage() {
             )}
           </section>
 
-          <section className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+          <section className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
             <h2 className="flex items-center gap-2 text-xl font-extrabold"><FileText className="text-[var(--brand-blue)]" /> Hóa đơn đã phát hành</h2>
             {!paidInvoices.length ? (
               <p className="mt-4 text-sm text-[var(--text-muted)]">Bạn chưa có hóa đơn nào.</p>

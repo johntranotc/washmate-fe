@@ -56,7 +56,7 @@ export default function PromotionsPage() {
       ) : (
         <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {visiblePromotions.map((item) => (
-            <article key={item.id} className="flex min-h-72 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <article key={item.id} className="flex min-h-72 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div className="bg-gradient-to-r from-blue-700 to-cyan-500 p-5 text-white">
                 <div className="flex items-center justify-between"><BadgePercent size={28} /><span className="rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold">{item.memberOnly ? "THÀNH VIÊN" : "ƯU ĐÃI"}</span></div>
                 <p className="mt-5 text-2xl font-black">{item.discountLabel}</p>

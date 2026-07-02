@@ -322,7 +322,7 @@ export default function VehiclesPage() {
       </div>
 
       {loading ? (
-        <Card className="rounded-3xl border border-border p-12 text-center shadow-sm">
+        <Card className="rounded-2xl border border-border p-12 text-center shadow-sm">
           <p className="text-lg font-bold text-foreground">Đang tải danh sách xe...</p>
           <p className="mt-2 text-sm text-muted-foreground">Vui lòng chờ trong giây lát.</p>
         </Card>
@@ -334,7 +334,7 @@ export default function VehiclesPage() {
             const formattedModel = vehicle.model ? vehicle.model.charAt(0).toUpperCase() + vehicle.model.slice(1) : "";
 
             return (
-              <Card key={vehicleId} className="group relative overflow-hidden rounded-3xl border border-border/80 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl">
+              <Card key={vehicleId} className="group relative overflow-hidden rounded-2xl border border-border/80 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl">
                 <div className="mb-6 flex items-start justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-blue-600 text-white shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
@@ -407,8 +407,8 @@ export default function VehiclesPage() {
           })}
         </div>
       ) : (
-        <Card className="rounded-3xl border border-border p-12 text-center shadow-sm">
-          <div className="mb-4 inline-block rounded-3xl bg-primary/10 p-5">
+        <Card className="rounded-2xl border border-border p-12 text-center shadow-sm">
+          <div className="mb-4 inline-block rounded-2xl bg-primary/10 p-5">
             <Car size={48} className="text-primary" />
           </div>
           <h2 className="mb-2 text-2xl font-bold leading-tight text-foreground">Bạn chưa có phương tiện nào</h2>
@@ -423,7 +423,7 @@ export default function VehiclesPage() {
 
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <Card className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+          <Card className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-2xl font-bold leading-tight text-foreground">Thêm xe mới</h2>
               <button type="button" onClick={() => setShowAddModal(false)}>
@@ -501,7 +501,7 @@ export default function VehiclesPage() {
 
       {showEditModal && selectedVehicle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <Card className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+          <Card className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-2xl font-bold leading-tight text-foreground">Sửa thông tin xe</h2>
               <button type="button" onClick={() => setShowEditModal(false)}>
@@ -579,7 +579,7 @@ export default function VehiclesPage() {
 
       {showDeleteModal && selectedVehicle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <Card className="w-full max-w-md rounded-3xl bg-white p-8">
+          <Card className="w-full max-w-md rounded-2xl bg-white p-8">
             <h2 className="mb-4 text-2xl font-bold leading-tight text-foreground">Xóa xe?</h2>
             <p className="mb-6 font-medium text-muted-foreground">
               Bạn có chắc chắn muốn xóa xe {selectedVehicle.licensePlate}? Hành động này không thể hoàn tác.

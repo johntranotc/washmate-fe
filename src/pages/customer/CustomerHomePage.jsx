@@ -74,7 +74,7 @@ export default function CustomerHomePage() {
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-white via-blue-50 to-cyan-50 p-7 md:p-9">
+      <section className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-white via-blue-50 to-cyan-50 p-7 md:p-9">
         <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-blue-200/40 blur-3xl" />
         <div className="relative flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
           <div>
