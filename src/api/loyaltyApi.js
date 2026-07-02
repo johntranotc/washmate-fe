@@ -1,5 +1,10 @@
 import axiosClient from "./axiosClient";
 
+// TODO(BE): Chưa có endpoint tổng quan tích điểm cấp chủ doanh nghiệp/chi nhánh, ví dụ:
+//   GET /api/v1/loyalty/owner/summary  -> { totalIssued, totalUsed, totalRemaining, customersWithPoints }
+//   GET /api/v1/loyalty/owner/tier-distribution?garageId -> [{ tier, customerCount }]
+// Khi có, wire vào AdminDashboardPage thay cho việc suy ra từ users (hiện hiển thị "—" nếu thiếu).
+
 export const loyaltyApi = {
   getMyLoyalty: (garageId) =>
     axiosClient.get("/loyalty/me", { params: { garageId } }),
