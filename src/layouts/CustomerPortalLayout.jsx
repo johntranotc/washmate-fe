@@ -9,10 +9,12 @@ import {
   Gift,
   LayoutGrid,
   LogOut,
+  Menu,
   Plus,
   Shield,
   Star,
   User,
+  X,
 } from "lucide-react";
 import { Logo } from "@/components/site/logo";
 import { loyaltyApi } from "@/api/loyaltyApi";
@@ -154,11 +156,18 @@ function DashboardHeader() {
 
   return (
     <header className="border-b border-white/40 bg-white/40 backdrop-blur-xl shadow-sm z-30">
-      <div className="flex h-16 items-center justify-between px-6">
+      <div className="flex h-16 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-3">
+          <button 
+            type="button" 
+            onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-menu'))}
+            className="md:hidden p-2 -ml-2 rounded-xl text-slate-700 hover:bg-white/60"
+          >
+            <Menu size={24} />
+          </button>
           <Logo />
-          <div className="h-6 w-px bg-border" />
-          <span className="text-sm font-medium text-muted-foreground">Khu vực khách hàng</span>
+          <div className="hidden sm:block h-6 w-px bg-border" />
+          <span className="hidden sm:inline-block text-sm font-medium text-muted-foreground">Khu vực khách hàng</span>
         </div>
 
         <div className="flex items-center gap-4 relative" ref={dropdownRef}>
@@ -238,39 +247,86 @@ function DashboardHeader() {
   );
 }
 
-function DashboardSidebar() {
+function DashboardSidebar({ mobileOpen, onClose }) {
   return (
-    <div className="relative w-[88px] shrink-0 z-30">
-      <aside className="absolute top-0 left-0 h-full w-[88px] hover:w-64 group transition-all duration-300 ease-in-out border-r border-white/40 bg-white/40 hover:bg-white/60 hover:shadow-2xl backdrop-blur-2xl font-sans overflow-hidden flex flex-col">
-        <nav className="p-4 space-y-2 flex-1 overflow-y-auto no-scrollbar">
-          {menuItems.map((item) => (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              end={item.end}
-              title={item.label}
-              className={({ isActive }) =>
-                cn(
-                  "rounded-2xl p-3.5 flex items-center gap-4 transition-all duration-200",
-                  isActive
-                    ? "bg-blue-500/15 text-blue-800 shadow-md shadow-blue-500/20 border border-blue-500/30 backdrop-blur-md font-semibold"
-                    : "text-slate-500 hover:bg-white/60 hover:text-slate-900",
-                )
-              }
-            >
-              <item.icon size={22} className="shrink-0" />
-              <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium">
-                {item.label}
-              </span>
-            </NavLink>
-          ))}
-        </nav>
-      </aside>
-    </div>
+    <>
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+          <aside className="absolute left-0 top-0 h-full w-72 bg-white shadow-2xl flex flex-col animate-in slide-in-from-left">
+            <div className="flex items-center justify-between p-4 border-b border-border/40">
+              <Logo />
+              <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+            <nav className="p-4 space-y-2 flex-1 overflow-y-auto no-scrollbar">
+              {menuItems.map((item) => (
+                <NavLink
+                  key={item.href}
+                  to={item.href}
+                  end={item.end}
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    cn(
+                      "rounded-2xl p-3.5 flex items-center gap-4 transition-all duration-200",
+                      isActive
+                        ? "bg-blue-500/15 text-blue-800 shadow-sm border border-blue-500/20 font-semibold"
+                        : "text-slate-600 hover:bg-slate-100",
+                    )
+                  }
+                >
+                  <item.icon size={22} className="shrink-0" />
+                  <span className="font-medium">{item.label}</span>
+                </NavLink>
+              ))}
+            </nav>
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
+      <div className="relative hidden md:block w-[88px] shrink-0 z-30">
+        <aside className="absolute top-0 left-0 h-full w-[88px] hover:w-64 group transition-all duration-300 ease-in-out border-r border-white/40 bg-white/40 hover:bg-white/60 hover:shadow-2xl backdrop-blur-2xl font-sans overflow-hidden flex flex-col">
+          <nav className="p-4 space-y-2 flex-1 overflow-y-auto no-scrollbar">
+            {menuItems.map((item) => (
+              <NavLink
+                key={item.href}
+                to={item.href}
+                end={item.end}
+                title={item.label}
+                className={({ isActive }) =>
+                  cn(
+                    "rounded-2xl p-3.5 flex items-center gap-4 transition-all duration-200",
+                    isActive
+                      ? "bg-blue-500/15 text-blue-800 shadow-md shadow-blue-500/20 border border-blue-500/30 backdrop-blur-md font-semibold"
+                      : "text-slate-500 hover:bg-white/60 hover:text-slate-900",
+                  )
+                }
+              >
+                <item.icon size={22} className="shrink-0" />
+                <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium">
+                  {item.label}
+                </span>
+              </NavLink>
+            ))}
+          </nav>
+        </aside>
+      </div>
+    </>
   );
 }
 
 function CustomerPortalLayout() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleToggle = () => setMobileMenuOpen(prev => !prev);
+    window.addEventListener('toggle-mobile-menu', handleToggle);
+    return () => window.removeEventListener('toggle-mobile-menu', handleToggle);
+  }, []);
+
   return (
     <div className="relative flex h-screen flex-col overflow-hidden">
       {/* Background Image for the whole portal */}
@@ -286,7 +342,7 @@ function CustomerPortalLayout() {
       <div className="relative z-10 flex flex-col h-full w-full">
         <DashboardHeader />
         <div className="flex flex-1 overflow-hidden">
-          <DashboardSidebar />
+          <DashboardSidebar mobileOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
           <main className="flex-1 overflow-auto no-scrollbar">
             <Outlet />
           </main>

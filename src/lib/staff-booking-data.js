@@ -96,6 +96,40 @@ export const normalizeStaffBooking = (value = {}) => {
   };
 };
 
+/**
+ * Xác định thao tác hợp lệ tiếp theo cho staff dựa trên vòng đời booking.
+ * Trả về null nếu không còn thao tác (COMPLETED/CANCELLED/REJECTED/NO_SHOW).
+ *
+ * Workflow:
+ *   PENDING     -> Xác nhận       (confirmBooking)   [chỉ khi BE hỗ trợ /confirm]
+ *   CONFIRMED   -> Check-in       (checkInBooking)   [yêu cầu payment PAID]
+ *   CHECKED_IN  -> Bắt đầu rửa    (startWashing)
+ *   WASHING     -> Hoàn tất       (completeBooking)
+ */
+export function getNextStaffAction(booking) {
+  if (!booking) return null;
+  switch (booking.bookingStatus) {
+    case "PENDING":
+      return { api: "confirmBooking", next: "CONFIRMED", label: "Xác nhận", enabled: true };
+    case "CONFIRMED": {
+      const paid = booking.paymentStatus === "PAID";
+      return {
+        api: "checkInBooking",
+        next: "CHECKED_IN",
+        label: "Check-in",
+        enabled: paid,
+        disabledHint: paid ? null : "Chờ khách thanh toán",
+      };
+    }
+    case "CHECKED_IN":
+      return { api: "startWashing", next: "WASHING", label: "Bắt đầu rửa", enabled: true };
+    case "WASHING":
+      return { api: "completeBooking", next: "COMPLETED", label: "Hoàn tất", enabled: true };
+    default:
+      return null;
+  }
+}
+
 // Badge color for each status
 export const bookingStatusTone = {
   PENDING: "bg-orange-100 text-orange-700",

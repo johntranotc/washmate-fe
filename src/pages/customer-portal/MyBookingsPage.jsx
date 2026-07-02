@@ -45,7 +45,7 @@ export default function MyBookingsPage() {
   }, [load]);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-8">
+    <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-8 pb-32">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-[var(--brand-blue)]">Lịch đặt của tôi</p>

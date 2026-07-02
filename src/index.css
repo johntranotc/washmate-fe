@@ -180,6 +180,9 @@
   * {
     @apply border-border outline-ring/50;
   }
+  body {
+    @apply font-sans antialiased text-foreground bg-background;
+  }
 }
 
 @layer utilities {

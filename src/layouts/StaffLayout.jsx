@@ -1,165 +1,129 @@
-import { CalendarDays, LayoutDashboard, ListChecks, Search, ChevronDown, Clock, XCircle, Timer } from "lucide-react";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import AccountDropdown from "../components/portal/AccountDropdown";
-import { cn } from "@/lib/utils";
+import {
+  CalendarDays, LayoutDashboard, ListChecks, Search, User, Bell, LogOut, Car,
+} from "lucide-react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { authApi } from "../api/authApi";
+import { getAuthItem } from "@/utils/authUtils";
 
 const navLinks = [
   { icon: LayoutDashboard, label: "Tổng quan", to: "/nhan-vien", end: true },
-  { 
-    icon: ListChecks, 
-    label: "Hàng đợi", 
-    to: "/nhan-vien/hang-doi", 
-    end: false,
-    subItems: [
-      { label: "Chờ xác nhận", hash: "#pending", icon: Clock },
-      { label: "Đang xử lý", hash: "#queue", icon: Timer },
-      { label: "Từ chối", hash: "#rejected", icon: XCircle },
-      { label: "Hủy", hash: "#cancelled", icon: XCircle }
-    ]
-  },
+  { icon: ListChecks, label: "Hàng đợi", to: "/nhan-vien/hang-doi", end: false },
   { icon: CalendarDays, label: "Danh sách lịch đặt", to: "/nhan-vien/danh-sach", end: false },
   { icon: Search, label: "Tra cứu booking", to: "/staff/bookings", end: false },
+  { icon: User, label: "Hồ sơ nhân viên", to: "/nhan-vien/profile", end: false },
 ];
 
-function StaffLayout() {
-  const location = useLocation();
+function readUser() {
+  try {
+    return JSON.parse(getAuthItem("currentUser") || "{}");
+  } catch {
+    return {};
+  }
+}
+
+export default function StaffLayout() {
   const navigate = useNavigate();
-  const [expanded, setExpanded] = useState({});
+  const user = readUser();
+  const displayName = user?.fullName || user?.name || "Nhân viên";
+  const initial = displayName.charAt(0).toUpperCase() || "S";
 
-  // Initialize expanded state based on current route
-  useEffect(() => {
-    navLinks.forEach(item => {
-      if (item.subItems) {
-        const isActiveRoute = location.pathname === item.to || (item.to !== "/nhan-vien" && location.pathname.startsWith(item.to));
-        if (isActiveRoute && expanded[item.to] === undefined) {
-          setExpanded(prev => ({ ...prev, [item.to]: true }));
-        }
-      }
-    });
-  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Scroll to hash when URL changes
-  useEffect(() => {
-    if (location.hash) {
-      const id = location.hash.replace("#", "");
-      const el = document.getElementById(id);
-      if (el) {
-        setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
-      }
+  async function handleLogout() {
+    try {
+      await authApi.logout();
+    } catch {
+      ["token", "accessToken", "refreshToken", "currentUser", "roles", "garageIds", "userEmail", "washmate_user_role"]
+        .forEach((k) => { sessionStorage.removeItem(k); localStorage.removeItem(k); });
     }
-  }, [location.pathname, location.hash]);
-
-  const handleSubItemClick = (e, to, hash) => {
-    e.preventDefault();
-    if (location.pathname !== to) {
-      navigate(to + hash);
-    } else {
-      navigate(hash);
-    }
-  };
-
-  const handleParentClick = (e, item) => {
-    if (item.subItems) {
-      // If clicking on a parent that has subItems, always toggle its expansion
-      setExpanded(prev => ({ ...prev, [item.to]: !prev[item.to] }));
-      
-      // If we are already on this route, prevent default navigation so it just acts as an accordion
-      if (location.pathname === item.to) {
-        e.preventDefault();
-      }
-    }
-  };
+    navigate("/dang-nhap");
+  }
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-slate-900 px-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 shadow">
-            <span className="text-xs font-black text-white">W</span>
+    <div className="flex h-screen overflow-hidden bg-slate-100 font-sans text-slate-900">
+      {/* Dark sidebar */}
+      <aside className="flex w-64 shrink-0 flex-col bg-[#0F172A] text-slate-300">
+        <div className="flex h-16 shrink-0 items-center gap-3 px-6">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500 shadow-sm shadow-blue-500/30">
+            <Car size={18} className="text-white" />
           </div>
           <div>
-            <p className="text-sm font-extrabold text-white leading-none">WashMate</p>
-            <p className="text-[10px] text-slate-400 leading-none mt-0.5">Staff Portal</p>
+            <p className="text-[15px] font-extrabold leading-none text-white">WashMate</p>
+            <p className="mt-1 text-[10px] leading-none text-blue-300">Staff Portal</p>
           </div>
         </div>
 
-        <AccountDropdown profilePath="/nhan-vien/profile" colorScheme="dark" />
-      </header>
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+          {navLinks.map(({ icon: Icon, label, to, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                [
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all",
+                  isActive
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                    : "text-slate-400 hover:bg-slate-800 hover:text-white",
+                ].join(" ")
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                  {label}
+                </>
+              )}
+            </NavLink>
+          ))}
+        </nav>
 
-      <div className="flex">
-        <aside className="sticky top-14 h-[calc(100vh-56px)] w-60 shrink-0 overflow-y-auto border-r border-slate-200 bg-white p-3">
-          <nav className="space-y-1">
-            {navLinks.map((item) => {
-              const isExpanded = !!expanded[item.to];
-              
-              return (
-                <div key={item.to} className="space-y-1">
-                  <NavLink
-                    to={item.to}
-                    end={item.end}
-                    onClick={(e) => handleParentClick(e, item)}
-                    className={({ isActive }) =>
-                      cn(
-                        "flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                        isActive
-                          ? "bg-blue-600 text-white shadow-sm"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                      )
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
-                        <div className="flex items-center gap-2.5">
-                          <item.icon size={16} />
-                          {item.label}
-                        </div>
-                        {item.subItems && (
-                          <ChevronDown 
-                            size={14} 
-                            className={cn("transition-transform", isExpanded && "rotate-180")} 
-                          />
-                        )}
-                      </>
-                    )}
-                  </NavLink>
-                  
-                  {/* Dropdown for sub-items */}
-                  {item.subItems && isExpanded && (
-                    <div className="pl-9 pr-2 space-y-1 py-1">
-                      {item.subItems.map((sub) => {
-                        const isSubActive = location.hash === sub.hash;
-                        return (
-                          <a
-                            key={sub.hash}
-                            href={`${item.to}${sub.hash}`}
-                            onClick={(e) => handleSubItemClick(e, item.to, sub.hash)}
-                            className={cn(
-                              "flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors",
-                              isSubActive
-                                ? "bg-blue-50 text-blue-700"
-                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                            )}
-                          >
-                            <sub.icon size={14} />
-                            {sub.label}
-                          </a>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </nav>
-        </aside>
+        {/* User card + logout */}
+        <div className="shrink-0 border-t border-slate-800 p-4">
+          <div className="flex items-center gap-3 rounded-xl px-2 py-2">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 text-sm font-bold text-white shadow">
+              {initial}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold text-white">{displayName}</p>
+              <p className="flex items-center gap-1 text-[11px] text-slate-400">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" /> Đang làm việc
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-700 py-2.5 text-xs font-bold text-slate-200 transition hover:bg-slate-800"
+          >
+            <LogOut size={15} /> Đăng xuất
+          </button>
+        </div>
+      </aside>
 
-        <main className="flex-1 p-6 min-w-0">
+      {/* Main */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="flex h-16 shrink-0 items-center justify-end gap-3 border-b border-slate-200 bg-white px-6">
+          <button
+            type="button"
+            aria-label="Thông báo"
+            className="relative grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50"
+          >
+            <Bell size={18} />
+          </button>
+          <div className="flex items-center gap-2.5 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 text-sm font-bold text-white shadow">
+              {initial}
+            </span>
+            <div className="hidden sm:block">
+              <p className="text-xs font-bold leading-tight text-slate-800">{displayName}</p>
+              <p className="text-[10px] leading-tight text-slate-500">STAFF</p>
+            </div>
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-6">
           <Outlet />
-        </main>
+        </div>
       </div>
     </div>
   );
 }
-
-export default StaffLayout;
