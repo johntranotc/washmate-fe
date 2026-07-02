@@ -15,7 +15,7 @@ const variantStyles = {
 
 export function StatCard({ icon, value, label, description, variant = "default" }) {
   return (
-    <div className={cn("rounded-3xl border border-border p-6", variantStyles[variant])}>
+    <div className={cn("rounded-2xl border border-border p-6", variantStyles[variant])}>
       <div className="flex items-start justify-between">
         <div>
           <div className="mb-2 text-sm font-medium text-muted-foreground">{label}</div>

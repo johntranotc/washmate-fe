@@ -196,7 +196,7 @@ export default function NewBookingPage() {
 
       <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Card className="rounded-3xl border border-border bg-white p-8">
+          <Card className="rounded-2xl border border-border bg-white p-8">
             <div className="mb-6 text-center">
               <div className="mb-4 inline-block rounded-full bg-primary/10 p-4">
                 <div className="text-primary">{stepContent[currentStep - 1].icon}</div>
@@ -410,7 +410,7 @@ export default function NewBookingPage() {
         </div>
 
         <div className="lg:col-span-1">
-          <Card className="sticky top-8 rounded-3xl border border-border bg-white p-6">
+          <Card className="sticky top-8 rounded-2xl border border-border bg-white p-6">
             <h3 className="mb-4 text-lg font-bold leading-tight text-foreground">Tóm tắt lựa chọn</h3>
 
             <div className="mb-6 space-y-3">
@@ -461,7 +461,7 @@ export default function NewBookingPage() {
 
       {showConfirmation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <Card className="w-full max-w-md rounded-3xl bg-white p-8">
+          <Card className="w-full max-w-md rounded-2xl bg-white p-8">
             <div className="text-center">
               <div className="mb-4 inline-block rounded-full bg-green-100 p-4">
                 <Check size={40} className="text-green-600" />

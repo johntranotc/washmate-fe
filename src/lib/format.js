@@ -22,6 +22,24 @@ export function formatMoneyCompact(value) {
   }).format(Number.isFinite(num) ? num : 0);
 }
 
+/**
+ * Adaptive money for KPI cards: full value when short enough, otherwise
+ * compact but unambiguous, e.g. 125680000 -> "125,68 Tr đ", 1250000000 -> "1,25 Tỷ đ".
+ * Never truncates digits — always a complete, readable value.
+ */
+export function formatMoneyShort(value) {
+  const num = Number(value);
+  const safe = Number.isFinite(num) ? num : 0;
+  const abs = Math.abs(safe);
+  if (abs < 10_000_000) return formatMoney(safe); // e.g. "9.980.000 đ" still fits
+  if (abs < 1_000_000_000) {
+    const tr = safe / 1_000_000;
+    return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(tr)} Tr đ`;
+  }
+  const ty = safe / 1_000_000_000;
+  return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(ty)} Tỷ đ`;
+}
+
 /** Plain grouped number, e.g. 126450 -> "126.450". */
 export function formatNumber(value) {
   const num = Number(value);

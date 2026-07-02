@@ -100,7 +100,7 @@ function BankTransferBlock({ booking, transferContent }) {
   ];
 
   return (
-    <div className="mt-6 overflow-hidden rounded-3xl border border-blue-200 bg-blue-50/40">
+    <div className="mt-6 overflow-hidden rounded-2xl border border-blue-200 bg-blue-50/40">
       <div className="border-b border-blue-100 px-5 py-4">
         <h3 className="text-sm font-extrabold text-blue-800">Quét mã QR để thanh toán</h3>
         <p className="mt-0.5 text-xs text-blue-600">
@@ -218,7 +218,7 @@ export default function CustomerPaymentPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-5xl p-8">
-        <div className="rounded-3xl bg-white p-12 text-center text-[var(--text-muted)]">
+        <div className="rounded-2xl bg-white p-12 text-center text-[var(--text-muted)]">
           Đang tải thông tin thanh toán...
         </div>
       </div>
@@ -228,7 +228,7 @@ export default function CustomerPaymentPage() {
   if (!booking) {
     return (
       <div className="mx-auto max-w-5xl p-8">
-        <div className="rounded-3xl border border-red-200 bg-red-50 p-10 text-center">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-10 text-center">
           <XCircle className="mx-auto text-red-500" />
           <h1 className="mt-4 text-xl font-extrabold text-red-700">Không thể tải dữ liệu lịch đặt</h1>
           <p className="mt-2 text-sm text-red-600">{error}</p>
@@ -243,7 +243,7 @@ export default function CustomerPaymentPage() {
   if (booking.bookingStatus === "PENDING") {
     return (
       <div className="mx-auto max-w-5xl p-8">
-        <div className="rounded-3xl border border-orange-200 bg-orange-50 p-10 text-center">
+        <div className="rounded-2xl border border-orange-200 bg-orange-50 p-10 text-center">
           <Clock className="mx-auto text-orange-500" size={40} />
           <h1 className="mt-4 text-xl font-extrabold text-orange-800">Chưa thể thanh toán</h1>
           <p className="mt-2 text-sm text-orange-700">
@@ -266,7 +266,7 @@ export default function CustomerPaymentPage() {
   if (booking.bookingStatus === "REJECTED") {
     return (
       <div className="mx-auto max-w-5xl p-8">
-        <div className="rounded-3xl border border-red-200 bg-red-50 p-10 text-center">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-10 text-center">
           <XCircle className="mx-auto text-red-500" size={40} />
           <h1 className="mt-4 text-xl font-extrabold text-red-700">Gara từ chối lịch đặt</h1>
           <p className="mt-2 text-sm text-red-600">
@@ -305,7 +305,7 @@ export default function CustomerPaymentPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         {/* ── Left: payment method + QR ── */}
-        <section className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-extrabold">Phương thức thanh toán</h2>
             <StatusBadge status={payment?.status || "PENDING"} type="payment" />
@@ -384,7 +384,7 @@ export default function CustomerPaymentPage() {
               </Link>
             )
           ) : (
-            <div className="mt-6 rounded-3xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-700">
+            <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-700">
               <p className="flex items-center gap-2 text-lg font-extrabold">
                 <CheckCircle2 /> Thanh toán thành công
               </p>
@@ -410,7 +410,7 @@ export default function CustomerPaymentPage() {
         </section>
 
         {/* ── Right: summary ── */}
-        <aside className="rounded-3xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+        <aside className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
           <h2 className="text-xl font-extrabold">Tóm tắt thanh toán</h2>
           <dl className="mt-5 space-y-4 text-sm">
             {[

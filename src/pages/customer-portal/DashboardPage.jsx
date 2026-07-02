@@ -9,7 +9,7 @@ import { RecentNotifications } from "@/components/customer-portal/recent-notific
 
 export default function DashboardPage() {
   return (
-    <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8 p-4 sm:p-8 pb-32">
+    <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-8 pb-16">
       <DashboardHero />
       <DashboardStatsGrid />
       <div className="grid gap-6 lg:grid-cols-2">

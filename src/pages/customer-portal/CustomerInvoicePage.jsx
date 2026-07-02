@@ -68,13 +68,13 @@ export default function CustomerInvoicePage() {
   }
 
   if (loading) {
-    return <div className="mx-auto max-w-4xl p-8"><div className="rounded-3xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải hóa đơn...</div></div>;
+    return <div className="mx-auto max-w-4xl p-8"><div className="rounded-2xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải hóa đơn...</div></div>;
   }
 
   if (!booking || !invoice) {
     return (
       <div className="mx-auto max-w-4xl p-8">
-        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-10 text-center">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-10 text-center">
           <h1 className="text-xl font-extrabold text-amber-800">Chưa có hóa đơn</h1>
           <p className="mt-2 text-sm text-amber-700">{error}</p>
           <button onClick={loadInvoice} className="mt-5 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white">Thử lại</button>
@@ -85,7 +85,7 @@ export default function CustomerInvoicePage() {
 
   return (
     <div className="mx-auto max-w-4xl p-8">
-      <div className="rounded-[2rem] border border-[var(--border-soft)] bg-white p-6 shadow-[var(--shadow-soft)] sm:p-10">
+      <div className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-[var(--shadow-soft)] sm:p-10">
         <header className="flex flex-col gap-5 border-b border-[var(--border-soft)] pb-7 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="grid size-12 place-items-center rounded-2xl bg-[var(--brand-blue)] text-white"><Droplets /></span>
@@ -111,7 +111,7 @@ export default function CustomerInvoicePage() {
             <span className="mt-2 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">{invoiceStatusLabels[invoice.status]}</span>
           </div>
         </section>
-        <section className="rounded-3xl bg-[var(--bg-main)] p-5">
+        <section className="rounded-2xl bg-[var(--bg-main)] p-5">
           <div className="grid gap-4 text-sm sm:grid-cols-2">
             <div><span className="text-[var(--text-muted)]">Gara</span><strong className="mt-1 block">{booking.garageName}</strong></div>
             <div><span className="text-[var(--text-muted)]">Lịch hẹn</span><strong className="mt-1 block">{formatBookingDate(booking.bookingDate)} · {booking.slotTime}</strong></div>

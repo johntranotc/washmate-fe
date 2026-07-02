@@ -81,7 +81,7 @@ export function GarageStep({ garages, selectedId, onSelect }) {
 
   if (!garages.length) {
     return (
-      <div className="rounded-3xl border border-dashed border-border bg-card p-10 text-center">
+      <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
         <MapPin className="mx-auto size-10 text-primary" />
         <h2 className="mt-4 text-xl font-extrabold text-foreground">Không có gara</h2>
         <p className="mt-2 text-sm text-muted-foreground">Không tìm thấy gara nào đang hoạt động.</p>
@@ -151,7 +151,7 @@ export function GarageStep({ garages, selectedId, onSelect }) {
 
         {/* List */}
         {processed.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border bg-card p-10 text-center">
+          <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
             <MapPin className="mx-auto size-9 text-muted-foreground/50" />
             <p className="mt-3 font-bold text-foreground">Không tìm thấy gara</p>
             <p className="mt-1 text-sm text-muted-foreground">Thử thay đổi từ khóa hoặc bộ lọc</p>
@@ -204,9 +204,9 @@ function GarageCard({ garage, selected, onSelect, onHover, onLeave }) {
   return (
     <article
       className={cn(
-        "cursor-pointer rounded-3xl border-2 bg-card p-5 shadow-sm transition-all duration-200",
+        "cursor-pointer rounded-2xl border-2 bg-card p-5 shadow-sm transition-all duration-200",
         selected
-          ? "border-primary bg-primary/5 shadow-[0_8px_24px_-8px_rgba(11,140,255,.3)]"
+          ? "border-primary bg-primary/5 shadow-[0_8px_24px_-8px_rgba(37,99,235,.3)]"
           : "border-border hover:border-primary/40 hover:shadow-md",
         !garage.isOpen && !selected && "opacity-60",
       )}
@@ -330,7 +330,7 @@ function MapPreviewPanel({
   const pinGarages = allGarages.slice(0, PIN_POSITIONS.length);
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       {/* Map area */}
       <div className="relative h-72 overflow-hidden bg-[#dbeafe]">
         {/* Grid texture */}
@@ -348,10 +348,10 @@ function MapPreviewPanel({
 
         {/* Simulated roads */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[32%] left-0 right-0 h-2 rounded bg-white/50" />
-          <div className="absolute top-[62%] left-0 right-0 h-1.5 rounded bg-white/35" />
-          <div className="absolute top-0 bottom-0 left-[42%] w-2 rounded bg-white/50" />
-          <div className="absolute top-0 bottom-0 left-[68%] w-1.5 rounded bg-white/35" />
+          <div className="absolute top-[32%] left-0 right-0 h-2 rounded bg-white" />
+          <div className="absolute top-[62%] left-0 right-0 h-1.5 rounded bg-white" />
+          <div className="absolute top-0 bottom-0 left-[42%] w-2 rounded bg-white" />
+          <div className="absolute top-0 bottom-0 left-[68%] w-1.5 rounded bg-white" />
         </div>
 
         {/* Radius circle (shows when location found) */}
@@ -423,7 +423,7 @@ function MapPreviewPanel({
         </div>
 
         {/* Legend */}
-        <div className="absolute bottom-2 right-2 space-y-1 rounded-xl bg-white/90 px-3 py-2 text-[10px] shadow-sm">
+        <div className="absolute bottom-2 right-2 space-y-1 rounded-xl bg-white px-3 py-2 text-[10px] shadow-sm">
           <p className="flex items-center gap-1.5">
             <span className="size-2 rounded-full bg-emerald-500" /> Mở cửa
           </p>
@@ -436,7 +436,7 @@ function MapPreviewPanel({
         </div>
 
         {/* "Map simulation" label */}
-        <div className="absolute left-2 top-2 rounded-lg bg-white/80 px-2 py-1 text-[10px] font-semibold text-slate-500">
+        <div className="absolute left-2 top-2 rounded-lg bg-white px-2 py-1 text-[10px] font-semibold text-slate-500">
           Bản đồ minh họa
         </div>
       </div>

@@ -93,7 +93,7 @@ export function MembershipSummary() {
 
   return (
     <div className="mb-8">
-      <Card className={cn("rounded-3xl border bg-gradient-to-br p-8", getTierGradient(loyaltyInfo.tierName))}>
+      <Card className={cn("rounded-2xl border bg-gradient-to-br p-8", getTierGradient(loyaltyInfo.tierName))}>
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="flex flex-col items-center justify-center">
             <div className="mb-4 flex items-center justify-center">
@@ -126,7 +126,7 @@ export function MembershipSummary() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-4 rounded-xl border border-border bg-white/60 p-4 backdrop-blur sm:grid-cols-2 shadow-sm">
+            <div className="grid grid-cols-1 gap-4 rounded-xl border border-border bg-white p-4 sm:grid-cols-2 shadow-sm">
               <div>
                 <p className="mb-1 text-xs font-medium text-muted-foreground">Quyền lợi</p>
                 <p className="text-sm font-semibold leading-tight text-foreground">{currentTierObj.benefits?.[0] || "Tích điểm mỗi lần rửa xe"}</p>

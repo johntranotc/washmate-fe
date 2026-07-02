@@ -60,7 +60,7 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6 lg:p-10 animate-in fade-in-0 duration-300">
-      <header className="bg-white/60 backdrop-blur-xl border border-white/80 p-8 rounded-[2.5rem] shadow-sm">
+      <header className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm">
         <div className="flex items-center gap-3 mb-3">
           <span className="grid size-10 place-items-center rounded-2xl bg-primary/10 text-primary">
             <KeyRound size={22} />

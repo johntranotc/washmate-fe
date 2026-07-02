@@ -52,7 +52,7 @@
 .ui-btn-primary {
   background: var(--brand-blue);
   color: #fff;
-  box-shadow: 0 12px 28px rgba(11, 140, 255, 0.28);
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.28);
 }
 
 .ui-btn-primary:hover:not(:disabled) {
@@ -79,7 +79,7 @@
 }
 
 .ui-btn-outline:hover:not(:disabled) {
-  background: rgba(11, 140, 255, 0.08);
+  background: rgba(37, 99, 235, 0.08);
 }
 
 .ui-btn-ghost {
@@ -182,7 +182,7 @@
 
 .ui-field-wrap:focus-within {
   border-color: var(--brand-blue);
-  box-shadow: 0 0 0 3px rgba(11, 140, 255, 0.12);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .ui-field-icon {

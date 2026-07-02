@@ -52,7 +52,7 @@ export default function MyBookingsPage() {
           <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Lịch đặt rửa xe</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">Theo dõi trạng thái các lịch đặt và tiếp tục thanh toán nếu cần.</p>
         </div>
-        <Link to="/khach-hang/dat-lich-moi" className="inline-flex items-center justify-center gap-2 self-start rounded-2xl bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)]">
+        <Link to="/khach-hang/dat-lich-moi" className="inline-flex items-center justify-center gap-2 self-start rounded-2xl bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_-10px_rgba(37,99,235,.75)]">
           Đặt lịch mới
         </Link>
       </header>
@@ -60,9 +60,9 @@ export default function MyBookingsPage() {
 
 
       {loading ? (
-        <div className="rounded-3xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải lịch đặt...</div>
+        <div className="rounded-2xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải lịch đặt...</div>
       ) : !bookings.length ? (
-        <div className="rounded-3xl border border-[var(--border-soft)] bg-white p-12 text-center">
+        <div className="rounded-2xl border border-[var(--border-soft)] bg-white p-12 text-center">
           <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[var(--brand-blue)]/10 text-[var(--brand-blue)]"><ClipboardList size={26} /></span>
           <h2 className="mt-4 text-xl font-extrabold">Bạn chưa có lịch đặt nào</h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">Đặt lịch rửa xe ngay để trải nghiệm dịch vụ của WashMate.</p>
@@ -78,7 +78,7 @@ export default function MyBookingsPage() {
             const isRejected = booking.bookingStatus === "REJECTED";
 
             return (
-              <div key={booking.id} className="rounded-3xl border border-[var(--border-soft)] bg-white shadow-sm transition hover:border-[var(--brand-blue)]">
+              <div key={booking.id} className="rounded-2xl border border-[var(--border-soft)] bg-white shadow-sm transition hover:border-[var(--brand-blue)]">
                 <Link
                   to={`/khach-hang/lich-dat/${booking.id}`}
                   className="block p-6"

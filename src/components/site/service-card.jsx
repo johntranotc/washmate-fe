@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export function ServiceCard({ service, showBook = false }) {
   return (
-    <article className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[0_18px_44px_-26px_rgba(16,32,51,0.35)] transition-all hover:-translate-y-1 hover:shadow-[0_28px_60px_-28px_rgba(11,140,255,0.45)]">
+    <article className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[0_18px_44px_-26px_rgba(15,23,42,0.35)] transition-all hover:-translate-y-1 hover:shadow-[0_28px_60px_-28px_rgba(37,99,235,0.45)]">
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
           src={service.image || "/placeholder.svg"}

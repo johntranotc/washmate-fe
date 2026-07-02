@@ -14,7 +14,7 @@ export function SlotStep({ date, onDateChange, slots, selectedId, onSelect, load
   return (
     <div className="space-y-6">
       {/* Date picker */}
-      <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <h2 className="flex items-center gap-2 text-lg font-extrabold text-foreground">
           <CalendarDays className="text-primary" /> Chọn ngày
         </h2>
@@ -39,7 +39,7 @@ export function SlotStep({ date, onDateChange, slots, selectedId, onSelect, load
       </section>
 
       {/* Slot picker */}
-      <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <h2 className="flex items-center gap-2 text-lg font-extrabold text-foreground">
           <Clock3 className="text-primary" /> Khung giờ phù hợp
         </h2>

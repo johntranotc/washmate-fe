@@ -3,7 +3,7 @@ import { TierBadge } from "@/components/site/tier-badge";
 
 export function TierDetailCard({ tier }) {
   return (
-    <article className="flex flex-col items-center rounded-3xl border border-border bg-card p-7 text-center shadow-[0_18px_44px_-30px_rgba(16,32,51,0.4)] transition-all hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-30px_rgba(11,140,255,0.4)]">
+    <article className="flex flex-col items-center rounded-3xl border border-border bg-card p-7 text-center shadow-[0_18px_44px_-30px_rgba(15,23,42,0.4)] transition-all hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-30px_rgba(37,99,235,0.4)]">
       <TierBadge tier={tier} size="md" />
       <h3 className="mt-5 text-2xl font-extrabold" style={{ color: tier.color }}>
         {tier.name}

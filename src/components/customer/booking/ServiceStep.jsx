@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export function ServiceStep({ services, selectedId, onSelect, garageName }) {
   if (!services.length) {
     return (
-      <div className="rounded-3xl border border-dashed border-border bg-card p-10 text-center">
+      <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
         <Sparkles className="mx-auto size-10 text-primary" />
         <h2 className="mt-4 text-xl font-extrabold text-foreground">
           Không có dịch vụ
@@ -33,7 +33,7 @@ export function ServiceStep({ services, selectedId, onSelect, garageName }) {
             <article
               key={service.id}
               className={cn(
-                "flex flex-col rounded-3xl border-2 bg-card p-6 shadow-sm transition",
+                "flex flex-col rounded-2xl border-2 bg-card p-6 shadow-sm transition",
                 selected ? "border-primary" : "border-border hover:border-primary/40",
               )}
             >

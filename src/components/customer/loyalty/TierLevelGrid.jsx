@@ -11,7 +11,7 @@ export function TierLevelGrid({ tiers, currentTierName }) {
           return (
             <Card
               key={tier.name}
-              className={`flex flex-col items-center rounded-3xl border p-5 text-center ${isCurrent ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
+              className={`flex flex-col items-center rounded-2xl border p-5 text-center ${isCurrent ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
             >
               <TierBadge tier={tier} size="sm" />
               {isCurrent && (

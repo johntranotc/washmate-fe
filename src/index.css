@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./styles/design-tokens.css"; /* token DESIGN.md — scoped .wm-admin, không ảnh hưởng Customer Portal */
 
 /* Custom variants used by @base-ui/react primitives (accordion, checkbox, etc.) */
 @custom-variant data-open {
@@ -137,43 +138,44 @@
   color-scheme: light;
   --radius: 1rem;
 
+  /* Giá trị đồng bộ theo /DESIGN.md — thống nhất 3 khu vực Khách hàng / Nhân viên / Admin */
   --background: #ffffff;
-  --foreground: #102033;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #102033;
+  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #102033;
+  --popover-foreground: #0f172a;
 
-  --primary: #0b8cff;
+  --primary: #2563eb;
   --primary-foreground: #ffffff;
 
-  --secondary: #f5faff;
-  --secondary-foreground: #075dce;
+  --secondary: #f8fafc;
+  --secondary-foreground: #1d4ed8;
 
-  --muted: #f5faff;
-  --muted-foreground: #5f6f82;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
 
   --accent: #b8f3f1;
-  --accent-foreground: #075dce;
+  --accent-foreground: #1d4ed8;
 
-  --destructive: #e5484d;
+  --destructive: #b91c1c;
 
-  --border: #ddeaf6;
-  --input: #ddeaf6;
-  --ring: #0b8cff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #2563eb;
 
   /* Brand custom tokens */
-  --brand: #0b8cff;
-  --brand-dark: #075dce;
+  --brand: #2563eb;
+  --brand-dark: #1d4ed8;
   --teal: #b8f3f1;
   --gold: #f7c948;
-  --surface: #f5faff;
+  --surface: #f8fafc;
 
-  --chart-1: #0b8cff;
-  --chart-2: #38bdf8;
-  --chart-3: #b8f3f1;
-  --chart-4: #f7c948;
-  --chart-5: #075dce;
+  --chart-1: #2563eb;
+  --chart-2: #f59e0b;
+  --chart-3: #8b5cf6;
+  --chart-4: #10b981;
+  --chart-5: #64748b;
 }
 
 @layer base {

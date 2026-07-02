@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   CalendarDays, LayoutDashboard, ListChecks, Search, User, Bell, LogOut, Car,
 } from "lucide-react";
@@ -37,8 +38,13 @@ export default function StaffLayout() {
     navigate("/dang-nhap");
   }
 
+  // Tiêu đề tab trình duyệt theo khu vực — như một web thật
+  useEffect(() => {
+    document.title = "WashMate — Nhân viên";
+  }, []);
+
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100 font-sans text-slate-900">
+    <div className="wm-staff flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-900">
       {/* Dark sidebar */}
       <aside className="flex w-64 shrink-0 flex-col bg-[#0F172A] text-slate-300">
         <div className="flex h-16 shrink-0 items-center gap-3 px-6">

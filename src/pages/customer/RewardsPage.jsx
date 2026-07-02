@@ -52,7 +52,7 @@ export default function RewardsPage() {
         {rewards.map((reward) => {
           const enoughPoints = points >= reward.pointsRequired;
           return (
-            <article key={reward.id} className="flex flex-col rounded-3xl border border-slate-200 bg-white p-6">
+            <article key={reward.id} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6">
               <span className="grid h-14 w-14 place-items-center rounded-2xl bg-blue-50 text-blue-600"><Gift size={25} /></span>
               <h2 className="mt-5 font-extrabold">{reward.name}</h2>
               <p className="mt-2 flex-1 text-xs leading-5 text-slate-500">{reward.description}</p>
@@ -66,7 +66,7 @@ export default function RewardsPage() {
       </section>
       {message && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/35 px-4">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
             <button onClick={() => setMessage("")} className="ml-auto block rounded-full p-2 text-slate-400 hover:bg-slate-100"><X size={18} /></button>
             <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-blue-50 text-blue-600"><Gift size={25} /></span>
             <h2 className="mt-4 text-center text-lg font-extrabold">Thông tin đổi thưởng</h2>

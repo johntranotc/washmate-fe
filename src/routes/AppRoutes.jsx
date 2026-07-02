@@ -8,16 +8,8 @@ import ServicesPage from "../pages/public/ServicesPage";
 import PricingPage from "../pages/public/PricingPage";
 import TiersPage from "../pages/public/TiersPage";
 
-import CustomerHomePage from "../pages/customer/CustomerHomePage";
-import VehiclePage from "../pages/customer/VehiclePage";
-import BookingCreatePage from "../pages/customer/BookingCreatePage";
-import BookingDetailPage from "../pages/customer/BookingDetailPage";
-import PaymentPage from "../pages/customer/PaymentPage";
-import InvoicePage from "../pages/customer/InvoicePage";
-import LoyaltyPage from "../pages/customer/LoyaltyPage";
 import PublicLayout from "../layouts/PublicLayout";
 import AuthLayout from "../layouts/AuthLayout";
-import CustomerLayout from "../layouts/CustomerLayout";
 import CustomerPortalLayout from "../layouts/CustomerPortalLayout";
 import StaffLayout from "../layouts/StaffLayout";
 import AdminLayout from "../layouts/AdminLayout";
@@ -25,7 +17,6 @@ import VnpayReturnPage from "../pages/customer/VnpayReturnPage";
 
 import DashboardPage from "../pages/customer-portal/DashboardPage";
 import VehiclesPage from "../pages/customer-portal/VehiclesPage";
-import NewBookingPage from "../pages/customer-portal/NewBookingPage";
 import CustomerBookingFlowPage from "../pages/customer-portal/CustomerBookingFlowPage";
 import MyBookingsPage from "../pages/customer-portal/MyBookingsPage";
 import CustomerBookingDetailPage from "../pages/customer-portal/CustomerBookingDetailPage";
@@ -57,6 +48,10 @@ import AdminInvoicePage from "../pages/admin/AdminInvoicePage";
 import AdminReportPage from "../pages/admin/AdminReportPage";
 import AdminInsightPage from "../pages/admin/AdminInsightPage";
 import AdminProfilePage from "../pages/admin/AdminProfilePage";
+import AdminLoyaltyPage from "../pages/admin/AdminLoyaltyPage";
+import AdminCampaignPage from "../pages/admin/AdminCampaignPage";
+import AdminStaffPage from "../pages/admin/AdminStaffPage";
+import AdminSettingsPage from "../pages/admin/AdminSettingsPage";
 
 import ScrollToHash from "./ScrollToHash";
 import { RequireRole } from "../components/auth/RequireRole";
@@ -82,21 +77,8 @@ function AppRoutes() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         </Route>
 
-        <Route
-          element={
-            <RequireRole role={ROLES.CUSTOMER}>
-              <CustomerLayout />
-            </RequireRole>
-          }
-        >
-          <Route path="/customer" element={<CustomerHomePage />} />
-          <Route path="/customer/vehicles" element={<VehiclePage />} />
-          <Route path="/customer/bookings/create" element={<BookingCreatePage />} />
-          <Route path="/customer/bookings/:bookingId" element={<BookingDetailPage />} />
-          <Route path="/customer/bookings/:bookingId/payment" element={<PaymentPage />} />
-          <Route path="/customer/bookings/:bookingId/invoice" element={<InvoicePage />} />
-          <Route path="/customer/loyalty" element={<LoyaltyPage />} />
-        </Route>
+        {/* Tree /customer cũ đã gỡ: trùng chức năng với /khach-hang (login điều hướng /khach-hang),
+            không còn link nội bộ trỏ vào và chứa flow demo. Files giữ nguyên để tham khảo. */}
 
         <Route
           element={
@@ -108,7 +90,7 @@ function AppRoutes() {
           <Route path="/khach-hang" element={<DashboardPage />} />
           <Route path="/khach-hang/xe-cua-toi" element={<VehiclesPage />} />
           <Route path="/khach-hang/dat-lich-moi" element={<CustomerBookingFlowPage />} />
-          <Route path="/khach-hang/dat-lich-moi-v2" element={<NewBookingPage />} />
+          {/* Route dat-lich-moi-v2 đã gỡ: NewBookingPage dùng danh sách dịch vụ/gara hardcode (mock) */}
           <Route path="/khach-hang/lich-dat" element={<MyBookingsPage />} />
           <Route path="/khach-hang/lich-dat/:bookingId" element={<CustomerBookingDetailPage />} />
           <Route path="/khach-hang/thanh-toan" element={<PaymentInvoicePage />} />
@@ -165,6 +147,10 @@ function AppRoutes() {
           <Route path="/quan-tri/reports" element={<AdminReportPage />} />
           <Route path="/quan-tri/ai-insights" element={<AdminInsightPage />} />
           <Route path="/quan-tri/profile" element={<AdminProfilePage />} />
+          <Route path="/quan-tri/loyalty" element={<AdminLoyaltyPage />} />
+          <Route path="/quan-tri/campaigns" element={<AdminCampaignPage />} />
+          <Route path="/quan-tri/staff" element={<AdminStaffPage />} />
+          <Route path="/quan-tri/settings" element={<AdminSettingsPage />} />
         </Route>
 
         <Route path="*" element={<div className="flex min-h-screen items-center justify-center text-slate-500">404 — Không tìm thấy trang</div>} />

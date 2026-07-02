@@ -131,14 +131,31 @@ export default function AdminDashboardPage() {
   const sumRevenue = (list) => list.filter((b) => b.bookingStatus === COMPLETED).reduce((s, b) => s + Number(b.finalAmount || 0), 0);
   const cnt = (list, statuses) => list.filter((b) => statuses.includes(b.bookingStatus)).length;
 
+  // "Khách hàng mới" thật sự: khách có booking ĐẦU TIÊN (trên toàn bộ lịch sử) rơi vào kỳ đang xem.
+  const firstBookingByCustomer = useMemo(() => {
+    const m = {};
+    allBookings.forEach((b) => {
+      if (!b.bookingDate) return;
+      if (selectedGarage !== "all" && String(b.garageId) !== String(selectedGarage)) return;
+      const k = b.customerId ?? b.customerName;
+      if (!k) return;
+      if (!m[k] || b.bookingDate < m[k]) m[k] = b.bookingDate;
+    });
+    return m;
+  }, [allBookings, selectedGarage]);
+  const countNewCustomers = useCallback(
+    (s, e) => Object.values(firstBookingByCustomer).filter((d) => d >= s && d <= e).length,
+    [firstBookingByCustomer],
+  );
+
   const metrics = useMemo(() => ({
     revenue: sumRevenue(currentBookings),
     bookings: currentBookings.length,
     completed: cnt(currentBookings, [COMPLETED]),
     processing: cnt(currentBookings, PROCESSING_STATUSES) + cnt(currentBookings, ["PENDING"]),
     cancelled: cnt(currentBookings, CANCELLED_STATUSES),
-    newCustomers: new Set(currentBookings.map((b) => b.customerId ?? b.customerName)).size,
-  }), [currentBookings]);
+    newCustomers: countNewCustomers(start, end),
+  }), [currentBookings, countNewCustomers, start, end]);
 
   const changes = useMemo(() => {
     const pct = (cur, prev) => (prev > 0 ? ((cur - prev) / prev) * 100 : null);
@@ -148,7 +165,7 @@ export default function AdminDashboardPage() {
       completed: cnt(prevBookings, [COMPLETED]),
       processing: cnt(prevBookings, PROCESSING_STATUSES) + cnt(prevBookings, ["PENDING"]),
       cancelled: cnt(prevBookings, CANCELLED_STATUSES),
-      newCustomers: new Set(prevBookings.map((b) => b.customerId ?? b.customerName)).size,
+      newCustomers: countNewCustomers(prevStart, prevEnd),
     };
     return {
       revenue: pct(metrics.revenue, prev.revenue),
@@ -158,7 +175,7 @@ export default function AdminDashboardPage() {
       cancelled: pct(metrics.cancelled, prev.cancelled),
       newCustomers: pct(metrics.newCustomers, prev.newCustomers),
     };
-  }, [metrics, prevBookings]);
+  }, [metrics, prevBookings, countNewCustomers, prevStart, prevEnd]);
 
   const revenueData = useMemo(() => {
     const len = daysBetween(start, end);
@@ -173,9 +190,9 @@ export default function AdminDashboardPage() {
     for (let i = 0; i < len; i += 1) {
       const dCur = addDays(start, i);
       const dPrev = addDays(prevStart, i);
-      out.push({ date: dCur.slice(5).split("-").reverse().join("/"), revenue: curMap[dCur] || 0, previousRevenue: prevMap[dPrev] || 0 });
+      out.push({ dateISO: dCur, revenue: curMap[dCur] || 0, previousRevenue: prevMap[dPrev] || 0 });
     }
-    return out.length > 45 ? out.slice(-45) : out;
+    return out.length > 92 ? out.slice(-92) : out;
   }, [currentBookings, prevBookings, start, end, prevStart]);
 
   const hasPrevRevenue = revenueData.some((d) => d.previousRevenue > 0);
@@ -259,7 +276,7 @@ export default function AdminDashboardPage() {
     });
     const cutoff = addDays(todayISO(), -30);
     const vipInactive = Object.values(byCustomer).filter((c) => c.count >= 2 && c.last < cutoff).length;
-    if (vipInactive > 0) list.push({ title: `${vipInactive} khách thân thiết hơn 30 ngày chưa quay lại`, description: "Cân nhắc gửi ưu đãi giữ chân nhóm khách này.", colorBg: "bg-orange-100", colorText: "text-orange-600", icon: <UserX size={16} /> });
+    if (vipInactive > 0) list.push({ title: `${vipInactive} khách thân thiết hơn 30 ngày chưa quay lại`, description: "Cân nhắc gửi ưu đãi giữ chân nhóm khách này.", colorBg: "bg-amber-100", colorText: "text-amber-600", icon: <UserX size={16} /> });
 
     const svc = (arr) => arr.reduce((m, b) => { if (b.serviceName) m[b.serviceName] = (m[b.serviceName] || 0) + 1; return m; }, {});
     const cur = svc(currentBookings), prv = svc(prevBookings);
@@ -282,7 +299,7 @@ export default function AdminDashboardPage() {
     const today = todayISO();
     const nowHM = new Date().toTimeString().slice(0, 5);
     const overdue = scope.filter((b) => b.bookingStatus === "CONFIRMED" && b.bookingDate === today && b.slotTime && b.slotTime < nowHM).length;
-    if (overdue > 0) list.push({ title: `${overdue} lịch đã qua giờ nhưng chưa check-in`, description: "Kiểm tra để tránh khách chờ lâu.", colorText: "text-orange-500 bg-orange-50 p-1.5 rounded-full", icon: <Clock size={14} /> });
+    if (overdue > 0) list.push({ title: `${overdue} lịch đã qua giờ nhưng chưa check-in`, description: "Kiểm tra để tránh khách chờ lâu.", colorText: "text-amber-500 bg-amber-50 p-1.5 rounded-full", icon: <Clock size={14} /> });
     const noShow = scope.filter((b) => b.bookingStatus === "NO_SHOW" && b.bookingDate === today).length;
     if (noShow > 0) list.push({ title: `${noShow} khách không đến hôm nay`, description: "Theo dõi tỷ lệ no-show để có phương án.", colorText: "text-blue-500 bg-blue-50 p-1.5 rounded-full", icon: <Info size={14} /> });
     return list;
@@ -339,7 +356,7 @@ export default function AdminDashboardPage() {
             {/* Main content */}
             <div className="min-w-0 space-y-6">
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-                <RevenueTrendChart data={revenueData} showPrevious={hasPrevRevenue} range={dateRange} onRangeChange={setDateRange} />
+                <RevenueTrendChart data={revenueData} showPrevious={hasPrevRevenue} />
                 <ServiceRevenueDonut data={serviceRevenue} />
               </div>
 

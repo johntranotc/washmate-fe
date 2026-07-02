@@ -2,7 +2,7 @@ import { TierBadge } from "@/components/site/tier-badge";
 
 export function LoyaltyHeroCard({ tier, tierName = "Đồng", nextTierName = "Bạc", availablePoints = 0, pointsToNextTier = 0, progressPercent = 0 }) {
   return (
-    <section className="relative overflow-hidden rounded-[2rem] bg-slate-900/60 backdrop-blur-xl border border-white/10 p-8 text-white shadow-2xl">
+    <section className="relative overflow-hidden rounded-2xl bg-slate-900/60 border border-white/10 p-8 text-white shadow-2xl">
       <div className="pointer-events-none absolute -right-10 -top-10 size-64 rounded-full bg-blue-500/20 blur-[80px]" />
       <div className="pointer-events-none absolute -left-10 -bottom-10 size-64 rounded-full bg-purple-500/20 blur-[80px]" />
       <div className="relative grid gap-8 lg:grid-cols-[auto_1fr_320px] lg:items-center z-10">

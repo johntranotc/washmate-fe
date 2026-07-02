@@ -1,0 +1,77 @@
+/**
+ * design-tokens.css — SINH TỪ DESIGN.md (source of truth: /DESIGN.md)
+ *
+ * Tạo lại khi DESIGN.md thay đổi:
+ *   npx @google/design.md export --format css-tailwind DESIGN.md
+ * rồi cập nhật giá trị --adm-* bên dưới (đã đổi prefix `--color-*` → `--adm-*`
+ * và scope vào `.wm-admin` để KHÔNG đè theme shadcn của Customer Portal
+ * trong src/index.css).
+ *
+ * Cơ chế áp dụng: Tailwind v4 emit utility dạng `var(--color-*)`, nên phần
+ * "bridge" bên dưới trỏ các biến palette (blue/slate/emerald/amber/red/orange)
+ * về token DESIGN.md — mọi class hiện có trong cây .wm-admin (AdminLayout)
+ * tự nhận giá trị token, không cần đổi tên class. Đổi DESIGN.md → đổi cả UI Admin.
+ */
+
+.wm-admin,
+.wm-staff {
+  /* ==== Tokens từ DESIGN.md ==== */
+  --adm-primary: #2563eb;
+  --adm-on-primary: #ffffff;
+  --adm-primary-container: #eff6ff;
+  --adm-primary-strong: #1d4ed8;
+  --adm-ink: #0f172a;
+  --adm-ink-soft: #334155;
+  --adm-secondary: #64748b;
+  --adm-muted: #94a3b8;
+  --adm-neutral: #f8fafc;
+  --adm-surface: #ffffff;
+  --adm-border: #e2e8f0;
+  --adm-success: #047857;
+  --adm-success-container: #d1fae5;
+  --adm-warning: #b45309;
+  --adm-warning-container: #fef3c7;
+  --adm-critical: #b91c1c;
+  --adm-critical-container: #fee2e2;
+  --adm-no-show: #c2410c;
+  --adm-no-show-container: #ffedd5;
+  --adm-accent-cyan: #0e7490;
+  --adm-accent-indigo: #4338ca;
+  --adm-accent-violet: #6d28d9;
+  --adm-chart-1: #2563eb;
+  --adm-chart-2: #f59e0b;
+  --adm-chart-3: #8b5cf6;
+  --adm-chart-4: #10b981;
+  --adm-chart-5: #64748b;
+
+  --adm-radius-field: 12px; /* nút, input, select  (rounded-xl) */
+  --adm-radius-card: 16px;  /* card, modal         (rounded-2xl) */
+  --adm-radius-pill: 999px; /* badge, chip         (rounded-full) */
+
+  /* ==== Bridge: bind palette Tailwind trong phạm vi Admin về token ==== */
+  /* Hành động / brand */
+  --color-blue-50: var(--adm-primary-container);
+  --color-blue-500: var(--adm-primary);
+  --color-blue-600: var(--adm-primary);
+  --color-blue-700: var(--adm-primary-strong);
+  /* Trung tính */
+  --color-slate-50: var(--adm-neutral);
+  --color-slate-200: var(--adm-border);
+  --color-slate-400: var(--adm-muted);
+  --color-slate-500: var(--adm-secondary);
+  --color-slate-700: var(--adm-ink-soft);
+  --color-slate-900: var(--adm-ink);
+  /* Ngữ nghĩa trạng thái */
+  --color-emerald-100: var(--adm-success-container);
+  --color-emerald-700: var(--adm-success);
+  --color-amber-100: var(--adm-warning-container);
+  --color-amber-700: var(--adm-warning);
+  --color-red-100: var(--adm-critical-container);
+  --color-red-700: var(--adm-critical);
+  --color-orange-100: var(--adm-no-show-container);
+  --color-orange-700: var(--adm-no-show);
+  /* Accent mở rộng */
+  --color-cyan-700: var(--adm-accent-cyan);
+  --color-indigo-700: var(--adm-accent-indigo);
+  --color-violet-700: var(--adm-accent-violet);
+}

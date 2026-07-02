@@ -385,7 +385,7 @@ export default function CustomerBookingFlowPage() {
       {content()}
 
       {step < 6 && !loading && !loadError && (
-        <div className="sticky bottom-4 sm:bottom-6 z-50 mx-auto mt-8 flex w-[95%] sm:w-auto sm:max-w-fit items-center justify-between gap-3 sm:gap-6 rounded-full border border-white/60 bg-white/50 sm:bg-white/30 px-4 sm:px-6 py-3 shadow-[0_8px_32px_0_rgba(31,38,135,0.18)] backdrop-blur-2xl transition-all duration-300">
+        <div className="sticky bottom-4 sm:bottom-6 z-50 mx-auto mt-8 flex w-[95%] sm:w-auto sm:max-w-fit items-center justify-between gap-3 sm:gap-6 rounded-full border border-slate-200 bg-white px-4 sm:px-6 py-3 shadow-[0_8px_32px_0_rgba(31,38,135,0.18)] transition-all duration-300">
           <button
             type="button"
             onClick={() => {
@@ -393,7 +393,7 @@ export default function CustomerBookingFlowPage() {
               setStep((cur) => Math.max(1, cur - 1));
             }}
             disabled={step === 1 || submitting}
-            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/80 bg-white/80 sm:bg-white/50 px-4 sm:px-5 py-2 text-sm font-bold text-slate-800 shadow-sm backdrop-blur-md transition-all hover:bg-white/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white sm:bg-white px-4 sm:px-5 py-2 text-sm font-bold text-slate-800 shadow-sm transition-all hover:bg-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ArrowLeft size={16} /> <span className="hidden sm:inline">Quay lại</span>
           </button>
@@ -402,7 +402,7 @@ export default function CustomerBookingFlowPage() {
             <button
               type="button"
               onClick={goNext}
-              className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600/90 to-primary/90 px-5 sm:px-7 py-2 text-sm font-extrabold text-white shadow-[0_4px_15px_rgba(11,140,255,0.4)] backdrop-blur-md transition-all hover:scale-105 hover:from-blue-600 hover:to-primary active:scale-95"
+              className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600/90 to-primary/90 px-5 sm:px-7 py-2 text-sm font-extrabold text-white shadow-[0_4px_15px_rgba(37,99,235,0.4)] transition-all hover:scale-105 hover:from-blue-600 hover:to-primary active:scale-95"
             >
               Tiếp tục <ArrowRight size={16} />
             </button>
@@ -411,7 +411,7 @@ export default function CustomerBookingFlowPage() {
               type="button"
               onClick={createBooking}
               disabled={submitting}
-              className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600/90 to-primary/90 px-5 sm:px-7 py-2 text-sm font-extrabold text-white shadow-[0_4px_15px_rgba(11,140,255,0.4)] backdrop-blur-md transition-all hover:scale-105 hover:from-blue-600 hover:to-primary active:scale-95 disabled:opacity-60"
+              className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600/90 to-primary/90 px-5 sm:px-7 py-2 text-sm font-extrabold text-white shadow-[0_4px_15px_rgba(37,99,235,0.4)] transition-all hover:scale-105 hover:from-blue-600 hover:to-primary active:scale-95 disabled:opacity-60"
             >
               <span className="truncate max-w-[140px] sm:max-w-none">{submitting ? "Đang gửi..." : "Hoàn tất đặt lịch"}</span>
               <ArrowRight size={16} className="shrink-0" />

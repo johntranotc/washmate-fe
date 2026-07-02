@@ -51,7 +51,7 @@ export default function TiersPage() {
             {howItWorks.map((item, i) => (
               <article
                 key={item.title}
-                className="relative rounded-3xl border border-border bg-card p-7 shadow-[0_18px_44px_-30px_rgba(16,32,51,0.4)]"
+                className="relative rounded-3xl border border-border bg-card p-7 shadow-[0_18px_44px_-30px_rgba(15,23,42,0.4)]"
               >
                 <span className="absolute right-6 top-6 text-5xl font-extrabold text-secondary">
                   {String(i + 1).padStart(2, "0")}

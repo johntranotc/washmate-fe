@@ -19,7 +19,7 @@ export function ServiceGrid() {
             className={cn(
               "rounded-full px-4 py-2 text-[14px] font-semibold transition-all",
               active === cat
-                ? "bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_rgba(11,140,255,0.9)]"
+                ? "bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_rgba(37,99,235,0.9)]"
                 : "border border-border bg-card text-foreground hover:border-primary hover:text-primary",
             )}
           >

@@ -93,7 +93,7 @@ const defaultNotifications = {
 // ── Profile Hero Card ──────────────────────────────────────────
 function ProfileHeroCard({ profile }) {
   return (
-    <section className="relative overflow-hidden rounded-[2rem] bg-slate-900/60 backdrop-blur-xl border border-white/10 p-8 text-white shadow-2xl">
+    <section className="relative overflow-hidden rounded-2xl bg-slate-900/60 border border-white/10 p-8 text-white shadow-2xl">
       {/* Decorative blur */}
       <div className="pointer-events-none absolute -right-10 -top-10 size-64 rounded-full bg-blue-500/20 blur-[80px]" />
       <div className="pointer-events-none absolute -left-10 -bottom-10 size-64 rounded-full bg-purple-500/20 blur-[80px]" />
@@ -103,7 +103,7 @@ function ProfileHeroCard({ profile }) {
         <div className="relative flex justify-center md:justify-start">
           <div
             className="absolute -inset-6 rounded-full blur-[40px] opacity-40"
-            style={{ backgroundColor: currentTier?.color ?? "#0b8cff" }}
+            style={{ backgroundColor: currentTier?.color ?? "#2563eb" }}
           />
           <div className="relative drop-shadow-2xl">
             <TierBadge tier={currentTier} size="lg" />
@@ -165,7 +165,7 @@ function ProfileHeroCard({ profile }) {
 
         {/* Mini info panel – desktop only */}
         <div className="hidden lg:flex lg:flex-col lg:gap-4">
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-5 backdrop-blur-md hover:bg-white/10 transition-colors duration-300">
+          <div className="rounded-2xl bg-white/5 border border-white/10 p-5 hover:bg-white/10 transition-colors duration-300">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
               Gara thường dùng
             </p>
@@ -175,7 +175,7 @@ function ProfileHeroCard({ profile }) {
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-5 backdrop-blur-md hover:bg-white/10 transition-colors duration-300">
+          <div className="rounded-2xl bg-white/5 border border-white/10 p-5 hover:bg-white/10 transition-colors duration-300">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
               Tiến độ lên hạng {loyaltyData.nextTierName}
             </p>
@@ -316,7 +316,7 @@ function PersonalInfoCard({ profile, onSave }) {
     "w-full rounded-xl border border-border bg-white px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition";
 
   return (
-    <div className="rounded-3xl border border-border bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
       {/* Card header */}
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -469,7 +469,7 @@ function NotificationsCard() {
   }
 
   return (
-    <div className="rounded-3xl border border-border bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
       <div className="mb-4">
         <h2 className="flex items-center gap-2 text-lg font-extrabold text-foreground">
           <Bell size={19} className="text-primary" />
@@ -538,7 +538,7 @@ function SessionCard() {
   }
 
   return (
-    <div className="rounded-3xl border border-border bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
       <div className="mb-4">
         <h2 className="text-lg font-extrabold text-foreground">Quản lý phiên đăng nhập</h2>
         <p className="mt-0.5 text-sm text-muted-foreground">
@@ -639,7 +639,7 @@ export default function AccountPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-4 p-5 lg:p-7">
       {/* Page header */}
-      <header className="bg-white/40 backdrop-blur-xl border border-white/50 p-6 sm:p-8 rounded-[2rem] shadow-sm mb-6">
+      <header className="bg-white border border-white/50 p-6 sm:p-8 rounded-2xl shadow-sm mb-6">
         <span className="inline-block rounded-full bg-blue-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 mb-3">Tài khoản</span>
         <h1 className="text-3xl font-extrabold leading-tight text-slate-900">
           Tài khoản của tôi

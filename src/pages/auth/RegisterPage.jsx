@@ -97,7 +97,7 @@ export default function RegisterPage() {
                 Tôi đồng ý với <a href="#" className="font-semibold text-primary">Điều khoản dịch vụ</a> và <a href="#" className="font-semibold text-primary">Chính sách bảo mật</a>.
               </Label>
             </div>
-            <button type="submit" disabled={loading} className="mt-1 h-12 rounded-xl bg-primary font-bold text-white shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)] hover:bg-brand-dark disabled:opacity-60">
+            <button type="submit" disabled={loading} className="mt-1 h-12 rounded-xl bg-primary font-bold text-white shadow-[0_12px_28px_-10px_rgba(37,99,235,.75)] hover:bg-brand-dark disabled:opacity-60">
               {loading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
             </button>
           </>
@@ -116,7 +116,7 @@ export default function RegisterPage() {
                 onChange={update("otp")}
               />
             </div>
-            <button type="submit" disabled={loading} className="mt-2 h-12 rounded-xl bg-primary font-bold text-white shadow-[0_12px_28px_-10px_rgba(11,140,255,.75)] hover:bg-brand-dark disabled:opacity-60">
+            <button type="submit" disabled={loading} className="mt-2 h-12 rounded-xl bg-primary font-bold text-white shadow-[0_12px_28px_-10px_rgba(37,99,235,.75)] hover:bg-brand-dark disabled:opacity-60">
               {loading ? "Đang xác thực..." : "Kích hoạt tài khoản"}
             </button>
             <div className="mt-3 flex items-center justify-between text-sm">
