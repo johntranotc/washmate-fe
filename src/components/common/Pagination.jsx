@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
  *   pageSize    — items per page (default 10)
  *   total       — total item count
  *   onPageChange(nextPage)
+ *   onPageSizeChange(nextSize) — optional; renders a rows-per-page select when set
+ *   pageSizeOptions — options for the select (default [5, 10, 20])
  *   className
  *
  * Renders "Đang xem 1–10 trên tổng X", prev/next, and numbered pages.
@@ -19,6 +21,8 @@ export default function Pagination({
   pageSize = 10,
   total = 0,
   onPageChange,
+  onPageSizeChange,
+  pageSizeOptions = [5, 10, 20],
   className = "",
 }) {
   const safeTotal = Number(total) || 0;
@@ -49,11 +53,28 @@ export default function Pagination({
         className,
       )}
     >
-      <p className="text-xs font-semibold text-muted-foreground">
-        Đang xem <b className="text-ink-soft">{from}</b>–
-        <b className="text-ink-soft">{to}</b> trên tổng{" "}
-        <b className="text-ink-soft">{safeTotal}</b>
-      </p>
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="text-xs font-semibold text-muted-foreground">
+          Đang xem <b className="text-ink-soft">{from}</b>–
+          <b className="text-ink-soft">{to}</b> trên tổng{" "}
+          <b className="text-ink-soft">{safeTotal}</b>
+        </p>
+        {onPageSizeChange && (
+          <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+            Hiển thị
+            <select
+              value={pageSize}
+              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              className="h-8 rounded-lg border border-border bg-card px-2 text-xs font-bold text-foreground outline-none"
+            >
+              {pageSizeOptions.map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+            dòng
+          </label>
+        )}
+      </div>
 
       <div className="flex items-center gap-1">
         <button
