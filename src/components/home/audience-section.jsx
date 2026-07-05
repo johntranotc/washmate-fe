@@ -14,9 +14,9 @@ export function AudienceSection() {
         <SectionHeading eyebrow="Dành cho ai?" title="Một nền tảng, ba không gian chuyên biệt" description="Mỗi vai trò có công cụ phù hợp nhưng vẫn vận hành trên cùng một hệ thống dữ liệu." />
         <div className="mt-14 grid gap-6 md:grid-cols-3">
           {audiences.map(({ icon: Icon, title, text }, index) => (
-            <article key={title} className="relative overflow-hidden rounded-[2rem] border border-border bg-white p-8 shadow-[0_20px_50px_-34px_rgba(37,99,235,.55)]">
+            <article key={title} className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 shadow-cta">
               <span className="absolute right-5 top-3 text-7xl font-black text-secondary">0{index + 1}</span>
-              <span className="relative grid size-14 place-items-center rounded-2xl bg-primary text-white"><Icon className="size-7" /></span>
+              <span className="relative grid size-14 place-items-center rounded-2xl bg-primary text-white"><Icon className="size-5" /></span>
               <h3 className="relative mt-7 text-2xl font-extrabold">{title}</h3>
               <p className="relative mt-3 leading-relaxed text-muted-foreground">{text}</p>
             </article>

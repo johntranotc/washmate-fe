@@ -5,13 +5,13 @@ import { cn } from "@/lib/utils";
 export function Logo({ className, variant = "default" }) {
   const light = variant === "light";
   return (
-    <Link to="/" className={cn("group flex items-center gap-2.5", className)} aria-label="SparkleAI / WashMate - Trang chủ">
-      <span className="grid size-10 place-items-center rounded-2xl bg-primary text-white shadow-[0_8px_20px_-6px_rgba(37,99,235,.6)] transition group-hover:-translate-y-0.5">
-        <Droplets className="size-5.5" strokeWidth={2.4} />
+    <Link to="/" className={cn("group flex items-center gap-2.5", className)} aria-label="WashMate - Trang chủ">
+      <span className="grid size-10 place-items-center rounded-2xl bg-primary text-white shadow-cta transition group-hover:-translate-y-0.5">
+        <Droplets className="size-5" strokeWidth={2.4} />
       </span>
       <span className="flex flex-col leading-none">
-        <span className={cn("text-[17px] font-extrabold tracking-tight", light ? "text-white" : "text-foreground")}>SparkleAI</span>
-        <span className={cn("text-xs font-bold tracking-wide", light ? "text-white/70" : "text-primary")}>/ WashMate</span>
+        <span className={cn("text-lg font-extrabold tracking-tight", light ? "text-white" : "text-foreground")}>WashMate</span>
+        <span className={cn("text-xs font-bold tracking-wide", light ? "text-white/70" : "text-primary")}>Rửa xe thông minh</span>
       </span>
     </Link>
   );

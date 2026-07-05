@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { Shield, Eye, EyeOff, CheckCircle, XCircle, KeyRound, Lock, Loader2 } from "lucide-react";
+import PageContainer from "@/components/shared/PageContainer";
+import PageHeader from "@/components/shared/PageHeader";
+import { Eye, EyeOff, CheckCircle, XCircle, Lock, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { authApi } from "@/api/authApi";
 
@@ -59,33 +62,24 @@ export default function ChangePasswordPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-6 lg:p-10 animate-in fade-in-0 duration-300">
-      <header className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm">
-        <div className="flex items-center gap-3 mb-3">
-          <span className="grid size-10 place-items-center rounded-2xl bg-primary/10 text-primary">
-            <KeyRound size={22} />
-          </span>
-          <span className="text-xs font-extrabold uppercase tracking-widest text-primary">Bảo mật tài khoản</span>
-        </div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-          Đổi mật khẩu
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground max-w-xl">
-          Để bảo vệ an toàn cho tài khoản WashMate, vui lòng đặt mật khẩu mạnh với ít nhất 8 ký tự bao gồm chữ và số.
-        </p>
-      </header>
+    <PageContainer variant="narrow" className="animate-in fade-in-0 duration-300">
+      <PageHeader
+        eyebrow="Bảo mật tài khoản"
+        title="Đổi mật khẩu"
+        description="Để bảo vệ an toàn cho tài khoản WashMate, vui lòng đặt mật khẩu mạnh với ít nhất 8 ký tự bao gồm chữ và số."
+      />
 
-      <div className="rounded-[2.5rem] border border-border/80 bg-white p-8 shadow-xl">
+      <div className="rounded-3xl border border-border/80 bg-card p-8 shadow-floating">
         {status && (
           <div
             className={cn(
               "mb-6 flex items-center gap-3 rounded-2xl px-5 py-4 text-sm font-bold shadow-sm animate-in zoom-in-95",
               status === "success"
-                ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
-                : "bg-red-50 border border-red-200 text-red-800",
+                ? "bg-success-container border border-success/25 text-success"
+                : "bg-critical-container border border-critical/25 text-critical",
             )}
           >
-            {status === "success" ? <CheckCircle size={20} className="text-emerald-600 shrink-0" /> : <XCircle size={20} className="text-red-600 shrink-0" />}
+            {status === "success" ? <CheckCircle size={20} className="text-success shrink-0" /> : <XCircle size={20} className="text-critical shrink-0" />}
             <span>{message}</span>
           </div>
         )}
@@ -93,8 +87,8 @@ export default function ChangePasswordPage() {
         <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
           {pwFields.map(({ label, key, placeholder }) => (
             <div key={key} className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                {label} <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-muted-foreground">
+                {label} <span className="text-critical">*</span>
               </label>
               <div className="relative">
                 <input
@@ -102,12 +96,12 @@ export default function ChangePasswordPage() {
                   value={form[key]}
                   onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
                   placeholder={placeholder}
-                  className="w-full h-12 rounded-2xl border border-border bg-slate-50/50 px-4 pr-12 text-sm font-medium text-foreground transition focus:bg-white focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15"
+                  className="w-full h-12 rounded-2xl border border-border bg-surface/50 px-4 pr-12 text-sm font-medium text-foreground transition focus:bg-card focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15"
                 />
                 <button
                   type="button"
                   onClick={() => toggleShow(key)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-xl p-1.5 text-muted-foreground transition hover:bg-slate-100 hover:text-foreground"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-xl p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
                   aria-label={show[key] ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
                   {show[key] ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -117,17 +111,18 @@ export default function ChangePasswordPage() {
           ))}
 
           <div className="pt-4">
-            <button
+            <Button
               type="submit"
+              size="xl"
               disabled={loading}
-              className="h-12 w-full sm:w-auto px-8 rounded-2xl bg-primary font-bold text-white shadow-lg shadow-primary/25 transition hover:bg-brand-dark flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-8 shadow-cta"
             >
-              {loading ? <Loader2 size={18} className="animate-spin" /> : <Lock size={18} />}
+              {loading ? <Loader2 className="animate-spin" /> : <Lock />}
               {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu ngay"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
-    </div>
+    </PageContainer>
   );
 }

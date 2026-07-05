@@ -1,3 +1,5 @@
+import PageContainer from "@/components/shared/PageContainer";
+import PageHeader from "@/components/shared/PageHeader";
 import {
   CheckCircle2,
   Clock,
@@ -11,7 +13,8 @@ import { Link, useParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { bookingApi } from "@/api/bookingApi";
 import { paymentApi } from "@/api/paymentApi";
-import { StatusBadge } from "@/components/customer/BookingStatusBadge";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import {
   formatBookingDate,
   formatMoney,
@@ -19,7 +22,6 @@ import {
   normalizePayment,
   paymentMethodLabels,
 } from "@/lib/customer-booking-data";
-import { loadCustomerBookingList } from "@/lib/customer-bookings";
 
 
 import {
@@ -65,13 +67,13 @@ function CopyButton({ value, label }) {
       type="button"
       onClick={handleCopy}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition",
+        "inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition",
         copied
-          ? "bg-emerald-100 text-emerald-700"
-          : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+          ? "bg-success-container text-success"
+          : "bg-muted text-muted-foreground hover:bg-border",
       )}
     >
-      <Copy size={13} />
+      <Copy size={14} />
       {copied ? "Đã sao chép" : label}
     </button>
   );
@@ -100,10 +102,10 @@ function BankTransferBlock({ booking, transferContent }) {
   ];
 
   return (
-    <div className="mt-6 overflow-hidden rounded-2xl border border-blue-200 bg-blue-50/40">
-      <div className="border-b border-blue-100 px-5 py-4">
-        <h3 className="text-sm font-extrabold text-blue-800">Quét mã QR để thanh toán</h3>
-        <p className="mt-0.5 text-xs text-blue-600">
+    <div className="mt-6 overflow-hidden rounded-2xl border border-primary/20 bg-primary-container/40">
+      <div className="border-b border-primary/15 px-5 py-4">
+        <h3 className="text-sm font-extrabold text-primary-strong">Quét mã QR để thanh toán</h3>
+        <p className="mt-0.5 text-xs text-primary">
           Vui lòng chuyển đúng nội dung để hệ thống đối soát nhanh hơn.
         </p>
       </div>
@@ -111,26 +113,26 @@ function BankTransferBlock({ booking, transferContent }) {
       <div className="flex flex-col gap-6 p-5 sm:flex-row sm:items-start">
         {/* QR code */}
         <div className="flex shrink-0 flex-col items-center gap-3">
-          <div className="rounded-2xl border border-blue-100 bg-white p-3 shadow-sm">
+          <div className="rounded-2xl border border-primary/15 bg-card p-3 shadow-sm">
             <QRCodeSVG value={qrContent} size={220} level="M" includeMargin={false} />
           </div>
-          <p className="text-[11px] font-bold text-blue-700">{WASHMATE_BANK.bankName}</p>
+          <p className="text-xs font-bold text-primary-strong">{WASHMATE_BANK.bankName}</p>
         </div>
 
         {/* Bank details */}
         <div className="flex-1 space-y-3">
           {rows.map(([label, display, copyValue]) => (
-            <div key={label} className="rounded-2xl border border-blue-100 bg-white p-4">
-              <p className="text-[11px] font-semibold text-slate-400">{label}</p>
+            <div key={label} className="rounded-2xl border border-primary/15 bg-card p-4">
+              <p className="text-xs font-semibold text-neutral-muted">{label}</p>
               <div className="mt-1.5 flex items-center justify-between gap-3">
                 <span
                   className={cn(
                     "font-extrabold",
                     label === "Nội dung chuyển khoản"
-                      ? "text-sm text-blue-700"
+                      ? "text-sm text-primary-strong"
                       : label === "Số tiền"
-                        ? "text-base text-emerald-700"
-                        : "text-sm text-slate-800",
+                        ? "text-base text-success"
+                        : "text-sm text-foreground",
                   )}
                 >
                   {display}
@@ -140,9 +142,9 @@ function BankTransferBlock({ booking, transferContent }) {
             </div>
           ))}
 
-          <p className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+          <p className="rounded-2xl border border-warning/20 bg-warning-container px-4 py-3 text-xs text-warning">
             <strong>Lưu ý:</strong> Nhập đúng nội dung{" "}
-            <strong className="text-amber-800">{transferContent}</strong> để hệ thống
+            <strong className="text-warning">{transferContent}</strong> để hệ thống
             tự động đối soát giao dịch.
           </p>
         </div>
@@ -218,7 +220,7 @@ export default function CustomerPaymentPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-5xl p-8">
-        <div className="rounded-2xl bg-white p-12 text-center text-[var(--text-muted)]">
+        <div className="rounded-2xl bg-card p-12 text-center text-muted-foreground">
           Đang tải thông tin thanh toán...
         </div>
       </div>
@@ -228,13 +230,13 @@ export default function CustomerPaymentPage() {
   if (!booking) {
     return (
       <div className="mx-auto max-w-5xl p-8">
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-10 text-center">
-          <XCircle className="mx-auto text-red-500" />
-          <h1 className="mt-4 text-xl font-extrabold text-red-700">Không thể tải dữ liệu lịch đặt</h1>
-          <p className="mt-2 text-sm text-red-600">{error}</p>
-          <button onClick={loadPayment} className="mt-5 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white">
+        <div className="rounded-2xl border border-critical/25 bg-critical-container p-10 text-center">
+          <XCircle className="mx-auto text-critical" />
+          <h1 className="mt-4 text-xl font-extrabold text-critical">Không thể tải dữ liệu lịch đặt</h1>
+          <p className="mt-2 text-sm text-critical">{error}</p>
+          <Button onClick={loadPayment} className="mt-5 bg-critical text-white hover:bg-critical/90">
             Thử lại
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -243,21 +245,23 @@ export default function CustomerPaymentPage() {
   if (booking.bookingStatus === "PENDING") {
     return (
       <div className="mx-auto max-w-5xl p-8">
-        <div className="rounded-2xl border border-orange-200 bg-orange-50 p-10 text-center">
-          <Clock className="mx-auto text-orange-500" size={40} />
-          <h1 className="mt-4 text-xl font-extrabold text-orange-800">Chưa thể thanh toán</h1>
-          <p className="mt-2 text-sm text-orange-700">
+        <div className="rounded-2xl border border-warning/30 bg-warning-container p-10 text-center">
+          <Clock className="mx-auto text-warning" size={40} />
+          <h1 className="mt-4 text-xl font-extrabold text-warning">Chưa thể thanh toán</h1>
+          <p className="mt-2 text-sm text-warning">
             Lịch đặt cần được gara xác nhận trước khi thanh toán.
           </p>
-          <p className="mt-1 text-sm font-bold text-orange-700">
+          <p className="mt-1 text-sm font-bold text-warning">
             Vui lòng chờ gara xác nhận và kiểm tra lại thông báo của bạn.
           </p>
-          <Link
-            to="/khach-hang/lich-dat"
-            className="mt-6 inline-block rounded-2xl border border-orange-300 bg-white px-5 py-3 text-sm font-bold text-orange-700"
+          <Button
+            variant="outline"
+            size="lg"
+            className="mt-6 border-warning/40 text-warning"
+            render={<Link to="/khach-hang/lich-dat" />}
           >
             Quay lại lịch đặt
-          </Link>
+          </Button>
         </div>
       </div>
     );
@@ -266,19 +270,19 @@ export default function CustomerPaymentPage() {
   if (booking.bookingStatus === "REJECTED") {
     return (
       <div className="mx-auto max-w-5xl p-8">
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-10 text-center">
-          <XCircle className="mx-auto text-red-500" size={40} />
-          <h1 className="mt-4 text-xl font-extrabold text-red-700">Gara từ chối lịch đặt</h1>
-          <p className="mt-2 text-sm text-red-600">
+        <div className="rounded-2xl border border-critical/25 bg-critical-container p-10 text-center">
+          <XCircle className="mx-auto text-critical" size={40} />
+          <h1 className="mt-4 text-xl font-extrabold text-critical">Gara từ chối lịch đặt</h1>
+          <p className="mt-2 text-sm text-critical">
             Gara không thể nhận lịch này. Không thể thực hiện thanh toán.
           </p>
           <div className="mt-6 flex justify-center gap-3">
-            <Link to="/khach-hang/lich-dat" className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700">
+            <Button variant="outline" size="lg" className="text-ink-soft" render={<Link to="/khach-hang/lich-dat" />}>
               Quay lại lịch đặt
-            </Link>
-            <Link to="/khach-hang/dat-lich-moi" className="rounded-2xl bg-red-600 px-5 py-3 text-sm font-bold text-white">
+            </Button>
+            <Button size="lg" className="bg-critical text-white hover:bg-critical/90" render={<Link to="/khach-hang/dat-lich-moi" />}>
               Đặt lịch mới
-            </Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -290,34 +294,30 @@ export default function CustomerPaymentPage() {
   const paid = payment?.status === "PAID";
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-8">
-      <header className="text-center">
-        <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-[var(--brand-blue)]">
-          Thanh toán an toàn
-        </p>
-        <h1 className="mt-2 text-3xl font-extrabold">Thanh toán lịch đặt</h1>
-        <p className="mt-2 text-sm text-[var(--text-muted)]">
-          Gara đã xác nhận lịch. Thanh toán để giữ khung giờ của bạn.
-        </p>
-      </header>
+    <PageContainer variant="customer">
+      <PageHeader
+        eyebrow="Thanh toán an toàn"
+        title="Thanh toán lịch đặt"
+        description="Gara đã xác nhận lịch. Thanh toán để giữ khung giờ của bạn."
+      />
 
 
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         {/* ── Left: payment method + QR ── */}
-        <section className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-extrabold">Phương thức thanh toán</h2>
             <StatusBadge status={payment?.status || "PENDING"} type="payment" />
           </div>
 
           {payment?.status === "FAILED" && (
-            <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+            <p className="mt-5 rounded-2xl border border-critical/25 bg-critical-container p-4 text-sm font-semibold text-critical">
               Thanh toán thất bại. Vui lòng thử lại.
             </p>
           )}
           {payment?.status === "CANCELLED" && (
-            <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-700">
+            <p className="mt-5 rounded-2xl border border-warning/25 bg-warning-container p-4 text-sm font-semibold text-warning">
               Giao dịch thanh toán đã bị hủy. Lịch đặt này không thể thanh toán tiếp. Vui lòng đặt lịch mới.
             </p>
           )}
@@ -331,11 +331,11 @@ export default function CustomerPaymentPage() {
                   className={cn(
                     "rounded-2xl border-2 p-5 text-left transition",
                     method === value
-                      ? "border-[var(--brand-blue)] bg-blue-50 text-[var(--brand-blue)]"
-                      : "border-[var(--border-soft)]",
+                      ? "border-primary bg-primary-container text-primary"
+                      : "border-border",
                   )}
                 >
-                  <Icon size={22} />
+                  <Icon size={20} />
                   <strong className="mt-3 block text-sm">{label}</strong>
                 </button>
               ))}
@@ -348,7 +348,7 @@ export default function CustomerPaymentPage() {
           )}
 
           {!paid && payment?.status !== "CANCELLED" && method === "CASH" && (
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-700">
+            <div className="mt-6 rounded-2xl border border-border bg-surface p-5 text-sm text-ink-soft">
               <strong className="block font-extrabold">Thanh toán tại gara</strong>
               <p className="mt-2 leading-6">
                 Bạn sẽ thanh toán trực tiếp tại gara sau khi hoàn tất dịch vụ. Nhân viên sẽ xuất
@@ -363,28 +363,31 @@ export default function CustomerPaymentPage() {
           {!paid ? (
             payment?.status === "CANCELLED" ? (
               <div className="mt-6 flex justify-center gap-3">
-                <Link to="/khach-hang/dat-lich-moi" className="w-full rounded-2xl bg-[var(--brand-blue)] py-3.5 text-center font-bold text-white">
+                <Button size="xl" className="w-full" render={<Link to="/khach-hang/dat-lich-moi" />}>
                   Đặt lịch mới
-                </Link>
+                </Button>
               </div>
             ) : method === "VNPAY" ? (
-              <button
+              <Button
+                size="xl"
                 onClick={processPayment}
                 disabled={processing}
-                className="mt-6 w-full rounded-2xl bg-[var(--brand-blue)] py-3.5 font-bold text-white disabled:opacity-60"
+                className="mt-6 w-full shadow-cta"
               >
                 {processing ? "Đang tạo URL thanh toán..." : "Thanh toán qua VNPAY"}
-              </button>
+              </Button>
             ) : (
-              <Link
-                to={`/khach-hang/lich-dat/${booking.id}`}
-                className="mt-6 block w-full rounded-2xl border border-[var(--border-soft)] bg-white py-3.5 text-center font-bold text-[var(--brand-blue)] hover:bg-slate-50 transition"
+              <Button
+                variant="outline"
+                size="xl"
+                className="mt-6 w-full text-primary"
+                render={<Link to={`/khach-hang/lich-dat/${booking.id}`} />}
               >
                 Quay lại chi tiết lịch đặt
-              </Link>
+              </Button>
             )
           ) : (
-            <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-700">
+            <div className="mt-6 rounded-2xl border border-success/25 bg-success-container p-6 text-success">
               <p className="flex items-center gap-2 text-lg font-extrabold">
                 <CheckCircle2 /> Thanh toán thành công
               </p>
@@ -403,14 +406,14 @@ export default function CustomerPaymentPage() {
           )}
 
           {error && (
-            <p className="mt-4 rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">
+            <p className="mt-4 rounded-2xl bg-critical-container p-4 text-sm font-semibold text-critical">
               {error}
             </p>
           )}
         </section>
 
         {/* ── Right: summary ── */}
-        <aside className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+        <aside className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className="text-xl font-extrabold">Tóm tắt thanh toán</h2>
           <dl className="mt-5 space-y-4 text-sm">
             {[
@@ -421,12 +424,12 @@ export default function CustomerPaymentPage() {
               ["Ngày giờ", `${formatBookingDate(booking.bookingDate)} · ${booking.slotTime}`],
             ].map(([label, value]) => (
               <div key={label}>
-                <dt className="text-xs text-[var(--text-muted)]">{label}</dt>
+                <dt className="text-xs text-muted-foreground">{label}</dt>
                 <dd className="mt-1 font-bold">{value}</dd>
               </div>
             ))}
           </dl>
-          <div className="mt-6 space-y-3 border-t border-[var(--border-soft)] pt-5 text-sm">
+          <div className="mt-6 space-y-3 border-t border-border pt-5 text-sm">
             <div className="flex justify-between">
               <span>Giá dịch vụ</span>
               <strong>{formatMoney(booking.amount)}</strong>
@@ -437,7 +440,7 @@ export default function CustomerPaymentPage() {
             </div>
             <div className="flex justify-between text-lg">
               <span className="font-bold">Tổng cần thanh toán</span>
-              <strong className="text-[var(--brand-blue)]">{formatMoney(booking.finalAmount)}</strong>
+              <strong className="text-primary">{formatMoney(booking.finalAmount)}</strong>
             </div>
           </div>
         </aside>
@@ -445,26 +448,17 @@ export default function CustomerPaymentPage() {
 
       {paid && (
         <div className="flex flex-wrap justify-center gap-3">
-          <Link
-            to={`/khach-hang/lich-dat/${booking.id}`}
-            className="rounded-2xl border border-[var(--border-soft)] bg-white px-5 py-3 text-sm font-bold"
-          >
+          <Button variant="outline" size="lg" render={<Link to={`/khach-hang/lich-dat/${booking.id}`} />}>
             Xem chi tiết lịch đặt
-          </Link>
-          <Link
-            to={`/khach-hang/thanh-toan/${booking.id}/hoa-don`}
-            className="rounded-2xl bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white"
-          >
+          </Button>
+          <Button size="lg" render={<Link to={`/khach-hang/thanh-toan/${booking.id}/hoa-don`} />}>
             Xem hóa đơn
-          </Link>
-          <Link
-            to="/khach-hang"
-            className="rounded-2xl border border-[var(--border-soft)] bg-white px-5 py-3 text-sm font-bold"
-          >
+          </Button>
+          <Button variant="outline" size="lg" render={<Link to="/khach-hang" />}>
             Về trang khách hàng
-          </Link>
+          </Button>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

@@ -1,15 +1,14 @@
 import { ArrowRight, Search } from "lucide-react";
+import PageHeader from "@/components/shared/PageHeader";
+import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { staffApi } from "@/api/staffApi";
 
-import {
-  bookingStatusLabels,
-  normalizeBookingList,
-  normalizeStaffBooking,
-} from "@/lib/staff-booking-data";
+import { normalizeBookingList, normalizeStaffBooking } from "@/lib/staff-booking-data";
+import { bookingStatusLabels } from "@/lib/status-tones";
 import { cn } from "@/lib/utils";
-import StatusBadge from "@/components/common/StatusBadge";
+import StatusBadge from "@/components/shared/StatusBadge";
 import Pagination from "@/components/common/Pagination";
 import { formatDate, formatTime } from "@/lib/format";
 
@@ -103,38 +102,34 @@ export default function StaffBookingListPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
-          Vận hành hôm nay
-        </p>
-        <h1 className="mt-2 text-3xl font-extrabold">Danh sách lịch đặt</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Tra cứu và xử lý booking theo đúng vòng đời dịch vụ.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Vận hành hôm nay"
+        title="Danh sách lịch đặt"
+        description="Tra cứu và xử lý booking theo đúng vòng đời dịch vụ."
+      />
 
 
 
       {/* Pending alert banner */}
       {pendingCount > 0 && (
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-orange-200 bg-orange-50 px-5 py-4">
-          <p className="text-sm font-bold text-orange-700">
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-warning/30 bg-warning-container px-5 py-4">
+          <p className="text-sm font-bold text-warning">
             Có {pendingCount} booking đang chờ gara xác nhận
           </p>
-          <button
-            type="button"
+          <Button
+            size="sm"
             onClick={() => setStatus("PENDING")}
-            className="rounded-xl bg-orange-500 px-3 py-1.5 text-xs font-bold text-white"
+            className="bg-warning text-white hover:bg-warning/90"
           >
             Xem ngay
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Search & filter */}
-      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
-        <label className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-3">
-          <Search size={17} className="text-slate-400" />
+      <section className="space-y-4 rounded-2xl border border-border bg-card p-4">
+        <label className="flex h-11 items-center gap-2 rounded-xl border border-border px-3">
+          <Search size={18} className="text-neutral-muted" />
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
@@ -151,17 +146,17 @@ export default function StaffBookingListPage() {
               className={cn(
                 "rounded-full px-3 py-1.5 text-xs font-bold transition",
                 status === item
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+                  ? "bg-primary text-white"
+                  : "bg-muted text-muted-foreground hover:bg-border",
                 item === "PENDING" &&
                   status !== item &&
                   pendingCount > 0 &&
-                  "border border-orange-300 bg-orange-50 text-orange-700",
+                  "border border-warning/40 bg-warning-container text-warning",
               )}
             >
               {filterLabels[item]}
               {item === "PENDING" && pendingCount > 0 && (
-                <span className="ml-1 inline-flex size-4 items-center justify-center rounded-full bg-orange-500 text-[9px] font-extrabold text-white">
+                <span className="ml-1 inline-flex size-5 items-center justify-center rounded-full bg-warning text-xs font-extrabold text-white">
                   {pendingCount}
                 </span>
               )}
@@ -171,20 +166,20 @@ export default function StaffBookingListPage() {
       </section>
 
       {/* Table */}
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <section className="overflow-hidden rounded-2xl border border-border bg-card">
         {loading ? (
-          <p className="py-16 text-center text-sm text-slate-500">
+          <p className="py-16 text-center text-sm text-muted-foreground">
             Đang tải lịch đặt...
           </p>
         ) : visibleBookings.length === 0 ? (
-          <p className="py-16 text-center text-sm text-slate-500">
+          <p className="py-16 text-center text-sm text-muted-foreground">
             Không có lịch đặt phù hợp.
           </p>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[900px] text-left text-xs">
-                <thead className="bg-slate-50 text-[10px] uppercase text-slate-500">
+                <thead className="bg-surface text-xs font-semibold text-muted-foreground">
                   <tr>
                     <th className="p-4">Booking / Khách</th>
                     <th className="p-4">Xe</th>
@@ -195,46 +190,46 @@ export default function StaffBookingListPage() {
                     <th className="p-4">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-border">
                   {pagedBookings.map((booking) => (
                     <tr
                       key={booking.id}
                       className={cn(
-                        booking.bookingStatus === "PENDING" && "bg-orange-50/50",
+                        booking.bookingStatus === "PENDING" && "bg-warning-container/50",
                       )}
                     >
                       <td className="p-4">
                         <b>{booking.code}</b>
-                        <span className="mt-1 block text-slate-500">
+                        <span className="mt-1 block text-muted-foreground">
                           {booking.customerName}
                         </span>
                         {booking.phone && (
-                          <span className="block text-slate-400">{booking.phone}</span>
+                          <span className="block text-neutral-muted">{booking.phone}</span>
                         )}
                       </td>
                       <td className="p-4">
                         <b>{booking.vehicle}</b>
-                        <span className="mt-1 block text-slate-500">{booking.plate}</span>
+                        <span className="mt-1 block text-muted-foreground">{booking.plate}</span>
                       </td>
                       <td className="p-4">{booking.serviceName}</td>
                       <td className="p-4">
                         {formatDate(booking.bookingDate)}
-                        <span className="mt-1 block font-bold text-blue-600">
+                        <span className="mt-1 block font-bold text-primary">
                           {formatTime(booking.slotTime)}
                         </span>
                       </td>
                       <td className="p-4">
-                        <StatusBadge status={booking.bookingStatus} type="booking" />
+                        <StatusBadge status={booking.bookingStatus} type="booking" size="sm" />
                       </td>
                       <td className="p-4">
-                        <StatusBadge status={booking.paymentStatus} type="payment" />
+                        <StatusBadge status={booking.paymentStatus} type="payment" size="sm" />
                       </td>
                       <td className="p-4">
                         <Link
                           to={`/nhan-vien/danh-sach/${booking.id}`}
-                          className="inline-flex items-center gap-1 font-bold text-blue-600 hover:underline"
+                          className="inline-flex items-center gap-1 font-bold text-primary hover:underline"
                         >
-                          Xem chi tiết <ArrowRight size={13} />
+                          Xem chi tiết <ArrowRight size={14} />
                         </Link>
                       </td>
                     </tr>

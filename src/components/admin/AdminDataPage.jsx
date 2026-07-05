@@ -1,6 +1,11 @@
 import { Eye, RefreshCcw, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { adminApi } from "../../api/adminApi";
+import { toast } from "@/components/ui/toast";
+import { confirmDialog } from "@/components/shared/ConfirmDialog";
+import PageHeader from "@/components/shared/PageHeader";
+import EmptyState from "@/components/shared/EmptyState";
+import { Button } from "@/components/ui/button";
 
 const unwrap = (payload) => Array.isArray(payload) ? payload : payload?.content || payload?.items || payload?.data || payload?.result || [];
 const money = (value) => `${Number(value || 0).toLocaleString("vi-VN")}đ`;
@@ -120,27 +125,41 @@ export default function AdminDataPage({ type }) {
   }), [config.filters, items, payment, status]);
 
   const handleView = (row) => {
-    alert("Tính năng Xem chi tiết (ID: " + (row.id ?? row.servicePackageId ?? row.serviceId ?? row.garageId ?? "N/A") + ") trên giao diện Quản trị đang được cập nhật!");
+    const id = row.id ?? row.servicePackageId ?? row.serviceId ?? row.garageId ?? "N/A";
+    toast.info(`Tính năng Xem chi tiết (ID: ${id}) đang được cập nhật.`);
   };
 
-  const handleCancel = (row) => {
+  const handleCancel = async (row) => {
     const id = row.id ?? row.bookingId;
-    if (window.confirm("Bạn có chắc chắn muốn hủy booking này không?")) {
-      adminApi.cancelBooking(id).then(() => {
-        load();
-      }).catch((err) => {
-        alert("Lỗi khi hủy booking: " + (err.response?.data?.message || err.message));
-      });
+    const confirmed = await confirmDialog({
+      title: "Hủy booking này?",
+      description: `Booking #${id} sẽ chuyển sang trạng thái CANCELLED.`,
+      confirmLabel: "Hủy booking",
+      cancelLabel: "Giữ lại",
+      destructive: true,
+    });
+    if (!confirmed) return;
+    try {
+      await adminApi.cancelBooking(id);
+      toast.success(`Đã hủy booking #${id}.`);
+      load();
+    } catch (err) {
+      toast.error("Lỗi khi hủy booking", { description: err.response?.data?.message || err.message });
     }
   };
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Quản trị WashMate</p><h1 className="mt-2 text-3xl font-extrabold">{config.title}</h1><p className="mt-2 text-sm text-slate-500">{config.description}</p></div><button onClick={load} className="inline-flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold"><RefreshCcw size={14} />Tải lại</button></header>
+      <PageHeader
+        eyebrow="Quản trị WashMate"
+        title={config.title}
+        description={config.description}
+        actions={<Button variant="outline" size="sm" onClick={load} className="text-xs"><RefreshCcw />Tải lại</Button>}
+      />
       
-      {config.filters && <section className="flex flex-wrap gap-3 rounded-2xl border border-slate-200 bg-white p-4"><select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs"><option value="ALL">Tất cả trạng thái</option>{["PENDING","CONFIRMED","CHECKED_IN","WASHING","COMPLETED","CANCELLED","NO_SHOW"].map((value) => <option key={value}>{value}</option>)}</select><select value={payment} onChange={(e) => setPayment(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs"><option value="ALL">Tất cả thanh toán</option><option value="PENDING">Chờ thanh toán</option><option value="PAID">Đã thanh toán</option><option value="REFUNDED">Đã hoàn tiền</option></select></section>}
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        {loading ? <p className="py-16 text-center text-sm text-slate-500">Đang tải dữ liệu...</p> : visible.length === 0 ? <p className="py-16 text-center text-sm text-slate-500">Chưa có dữ liệu để hiển thị.</p> : <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-xs"><thead className="bg-slate-50 text-[10px] uppercase text-slate-500"><tr>{config.columns.map(([, label]) => <th key={label} className="p-4">{label}</th>)}<th className="p-4">Thao tác</th></tr></thead><tbody className="divide-y divide-slate-100">{visible.map((row, index) => <tr key={row.id ?? row.servicePackageId ?? row.serviceId ?? row.garageId ?? index}>{config.columns.map(([key, label, format]) => <td key={label} className="p-4">{format ? format(row[key], row) : row[key] ?? "Chưa cập nhật"}</td>)}<td className="p-4"><div className="flex items-center gap-4"><button onClick={() => handleView(row)} className="inline-flex items-center gap-1 font-bold text-blue-600"><Eye size={13} />Xem</button>{type === "bookings" && row.bookingStatus !== "CANCELLED" && (<button onClick={() => handleCancel(row)} className="inline-flex items-center gap-1 font-bold text-red-500"><XCircle size={13} />Hủy</button>)}</div></td></tr>)}</tbody></table></div>}
+      {config.filters && <section className="flex flex-wrap gap-3 rounded-2xl border border-border bg-card p-4"><select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border border-border px-3 py-2 text-xs"><option value="ALL">Tất cả trạng thái</option>{["PENDING","CONFIRMED","CHECKED_IN","WASHING","COMPLETED","CANCELLED","NO_SHOW"].map((value) => <option key={value}>{value}</option>)}</select><select value={payment} onChange={(e) => setPayment(e.target.value)} className="rounded-xl border border-border px-3 py-2 text-xs"><option value="ALL">Tất cả thanh toán</option><option value="PENDING">Chờ thanh toán</option><option value="PAID">Đã thanh toán</option><option value="REFUNDED">Đã hoàn tiền</option></select></section>}
+      <section className="overflow-hidden rounded-2xl border border-border bg-card">
+        {loading ? <p className="py-16 text-center text-sm text-muted-foreground">Đang tải dữ liệu...</p> : visible.length === 0 ? <EmptyState className="border-0 bg-transparent" icon={Eye} title="Chưa có dữ liệu để hiển thị" description="Thử đổi bộ lọc hoặc bấm Tải lại." /> : <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-xs"><thead className="bg-surface text-xs font-semibold text-muted-foreground"><tr>{config.columns.map(([, label]) => <th key={label} className="p-4">{label}</th>)}<th className="p-4">Thao tác</th></tr></thead><tbody className="divide-y divide-border">{visible.map((row, index) => <tr key={row.id ?? row.servicePackageId ?? row.serviceId ?? row.garageId ?? index}>{config.columns.map(([key, label, format]) => <td key={label} className="p-4">{format ? format(row[key], row) : row[key] ?? "Chưa cập nhật"}</td>)}<td className="p-4"><div className="flex items-center gap-4"><button onClick={() => handleView(row)} className="inline-flex items-center gap-1 font-bold text-primary"><Eye size={14} />Xem</button>{type === "bookings" && row.bookingStatus !== "CANCELLED" && (<button onClick={() => handleCancel(row)} className="inline-flex items-center gap-1 font-bold text-critical"><XCircle size={14} />Hủy</button>)}</div></td></tr>)}</tbody></table></div>}
       </section>
     </div>
   );

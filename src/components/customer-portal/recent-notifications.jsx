@@ -42,11 +42,11 @@ export function RecentNotifications() {
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-border bg-white p-8 text-center text-muted-foreground">
+        <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground">
           Đang tải thông báo...
         </div>
       ) : notifications.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-white p-8 text-center text-muted-foreground">
+        <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground">
           <Bell size={36} className="mx-auto mb-2 opacity-50" />
           <p className="font-semibold text-foreground">Bạn chưa có thông báo mới nào</p>
         </div>
@@ -59,7 +59,7 @@ export function RecentNotifications() {
               <Card
                 key={notification.notificationId || notification.id || idx}
                 className={`rounded-2xl border p-4 transition-all ${
-                  isRead ? "border-border bg-white" : "border-primary bg-primary/5"
+                  isRead ? "border-border bg-card" : "border-primary bg-primary/5"
                 }`}
               >
                 <div className="flex items-start gap-4">

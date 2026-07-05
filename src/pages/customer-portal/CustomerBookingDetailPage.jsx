@@ -1,11 +1,14 @@
-import { ArrowLeft, CalendarDays, Car, Gift, MapPin, NotebookText, Sparkles } from "lucide-react";
+import { ArrowLeft, CalendarDays, Car, Droplets, Gift, MapPin, NotebookText } from "lucide-react";
+import PageContainer from "@/components/shared/PageContainer";
+import PageHeader from "@/components/shared/PageHeader";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { bookingApi } from "@/api/bookingApi";
 import { paymentApi } from "@/api/paymentApi";
 import { BookingTimeline } from "@/components/customer/BookingTimeline";
 import { PaymentStatusCard } from "@/components/customer/PaymentStatusCard";
-import { StatusBadge } from "@/components/customer/BookingStatusBadge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import {
   formatBookingDate,
   formatMoney,
@@ -62,16 +65,16 @@ export default function CustomerBookingDetailPage() {
   }, [loadDetail]);
 
   if (loading) {
-    return <div className="mx-auto max-w-5xl p-8"><div className="rounded-2xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải chi tiết lịch đặt...</div></div>;
+    return <div className="mx-auto max-w-5xl p-8"><div className="rounded-2xl bg-card p-12 text-center text-muted-foreground">Đang tải chi tiết lịch đặt...</div></div>;
   }
 
   if (!booking) {
     return (
       <div className="mx-auto max-w-5xl p-8">
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-10 text-center">
-          <h1 className="text-xl font-extrabold text-red-700">Không tìm thấy lịch đặt</h1>
-          <p className="mt-2 text-sm text-red-600">{error}</p>
-          <button onClick={loadDetail} className="mt-5 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white">Thử lại</button>
+        <div className="rounded-2xl border border-critical/25 bg-critical-container p-10 text-center">
+          <h1 className="text-xl font-extrabold text-critical">Không tìm thấy lịch đặt</h1>
+          <p className="mt-2 text-sm text-critical">{error}</p>
+          <Button onClick={loadDetail} className="mt-5 bg-critical text-white hover:bg-critical/90">Thử lại</Button>
         </div>
       </div>
     );
@@ -80,7 +83,7 @@ export default function CustomerBookingDetailPage() {
   const details = [
     [Car, "Xe", booking.vehicle],
     [Car, "Biển số", booking.plate],
-    [Sparkles, "Dịch vụ", booking.serviceName],
+    [Droplets, "Dịch vụ", booking.serviceName],
     [MapPin, "Gara", booking.garageName],
     [MapPin, "Địa chỉ gara", booking.garageAddress],
     [CalendarDays, "Ngày hẹn", formatBookingDate(booking.bookingDate)],
@@ -89,64 +92,60 @@ export default function CustomerBookingDetailPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <Link to="/khach-hang/lich-dat" className="inline-flex items-center gap-2 text-sm font-bold text-[var(--brand-blue)]"><ArrowLeft size={16} /> Quay lại lịch đặt</Link>
-          <h1 className="mt-4 text-3xl font-extrabold">Chi tiết lịch đặt</h1>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <strong>{booking.code}</strong>
-            <StatusBadge status={booking.bookingStatus} />
-          </div>
-        </div>
-      </header>
+    <PageContainer variant="customer">
+      <Link to="/khach-hang/lich-dat" className="inline-flex items-center gap-2 text-sm font-bold text-primary"><ArrowLeft size={16} /> Quay lại lịch đặt</Link>
+      <PageHeader
+        title="Chi tiết lịch đặt"
+        description={booking.code}
+        actions={<StatusBadge status={booking.bookingStatus} />}
+      />
 
-      <section className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-extrabold">Tiến trình lịch đặt</h2>
-            <p className="mt-1 text-sm text-[var(--text-muted)]">Trạng thái được cập nhật theo quá trình thanh toán và chăm sóc xe.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Trạng thái được cập nhật theo quá trình thanh toán và chăm sóc xe.</p>
           </div>
         </div>
         <BookingTimeline booking={booking} />
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
-        <section className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className="text-xl font-extrabold">Thông tin lịch đặt</h2>
           <dl className="mt-6 grid gap-5 sm:grid-cols-2">
             {details.map(([Icon, label, value]) => (
               <div key={label} className="flex gap-3">
-                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--brand-blue)]/10 text-[var(--brand-blue)]"><Icon size={18} /></span>
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Icon size={18} /></span>
                 <div>
-                  <dt className="text-xs font-semibold text-[var(--text-muted)]">{label}</dt>
+                  <dt className="text-xs font-semibold text-muted-foreground">{label}</dt>
                   <dd className="mt-1 font-bold">{value}</dd>
                 </div>
               </div>
             ))}
           </dl>
-          <div className="mt-7 flex items-center justify-between rounded-2xl bg-[var(--bg-main)] p-5">
+          <div className="mt-7 flex items-center justify-between rounded-2xl bg-surface p-5">
             <span className="font-bold">Tổng tiền tạm tính</span>
-            <strong className="text-xl text-[var(--brand-blue)]">{formatMoney(booking.finalAmount)}</strong>
+            <strong className="text-xl text-primary">{formatMoney(booking.finalAmount)}</strong>
           </div>
         </section>
         <PaymentStatusCard booking={booking} />
       </div>
 
-      <section className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="flex items-start gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--brand-blue)]/10 text-[var(--brand-blue)]"><Gift size={18} /></span>
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Gift size={18} /></span>
           <div>
             <h2 className="text-lg font-extrabold">Điểm thưởng</h2>
             {booking.bookingStatus === "COMPLETED" && booking.paymentStatus === "PAID" ? (
-              <p className="mt-1 text-sm text-[var(--text-muted)]">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Bạn đã được cộng điểm thưởng cho lịch đặt này. Xem tại{" "}
-                <Link to="/khach-hang/diem-thanh-vien" className="font-bold text-[var(--brand-blue)]">trang Điểm thành viên</Link>.
+                <Link to="/khach-hang/diem-thanh-vien" className="font-bold text-primary">trang Điểm thành viên</Link>.
               </p>
             ) : (
-              <p className="mt-1 text-sm text-[var(--text-muted)]">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Điểm thưởng sẽ được cộng sau khi lịch đặt hoàn tất và thanh toán thành công.{" "}
-                <Link to="/khach-hang/diem-thanh-vien" className="font-bold text-[var(--brand-blue)]">Xem điểm thành viên</Link>.
+                <Link to="/khach-hang/diem-thanh-vien" className="font-bold text-primary">Xem điểm thành viên</Link>.
               </p>
             )}
           </div>
@@ -154,10 +153,10 @@ export default function CustomerBookingDetailPage() {
       </section>
 
       <div className="flex flex-wrap gap-3">
-        <Link to="/khach-hang" className="rounded-2xl border border-[var(--border-soft)] bg-white px-5 py-3 text-sm font-bold">Quay về trang khách hàng</Link>
-        <Link to="/khach-hang/lich-dat" className="rounded-2xl border border-[var(--border-soft)] bg-white px-5 py-3 text-sm font-bold">Xem lịch đặt</Link>
-        <Link to="/khach-hang/dat-lich-moi" className="rounded-2xl bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white">Đặt lịch mới</Link>
+        <Button variant="outline" size="lg" render={<Link to="/khach-hang" />}>Quay về trang khách hàng</Button>
+        <Button variant="outline" size="lg" render={<Link to="/khach-hang/lich-dat" />}>Xem lịch đặt</Button>
+        <Button size="lg" render={<Link to="/khach-hang/dat-lich-moi" />}>Đặt lịch mới</Button>
       </div>
-    </div>
+    </PageContainer>
   );
 }

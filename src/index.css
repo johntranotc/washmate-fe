@@ -1,6 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "./styles/design-tokens.css"; /* token DESIGN.md — scoped .wm-admin, không ảnh hưởng Customer Portal */
 
 /* Custom variants used by @base-ui/react primitives (accordion, checkbox, etc.) */
 @custom-variant data-open {
@@ -95,6 +95,12 @@
   --font-sans: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Be Vietnam Pro", ui-monospace, monospace;
 
+  /* Shadow tokens — 3 ý định duy nhất, cấm shadow-[...] arbitrary (xem DESIGN.md).
+     Tên "cta" thay vì "primary" vì shadow-primary/NN đang được dùng làm colored shadow. */
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px -12px rgba(15, 23, 42, 0.12);
+  --shadow-floating: 0 8px 32px rgba(15, 23, 42, 0.18);
+  --shadow-cta: 0 4px 15px rgba(37, 99, 235, 0.4);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -114,10 +120,39 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-container: var(--primary-container);
+
+  --color-success: var(--success);
+  --color-success-container: var(--success-container);
+  --color-warning: var(--warning);
+  --color-warning-container: var(--warning-container);
+  --color-critical: var(--critical);
+  --color-critical-container: var(--critical-container);
+  --color-no-show: var(--no-show);
+  --color-no-show-container: var(--no-show-container);
+
+  --color-ink-soft: var(--ink-soft);
+  --color-neutral-muted: var(--neutral-muted);
+
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-indigo: var(--accent-indigo);
+  --color-accent-violet: var(--accent-violet);
+
+  --color-tier-bronze: var(--tier-bronze);
+  --color-tier-bronze-ink: var(--tier-bronze-ink);
+  --color-tier-silver: var(--tier-silver);
+  --color-tier-silver-ink: var(--tier-silver-ink);
+  --color-tier-gold: var(--tier-gold);
+  --color-tier-gold-ink: var(--tier-gold-ink);
+  --color-tier-platinum: var(--tier-platinum);
+  --color-tier-diamond: var(--tier-diamond);
+
   --color-brand: var(--brand);
   --color-brand-dark: var(--brand-dark);
   --color-teal: var(--teal);
   --color-gold: var(--gold);
+  --color-gold-ink: var(--gold-ink);
   --color-surface: var(--surface);
 
   --color-chart-1: var(--chart-1);
@@ -148,6 +183,8 @@
 
   --primary: #2563eb;
   --primary-foreground: #ffffff;
+  --primary-strong: #1d4ed8;
+  --primary-container: #eff6ff;
 
   --secondary: #f8fafc;
   --secondary-foreground: #1d4ed8;
@@ -164,13 +201,44 @@
   --input: #e2e8f0;
   --ring: #2563eb;
 
+  /* Semantic states — dùng chung cả 3 portal (Customer/Staff/Admin) */
+  --success: #047857;
+  --success-container: #d1fae5;
+  --warning: #b45309;
+  --warning-container: #fef3c7;
+  --critical: #b91c1c;
+  --critical-container: #fee2e2;
+  --no-show: #c2410c;
+  --no-show-container: #ffedd5;
+
+  /* Neutral text tiers */
+  --ink-soft: #334155;
+  --neutral-muted: #94a3b8;
+
+  /* Extended accents (Admin/Staff data grouping) */
+  --accent-cyan: #0e7490;
+  --accent-indigo: #4338ca;
+  --accent-violet: #6d28d9;
+
+  /* Membership tiers (Đồng/Bạc/Vàng/Bạch Kim/Kim Cương) */
+  --tier-bronze: #b07b4f;
+  --tier-bronze-ink: #8c5a32;
+  --tier-silver: #94a3b8;
+  --tier-silver-ink: #64748b;
+  --tier-gold: #f59e0b;
+  --tier-gold-ink: #b8860b;
+  --tier-platinum: #3b82f6;
+  --tier-diamond: #8b5cf6;
+
   /* Brand custom tokens */
   --brand: #2563eb;
   --brand-dark: #1d4ed8;
   --teal: #b8f3f1;
   --gold: #f7c948;
+  --gold-ink: #5a4500; /* text trên nền gold */
   --surface: #f8fafc;
 
+  /* Keep in sync with src/lib/chart-colors.js (Recharts cần chuỗi màu tĩnh) */
   --chart-1: #2563eb;
   --chart-2: #f59e0b;
   --chart-3: #8b5cf6;

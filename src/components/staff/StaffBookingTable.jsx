@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Search, Eye } from "lucide-react";
-import StatusBadge from "../common/StatusBadge";
+import StatusBadge from "@/components/shared/StatusBadge";
 import Pagination from "../common/Pagination";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/format";
@@ -46,11 +46,11 @@ export function StaffBookingTable({ bookings = [] }) {
   }, [filtered, page]);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white">
+    <section className="rounded-2xl border border-border bg-card">
       <div className="flex flex-col gap-3 p-5 pb-3 lg:flex-row lg:items-center lg:justify-between">
-        <h2 className="font-extrabold text-slate-800">Danh sách lịch đặt</h2>
-        <label className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 lg:w-80">
-          <Search size={16} className="text-slate-400" />
+        <h2 className="font-extrabold text-foreground">Danh sách lịch đặt</h2>
+        <label className="flex h-10 items-center gap-2 rounded-xl border border-border px-3 lg:w-80">
+          <Search size={16} className="text-neutral-muted" />
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
@@ -61,7 +61,7 @@ export function StaffBookingTable({ bookings = [] }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto border-b border-slate-100 px-5">
+      <div className="flex gap-1 overflow-x-auto border-b border-border px-5">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -70,8 +70,8 @@ export function StaffBookingTable({ bookings = [] }) {
             className={cn(
               "shrink-0 border-b-2 px-3 py-2.5 text-xs font-bold transition",
               tab === t.key
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-slate-500 hover:text-slate-800",
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             {t.label}
@@ -82,40 +82,40 @@ export function StaffBookingTable({ bookings = [] }) {
       <div className="overflow-x-auto px-5">
         <table className="w-full min-w-[820px] text-left text-xs">
           <thead>
-            <tr className="border-b border-slate-100 text-[10px] uppercase tracking-wider text-slate-400">
-              <th className="py-3 pr-3 font-bold">Mã booking</th>
-              <th className="py-3 pr-3 font-bold">Khách hàng</th>
-              <th className="py-3 pr-3 font-bold">Biển số</th>
-              <th className="py-3 pr-3 font-bold">Dịch vụ</th>
-              <th className="py-3 pr-3 font-bold">Giờ hẹn</th>
-              <th className="py-3 pr-3 font-bold">Trạng thái</th>
-              <th className="py-3 pr-3 font-bold">Thanh toán</th>
+            <tr className="border-b border-border text-xs font-semibold text-neutral-muted">
+              <th className="py-3 pr-3 font-semibold">Mã booking</th>
+              <th className="py-3 pr-3 font-semibold">Khách hàng</th>
+              <th className="py-3 pr-3 font-semibold">Biển số</th>
+              <th className="py-3 pr-3 font-semibold">Dịch vụ</th>
+              <th className="py-3 pr-3 font-semibold">Giờ hẹn</th>
+              <th className="py-3 pr-3 font-semibold">Trạng thái</th>
+              <th className="py-3 pr-3 font-semibold">Thanh toán</th>
               <th className="py-3 font-bold text-right">Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-50">
+          <tbody className="divide-y divide-surface">
             {paged.length > 0 ? paged.map((b) => (
-              <tr key={b.id} className="hover:bg-slate-50">
-                <td className="py-3 pr-3 font-bold text-blue-600">{b.code}</td>
-                <td className="py-3 pr-3 font-semibold text-slate-700">{b.customerName}</td>
-                <td className="py-3 pr-3 font-mono text-slate-600">{b.plate}</td>
-                <td className="py-3 pr-3 text-slate-600 truncate max-w-[140px]">{b.serviceName}</td>
-                <td className="py-3 pr-3 font-bold text-slate-700">{formatTime(b.slotTime) || "--:--"}</td>
-                <td className="py-3 pr-3"><StatusBadge status={b.bookingStatus} type="booking" /></td>
-                <td className="py-3 pr-3"><StatusBadge status={b.paymentStatus} type="payment" /></td>
+              <tr key={b.id} className="hover:bg-surface">
+                <td className="py-3 pr-3 font-bold text-primary">{b.code}</td>
+                <td className="py-3 pr-3 font-semibold text-ink-soft">{b.customerName}</td>
+                <td className="py-3 pr-3 font-mono text-muted-foreground">{b.plate}</td>
+                <td className="py-3 pr-3 text-muted-foreground truncate max-w-[140px]">{b.serviceName}</td>
+                <td className="py-3 pr-3 font-bold text-ink-soft">{formatTime(b.slotTime) || "--:--"}</td>
+                <td className="py-3 pr-3"><StatusBadge status={b.bookingStatus} type="booking" size="sm" /></td>
+                <td className="py-3 pr-3"><StatusBadge status={b.paymentStatus} type="payment" size="sm" /></td>
                 <td className="py-3 text-right">
                   <Link
                     to={`/nhan-vien/danh-sach/${b.id}`}
-                    className="inline-grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50"
+                    className="inline-grid h-8 w-8 place-items-center rounded-lg border border-border text-muted-foreground hover:bg-surface"
                     aria-label="Xem chi tiết"
                   >
-                    <Eye size={15} />
+                    <Eye size={16} />
                   </Link>
                 </td>
               </tr>
             )) : (
               <tr>
-                <td colSpan="8" className="py-10 text-center text-slate-400">Không có lịch đặt phù hợp.</td>
+                <td colSpan="8" className="py-10 text-center text-neutral-muted">Không có lịch đặt phù hợp.</td>
               </tr>
             )}
           </tbody>

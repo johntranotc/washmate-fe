@@ -2,36 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { MapPin, ArrowRight, Calendar, Plus } from "lucide-react";
 import { loadCustomerBookingList } from "@/lib/customer-bookings";
 import { formatBookingDate, formatMoney } from "@/lib/customer-booking-data";
-
-const statusColors = {
-  "Chờ thanh toán": "bg-yellow-100 text-yellow-800",
-  "PENDING": "bg-yellow-100 text-yellow-800",
-  "Đã xác nhận": "bg-blue-100 text-blue-800",
-  "CONFIRMED": "bg-blue-100 text-blue-800",
-  "Đã check-in": "bg-teal-100 text-teal-800",
-  "CHECKED_IN": "bg-teal-100 text-teal-800",
-  "Đang rửa xe": "bg-purple-100 text-purple-800",
-  "IN_PROGRESS": "bg-purple-100 text-purple-800",
-  "Đã hoàn tất": "bg-green-100 text-green-800",
-  "COMPLETED": "bg-green-100 text-green-800",
-  "Đã hủy": "bg-red-100 text-red-800",
-  "CANCELLED": "bg-red-100 text-red-800",
-  "REJECTED": "bg-red-100 text-red-800",
-};
-
-const statusLabels = {
-  "PENDING": "Chờ xác nhận",
-  "CONFIRMED": "Đã xác nhận",
-  "CHECKED_IN": "Đã đến gara",
-  "IN_PROGRESS": "Đang rửa xe",
-  "COMPLETED": "Hoàn tất",
-  "CANCELLED": "Đã hủy",
-  "REJECTED": "Từ chối",
-};
+import { StatusBadge } from "@/components/shared/StatusBadge";
 
 export function UpcomingBookings() {
   const navigate = useNavigate();
@@ -62,20 +36,17 @@ export function UpcomingBookings() {
             Theo dõi các lịch rửa xe gần nhất và trạng thái xử lý của bạn.
           </p>
         </div>
-        <Button
-          onClick={() => navigate("/khach-hang/dat-lich-moi")}
-          className="rounded-xl bg-primary px-4 py-2 font-bold text-white shadow-md hover:bg-primary/90"
-        >
-          <Plus size={18} className="mr-1" /> Đặt lịch mới
+        <Button onClick={() => navigate("/khach-hang/dat-lich-moi")}>
+          <Plus /> Đặt lịch mới
         </Button>
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-border bg-white p-8 text-center text-muted-foreground">
+        <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground">
           Đang tải lịch đặt...
         </div>
       ) : bookings.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-white p-8 text-center">
+        <div className="rounded-2xl border border-border bg-card p-8 text-center">
           <Calendar size={36} className="mx-auto mb-2 text-muted-foreground opacity-50" />
           <p className="font-semibold text-foreground">Bạn chưa có lịch đặt nào</p>
           <Button
@@ -91,8 +62,6 @@ export function UpcomingBookings() {
           {bookings.map((booking, idx) => {
             if (!booking || typeof booking !== "object") return null;
             const rawStatus = booking.bookingStatus || booking.status || "PENDING";
-            const label = statusLabels[rawStatus] || rawStatus;
-            const color = statusColors[rawStatus] || "bg-gray-100 text-gray-800";
 
             const renderStr = (val, fb) => {
               if (typeof val === "string") return val;
@@ -108,7 +77,7 @@ export function UpcomingBookings() {
             const garText = renderStr(booking.garageName || booking.garage, "Gara WashMate");
 
             return (
-              <Card key={booking.id || booking.bookingId || idx} className="rounded-2xl border border-border p-6 transition-all hover:shadow-lg">
+              <Card key={booking.id || booking.bookingId || idx} className="rounded-2xl border border-border p-6 transition-all hover:shadow-card">
                 <div className="mb-4 flex items-start justify-between">
                   <div className="flex-1">
                     <h3 className="mb-1 text-lg font-bold leading-tight text-foreground">
@@ -123,7 +92,7 @@ export function UpcomingBookings() {
                       </div>
                     </div>
                   </div>
-                  <Badge className={color}>{label}</Badge>
+                  <StatusBadge status={rawStatus} />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 border-y border-border py-4 sm:grid-cols-3">
@@ -146,7 +115,7 @@ export function UpcomingBookings() {
                       onClick={() => navigate(`/khach-hang/lich-dat/${booking.id || booking.bookingId}`)}
                       className="font-semibold text-primary hover:bg-secondary"
                     >
-                      Xem chi tiết <ArrowRight size={16} />
+                      Xem chi tiết <ArrowRight />
                     </Button>
                   </div>
                 </div>

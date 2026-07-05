@@ -2,8 +2,8 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import AppRoutes from "./routes/AppRoutes.jsx";
-import { AppStoreProvider } from "./state/AppStore.jsx";
-import "./styles/theme.css";
+import { ToastHost } from "./components/ui/toast.jsx";
+import { ConfirmDialogHost } from "./components/shared/ConfirmDialog.jsx";
 import "./index.css";
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "833728967316-qe96dimj7jlcr07asavus1rb109shv67.apps.googleusercontent.com";
@@ -23,20 +23,20 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: "40px", fontFamily: "sans-serif", backgroundColor: "#fff0f0", minHeight: "100vh", color: "#900" }}>
-          <h1 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "16px" }}>🚨 Phát hiện lỗi hiển thị giao diện (React Error Crash)</h1>
-          <p style={{ marginBottom: "12px", fontSize: "16px" }}>Vui lòng chụp lại màn hình lỗi này gửi cho tôi để tôi khắc phục chính xác 100%:</p>
-          <div style={{ backgroundColor: "#ffe0e0", padding: "16px", borderRadius: "8px", overflow: "auto", border: "1px solid #ffb0b0", marginBottom: "20px" }}>
+        <div style={{ padding: "40px", fontFamily: "var(--font-sans)", backgroundColor: "var(--critical-container)", minHeight: "100vh", color: "var(--critical)" }}>
+          <h1 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "16px" }}>Phát hiện lỗi hiển thị giao diện (React Error Crash)</h1>
+          <p style={{ marginBottom: "12px", fontSize: "16px" }}>Vui lòng chụp lại màn hình lỗi này và gửi cho đội phát triển:</p>
+          <div style={{ backgroundColor: "var(--background)", padding: "16px", borderRadius: "var(--radius)", overflow: "auto", border: "1px solid var(--border)", marginBottom: "20px" }}>
             <strong>{this.state.error && this.state.error.toString()}</strong>
           </div>
           {this.state.errorInfo && (
-            <pre style={{ fontSize: "13px", backgroundColor: "#333", color: "#0f0", padding: "16px", borderRadius: "8px", overflow: "auto" }}>
+            <pre style={{ fontSize: "13px", backgroundColor: "var(--foreground)", color: "var(--background)", padding: "16px", borderRadius: "var(--radius)", overflow: "auto" }}>
               {this.state.errorInfo.componentStack}
             </pre>
           )}
           <button
             onClick={() => { localStorage.clear(); sessionStorage.clear(); window.location.href = "/dang-nhap"; }}
-            style={{ marginTop: "20px", padding: "12px 24px", backgroundColor: "#d00", color: "#fff", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}
+            style={{ marginTop: "20px", padding: "12px 24px", backgroundColor: "var(--critical)", color: "var(--primary-foreground)", border: "none", borderRadius: "var(--radius)", fontWeight: "bold", cursor: "pointer" }}
           >
             Xóa dữ liệu bị lỗi & Đăng nhập lại
           </button>
@@ -50,9 +50,10 @@ class ErrorBoundary extends React.Component {
 createRoot(document.getElementById("root")).render(
   <ErrorBoundary>
     <GoogleOAuthProvider clientId={googleClientId}>
-      <AppStoreProvider>
+      <ToastHost>
         <AppRoutes />
-      </AppStoreProvider>
+        <ConfirmDialogHost />
+      </ToastHost>
     </GoogleOAuthProvider>
   </ErrorBoundary>,
 );

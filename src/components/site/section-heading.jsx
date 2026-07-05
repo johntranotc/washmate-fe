@@ -18,7 +18,7 @@ export function SectionHeading({
       {eyebrow && (
         <span
           className={cn(
-            "inline-flex w-fit items-center gap-2 rounded-full border border-border bg-secondary px-3.5 py-1.5 text-[13px] font-semibold text-primary",
+            "inline-flex w-fit items-center gap-2 rounded-full border border-border bg-secondary px-3.5 py-1.5 text-sm font-semibold text-primary",
             align === "center" && "mx-auto",
           )}
         >
@@ -26,7 +26,7 @@ export function SectionHeading({
           {eyebrow}
         </span>
       )}
-      <h2 className="text-pretty text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl lg:text-[44px] lg:leading-[1.1]">
+      <h2 className="text-pretty text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl lg:text-5xl lg:leading-tight">
         {title}
       </h2>
       {description && (

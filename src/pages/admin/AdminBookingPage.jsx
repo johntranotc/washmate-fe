@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import PageContainer from "@/components/shared/PageContainer";
+import PageHeader from "@/components/shared/PageHeader";
 import { CalendarDays, RefreshCw, Search, AlertTriangle, X, CheckCircle2, XCircle } from "lucide-react";
 import { adminApi } from "../../api/adminApi";
 import { garageApi } from "../../api/garageApi";
 import { staffApi } from "../../api/staffApi";
 import { normalizeBookingList, normalizeStaffBooking } from "../../lib/staff-booking-data";
-import StatusBadge from "../../components/common/StatusBadge";
+import StatusBadge from "@/components/shared/StatusBadge";
 import Pagination from "../../components/common/Pagination";
 import { formatDate, formatMoney, formatTime } from "../../lib/format";
+import { Button } from "@/components/ui/button";
 
 const PAGE_SIZE = 10;
 
@@ -83,12 +86,12 @@ export default function AdminBookingPage() {
     switch (b?.bookingStatus) {
       case "PENDING":
         return [
-          { key: "confirm", label: "Xác nhận lịch", api: () => staffApi.confirmBooking(b.id), tone: "bg-blue-600 hover:bg-blue-700 text-white", icon: <CheckCircle2 size={14} /> },
-          { key: "cancel", label: "Hủy lịch", api: () => staffApi.cancelBooking(b.id), tone: "bg-white border border-red-200 text-red-600 hover:bg-red-50", icon: <XCircle size={14} /> },
+          { key: "confirm", label: "Xác nhận lịch", api: () => staffApi.confirmBooking(b.id), variant: "default", icon: <CheckCircle2 /> },
+          { key: "cancel", label: "Hủy lịch", api: () => staffApi.cancelBooking(b.id), variant: "destructive", icon: <XCircle /> },
         ];
       case "CONFIRMED":
         return [
-          { key: "cancel", label: "Hủy lịch", api: () => staffApi.cancelBooking(b.id), tone: "bg-white border border-red-200 text-red-600 hover:bg-red-50", icon: <XCircle size={14} /> },
+          { key: "cancel", label: "Hủy lịch", api: () => staffApi.cancelBooking(b.id), variant: "destructive", icon: <XCircle /> },
         ];
       default:
         return []; // CHECKED_IN/WASHING do Staff vận hành; trạng thái cuối không có action
@@ -110,99 +113,103 @@ export default function AdminBookingPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-6 p-4 sm:p-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900">Lịch hẹn</h1>
-          <p className="mt-1 text-sm text-slate-500">Theo dõi và quản lý toàn bộ lịch đặt rửa xe trong hệ thống.</p>
-        </div>
-        <button onClick={load} className="flex h-10 w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50">
-          <RefreshCw size={16} /> Tải lại
-        </button>
-      </header>
+    <PageContainer>
+      <PageHeader
+        title="Lịch hẹn"
+        description="Theo dõi và quản lý toàn bộ lịch đặt rửa xe trong hệ thống."
+        actions={
+          <Button variant="outline" onClick={load} className="w-fit text-ink-soft">
+            <RefreshCw /> Tải lại
+          </Button>
+        }
+      />
 
       {/* Bộ lọc */}
-      <section className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <label className="flex h-10 min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-slate-200 px-3 sm:max-w-xs">
-          <Search size={16} className="text-slate-400" />
+      <section className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
+        <label className="flex h-10 min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-border px-3 sm:max-w-xs">
+          <Search size={16} className="text-neutral-muted" />
           <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Tìm mã lịch, khách, biển số..." className="w-full bg-transparent text-sm outline-none" />
         </label>
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500">
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm font-semibold outline-none focus:border-primary">
           {STATUS_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
-        <select value={garageId} onChange={(e) => setGarageId(e.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500">
+        <select value={garageId} onChange={(e) => setGarageId(e.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm font-semibold outline-none focus:border-primary">
           <option value="all">Tất cả chi nhánh</option>
           {garages.map((g) => <option key={g.id ?? g.garageId} value={g.id ?? g.garageId}>{g.name ?? g.garageName}</option>)}
         </select>
         <div className="flex items-center gap-2">
-          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500" />
-          <span className="text-sm text-slate-400">→</span>
-          <input type="date" value={toDate} min={fromDate || undefined} onChange={(e) => setToDate(e.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500" />
+          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm font-semibold outline-none focus:border-primary" />
+          <span className="text-sm text-neutral-muted">→</span>
+          <input type="date" value={toDate} min={fromDate || undefined} onChange={(e) => setToDate(e.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm font-semibold outline-none focus:border-primary" />
         </div>
         {(fromDate || toDate || status !== "ALL" || garageId !== "all" || keyword) && (
-          <button onClick={() => { setStatus("ALL"); setGarageId("all"); setFromDate(""); setToDate(""); setKeyword(""); }} className="h-10 rounded-xl px-3 text-xs font-bold text-slate-500 hover:text-slate-800">
+          <Button
+            variant="ghost"
+            onClick={() => { setStatus("ALL"); setGarageId("all"); setFromDate(""); setToDate(""); setKeyword(""); }}
+            className="text-xs font-bold text-muted-foreground"
+          >
             Xóa bộ lọc
-          </button>
+          </Button>
         )}
       </section>
 
       {/* Bảng dữ liệu */}
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <div className="flex items-center gap-2 p-5 pb-3">
-          <CalendarDays size={18} className="text-blue-600" />
-          <span className="font-extrabold text-slate-800">{loading ? "Đang tải..." : `${filtered.length} lịch hẹn`}</span>
+          <CalendarDays size={18} className="text-primary" />
+          <span className="font-extrabold text-foreground">{loading ? "Đang tải..." : `${filtered.length} lịch hẹn`}</span>
         </div>
         {loading ? (
-          <p className="py-16 text-center text-sm text-slate-500"><RefreshCw className="mx-auto mb-2 animate-spin" size={22} />Đang tải danh sách lịch hẹn...</p>
+          <p className="py-16 text-center text-sm text-muted-foreground"><RefreshCw className="mx-auto mb-2 animate-spin" size={20} />Đang tải danh sách lịch hẹn...</p>
         ) : error ? (
           <div className="p-10 text-center">
-            <AlertTriangle className="mx-auto mb-2 text-red-500" size={24} />
-            <p className="text-sm font-bold text-red-700">{error}</p>
-            <button onClick={load} className="mt-3 rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white">Thử lại</button>
+            <AlertTriangle className="mx-auto mb-2 text-critical" size={24} />
+            <p className="text-sm font-bold text-critical">{error}</p>
+            <Button variant="destructive" size="sm" onClick={load} className="mt-3">Thử lại</Button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
-            <CalendarDays size={40} className="mx-auto text-slate-200" />
-            <p className="mt-3 text-sm font-bold text-slate-500">Không có lịch hẹn nào khớp bộ lọc</p>
-            <p className="mt-1 text-xs text-slate-400">Thử thay đổi trạng thái, chi nhánh hoặc khoảng ngày.</p>
+            <CalendarDays size={40} className="mx-auto text-border" />
+            <p className="mt-3 text-sm font-bold text-muted-foreground">Không có lịch hẹn nào khớp bộ lọc</p>
+            <p className="mt-1 text-xs text-neutral-muted">Thử thay đổi trạng thái, chi nhánh hoặc khoảng ngày.</p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto px-5">
               <table className="w-full min-w-[960px] whitespace-nowrap text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-400">
-                    <th className="px-2 py-3 font-bold">Mã lịch</th>
-                    <th className="px-2 py-3 font-bold">Khách hàng</th>
-                    <th className="px-2 py-3 font-bold">Biển số</th>
-                    <th className="px-2 py-3 font-bold">Dịch vụ</th>
-                    <th className="px-2 py-3 font-bold">Chi nhánh</th>
-                    <th className="px-2 py-3 font-bold">Giờ hẹn</th>
-                    <th className="px-2 py-3 font-bold">Số tiền</th>
-                    <th className="px-2 py-3 font-bold">Trạng thái</th>
-                    <th className="px-2 py-3 font-bold">Thanh toán</th>
-                    <th className="px-2 py-3 font-bold">Thao tác</th>
+                  <tr className="border-b border-border text-xs text-neutral-muted">
+                    <th className="px-2 py-3 font-semibold">Mã lịch</th>
+                    <th className="px-2 py-3 font-semibold">Khách hàng</th>
+                    <th className="px-2 py-3 font-semibold">Biển số</th>
+                    <th className="px-2 py-3 font-semibold">Dịch vụ</th>
+                    <th className="px-2 py-3 font-semibold">Chi nhánh</th>
+                    <th className="px-2 py-3 font-semibold">Giờ hẹn</th>
+                    <th className="px-2 py-3 font-semibold">Số tiền</th>
+                    <th className="px-2 py-3 font-semibold">Trạng thái</th>
+                    <th className="px-2 py-3 font-semibold">Thanh toán</th>
+                    <th className="px-2 py-3 font-semibold">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-border">
                   {paged.map((b) => (
-                    <tr key={b.id} className="transition-colors hover:bg-slate-50">
-                      <td className="px-2 py-3 font-bold text-slate-800">{b.code || `#${b.id}`}</td>
-                      <td className="max-w-[160px] truncate px-2 py-3 font-semibold text-slate-700">{b.customerName}</td>
+                    <tr key={b.id} className="transition-colors hover:bg-surface">
+                      <td className="px-2 py-3 font-bold text-foreground">{b.code || `#${b.id}`}</td>
+                      <td className="max-w-[160px] truncate px-2 py-3 font-semibold text-ink-soft">{b.customerName}</td>
                       <td className="px-2 py-3">
-                        <span className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-700">{b.plate}</span>
+                        <span className="rounded border border-border bg-muted px-2 py-0.5 font-mono text-xs font-bold text-ink-soft">{b.plate}</span>
                       </td>
-                      <td className="max-w-[150px] truncate px-2 py-3 text-slate-600">{b.serviceName}</td>
-                      <td className="max-w-[140px] truncate px-2 py-3 text-slate-600">{b.garageName}</td>
-                      <td className="px-2 py-3 text-slate-600">
+                      <td className="max-w-[150px] truncate px-2 py-3 text-muted-foreground">{b.serviceName}</td>
+                      <td className="max-w-[140px] truncate px-2 py-3 text-muted-foreground">{b.garageName}</td>
+                      <td className="px-2 py-3 text-muted-foreground">
                         {formatDate(b.bookingDate)}
-                        {b.slotTime && <span className="ml-1 font-bold text-blue-600">{formatTime(b.slotTime)}</span>}
+                        {b.slotTime && <span className="ml-1 font-bold text-primary">{formatTime(b.slotTime)}</span>}
                       </td>
-                      <td className="px-2 py-3 font-bold text-slate-800">{formatMoney(b.finalAmount)}</td>
-                      <td className="px-2 py-3"><StatusBadge status={b.bookingStatus} type="booking" /></td>
-                      <td className="px-2 py-3"><StatusBadge status={b.paymentStatus} type="payment" /></td>
+                      <td className="px-2 py-3 font-bold text-foreground">{formatMoney(b.finalAmount)}</td>
+                      <td className="px-2 py-3"><StatusBadge status={b.bookingStatus} type="booking" size="sm" /></td>
+                      <td className="px-2 py-3"><StatusBadge status={b.paymentStatus} type="payment" size="sm" /></td>
                       <td className="px-2 py-3">
-                        <button onClick={() => { setSelected(b); setActionError(null); }} className="font-bold text-blue-600 hover:underline">Chi tiết</button>
+                        <button onClick={() => { setSelected(b); setActionError(null); }} className="font-bold text-primary hover:underline">Chi tiết</button>
                       </td>
                     </tr>
                   ))}
@@ -216,53 +223,54 @@ export default function AdminBookingPage() {
 
       {/* Modal chi tiết */}
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4" onClick={() => setSelected(null)}>
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={() => setSelected(null)}>
+          <div className="w-full max-w-lg rounded-2xl bg-card p-6 shadow-floating" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-start justify-between">
               <div>
-                <h3 className="text-lg font-extrabold text-slate-900">Lịch hẹn {selected.code || `#${selected.id}`}</h3>
+                <h3 className="text-lg font-extrabold text-foreground">Lịch hẹn {selected.code || `#${selected.id}`}</h3>
                 <div className="mt-1.5 flex gap-2">
                   <StatusBadge status={selected.bookingStatus} type="booking" />
                   <StatusBadge status={selected.paymentStatus} type="payment" />
                 </div>
               </div>
-              <button onClick={() => setSelected(null)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"><X size={18} /></button>
+              <Button variant="ghost" size="icon-sm" aria-label="Đóng" onClick={() => setSelected(null)} className="text-neutral-muted hover:text-ink-soft"><X className="size-4.5" /></Button>
             </div>
 
             <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-              <div><dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Khách hàng</dt><dd className="mt-0.5 font-semibold text-slate-800">{selected.customerName}</dd></div>
-              <div><dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Số điện thoại</dt><dd className="mt-0.5 font-semibold text-slate-800">{selected.phone}</dd></div>
-              <div><dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Xe</dt><dd className="mt-0.5 font-semibold text-slate-800">{selected.vehicle} · {selected.plate}</dd></div>
-              <div><dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Dịch vụ</dt><dd className="mt-0.5 font-semibold text-slate-800">{selected.serviceName}</dd></div>
-              <div><dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Chi nhánh</dt><dd className="mt-0.5 font-semibold text-slate-800">{selected.garageName}</dd></div>
-              <div><dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Giờ hẹn</dt><dd className="mt-0.5 font-semibold text-slate-800">{formatDate(selected.bookingDate)} {selected.slotTime && `· ${formatTime(selected.slotTime)}`}</dd></div>
-              <div><dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Thành tiền</dt><dd className="mt-0.5 font-black text-blue-600">{formatMoney(selected.finalAmount)}</dd></div>
+              <div><dt className="text-xs font-semibold text-neutral-muted">Khách hàng</dt><dd className="mt-0.5 font-semibold text-foreground">{selected.customerName}</dd></div>
+              <div><dt className="text-xs font-semibold text-neutral-muted">Số điện thoại</dt><dd className="mt-0.5 font-semibold text-foreground">{selected.phone}</dd></div>
+              <div><dt className="text-xs font-semibold text-neutral-muted">Xe</dt><dd className="mt-0.5 font-semibold text-foreground">{selected.vehicle} · {selected.plate}</dd></div>
+              <div><dt className="text-xs font-semibold text-neutral-muted">Dịch vụ</dt><dd className="mt-0.5 font-semibold text-foreground">{selected.serviceName}</dd></div>
+              <div><dt className="text-xs font-semibold text-neutral-muted">Chi nhánh</dt><dd className="mt-0.5 font-semibold text-foreground">{selected.garageName}</dd></div>
+              <div><dt className="text-xs font-semibold text-neutral-muted">Giờ hẹn</dt><dd className="mt-0.5 font-semibold text-foreground">{formatDate(selected.bookingDate)} {selected.slotTime && `· ${formatTime(selected.slotTime)}`}</dd></div>
+              <div><dt className="text-xs font-semibold text-neutral-muted">Thành tiền</dt><dd className="mt-0.5 font-black text-primary">{formatMoney(selected.finalAmount)}</dd></div>
               {selected.rejectionReason && (
-                <div className="col-span-2"><dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Lý do từ chối</dt><dd className="mt-0.5 text-slate-700">{selected.rejectionReason}</dd></div>
+                <div className="col-span-2"><dt className="text-xs font-semibold text-neutral-muted">Lý do từ chối</dt><dd className="mt-0.5 text-ink-soft">{selected.rejectionReason}</dd></div>
               )}
             </dl>
 
             {actionError && (
-              <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-600">{actionError}</p>
+              <p className="mt-4 rounded-xl border border-critical/25 bg-critical-container px-3 py-2 text-xs font-bold text-critical">{actionError}</p>
             )}
 
             {actionsFor(selected).length > 0 && (
-              <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+              <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
                 {actionsFor(selected).map((a) => (
-                  <button
+                  <Button
                     key={a.key}
+                    variant={a.variant}
+                    size="sm"
                     disabled={actionBusy}
                     onClick={() => runAction(a)}
-                    className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition disabled:opacity-50 ${a.tone}`}
                   >
                     {a.icon} {actionBusy ? "Đang xử lý..." : a.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

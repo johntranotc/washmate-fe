@@ -51,16 +51,16 @@ export default function TiersPage() {
             {howItWorks.map((item, i) => (
               <article
                 key={item.title}
-                className="relative rounded-3xl border border-border bg-card p-7 shadow-[0_18px_44px_-30px_rgba(15,23,42,0.4)]"
+                className="relative rounded-3xl border border-border bg-card p-7 shadow-card"
               >
                 <span className="absolute right-6 top-6 text-5xl font-extrabold text-secondary">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <span className="flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-                  <item.icon className="size-7" />
+                  <item.icon className="size-5" />
                 </span>
                 <h3 className="mt-5 text-xl font-bold text-foreground">{item.title}</h3>
-                <p className="mt-2.5 text-[15px] leading-relaxed text-muted-foreground">{item.description}</p>
+                <p className="mt-2.5 text-base leading-relaxed text-muted-foreground">{item.description}</p>
               </article>
             ))}
           </div>

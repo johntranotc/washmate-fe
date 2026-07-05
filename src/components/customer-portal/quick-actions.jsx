@@ -46,7 +46,7 @@ export function QuickActions() {
           return (
             <Card
               key={action.title}
-              className="group flex h-full flex-col cursor-pointer rounded-2xl border border-border p-6 transition-all hover:shadow-lg"
+              className="group flex h-full flex-col cursor-pointer rounded-2xl border border-border p-6 transition-all hover:shadow-card"
             >
               <div className="mb-4 w-fit rounded-xl bg-primary/10 p-3">
                 <Icon size={24} className="text-primary" />
@@ -56,7 +56,7 @@ export function QuickActions() {
               <Button
                 size="sm"
                 onClick={() => navigate(action.href)}
-                className="mt-auto w-full rounded-lg bg-primary text-xs font-semibold text-primary-foreground hover:bg-brand-dark"
+                className="mt-auto w-full"
               >
                 {action.buttonText}
               </Button>

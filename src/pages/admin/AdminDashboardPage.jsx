@@ -1,9 +1,13 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import PageContainer from "@/components/shared/PageContainer";
+import PageHeader from "@/components/shared/PageHeader";
 import { RefreshCcw, AlertTriangle, Clock, Info, TrendingUp, UserX } from "lucide-react";
 import { garageApi } from "../../api/garageApi";
 import { adminApi } from "../../api/adminApi";
 import { normalizeBookingList, normalizeStaffBooking } from "../../lib/staff-booking-data";
+import { bookingStatusLabels } from "../../lib/status-tones";
 import { todayISO } from "../../lib/format";
+import { Button } from "@/components/ui/button";
 
 import { DashboardKpiCards } from "../../components/admin/dashboard/DashboardKpiCards";
 import { RevenueTrendChart } from "../../components/admin/dashboard/RevenueTrendChart";
@@ -16,28 +20,21 @@ import { LoyaltyPointsSummary } from "../../components/admin/dashboard/LoyaltyPo
 import { AiInsightPanel } from "../../components/admin/dashboard/AiInsightPanel";
 import { AlertsPanel } from "../../components/admin/dashboard/AlertsPanel";
 import { RecentBookingsTable } from "../../components/admin/dashboard/RecentBookingsTable";
+import { CHART, STATUS_COLORS } from "../../lib/chart-colors";
 
 // Business config (from product spec) — thresholds & discounts are real config, not data.
 const LOYALTY_TIERS = [
-  { name: "Đồng", points: 0, discount: 5, color: "#CD7F32", image: "/badges/dong.png" },
-  { name: "Bạc", points: 500, discount: 8, color: "#94A3B8", image: "/badges/bac.png" },
-  { name: "Vàng", points: 1500, discount: 12, color: "#F59E0B", image: "/badges/vang.png" },
-  { name: "Bạch Kim", points: 3500, discount: 15, color: "#3B82F6", image: "/badges/bach-kim.png" },
-  { name: "Kim Cương", points: 8000, discount: 20, color: "#8B5CF6", image: "/badges/kim-cuong.png" },
+  { name: "Đồng", points: 0, discount: 5, color: "var(--tier-bronze)", image: "/badges/dong.png" },
+  { name: "Bạc", points: 500, discount: 8, color: "var(--tier-silver)", image: "/badges/bac.png" },
+  { name: "Vàng", points: 1500, discount: 12, color: "var(--tier-gold)", image: "/badges/vang.png" },
+  { name: "Bạch Kim", points: 3500, discount: 15, color: "var(--tier-platinum)", image: "/badges/bach-kim.png" },
+  { name: "Kim Cương", points: 8000, discount: 20, color: "var(--tier-diamond)", image: "/badges/kim-cuong.png" },
 ];
 
 const COMPLETED = "COMPLETED";
 const PROCESSING_STATUSES = ["CONFIRMED", "CHECKED_IN", "WASHING"];
 const CANCELLED_STATUSES = ["CANCELLED", "REJECTED", "NO_SHOW"];
 
-const bookingStatusColors = {
-  PENDING: "#F59E0B", CONFIRMED: "#3B82F6", CHECKED_IN: "#06B6D4", WASHING: "#8B5CF6",
-  COMPLETED: "#10B981", CANCELLED: "#94A3B8", REJECTED: "#EF4444", NO_SHOW: "#F97316",
-};
-const bookingStatusLabels = {
-  PENDING: "Chờ xác nhận", CONFIRMED: "Đã xác nhận", CHECKED_IN: "Đã check-in", WASHING: "Đang rửa",
-  COMPLETED: "Đã hoàn thành", CANCELLED: "Đã hủy", REJECTED: "Từ chối", NO_SHOW: "Không đến",
-};
 
 // --- date helpers -----------------------------------------------------------
 function toISO(d) {
@@ -224,7 +221,7 @@ export default function AdminDashboardPage() {
     currentBookings.forEach((b) => { const st = b.bookingStatus || "PENDING"; m[st] = (m[st] || 0) + 1; });
     const total = currentBookings.length || 1;
     return Object.entries(m).map(([k, v]) => ({
-      name: bookingStatusLabels[k] || k, value: v, percentage: Math.round((v / total) * 100), color: bookingStatusColors[k] || "#94A3B8",
+      name: bookingStatusLabels[k] || k, value: v, percentage: Math.round((v / total) * 100), color: STATUS_COLORS[k] || CHART.compare,
     })).sort((a, b) => b.value - a.value);
   }, [currentBookings]);
 
@@ -276,18 +273,18 @@ export default function AdminDashboardPage() {
     });
     const cutoff = addDays(todayISO(), -30);
     const vipInactive = Object.values(byCustomer).filter((c) => c.count >= 2 && c.last < cutoff).length;
-    if (vipInactive > 0) list.push({ title: `${vipInactive} khách thân thiết hơn 30 ngày chưa quay lại`, description: "Cân nhắc gửi ưu đãi giữ chân nhóm khách này.", colorBg: "bg-amber-100", colorText: "text-amber-600", icon: <UserX size={16} /> });
+    if (vipInactive > 0) list.push({ title: `${vipInactive} khách thân thiết hơn 30 ngày chưa quay lại`, description: "Cân nhắc gửi ưu đãi giữ chân nhóm khách này.", colorBg: "bg-warning-container", colorText: "text-warning", icon: <UserX size={16} /> });
 
     const svc = (arr) => arr.reduce((m, b) => { if (b.serviceName) m[b.serviceName] = (m[b.serviceName] || 0) + 1; return m; }, {});
     const cur = svc(currentBookings), prv = svc(prevBookings);
     let best = null;
     Object.entries(cur).forEach(([name, c]) => { const p = prv[name] || 0; if (p > 0) { const g = ((c - p) / p) * 100; if (!best || g > best.growth) best = { name, growth: g }; } });
-    if (best && best.growth > 0) list.push({ title: `Dịch vụ "${best.name}" tăng ${best.growth.toFixed(0)}%`, description: "Nhu cầu tăng so với kỳ trước — có thể ưu tiên nhân lực.", colorBg: "bg-emerald-100", colorText: "text-emerald-600", icon: <TrendingUp size={16} /> });
+    if (best && best.growth > 0) list.push({ title: `Dịch vụ "${best.name}" tăng ${best.growth.toFixed(0)}%`, description: "Nhu cầu tăng so với kỳ trước — có thể ưu tiên nhân lực.", colorBg: "bg-success-container", colorText: "text-success", icon: <TrendingUp size={16} /> });
 
     const slot = {};
     currentBookings.forEach((b) => { if (b.slotTime) slot[b.slotTime] = (slot[b.slotTime] || 0) + 1; });
     const busiest = Object.entries(slot).sort((a, b) => b[1] - a[1])[0];
-    if (busiest && busiest[1] >= 3) list.push({ title: `Khung giờ ${busiest[0]} đang quá tải (${busiest[1]} lịch)`, description: "Cân nhắc mở thêm slot hoặc phân bổ lại nhân sự.", colorBg: "bg-purple-100", colorText: "text-purple-600", icon: <Clock size={16} /> });
+    if (busiest && busiest[1] >= 3) list.push({ title: `Khung giờ ${busiest[0]} đang quá tải (${busiest[1]} lịch)`, description: "Cân nhắc mở thêm slot hoặc phân bổ lại nhân sự.", colorBg: "bg-accent-violet/15", colorText: "text-accent-violet", icon: <Clock size={16} /> });
     return list;
   }, [allBookings, currentBookings, prevBookings, matchesGarage]);
 
@@ -295,30 +292,30 @@ export default function AdminDashboardPage() {
     const list = [];
     const scope = allBookings.filter(matchesGarage);
     const pending = scope.filter((b) => b.bookingStatus === "PENDING").length;
-    if (pending > 0) list.push({ title: `${pending} lịch hẹn đang chờ xác nhận`, description: "Vui lòng kiểm tra và xác nhận sớm.", colorText: "text-red-500 bg-red-50 p-1.5 rounded-full", icon: <AlertTriangle size={14} /> });
+    if (pending > 0) list.push({ title: `${pending} lịch hẹn đang chờ xác nhận`, description: "Vui lòng kiểm tra và xác nhận sớm.", colorText: "text-critical bg-critical-container p-1.5 rounded-full", icon: <AlertTriangle size={14} /> });
     const today = todayISO();
     const nowHM = new Date().toTimeString().slice(0, 5);
     const overdue = scope.filter((b) => b.bookingStatus === "CONFIRMED" && b.bookingDate === today && b.slotTime && b.slotTime < nowHM).length;
-    if (overdue > 0) list.push({ title: `${overdue} lịch đã qua giờ nhưng chưa check-in`, description: "Kiểm tra để tránh khách chờ lâu.", colorText: "text-amber-500 bg-amber-50 p-1.5 rounded-full", icon: <Clock size={14} /> });
+    if (overdue > 0) list.push({ title: `${overdue} lịch đã qua giờ nhưng chưa check-in`, description: "Kiểm tra để tránh khách chờ lâu.", colorText: "text-warning bg-warning-container p-1.5 rounded-full", icon: <Clock size={14} /> });
     const noShow = scope.filter((b) => b.bookingStatus === "NO_SHOW" && b.bookingDate === today).length;
-    if (noShow > 0) list.push({ title: `${noShow} khách không đến hôm nay`, description: "Theo dõi tỷ lệ no-show để có phương án.", colorText: "text-blue-500 bg-blue-50 p-1.5 rounded-full", icon: <Info size={14} /> });
+    if (noShow > 0) list.push({ title: `${noShow} khách không đến hôm nay`, description: "Theo dõi tỷ lệ no-show để có phương án.", colorText: "text-primary bg-primary-container p-1.5 rounded-full", icon: <Info size={14} /> });
     return list;
   }, [allBookings, matchesGarage]);
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-6 p-4 sm:p-8">
+    <PageContainer>
       {/* Header */}
-      <header className="mb-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900">Tổng quan doanh nghiệp</h1>
-          <p className="mt-1 text-sm text-slate-500">Cập nhật tình hình hoạt động kinh doanh toàn hệ thống.</p>
-        </div>
+      <PageHeader
+        title="Tổng quan doanh nghiệp"
+        description="Cập nhật tình hình hoạt động kinh doanh toàn hệ thống."
+        actions={
+          <>
         <div className="flex flex-wrap items-center gap-3">
-          <select className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold shadow-sm outline-none focus:border-blue-500" value={selectedGarage} onChange={(e) => setSelectedGarage(e.target.value)}>
+          <select className="h-10 rounded-xl border border-border bg-card px-4 text-sm font-semibold shadow-sm outline-none focus:border-primary" value={selectedGarage} onChange={(e) => setSelectedGarage(e.target.value)}>
             <option value="all">Tất cả chi nhánh</option>
             {garages.map((g) => (<option key={g.id || g.garageId} value={g.id || g.garageId}>{g.name || g.garageName}</option>))}
           </select>
-          <select className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold shadow-sm outline-none focus:border-blue-500" value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
+          <select className="h-10 rounded-xl border border-border bg-card px-4 text-sm font-semibold shadow-sm outline-none focus:border-primary" value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
             <option value="today">Hôm nay</option>
             <option value="week">7 ngày qua</option>
             <option value="month">Tháng này</option>
@@ -326,27 +323,29 @@ export default function AdminDashboardPage() {
           </select>
           {dateRange === "custom" && (
             <>
-              <input type="date" value={customFrom} max={customTo} onChange={(e) => setCustomFrom(e.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold shadow-sm outline-none focus:border-blue-500" />
-              <span className="text-sm text-slate-400">→</span>
-              <input type="date" value={customTo} min={customFrom} onChange={(e) => setCustomTo(e.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold shadow-sm outline-none focus:border-blue-500" />
+              <input type="date" value={customFrom} max={customTo} onChange={(e) => setCustomFrom(e.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm font-semibold shadow-sm outline-none focus:border-primary" />
+              <span className="text-sm text-neutral-muted">→</span>
+              <input type="date" value={customTo} min={customFrom} onChange={(e) => setCustomTo(e.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm font-semibold shadow-sm outline-none focus:border-primary" />
             </>
           )}
-          <button onClick={loadData} className="flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50">
-            <RefreshCcw size={16} /> Tải lại
-          </button>
+          <Button variant="outline" onClick={loadData} className="text-ink-soft">
+            <RefreshCcw /> Tải lại
+          </Button>
         </div>
-      </header>
+          </>
+        }
+      />
 
       {loading && !allBookings.length ? (
         <div className="py-20 text-center">
-          <RefreshCcw className="mx-auto mb-4 h-8 w-8 animate-spin text-blue-500" />
-          <p className="font-semibold text-slate-500">Đang tổng hợp dữ liệu doanh nghiệp...</p>
+          <RefreshCcw className="mx-auto mb-4 h-8 w-8 animate-spin text-primary" />
+          <p className="font-semibold text-muted-foreground">Đang tổng hợp dữ liệu doanh nghiệp...</p>
         </div>
       ) : error && !allBookings.length ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
-          <AlertTriangle className="mx-auto mb-3 text-red-500" size={28} />
-          <p className="text-sm font-bold text-red-700">{error}</p>
-          <button onClick={loadData} className="mt-4 rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white">Thử lại</button>
+        <div className="rounded-2xl border border-critical/25 bg-critical-container p-8 text-center">
+          <AlertTriangle className="mx-auto mb-3 text-critical" size={28} />
+          <p className="text-sm font-bold text-critical">{error}</p>
+          <Button variant="destructive" size="sm" onClick={loadData} className="mt-4">Thử lại</Button>
         </div>
       ) : (
         <>
@@ -380,6 +379,6 @@ export default function AdminDashboardPage() {
           <RecentBookingsTable bookings={currentBookings} />
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

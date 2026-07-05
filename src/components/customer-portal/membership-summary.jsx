@@ -51,21 +51,21 @@ export function MembershipSummary() {
     switch (tierName?.toLowerCase()) {
       case "đồng":
       case "bronze":
-        return "from-[#B07B4F]/20 via-white to-[#B07B4F]/5 border-[#B07B4F]/40";
+        return "from-tier-bronze/20 via-card to-tier-bronze/5 border-tier-bronze/40";
       case "bạc":
       case "silver":
-        return "from-slate-300/30 via-white to-slate-200/10 border-slate-300";
+        return "from-neutral-muted/30 via-card to-border/10 border-border";
       case "vàng":
       case "gold":
-        return "from-[#FFD700]/20 via-white to-[#FFA500]/5 border-[#FFD700]/50";
+        return "from-tier-gold/20 via-card to-tier-gold/5 border-tier-gold/50";
       case "bạch kim":
       case "platinum":
-        return "from-indigo-200/30 via-white to-purple-200/10 border-indigo-300";
+        return "from-accent-indigo/20 via-card to-accent-violet/10 border-accent-indigo/40";
       case "kim cương":
       case "diamond":
-        return "from-cyan-200/30 via-white to-blue-200/10 border-cyan-300";
+        return "from-accent-cyan/20 via-card to-primary/10 border-accent-cyan/40";
       default:
-        return "from-primary/10 via-white to-primary/5 border-border";
+        return "from-primary/10 via-card to-primary/5 border-border";
     }
   };
 
@@ -73,19 +73,19 @@ export function MembershipSummary() {
     switch (tierName?.toLowerCase()) {
       case "đồng":
       case "bronze":
-        return "text-[#8C5A32]";
+        return "text-tier-bronze-ink";
       case "bạc":
       case "silver":
-        return "text-slate-500";
+        return "text-muted-foreground";
       case "vàng":
       case "gold":
-        return "text-[#B8860B]";
+        return "text-tier-gold-ink";
       case "bạch kim":
       case "platinum":
-        return "text-indigo-600";
+        return "text-accent-indigo";
       case "kim cương":
       case "diamond":
-        return "text-cyan-600";
+        return "text-accent-cyan";
       default:
         return "text-primary";
     }
@@ -126,7 +126,7 @@ export function MembershipSummary() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-4 rounded-xl border border-border bg-white p-4 sm:grid-cols-2 shadow-sm">
+            <div className="grid grid-cols-1 gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 shadow-sm">
               <div>
                 <p className="mb-1 text-xs font-medium text-muted-foreground">Quyền lợi</p>
                 <p className="text-sm font-semibold leading-tight text-foreground">{currentTierObj.benefits?.[0] || "Tích điểm mỗi lần rửa xe"}</p>
@@ -139,7 +139,7 @@ export function MembershipSummary() {
 
             <Button
               onClick={() => navigate("/khach-hang/diem-thanh-vien")}
-              className="mt-6 rounded-xl bg-primary font-bold text-primary-foreground hover:bg-brand-dark"
+              className="mt-6"
             >
               Xem điểm thưởng
             </Button>

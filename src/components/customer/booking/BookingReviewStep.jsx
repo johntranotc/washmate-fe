@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Info, CalendarDays, Car, MapPin, Sparkles, Wallet, CreditCard, QrCode, Tag, BadgePercent, CheckCircle2, X } from "lucide-react";
+import { Info, CalendarDays, Car, Droplets, MapPin, Wallet, CreditCard, QrCode, Tag, BadgePercent, CheckCircle2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate, getGarageId } from "@/lib/booking-flow";
 import { promotionApi } from "@/api/promotionApi";
 
@@ -90,7 +91,7 @@ export function BookingReviewStep({
       debug: `Mã gara: ${getGarageId(garage) || "Không hợp lệ"}`,
     },
     {
-      icon: Sparkles,
+      icon: Droplets,
       title: "Dịch vụ",
       lines: [service.name, formatCurrency(service.price), `Thời gian dự kiến: ${service.duration || "—"} phút`],
     },
@@ -116,7 +117,7 @@ export function BookingReviewStep({
         {items.map(({ icon: Icon, title, lines, debug }) => (
           <article key={title} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <span className="grid size-11 place-items-center rounded-2xl bg-primary/10 text-primary">
-              <Icon size={21} />
+              <Icon size={20} />
             </span>
             <h3 className="mt-4 font-extrabold text-foreground">{title}</h3>
             <div className="mt-3 space-y-1 text-sm text-muted-foreground">
@@ -125,7 +126,7 @@ export function BookingReviewStep({
               ))}
             </div>
             {debug && (
-              <p className="mt-3 inline-flex rounded-full bg-muted px-3 py-1 text-[11px] font-semibold text-muted-foreground">
+              <p className="mt-3 inline-flex rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
                 {debug}
               </p>
             )}
@@ -135,7 +136,7 @@ export function BookingReviewStep({
 
       <aside className="space-y-6 rounded-2xl border border-border bg-card p-6 shadow-sm self-start">
         {/* Ưu đãi & Khuyến mãi */}
-        <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/70 to-indigo-50/50 p-4 shadow-sm">
+        <div className="rounded-2xl border border-primary/20 bg-primary-container/50 p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 text-primary font-extrabold text-sm">
               <Tag size={18} />
@@ -145,7 +146,7 @@ export function BookingReviewStep({
               <button
                 type="button"
                 onClick={() => onSelectPromotion?.(null)}
-                className="text-xs font-bold text-red-600 hover:underline flex items-center gap-1"
+                className="text-xs font-bold text-critical hover:underline flex items-center gap-1"
               >
                 <X size={14} /> Gỡ bỏ
               </button>
@@ -158,23 +159,19 @@ export function BookingReviewStep({
               value={inputCode}
               onChange={(e) => setInputCode(e.target.value)}
               placeholder="Nhập mã (VD: WASH10)..."
-              className="flex-1 rounded-xl border border-blue-200 bg-white px-3 py-2 text-xs font-bold uppercase placeholder:normal-case placeholder:font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+              className="flex-1 rounded-xl border border-primary/20 bg-card px-3 py-2 text-xs font-bold uppercase placeholder:normal-case placeholder:font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
             />
-            <button
-              type="button"
-              onClick={handleApplyCode}
-              className="rounded-xl bg-primary px-3.5 py-2 text-xs font-extrabold text-white hover:bg-primary/90 transition shadow-sm shrink-0"
-            >
+            <Button size="sm" onClick={handleApplyCode} className="shrink-0">
               Áp dụng
-            </button>
+            </Button>
           </div>
-          {promoError && <p className="text-[11px] font-semibold text-red-600 mb-2">{promoError}</p>}
+          {promoError && <p className="text-xs font-semibold text-critical mb-2">{promoError}</p>}
 
           <div className="space-y-2 mt-3">
-            <p className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Hoặc chọn ưu đãi khả dụng:</p>
+            <p className="text-xs font-semibold text-muted-foreground">Hoặc chọn ưu đãi khả dụng:</p>
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {apiPromotions.length === 0 ? (
-                <p className="text-xs text-slate-400 italic py-2">Chưa có mã khuyến mãi nào đang áp dụng cho Gara này.</p>
+                <p className="text-xs text-neutral-muted italic py-2">Chưa có mã khuyến mãi nào đang áp dụng cho Gara này.</p>
               ) : (
                 apiPromotions.map((p) => {
                 const isSelected = promotion?.code === p.code;
@@ -185,28 +182,28 @@ export function BookingReviewStep({
                     className={`cursor-pointer rounded-xl border p-2.5 transition flex items-center justify-between gap-2 ${
                       isSelected
                         ? "border-primary bg-primary/10 shadow-sm"
-                        : "border-blue-100/80 bg-white hover:border-primary/50"
+                        : "border-primary/15 bg-card hover:border-primary/50"
                     }`}
                   >
                     <div className="flex items-start gap-2.5 overflow-hidden">
-                      <span className={`mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg ${isSelected ? "bg-primary text-white" : "bg-blue-100 text-blue-700"}`}>
-                        <BadgePercent size={15} />
+                      <span className={`mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg ${isSelected ? "bg-primary text-white" : "bg-primary-container text-primary-strong"}`}>
+                        <BadgePercent size={16} />
                       </span>
                       <div className="overflow-hidden">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-extrabold text-xs text-slate-900">{p.code}</span>
-                          <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-800">
+                          <span className="font-extrabold text-xs text-foreground">{p.code}</span>
+                          <span className="rounded bg-success-container px-1.5 py-0.5 text-xs font-extrabold text-success">
                             -{formatCurrency(calculateDiscount(p))}
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-600 truncate">{p.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{p.title}</p>
                       </div>
                     </div>
                     <div className="shrink-0">
                       {isSelected ? (
                         <CheckCircle2 size={18} className="text-primary" />
                       ) : (
-                        <span className="text-[11px] font-bold text-primary hover:underline">Chọn</span>
+                        <span className="text-xs font-bold text-primary hover:underline">Chọn</span>
                       )}
                     </div>
                   </div>
@@ -223,7 +220,7 @@ export function BookingReviewStep({
             <span className="font-semibold text-foreground">{formatCurrency(basePrice)}</span>
           </div>
           {promotion && (
-            <div className="flex justify-between text-emerald-700 font-semibold">
+            <div className="flex justify-between text-success font-semibold">
               <span>Ưu đãi ({promotion.code}):</span>
               <span>-{formatCurrency(discountAmount)}</span>
             </div>
@@ -236,7 +233,7 @@ export function BookingReviewStep({
 
         {/* Payment Method Selection */}
         <div>
-          <label className="text-sm font-extrabold text-foreground uppercase tracking-wider block mb-3">
+          <label className="text-sm font-bold text-foreground block mb-3">
             Phương thức thanh toán
           </label>
           <div className="grid grid-cols-2 gap-3">
@@ -249,7 +246,7 @@ export function BookingReviewStep({
                   : "border-border bg-muted/30 text-muted-foreground hover:bg-muted"
               }`}
             >
-              <Wallet className="size-6 mb-1.5" />
+              <Wallet className="size-5 mb-1.5" />
               <span className="text-xs">Tiền mặt</span>
             </button>
             <button
@@ -261,7 +258,7 @@ export function BookingReviewStep({
                   : "border-border bg-muted/30 text-muted-foreground hover:bg-muted"
               }`}
             >
-              <QrCode className="size-6 mb-1.5" />
+              <QrCode className="size-5 mb-1.5" />
               <span className="text-xs">Chuyển khoản / VNPAY</span>
             </button>
           </div>
@@ -278,7 +275,7 @@ export function BookingReviewStep({
           />
         </label>
 
-        <div className="flex gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-800">
+        <div className="flex gap-3 rounded-2xl border border-primary/20 bg-primary-container p-4 text-sm leading-6 text-primary-strong">
           <Info className="mt-0.5 size-5 shrink-0" />
           <p>
             {paymentMethod === "CASH"

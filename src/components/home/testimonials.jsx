@@ -8,7 +8,7 @@ export function Testimonials() {
       <div className="mx-auto max-w-6xl px-4">
         <SectionHeading
           eyebrow="Khách hàng nói gì"
-          title="Hàng nghìn chủ xe tin tưởng SparkleAI"
+          title="Hàng nghìn chủ xe tin tưởng WashMate"
           description="Sự hài lòng của khách hàng là thước đo chất lượng dịch vụ của chúng tôi."
         />
 
@@ -18,7 +18,7 @@ export function Testimonials() {
               key={item.name}
               className="flex flex-col rounded-3xl border border-border bg-card p-7 shadow-sm"
             >
-              <div className="flex gap-1 text-accent" aria-label={`${item.rating} trên 5 sao`}>
+              <div className="flex gap-1 text-gold" aria-label={`${item.rating} trên 5 sao`}>
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
