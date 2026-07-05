@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="220" viewBox="0 0 760 220">
+  <defs>
+    <linearGradient id="wmBg" x1="0" y1="0" x2="760" y2="220">
+      <stop stop-color="#061E55"/><stop offset="1" stop-color="#0B63F6"/>
+    </linearGradient>
+  </defs>
+  <rect width="760" height="220" rx="40" fill="url(#wmBg)"/>
+  <g transform="translate(34 22) scale(.70)">
+    <path d="M128 19C106 55 66 88 66 133c0 38 27 79 62 79s62-41 62-79c0-45-40-78-62-114Z" fill="#2F8BFF"/>
+    <circle cx="128" cy="142" r="55" fill="#EAF3FF" opacity="0.96"/>
+    <path d="M87 150h82l-10 24H97l-10-24Z" fill="#0B63F6"/>
+    <path d="M101 139h54l11 11H90l11-11Z" fill="#063B91"/>
+    <circle cx="105" cy="174" r="9" fill="#EAF3FF"/>
+    <circle cx="151" cy="174" r="9" fill="#EAF3FF"/>
+    <path d="M105 128c13-9 33-9 46 0" stroke="#063B91" stroke-width="9" stroke-linecap="round" fill="none"/>
+  </g>
+  <text x="205" y="92" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="54" font-weight="800">WashMate</text>
+  <text x="207" y="142" fill="#D9E9FF" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="600">Staff Portal</text>
+</svg>

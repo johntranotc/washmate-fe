@@ -64,22 +64,17 @@ export const normalizeStaffBooking = (value = {}) => {
 
     // Payment — BE: { id, amount, method, status }
     paymentStatus: payment.status ?? item.paymentStatus ?? "PENDING",
+    paymentId: payment.id ?? item.paymentId ?? null,
+    paymentMethod: payment.method ?? item.paymentMethod ?? null,
 
     // Date & time — BE: bookingDate (LocalDate), slot.startTime (LocalTime)
     bookingDate: item.bookingDate ?? item.slotDate ?? "",
     slotTime: (slot.startTime ?? item.slotTime ?? item.startTime ?? "").slice(0, 5),
 
     finalAmount: Number(item.finalAmount ?? item.totalAmount ?? item.amount ?? 0),
-    note: (() => {
-      let n = item.bookingNote ?? item.note ?? "";
-      if (!n) {
-        try {
-          const notesMap = JSON.parse(localStorage.getItem("washmate_booking_notes") || "{}");
-          n = notesMap[item.id] || notesMap[item.bookingCode] || localStorage.getItem("washmate_latest_booking_note") || "";
-        } catch {}
-      }
-      return n;
-    })(),
+    // Chỉ nhận ghi chú từ API. BE hiện CHƯA có field note trên booking → thường
+    // rỗng; tuyệt đối không đọc localStorage (dữ liệu máy khác, không phải của booking).
+    note: item.bookingNote ?? item.note ?? "",
   };
 };
 
@@ -96,8 +91,18 @@ export const normalizeStaffBooking = (value = {}) => {
 export function getNextStaffAction(booking) {
   if (!booking) return null;
   switch (booking.bookingStatus) {
-    case "PENDING":
-      return { api: "confirmBooking", next: "CONFIRMED", label: "Xác nhận", enabled: true };
+    case "PENDING": {
+      // Luồng thật: khách thanh toán trước, gara xác nhận sau — chưa PAID thì
+      // chưa nhận lịch (staff thu tiền mặt qua "Xác nhận thanh toán" trước).
+      const paid = booking.paymentStatus === "PAID";
+      return {
+        api: "confirmBooking",
+        next: "CONFIRMED",
+        label: "Xác nhận",
+        enabled: paid,
+        disabledHint: paid ? null : "Chờ thanh toán",
+      };
+    }
     case "CONFIRMED": {
       const paid = booking.paymentStatus === "PAID";
       return {
@@ -110,10 +115,110 @@ export function getNextStaffAction(booking) {
     }
     case "CHECKED_IN":
       return { api: "startWashing", next: "WASHING", label: "Bắt đầu rửa", enabled: true };
-    case "WASHING":
-      return { api: "completeBooking", next: "COMPLETED", label: "Hoàn tất", enabled: true };
+    case "WASHING": {
+      // BE từ chối (409) hoàn tất khi payment chưa PAID.
+      const paid = booking.paymentStatus === "PAID";
+      return {
+        api: "completeBooking",
+        next: "COMPLETED",
+        label: "Hoàn tất",
+        enabled: paid,
+        disabledHint: paid ? null : "Chờ khách thanh toán",
+      };
+    }
     default:
       return null;
   }
+}
+
+// Grace period giữ chỗ (phút) — đồng bộ washmate.payment.vnpay.timeout-minutes của BE
+// (BE chưa có policy API nên FE giữ hằng số này; đổi ở một chỗ duy nhất tại đây).
+export const NO_SHOW_GRACE_MINUTES = 15;
+
+/** Số phút từ bây giờ tới giờ hẹn (âm nếu đã quá giờ); null nếu thiếu dữ liệu. */
+export function minutesUntilSlot(booking, now = new Date()) {
+  if (!booking?.bookingDate || !booking?.slotTime) return null;
+  const dt = new Date(`${booking.bookingDate}T${booking.slotTime}:00`);
+  if (Number.isNaN(dt.getTime())) return null;
+  return Math.round((dt.getTime() - now.getTime()) / 60000);
+}
+
+/** Booking đã quá giờ hẹn mà vẫn chưa được xử lý (PENDING/CONFIRMED). */
+export function isOverdue(booking, now = new Date()) {
+  if (!["PENDING", "CONFIRMED"].includes(booking?.bookingStatus)) return false;
+  const m = minutesUntilSlot(booking, now);
+  return m !== null && m < 0;
+}
+
+/** Đủ điều kiện chuyển No-show: BE chỉ cho CONFIRMED, và đã quá grace period. */
+export function canMarkNoShow(booking, now = new Date()) {
+  if (booking?.bookingStatus !== "CONFIRMED") return false;
+  const m = minutesUntilSlot(booking, now);
+  return m !== null && m <= -NO_SHOW_GRACE_MINUTES;
+}
+
+/**
+ * Thanh toán không còn hợp lệ (bị hủy/thất bại) trên booking chưa check-in.
+ * BE không cho xác nhận hay tạo lại link cho payment ngoài PENDING → case này
+ * cần staff xử lý (gọi khách), không được phép check-in.
+ */
+export function isPaymentInvalid(booking) {
+  return (
+    ["PENDING", "CONFIRMED"].includes(booking?.bookingStatus) &&
+    ["CANCELLED", "FAILED"].includes(booking?.paymentStatus)
+  );
+}
+
+/** Booking cần staff xử lý ngay: quá giờ hẹn hoặc thanh toán không hợp lệ. */
+export function isUrgent(booking, now = new Date()) {
+  return isOverdue(booking, now) || isPaymentInvalid(booking);
+}
+
+/**
+ * Trạng thái VẬN HÀNH để hiển thị badge: booking CONFIRMED nhưng payment đã
+ * hủy/thất bại thì hiển thị "Chờ thanh toán" thay vì "Đã xác nhận" (dữ liệu
+ * payment là thật từ API — chỉ đổi cách trình bày, không đổi status gốc).
+ */
+export function displayBookingStatus(booking) {
+  if (isPaymentInvalid(booking)) return "PAYMENT_PENDING";
+  return booking?.bookingStatus;
+}
+
+/**
+ * Nhãn cột "Điều kiện thao tác" — luôn nhất quán với getNextStaffAction
+ * (cùng suy ra từ status + payment thật, không bao giờ mâu thuẫn với badge).
+ */
+export function actionConditionOf(booking) {
+  const paid = booking?.paymentStatus === "PAID";
+  switch (booking?.bookingStatus) {
+    case "PENDING":
+      return paid ? "Đủ điều kiện" : "Chờ thanh toán";
+    case "CONFIRMED":
+      return paid ? "Đủ điều kiện check-in" : "Chờ thanh toán";
+    case "CHECKED_IN":
+      return "Đủ điều kiện";
+    case "WASHING":
+      return paid ? "Có thể hoàn tất" : "Đang thực hiện";
+    default:
+      return "—";
+  }
+}
+
+/**
+ * Nhãn NGẮN cho cột "Cần xử lý" (tối đa 2 dòng) — suy từ thời gian/payment thật.
+ * Trả [] nếu không có gì cần xử lý.
+ */
+export function urgentShortLabels(booking, now = new Date()) {
+  const labels = [];
+  const m = minutesUntilSlot(booking, now);
+  const overdue = isOverdue(booking, now);
+  if (overdue && typeof m === "number") labels.push(`Quá ${Math.abs(m)} phút`);
+  if (isPaymentInvalid(booking) || (overdue && booking.paymentStatus !== "PAID")) {
+    labels.push("Cần thanh toán");
+  } else if (overdue && booking.bookingStatus === "CONFIRMED") {
+    const untilNoShow = NO_SHOW_GRACE_MINUTES - Math.abs(m);
+    if (untilNoShow > 0) labels.push("Sắp No-show");
+  }
+  return labels.slice(0, 2);
 }
 
