@@ -51,15 +51,9 @@ export function normalizeBooking(value) {
       ? "CONFIRMED"
       : backendStatus;
 
-  let savedNote = item.bookingNote || item.note || "";
-  if (!savedNote) {
-    try {
-      const notesMap = JSON.parse(localStorage.getItem("washmate_booking_notes") || "{}");
-      const bid = item.bookingId ?? item.id;
-      const bcode = item.bookingCode || item.code;
-      savedNote = notesMap[bid] || notesMap[bcode] || localStorage.getItem("washmate_latest_booking_note") || "";
-    } catch {}
-  }
+  // Chỉ nhận ghi chú từ API — BE chưa có field note trên booking nên thường rỗng.
+  // Không đọc localStorage: ghi chú lưu máy không phải dữ liệu thật của booking.
+  const savedNote = item.bookingNote || item.note || "";
 
   return {
     ...item,
