@@ -1,265 +1,395 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Search, AlertTriangle } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
-import { useNavigate } from "react-router-dom";
-import { staffApi } from "@/api/staffApi";
-import { normalizeBookingList, normalizeStaffBooking } from "@/lib/staff-booking-data";
-import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import StatusBadge from "@/components/shared/StatusBadge";
+import { staffApi } from "@/api/staffApi";
+import { userApi } from "@/api/userApi";
+import {
+  normalizeBookingList,
+  normalizeStaffBooking,
+  getNextStaffAction,
+  isUrgent,
+  isPaymentInvalid,
+  displayBookingStatus,
+} from "@/lib/staff-booking-data";
+import { useStaffBookingActions } from "@/lib/use-staff-booking-actions";
+import { bookingStatusLabels } from "@/lib/status-tones";
+import { formatDate, formatTime, formatMoney } from "@/lib/format";
+import { STAFF_ASSETS } from "@/lib/staff-assets";
+import { StaffBookingActions } from "@/components/staff/StaffBookingActions";
+import { StaffCheckInModal } from "@/components/staff/StaffCheckInModal";
+import { StaffRejectModal } from "@/components/staff/StaffRejectModal";
+import { StaffBookingDetailModal } from "@/components/staff/StaffBookingDetailModal";
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(value);
+const STATUS_OPTIONS = [
+  "PENDING",
+  "CONFIRMED",
+  "CHECKED_IN",
+  "WASHING",
+  "COMPLETED",
+  "REJECTED",
+  "NO_SHOW",
+  "CANCELLED",
+];
+
+const HINT_CHIPS = ["Mã booking", "Biển số xe", "Số điện thoại", "Tên khách hàng"];
+
+const CLOSED_REASONS = {
+  COMPLETED: "Booking đã hoàn tất",
+  CANCELLED: "Booking đã hủy",
+  REJECTED: "Gara đã từ chối",
+  NO_SHOW: "Khách không đến",
+};
+
+/**
+ * Lý do đủ/không đủ điều kiện xử lý — suy từ status/payment/garage scope thật,
+ * nhất quán với getNextStaffAction (không bao giờ mâu thuẫn với nút hành động).
+ */
+function workflowConditionOf(booking, inScope) {
+  if (inScope === false) return { eligible: false, reason: "Sai garage — ngoài phạm vi xử lý" };
+  if (CLOSED_REASONS[booking.bookingStatus]) {
+    return { eligible: false, reason: CLOSED_REASONS[booking.bookingStatus] };
+  }
+  if (booking.paymentStatus !== "PAID") {
+    return { eligible: false, reason: "Thanh toán chưa hợp lệ" };
+  }
+  const action = getNextStaffAction(booking);
+  if (action?.enabled) {
+    return { eligible: true, reason: `Đủ điều kiện: ${action.label}` };
+  }
+  return { eligible: false, reason: action?.disabledHint || "Chưa đủ điều kiện xử lý" };
 }
 
-function getStatusLabel(status) {
-  const labels = {
-    PENDING: "PENDING - Chờ xử lý",
-    CONFIRMED: "CONFIRMED - Đã xác nhận",
-    CHECKED_IN: "CHECKED_IN - Đã check-in",
-    WASHING: "WASHING - Đang rửa xe",
-    COMPLETED: "COMPLETED - Hoàn tất",
-    CANCELLED: "CANCELLED - Đã hủy",
-    NO_SHOW: "NO_SHOW - Không đến",
-    PAID: "PAID - Đã thanh toán",
-    NOT_ISSUED: "NOT_ISSUED - Chưa phát hành",
-  };
-
-  return labels[status] || status;
+function attentionOf(booking, inScope) {
+  if (inScope === false) return "Ngoài phạm vi";
+  if (isPaymentInvalid(booking)) return "Payment bất thường";
+  if (["PENDING", "CONFIRMED"].includes(booking.bookingStatus) && booking.paymentStatus !== "PAID") {
+    return "Cần chú ý";
+  }
+  if (isUrgent(booking)) return "Cần chú ý";
+  return null;
 }
 
-function StaffBookingSearchPage() {
-  const navigate = useNavigate();
-
-  const [keyword, setKeyword] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
-  const [allBookings, setAllBookings] = useState([]);
-
-  useEffect(() => {
-    staffApi.getTodayBookings()
-      .then((data) => {
-        setAllBookings(normalizeBookingList(data).map(normalizeStaffBooking));
-      })
-      .catch((error) => console.error("Failed to fetch search bookings:", error));
-  }, []);
-
-  const filteredBookings = useMemo(() => {
-    const normalizedKeyword = keyword.trim().toLowerCase();
-
-    return allBookings.filter((booking) => {
-      const matchesKeyword =
-        !normalizedKeyword ||
-        (booking.code || "").toLowerCase().includes(normalizedKeyword) ||
-        (booking.customerName || "").toLowerCase().includes(normalizedKeyword) ||
-        (booking.phone || "").toLowerCase().includes(normalizedKeyword) ||
-        (booking.plate || "").toLowerCase().includes(normalizedKeyword);
-
-      const matchesStatus =
-        statusFilter === "ALL" || booking.bookingStatus === statusFilter;
-
-      return matchesKeyword && matchesStatus;
-    });
-  }, [keyword, statusFilter, allBookings]);
-
-  function goToWorkflow(bookingId) {
-    navigate(`/staff/bookings/${bookingId}/workflow`);
-  }
-
-  function canProcessWorkflow(booking) {
-    return (
-      booking.paymentStatus === "PAID" &&
-      ["CONFIRMED", "CHECKED_IN", "WASHING"].includes(booking.bookingStatus)
-    );
-  }
-
+function ResultSkeleton() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="Vận hành hôm nay"
-        title="Tra cứu đặt lịch"
-        description="Nhân viên tra cứu booking bằng mã đặt lịch, biển số xe hoặc số điện thoại."
-      />
-
-      <div className="rounded-xl border border-primary/20 bg-primary-container p-4 text-center text-sm text-primary-strong">
-        <strong>Quy tắc nghiệp vụ:</strong> Staff chỉ được xử lý workflow khi
-        booking đã CONFIRMED và payment đã PAID.
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <label className="block text-sm font-medium text-ink-soft">
-              Từ khóa tra cứu
-            </label>
-            <input
-              value={keyword}
-              onChange={(event) => setKeyword(event.target.value)}
-              placeholder="Nhập mã booking, biển số xe, số điện thoại hoặc tên khách hàng"
-              className="mt-2 w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-foreground"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-ink-soft">
-              Lọc theo trạng thái
-            </label>
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-              className="mt-2 w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-foreground"
-            >
-              <option value="ALL">Tất cả trạng thái</option>
-              <option value="PENDING">PENDING - Chờ xử lý</option>
-              <option value="CONFIRMED">CONFIRMED - Đã xác nhận</option>
-              <option value="CHECKED_IN">CHECKED_IN - Đã check-in</option>
-              <option value="WASHING">WASHING - Đang rửa xe</option>
-              <option value="COMPLETED">COMPLETED - Hoàn tất</option>
-              <option value="CANCELLED">CANCELLED - Đã hủy</option>
-              <option value="NO_SHOW">NO_SHOW - Không đến</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-4">
-          <div className="rounded-xl bg-surface p-4 text-center">
-            <p className="text-sm text-muted-foreground">Tổng booking</p>
-            <p className="mt-1 text-2xl font-bold text-foreground">
-              {allBookings.length}
-            </p>
-          </div>
-
-          <div className="rounded-xl bg-success-container p-4 text-center">
-            <p className="text-sm text-success">Đã thanh toán</p>
-            <p className="mt-1 text-2xl font-bold text-success">
-              {
-                allBookings.filter(
-                  (booking) => booking.paymentStatus === "PAID",
-                ).length
-              }
-            </p>
-          </div>
-
-          <div className="rounded-xl bg-primary-container p-4 text-center">
-            <p className="text-sm text-primary-strong">Đang xử lý</p>
-            <p className="mt-1 text-2xl font-bold text-primary-strong">
-              {
-                allBookings.filter((booking) =>
-                  ["CONFIRMED", "CHECKED_IN", "WASHING"].includes(
-                    booking.bookingStatus,
-                  ),
-                ).length
-              }
-            </p>
-          </div>
-
-          <div className="rounded-xl bg-warning-container p-4 text-center">
-            <p className="text-sm text-warning">Chờ thanh toán</p>
-            <p className="mt-1 text-2xl font-bold text-warning">
-              {
-                allBookings.filter(
-                  (booking) => booking.paymentStatus === "PENDING",
-                ).length
-              }
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card shadow-sm">
-        <div className="border-b border-border p-5">
-          <h2 className="text-xl font-bold text-foreground">
-            Danh sách booking
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Tìm thấy {filteredBookings.length} booking phù hợp.
-          </p>
-        </div>
-
-        {filteredBookings.length === 0 ? (
-          <div className="p-10 text-center">
-            <h3 className="text-lg font-bold text-foreground">
-              Không tìm thấy booking phù hợp
-            </h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Hãy thử tìm bằng mã booking, biển số xe hoặc số điện thoại khác.
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y divide-border">
-            {filteredBookings.map((booking) => {
-              const allowWorkflow = canProcessWorkflow(booking);
-
-              return (
-                <div
-                  key={booking.id}
-                  className="grid grid-cols-1 gap-4 p-5 lg:grid-cols-[1.4fr_1fr_1fr_auto]"
-                >
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-lg font-bold text-foreground">
-                        {booking.code}
-                      </h3>
-                      <StatusBadge status={booking.bookingStatus} type="booking" size="sm" />
-                    </div>
-
-                    <p className="mt-2 font-semibold text-foreground">
-                      {booking.customerName}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      SĐT: {booking.phone}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Xe: {booking.plate} - {booking.vehicle}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-muted-foreground">Lịch hẹn</p>
-                    <p className="mt-1 font-bold text-foreground">
-                      {booking.bookingDate}
-                    </p>
-                    <p className="text-sm text-muted-foreground">{booking.slotTime}</p>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      {booking.garageName}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-muted-foreground">Thanh toán</p>
-                    <div className="mt-2">
-                      <StatusBadge status={booking.paymentStatus} type="payment" size="sm" />
-                    </div>
-                    <p className="mt-2 font-bold text-foreground">
-                      {formatCurrency(booking.finalAmount)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Hóa đơn: {getStatusLabel(booking.invoiceStatus)}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col justify-center gap-3">
-                    <Button
-                      onClick={() => goToWorkflow(booking.id)}
-                      disabled={!allowWorkflow}
-                    >
-                      Xử lý workflow
-                    </Button>
-
-                    {!allowWorkflow && (
-                      <p className="max-w-[180px] text-center text-xs text-critical">
-                        Chỉ xử lý khi booking đã xác nhận và payment đã PAID.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+    <div className="space-y-3">
+      {Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-40 rounded-2xl" />)}
     </div>
   );
 }
 
-export default StaffBookingSearchPage;
+export default function StaffBookingSearchPage() {
+  const [bookings, setBookings] = useState([]);
+  const [garageIds, setGarageIds] = useState(null); // null = chưa biết scope
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  const [keyword, setKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+
+  const [checkInTarget, setCheckInTarget] = useState(null);
+  const [rejectTarget, setRejectTarget] = useState(null);
+  const [detailTarget, setDetailTarget] = useState(null);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    staffApi
+      .getAllBookings()
+      .then((data) => {
+        setBookings(normalizeBookingList(data).map(normalizeStaffBooking));
+        setLastUpdated(new Date());
+      })
+      .catch((e) => {
+        console.error("[StaffBookingSearch] load failed:", e);
+        setError(e?.message || "Không thể tải danh sách booking.");
+        setBookings([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Garage scope thật từ tài khoản đang đăng nhập (/users/me → garageIds).
+  useEffect(() => {
+    let mounted = true;
+    userApi
+      .getMe()
+      .then((me) => { if (mounted) setGarageIds(me?.garageIds || []); })
+      .catch(() => {}); // không chặn trang; scope giữ null = không hiển thị cảnh báo sai
+    return () => { mounted = false; };
+  }, []);
+
+  const { busyId, handleNextAction, handleConfirmPayment, handleNoShow } = useStaffBookingActions(load);
+
+  // null = chưa xác định (không kết luận sai garage khi thiếu dữ liệu scope)
+  const inScopeOf = useCallback((booking) => {
+    if (!Array.isArray(garageIds) || garageIds.length === 0) return null;
+    if (booking.garageId == null) return null;
+    return garageIds.some((id) => String(id) === String(booking.garageId));
+  }, [garageIds]);
+
+  const results = useMemo(() => {
+    const kw = keyword.trim().toLowerCase();
+    return bookings
+      .filter((b) => {
+        if (statusFilter !== "ALL" && b.bookingStatus !== statusFilter) return false;
+        if (!kw) return true;
+        return `${b.code} ${b.customerName} ${b.phone} ${b.plate}`.toLowerCase().includes(kw);
+      })
+      .sort((a, b) =>
+        (b.bookingDate || "").localeCompare(a.bookingDate || "") ||
+        (a.slotTime || "99:99").localeCompare(b.slotTime || "99:99"));
+  }, [bookings, keyword, statusFilter]);
+
+  const summary = useMemo(() => {
+    let eligible = 0;
+    let attention = 0;
+    results.forEach((b) => {
+      const scope = inScopeOf(b);
+      if (workflowConditionOf(b, scope).eligible) eligible += 1;
+      if (attentionOf(b, scope)) attention += 1;
+    });
+    return { found: results.length, eligible, attention };
+  }, [results, inScopeOf]);
+
+  const hasFilter = keyword.trim() !== "" || statusFilter !== "ALL";
+  const clearSearch = () => { setKeyword(""); setStatusFilter("ALL"); };
+
+  const updatedLabel = lastUpdated
+    ? lastUpdated.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    : null;
+
+  const actions = {
+    onCheckIn: setCheckInTarget,
+    onNextAction: handleNextAction,
+    onConfirmPayment: handleConfirmPayment,
+    onNoShow: handleNoShow,
+    onReject: setRejectTarget,
+    onDetail: setDetailTarget,
+  };
+
+  const SUMMARY_PILLS = [
+    { key: "found", label: "Kết quả tìm thấy", icon: STAFF_ASSETS.nav.search, tone: "text-foreground" },
+    { key: "eligible", label: "Đủ điều kiện xử lý", icon: STAFF_ASSETS.status.paid, tone: "text-success" },
+    { key: "attention", label: "Cần chú ý", icon: STAFF_ASSETS.kpi.warning, tone: "text-warning" },
+  ];
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        eyebrow="Vận hành hôm nay"
+        title="Tra cứu booking"
+        description="Nhân viên tra cứu booking bằng mã đặt lịch, biển số xe hoặc số điện thoại."
+        actions={
+          <>
+            {updatedLabel && (
+              <span className="text-xs font-medium text-muted-foreground">Cập nhật lúc {updatedLabel}</span>
+            )}
+            <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+              <img
+                src={STAFF_ASSETS.action.refresh}
+                alt=""
+                width={16}
+                height={16}
+                className={`rounded ${loading ? "animate-spin" : ""}`}
+              />
+              Tải lại
+            </Button>
+          </>
+        }
+      />
+
+      {/* Info banner mỏng */}
+      <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary-container px-4 py-2.5">
+        <img src={STAFF_ASSETS.action.info} alt="" width={18} height={18} className="shrink-0 rounded" />
+        <p className="text-xs font-semibold text-primary-strong">
+          Chỉ xử lý workflow khi booking đã xác nhận và thanh toán hợp lệ.
+        </p>
+      </div>
+
+      {/* Search panel */}
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <label className="text-xs font-bold text-foreground" htmlFor="staff-search-keyword">
+              Từ khóa tra cứu
+            </label>
+            <div className="mt-1.5 flex h-11 items-center gap-2 rounded-xl border border-input px-3 focus-within:border-ring">
+              <Search size={16} className="shrink-0 text-neutral-muted" />
+              <input
+                id="staff-search-keyword"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="Nhập mã booking, biển số xe, số điện thoại hoặc tên khách hàng"
+                className="w-full bg-transparent text-sm outline-none"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-bold text-foreground" htmlFor="staff-search-status">
+              Lọc theo trạng thái
+            </label>
+            <select
+              id="staff-search-status"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="mt-1.5 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none focus:border-ring"
+            >
+              <option value="ALL">Tất cả trạng thái</option>
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>{bookingStatusLabels[s]}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <span className="text-xs text-muted-foreground">Tra cứu theo:</span>
+          {HINT_CHIPS.map((chip) => (
+            <span key={chip} className="rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+              {chip}
+            </span>
+          ))}
+        </div>
+
+        {/* Summary — 3 pill, số thật từ kết quả đang lọc */}
+        <div className="mt-4 grid grid-cols-1 gap-3 border-t border-border pt-4 sm:grid-cols-3">
+          {SUMMARY_PILLS.map(({ key, label, icon, tone }) => (
+            <div key={key} className="flex items-center gap-3 rounded-xl bg-surface px-4 py-3">
+              <img src={icon} alt="" width={32} height={32} className="rounded-lg" />
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+                <b className={`block text-xl font-extrabold ${tone}`}>{summary[key]}</b>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Kết quả */}
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Kết quả booking</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Tìm thấy {results.length} booking phù hợp.
+          </p>
+        </div>
+
+        {loading && !bookings.length ? (
+          <ResultSkeleton />
+        ) : error && !bookings.length ? (
+          <div className="rounded-2xl border border-critical/25 bg-critical-container p-8 text-center">
+            <AlertTriangle className="mx-auto mb-3 text-critical" size={28} />
+            <p className="text-sm font-bold text-critical">{error}</p>
+            <Button size="sm" onClick={load} className="mt-4 bg-critical text-white hover:bg-critical/90">Thử lại</Button>
+          </div>
+        ) : results.length === 0 ? (
+          <div className="flex flex-col items-center rounded-2xl border border-border bg-card px-6 py-12 text-center">
+            <img src={STAFF_ASSETS.illustration.emptyBookings} alt="" className="h-28 w-auto" />
+            <p className="mt-3 text-sm font-semibold text-foreground">Không tìm thấy booking phù hợp.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Kiểm tra lại mã booking, biển số hoặc số điện thoại.
+            </p>
+            {hasFilter && (
+              <Button size="sm" variant="outline" className="mt-4" onClick={clearSearch}>
+                Xóa tìm kiếm
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {results.map((b) => {
+              const scope = inScopeOf(b);
+              const condition = workflowConditionOf(b, scope);
+              const attention = attentionOf(b, scope);
+              return (
+                <article key={b.id} className="rounded-2xl border border-border bg-card p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-sm font-extrabold text-primary">{b.code}</h3>
+                    <StatusBadge status={displayBookingStatus(b)} type="booking" size="sm" />
+                    <StatusBadge status={b.paymentStatus} type="payment" size="sm" />
+                    {attention && (
+                      <span className="rounded-full bg-warning-container px-2.5 py-0.5 text-xs font-bold text-warning">
+                        {attention}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-[1.3fr_1fr_1fr_auto]">
+                    <div className="text-xs">
+                      <p className="text-sm font-bold text-foreground">{b.customerName}</p>
+                      <p className="mt-0.5 text-muted-foreground">SĐT: {b.phone}</p>
+                      <p className="mt-0.5 text-muted-foreground">
+                        Xe: <b className="text-foreground">{b.plate}</b> · {b.vehicle}
+                      </p>
+                    </div>
+
+                    <div className="text-xs">
+                      <p className="text-muted-foreground">Lịch hẹn</p>
+                      <p className="mt-0.5 font-bold text-foreground">
+                        {formatDate(b.bookingDate)} · {formatTime(b.slotTime) || "--:--"}
+                      </p>
+                      <p className="mt-0.5 text-muted-foreground">{b.garageName}</p>
+                      <p className="mt-0.5 truncate text-muted-foreground">{b.serviceName}</p>
+                    </div>
+
+                    <div className="text-xs">
+                      <p className="text-muted-foreground">Thanh toán</p>
+                      {b.finalAmount > 0 && (
+                        <p className="mt-0.5 font-bold text-foreground">{formatMoney(b.finalAmount)}</p>
+                      )}
+                      <p
+                        className={`mt-1.5 font-bold ${condition.eligible ? "text-success" : "text-warning"}`}
+                      >
+                        {condition.eligible ? "Đủ điều kiện workflow" : "Không đủ điều kiện workflow"}
+                      </p>
+                      <p className="mt-0.5 text-muted-foreground">{condition.reason}</p>
+                    </div>
+
+                    <div className="flex items-center lg:justify-end">
+                      {scope === false ? (
+                        <div className="flex flex-col items-end gap-1.5">
+                          <Button size="sm" variant="outline" disabled title="Booking không thuộc garage bạn phụ trách">
+                            Ngoài phạm vi xử lý
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setDetailTarget(b)}>
+                            Chi tiết
+                          </Button>
+                        </div>
+                      ) : (
+                        <StaffBookingActions booking={b} busyId={busyId} {...actions} />
+                      )}
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <StaffCheckInModal
+        booking={checkInTarget}
+        open={Boolean(checkInTarget)}
+        onOpenChange={(open) => { if (!open) setCheckInTarget(null); }}
+        onDone={load}
+      />
+      <StaffRejectModal
+        booking={rejectTarget}
+        open={Boolean(rejectTarget)}
+        onOpenChange={(open) => { if (!open) setRejectTarget(null); }}
+        onDone={load}
+      />
+      <StaffBookingDetailModal
+        booking={detailTarget}
+        open={Boolean(detailTarget)}
+        onOpenChange={(open) => { if (!open) setDetailTarget(null); }}
+        inScope={detailTarget ? inScopeOf(detailTarget) ?? undefined : undefined}
+      />
+    </div>
+  );
+}
