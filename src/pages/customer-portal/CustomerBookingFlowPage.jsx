@@ -309,17 +309,8 @@ export default function CustomerBookingFlowPage() {
       }
       const response = await bookingApi.createBooking(payload);
       const normalizedResult = normalizeBookingResponse(response);
-      if (payload.bookingNote) {
-        try {
-          const notesMap = JSON.parse(localStorage.getItem("washmate_booking_notes") || "{}");
-          const bid = normalizedResult?.id || normalizedResult?.bookingId || response?.id;
-          const bcode = normalizedResult?.code || normalizedResult?.bookingCode || response?.bookingCode;
-          if (bid) notesMap[bid] = payload.bookingNote;
-          if (bcode) notesMap[bcode] = payload.bookingNote;
-          localStorage.setItem("washmate_booking_notes", JSON.stringify(notesMap));
-          localStorage.setItem("washmate_latest_booking_note", payload.bookingNote);
-        } catch {}
-      }
+      // Ghi chú KHÔNG lưu localStorage nữa: BE chưa nhận bookingNote khi tạo
+      // booking nên ghi chú hiện chưa được lưu — blocker chờ BE bổ sung field.
       setResult({
         ...normalizedResult,
         bookingStatus: "PENDING",
