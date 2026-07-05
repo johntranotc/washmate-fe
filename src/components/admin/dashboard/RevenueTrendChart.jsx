@@ -4,6 +4,7 @@ import {
 } from "recharts";
 import { cn } from "@/lib/utils";
 import { formatMoney, formatMoneyCompact, formatMoneyShort } from "@/lib/format";
+import { CHART } from "../../../lib/chart-colors";
 
 /** Grouping granularity for the chart (independent from the page's period filter). */
 const GROUPS = [
@@ -67,13 +68,13 @@ export function RevenueTrendChart({ data = [], showPrevious = false }) {
   const fewPoints = grouped.length <= 14;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-extrabold text-slate-800">Doanh thu theo thời gian</h3>
-          <p className="mt-0.5 text-[11px] font-semibold text-slate-400">Chỉ tính lịch hẹn đã hoàn thành trong kỳ đã chọn</p>
+          <h3 className="font-extrabold text-foreground">Doanh thu theo thời gian</h3>
+          <p className="mt-0.5 text-xs font-semibold text-neutral-muted">Chỉ tính lịch hẹn đã hoàn thành trong kỳ đã chọn</p>
         </div>
-        <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
+        <div className="flex gap-1 rounded-lg bg-muted p-1">
           {GROUPS.map((g) => (
             <button
               key={g.key}
@@ -81,7 +82,7 @@ export function RevenueTrendChart({ data = [], showPrevious = false }) {
               onClick={() => setGroup(g.key)}
               className={cn(
                 "rounded-md px-3 py-1 text-xs font-bold transition",
-                group === g.key ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-800",
+                group === g.key ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}
             >
               {g.label}
@@ -91,20 +92,20 @@ export function RevenueTrendChart({ data = [], showPrevious = false }) {
       </div>
 
       {/* Summary strip — real numbers so the chart has business context */}
-      <div className="mb-4 grid grid-cols-3 gap-3 rounded-xl bg-slate-50 p-3">
+      <div className="mb-4 grid grid-cols-3 gap-3 rounded-xl bg-surface p-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tổng doanh thu kỳ</p>
-          <p className="mt-0.5 text-sm font-black text-slate-900">{formatMoneyShort(stats.total)}</p>
+          <p className="text-xs font-semibold text-neutral-muted">Tổng doanh thu kỳ</p>
+          <p className="mt-0.5 text-sm font-black text-foreground">{formatMoneyShort(stats.total)}</p>
         </div>
-        <div className="border-l border-slate-200 pl-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Trung bình / ngày</p>
-          <p className="mt-0.5 text-sm font-black text-slate-900">{formatMoneyShort(stats.avg)}</p>
+        <div className="border-l border-border pl-3">
+          <p className="text-xs font-semibold text-neutral-muted">Trung bình / ngày</p>
+          <p className="mt-0.5 text-sm font-black text-foreground">{formatMoneyShort(stats.avg)}</p>
         </div>
-        <div className="border-l border-slate-200 pl-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Cao nhất</p>
-          <p className="mt-0.5 text-sm font-black text-slate-900">
+        <div className="border-l border-border pl-3">
+          <p className="text-xs font-semibold text-neutral-muted">Cao nhất</p>
+          <p className="mt-0.5 text-sm font-black text-foreground">
             {stats.peak ? formatMoneyShort(stats.peak.revenue) : "—"}
-            {stats.peak && <span className="ml-1 text-[10px] font-semibold text-slate-400">({labelFor(stats.peak.dateISO, "day")})</span>}
+            {stats.peak && <span className="ml-1 text-xs font-semibold text-neutral-muted">({labelFor(stats.peak.dateISO, "day")})</span>}
           </p>
         </div>
       </div>
@@ -115,43 +116,43 @@ export function RevenueTrendChart({ data = [], showPrevious = false }) {
             <AreaChart data={grouped} margin={{ top: 5, right: 8, left: 10, bottom: 0 }}>
               <defs>
                 <linearGradient id="revFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.25} />
-                  <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.02} />
+                  <stop offset="0%" stopColor={CHART.c1} stopOpacity={0.25} />
+                  <stop offset="100%" stopColor={CHART.c1} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-              <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748B" }} dy={10} interval="preserveStartEnd" minTickGap={24} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748B" }} tickFormatter={formatMoneyCompact} width={52} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={CHART.grid} />
+              <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: CHART.axis }} dy={10} interval="preserveStartEnd" minTickGap={24} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: CHART.axis }} tickFormatter={formatMoneyCompact} width={52} />
               <RechartsTooltip
                 formatter={(v, name) => [formatMoney(v), name === "revenue" ? "Doanh thu" : "Kỳ trước"]}
-                labelStyle={{ fontWeight: 700, color: "#0F172A" }}
-                contentStyle={{ borderRadius: 12, border: "1px solid #E2E8F0", fontSize: 12 }}
+                labelStyle={{ fontWeight: 700, color: CHART.ink }}
+                contentStyle={{ borderRadius: 12, border: `1px solid ${CHART.grid}`, fontSize: 12 }}
               />
               <Legend
                 verticalAlign="top"
                 height={28}
                 formatter={(value) => (
-                  <span className="text-xs font-semibold text-slate-500">{value === "revenue" ? "Doanh thu (đ)" : "Kỳ trước (đ)"}</span>
+                  <span className="text-xs font-semibold text-muted-foreground">{value === "revenue" ? "Doanh thu (đ)" : "Kỳ trước (đ)"}</span>
                 )}
               />
               {showPrevious && (
-                <Area type="monotone" dataKey="previousRevenue" stroke="#94A3B8" strokeWidth={2} strokeDasharray="5 5" fill="none" dot={false} />
+                <Area type="monotone" dataKey="previousRevenue" stroke={CHART.compare} strokeWidth={2} strokeDasharray="5 5" fill="none" dot={false} />
               )}
               <Area
                 type="monotone"
                 dataKey="revenue"
-                stroke="#3B82F6"
+                stroke={CHART.c1}
                 strokeWidth={3}
                 fill="url(#revFill)"
-                dot={fewPoints ? { r: 4, fill: "#3B82F6", strokeWidth: 2, stroke: "#fff" } : false}
+                dot={fewPoints ? { r: 4, fill: CHART.c1, strokeWidth: 2, stroke: CHART.contrast } : false}
                 activeDot={{ r: 6 }}
               />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
-            <p className="text-sm font-bold text-slate-500">Chưa có doanh thu trong kỳ đã chọn</p>
-            <p className="text-xs text-slate-400">Doanh thu được ghi nhận khi lịch hẹn chuyển sang trạng thái Hoàn thành.</p>
+            <p className="text-sm font-bold text-muted-foreground">Chưa có doanh thu trong kỳ đã chọn</p>
+            <p className="text-xs text-neutral-muted">Doanh thu được ghi nhận khi lịch hẹn chuyển sang trạng thái Hoàn thành.</p>
           </div>
         )}
       </div>

@@ -13,7 +13,7 @@ import AuthLayout from "../layouts/AuthLayout";
 import CustomerPortalLayout from "../layouts/CustomerPortalLayout";
 import StaffLayout from "../layouts/StaffLayout";
 import AdminLayout from "../layouts/AdminLayout";
-import VnpayReturnPage from "../pages/customer/VnpayReturnPage";
+import VnpayReturnPage from "../pages/customer-portal/VnpayReturnPage";
 
 import DashboardPage from "../pages/customer-portal/DashboardPage";
 import VehiclesPage from "../pages/customer-portal/VehiclesPage";
@@ -104,12 +104,6 @@ function AppRoutes() {
           <Route path="/khach-hang/doi-mat-khau" element={<ChangePasswordPage />} />
         </Route>
 
-        {/* Staff — public (no role check) for /staff/* */}
-        <Route element={<StaffLayout />}>
-          <Route path="/staff/bookings" element={<StaffBookingSearchPage />} />
-          <Route path="/staff/bookings/:bookingId/workflow" element={<StaffWorkflowPage />} />
-        </Route>
-
         {/* Staff — role-protected */}
         <Route
           element={
@@ -118,16 +112,13 @@ function AppRoutes() {
             </RequireRole>
           }
         >
+          <Route path="/staff/bookings" element={<StaffBookingSearchPage />} />
+          <Route path="/staff/bookings/:bookingId/workflow" element={<StaffWorkflowPage />} />
           <Route path="/nhan-vien" element={<StaffDashboardPage />} />
           <Route path="/nhan-vien/hang-doi" element={<StaffQueuePage />} />
           <Route path="/nhan-vien/danh-sach" element={<StaffBookingListPage />} />
           <Route path="/nhan-vien/danh-sach/:bookingId" element={<StaffBookingWorkflowPage />} />
           <Route path="/nhan-vien/profile" element={<StaffProfilePage />} />
-        </Route>
-
-        {/* Admin — unprotected for /admin/* */}
-        <Route element={<AdminLayout />}>
-          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         </Route>
 
         {/* Admin — role-protected */}
@@ -153,7 +144,7 @@ function AppRoutes() {
           <Route path="/quan-tri/settings" element={<AdminSettingsPage />} />
         </Route>
 
-        <Route path="*" element={<div className="flex min-h-screen items-center justify-center text-slate-500">404 — Không tìm thấy trang</div>} />
+        <Route path="*" element={<div className="flex min-h-screen items-center justify-center text-muted-foreground">404 — Không tìm thấy trang</div>} />
       </Routes>
     </BrowserRouter>
   );

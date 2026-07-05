@@ -17,10 +17,10 @@ export function WhyWashMate() {
         <SectionHeading eyebrow="Vì sao chọn WashMate?" title="Một trải nghiệm chăm sóc xe liền mạch" description="Từ đặt lịch đến nhận xe, mọi bước đều nhanh chóng, rõ ràng và dễ kiểm soát." />
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {benefits.map(([Icon, title, description]) => (
-            <article key={title} className="group rounded-3xl border border-border bg-card p-7 shadow-[0_18px_44px_-30px_rgba(15,23,42,.4)] transition hover:-translate-y-1 hover:border-primary/40">
-              <span className="grid size-14 place-items-center rounded-2xl bg-secondary text-primary transition group-hover:bg-primary group-hover:text-white"><Icon className="size-7" /></span>
+            <article key={title} className="group rounded-3xl border border-border bg-card p-7 shadow-card transition hover:-translate-y-1 hover:border-primary/40">
+              <span className="grid size-14 place-items-center rounded-2xl bg-secondary text-primary transition group-hover:bg-primary group-hover:text-white"><Icon className="size-5" /></span>
               <h3 className="mt-5 text-xl font-bold">{title}</h3>
-              <p className="mt-2.5 text-[15px] leading-relaxed text-muted-foreground">{description}</p>
+              <p className="mt-2.5 text-base leading-relaxed text-muted-foreground">{description}</p>
             </article>
           ))}
         </div>

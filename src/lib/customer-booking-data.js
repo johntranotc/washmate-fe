@@ -1,25 +1,6 @@
 import { asList } from "./booking-flow";
 
-export const bookingStatusLabels = {
-  PENDING: "Chờ gara xác nhận",
-  CONFIRMED: "Đã được gara xác nhận",
-  PAYMENT_PENDING: "Chờ thanh toán",
-  PAID: "Đã thanh toán",
-  CHECKED_IN: "Đã check-in",
-  WASHING: "Đang rửa xe",
-  COMPLETED: "Hoàn tất",
-  CANCELLED: "Đã hủy",
-  REJECTED: "Gara từ chối",
-  NO_SHOW: "Không đến",
-};
-
-export const paymentStatusLabels = {
-  PENDING: "Chờ thanh toán",
-  PAID: "Đã thanh toán",
-  FAILED: "Thanh toán thất bại",
-  CANCELLED: "Đã hủy thanh toán",
-  REFUNDED: "Đã hoàn tiền",
-};
+// Label trạng thái booking/payment: dùng src/lib/status-tones.js (nguồn duy nhất).
 
 export const invoiceStatusLabels = {
   ISSUED: "Đã phát hành",

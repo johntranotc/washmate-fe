@@ -27,22 +27,22 @@ function Cell({ value }) {
         <Minus className="size-4" />
       </span>
     );
-  return <span className="text-[14px] font-semibold text-foreground">{value}</span>;
+  return <span className="text-sm font-semibold text-foreground">{value}</span>;
 }
 
 export function ComparisonTable() {
   return (
-    <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_18px_44px_-30px_rgba(15,23,42,0.4)]">
+    <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] border-collapse text-left">
           <thead>
             <tr className="border-b border-border bg-surface">
-              <th className="px-6 py-5 text-[15px] font-bold text-foreground">Tính năng</th>
+              <th className="px-6 py-5 text-sm font-bold text-foreground">Tính năng</th>
               {plans.map((p, i) => (
                 <th
                   key={p}
                   className={cn(
-                    "px-6 py-5 text-center text-[15px] font-bold",
+                    "px-6 py-5 text-center text-sm font-bold",
                     i === 2 ? "text-primary" : "text-foreground",
                   )}
                 >
@@ -54,7 +54,7 @@ export function ComparisonTable() {
           <tbody>
             {rows.map((row, ri) => (
               <tr key={row.feature} className={cn("border-b border-border last:border-0", ri % 2 === 1 && "bg-surface/50")}>
-                <td className="px-6 py-4 text-[15px] font-medium text-foreground">{row.feature}</td>
+                <td className="px-6 py-4 text-sm font-medium text-foreground">{row.feature}</td>
                 {row.values.map((v, i) => (
                   <td key={i} className="px-6 py-4 text-center">
                     <Cell value={v} />

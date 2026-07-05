@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import PageContainer from "@/components/shared/PageContainer";
+import PageHeader from "@/components/shared/PageHeader";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { vehicleApi } from "@/api/vehicleApi";
 import { servicePackageApi } from "@/api/servicePackageApi";
 import { garageApi } from "@/api/garageApi";
@@ -30,22 +33,38 @@ import {
 
 // Step order: 1=Gara, 2=Service, 3=Vehicle, 4=Slot, 5=Review, 6=Success
 
+// Draft trong sessionStorage để F5/back không mất luồng đặt lịch đang dở.
+const DRAFT_KEY = "washmate_booking_draft";
+
+function readDraft() {
+  try {
+    return JSON.parse(sessionStorage.getItem(DRAFT_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
 export default function CustomerBookingFlowPage() {
-  const [step, setStep] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [vehicles, setVehicles] = useState([]);
   const [allServices, setAllServices] = useState([]);
   const [garages, setGarages] = useState([]);
   const [slots, setSlots] = useState([]);
-  const [selection, setSelection] = useState({
-    garage: null,
-    service: null,
-    vehicle: null,
-    date: nextDates()[0].value,
-    slot: null,
+  const [selection, setSelection] = useState(() => {
+    const draft = readDraft();
+    const dateOptions = nextDates();
+    const draftDate = draft?.selection?.date;
+    return {
+      garage: draft?.selection?.garage ?? null,
+      service: draft?.selection?.service ?? null,
+      vehicle: draft?.selection?.vehicle ?? null,
+      date: dateOptions.some((d) => d.value === draftDate) ? draftDate : dateOptions[0].value,
+      slot: draft?.selection?.slot ?? null,
+    };
   });
-  const [note, setNote] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("CASH");
-  const [promotion, setPromotion] = useState(null);
+  const [note, setNote] = useState(() => readDraft()?.note ?? "");
+  const [paymentMethod, setPaymentMethod] = useState(() => readDraft()?.paymentMethod ?? "CASH");
+  const [promotion, setPromotion] = useState(() => readDraft()?.promotion ?? null);
   const [loading, setLoading] = useState(true);
   const [slotLoading, setSlotLoading] = useState(false);
   const [serviceLoading, setServiceLoading] = useState(false);
@@ -53,6 +72,39 @@ export default function CustomerBookingFlowPage() {
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+
+  // Step nằm trên URL (?step=N) để F5/back/forward giữ đúng vị trí,
+  // clamp về bước đầu tiên còn thiếu dữ liệu để không nhảy cóc.
+  const maxStep = !selection.garage
+    ? 1
+    : !selection.service
+      ? 2
+      : !selection.vehicle
+        ? 3
+        : !(selection.date && selection.slot)
+          ? 4
+          : 5;
+  const urlStep = Number.parseInt(searchParams.get("step"), 10) || 1;
+  const step = result ? 6 : Math.min(Math.max(urlStep, 1), maxStep);
+
+  const gotoStep = useCallback(
+    (next) => {
+      setSubmitError("");
+      setSearchParams({ step: String(next) });
+    },
+    [setSearchParams],
+  );
+
+  // Persist draft mỗi khi lựa chọn thay đổi; xóa khi đặt lịch thành công.
+  useEffect(() => {
+    try {
+      if (result) {
+        sessionStorage.removeItem(DRAFT_KEY);
+      } else {
+        sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ selection, note, paymentMethod, promotion }));
+      }
+    } catch {}
+  }, [selection, note, paymentMethod, promotion, result]);
 
   const loadFoundationData = useCallback(async () => {
     setLoading(true);
@@ -120,9 +172,9 @@ export default function CustomerBookingFlowPage() {
     async function loadSlots() {
       const garageId = getGarageId(selection.garage);
       setSlotLoading(true);
-      setSelection((cur) => ({ ...cur, slot: null }));
       if (!garageId) {
         setSlots([]);
+        setSelection((cur) => ({ ...cur, slot: null }));
         setSlotLoading(false);
         return;
       }
@@ -132,9 +184,19 @@ export default function CustomerBookingFlowPage() {
           .map(normalizeSlot)
           .filter((slot) => !slot.garageId || String(slot.garageId) === String(garageId));
 
-        if (active) setSlots(normalized);
+        if (active) {
+          setSlots(normalized);
+          // Giữ slot đã chọn (vd. restore từ draft) nếu vẫn còn khả dụng, ngược lại bỏ chọn.
+          setSelection((cur) => {
+            const match = cur.slot && normalized.find((s) => String(s.id) === String(cur.slot.id) && !s.disabled);
+            return match ? { ...cur, slot: match } : { ...cur, slot: null };
+          });
+        }
       } catch {
-        if (active) setSlots([]);
+        if (active) {
+          setSlots([]);
+          setSelection((cur) => ({ ...cur, slot: null }));
+        }
       } finally {
         if (active) setSlotLoading(false);
       }
@@ -174,7 +236,7 @@ export default function CustomerBookingFlowPage() {
       }
       return;
     }
-    setStep((cur) => Math.min(cur + 1, 5));
+    gotoStep(Math.min(step + 1, 5));
   }
 
   async function createBooking() {
@@ -264,7 +326,6 @@ export default function CustomerBookingFlowPage() {
         promotion,
         discountAmount,
       });
-      setStep(6);
     } catch (error) {
       setSubmitError(bookingErrorMessage(error));
     } finally {
@@ -351,33 +412,24 @@ export default function CustomerBookingFlowPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-7 p-4 sm:p-8 pb-32">
-      <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-primary">
-            Đặt lịch thông minh
-          </p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Đặt lịch rửa xe
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Chọn gara, dịch vụ, xe và khung giờ phù hợp. Gara sẽ xác nhận lịch hẹn trong thời gian sớm nhất.
-          </p>
-        </div>
-        <Link
-          to="/khach-hang"
-          className="inline-flex items-center gap-2 self-start rounded-2xl border border-border bg-card px-4 py-3 text-sm font-bold text-foreground shadow-sm"
-        >
-          <ArrowLeft size={17} /> Quay lại
-        </Link>
-      </header>
+    <PageContainer variant="customer" className="pb-32">
+      <PageHeader
+        eyebrow="Đặt lịch thông minh"
+        title="Đặt lịch rửa xe"
+        description="Chọn gara, dịch vụ, xe và khung giờ phù hợp. Gara sẽ xác nhận lịch hẹn trong thời gian sớm nhất."
+        actions={
+          <Button variant="outline" size="lg" render={<Link to="/khach-hang" />}>
+            <ArrowLeft /> Quay lại
+          </Button>
+        }
+      />
 
       <BookingStepper currentStep={step} />
 
 
 
       {submitError && (
-        <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">
+        <div role="alert" className="rounded-2xl border border-critical/25 bg-critical-container px-5 py-4 text-sm font-semibold text-critical">
           {submitError}
         </div>
       )}
@@ -385,40 +437,38 @@ export default function CustomerBookingFlowPage() {
       {content()}
 
       {step < 6 && !loading && !loadError && (
-        <div className="sticky bottom-4 sm:bottom-6 z-50 mx-auto mt-8 flex w-[95%] sm:w-auto sm:max-w-fit items-center justify-between gap-3 sm:gap-6 rounded-full border border-slate-200 bg-white px-4 sm:px-6 py-3 shadow-[0_8px_32px_0_rgba(31,38,135,0.18)] transition-all duration-300">
-          <button
-            type="button"
-            onClick={() => {
-              setSubmitError("");
-              setStep((cur) => Math.max(1, cur - 1));
-            }}
+        <div className="sticky bottom-4 sm:bottom-6 z-50 mx-auto mt-8 flex w-[95%] sm:w-auto sm:max-w-fit items-center justify-between gap-3 sm:gap-6 rounded-full border border-border bg-card px-4 sm:px-6 py-3 shadow-floating transition-all duration-300">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => gotoStep(Math.max(1, step - 1))}
             disabled={step === 1 || submitting}
-            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white sm:bg-white px-4 sm:px-5 py-2 text-sm font-bold text-slate-800 shadow-sm transition-all hover:bg-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-full"
           >
-            <ArrowLeft size={16} /> <span className="hidden sm:inline">Quay lại</span>
-          </button>
+            <ArrowLeft /> <span className="hidden sm:inline">Quay lại</span>
+          </Button>
 
           {step < 5 ? (
-            <button
-              type="button"
+            <Button
+              size="sm"
               onClick={goNext}
-              className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600/90 to-primary/90 px-5 sm:px-7 py-2 text-sm font-extrabold text-white shadow-[0_4px_15px_rgba(37,99,235,0.4)] transition-all hover:scale-105 hover:from-blue-600 hover:to-primary active:scale-95"
+              className="flex-1 rounded-full px-5 shadow-cta sm:flex-none sm:px-7"
             >
-              Tiếp tục <ArrowRight size={16} />
-            </button>
+              Tiếp tục <ArrowRight />
+            </Button>
           ) : (
-            <button
-              type="button"
+            <Button
+              size="sm"
               onClick={createBooking}
               disabled={submitting}
-              className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600/90 to-primary/90 px-5 sm:px-7 py-2 text-sm font-extrabold text-white shadow-[0_4px_15px_rgba(37,99,235,0.4)] transition-all hover:scale-105 hover:from-blue-600 hover:to-primary active:scale-95 disabled:opacity-60"
+              className="flex-1 rounded-full px-5 shadow-cta sm:flex-none sm:px-7"
             >
               <span className="truncate max-w-[140px] sm:max-w-none">{submitting ? "Đang gửi..." : "Hoàn tất đặt lịch"}</span>
-              <ArrowRight size={16} className="shrink-0" />
-            </button>
+              <ArrowRight className="shrink-0" />
+            </Button>
           )}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

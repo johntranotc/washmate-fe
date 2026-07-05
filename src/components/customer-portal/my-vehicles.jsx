@@ -38,20 +38,17 @@ export function MyVehicles() {
             Quản lý các phương tiện của bạn để đặt lịch nhanh hơn.
           </p>
         </div>
-        <Button
-          onClick={() => navigate("/khach-hang/xe-cua-toi")}
-          className="rounded-xl bg-primary px-4 py-2 font-bold text-white shadow-md hover:bg-primary/90"
-        >
-          <Plus size={18} className="mr-1" /> Quản lý xe
+        <Button onClick={() => navigate("/khach-hang/xe-cua-toi")}>
+          <Plus /> Quản lý xe
         </Button>
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-border bg-white p-8 text-center text-muted-foreground">
+        <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground">
           Đang tải danh sách phương tiện...
         </div>
       ) : vehicles.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-white p-8 text-center">
+        <div className="rounded-2xl border border-border bg-card p-8 text-center">
           <Car size={36} className="mx-auto mb-2 text-muted-foreground opacity-50" />
           <p className="font-semibold text-foreground">Bạn chưa lưu phương tiện nào</p>
           <Button
@@ -67,18 +64,18 @@ export function MyVehicles() {
           {vehicles.map((vehicle, idx) => {
             if (!vehicle || typeof vehicle !== "object") return null;
             return (
-              <Card key={vehicle.vehicleId || vehicle.id || idx} className="rounded-2xl border border-border p-6 transition-all hover:shadow-lg">
+              <Card key={vehicle.vehicleId || vehicle.id || idx} className="rounded-2xl border border-border p-6 transition-all hover:shadow-card">
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="rounded-full bg-primary/10 p-3">
-                      <Car size={24} className="text-primary" />
+                      <Car size={20} className="text-primary" />
                     </div>
                     <div>
                       <p className="font-bold leading-tight text-foreground">{vehicle.brand || "Xe"}</p>
                       <p className="text-sm font-medium text-muted-foreground">{vehicle.model || "Khách hàng"}</p>
                     </div>
                   </div>
-                  <Badge className="rounded-full bg-green-100 text-green-800">Đang sử dụng</Badge>
+                  <Badge className="rounded-full bg-success-container text-success">Đang sử dụng</Badge>
                 </div>
 
                 <div className="space-y-3 border-y border-border py-4">
@@ -98,7 +95,7 @@ export function MyVehicles() {
                   onClick={() => navigate("/khach-hang/xe-cua-toi")}
                   className="mt-4 w-full justify-center font-bold text-primary hover:bg-secondary"
                 >
-                  Xem chi tiết <ArrowRight size={16} />
+                  Xem chi tiết <ArrowRight />
                 </Button>
               </Card>
             );

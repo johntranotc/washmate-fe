@@ -1,297 +1,305 @@
 ---
-version: alpha
-name: WashMate Admin
-description: Design system cho khu vuc quan tri (Admin/Owner) cua WashMate - he thong rua xe thong minh.
+name: WashMate
+description: Multi-portal laundry booking platform (Customer / Staff / Admin). Blue is the primary brand color, light-only, large-radius card-based UI in the shadcn/ui style on Tailwind v4.
+
+# All values below mirror src/index.css (the single source of truth) and
+# src/lib/chart-colors.js (static mirror of --chart-* for Recharts).
+# If a color changes in code, update this file too — both sides must
+# always stay in sync.
 colors:
-  primary: "#2563EB"
-  on-primary: "#FFFFFF"
-  primary-container: "#EFF6FF"
-  primary-strong: "#1D4ED8"
-  ink: "#0F172A"
-  ink-soft: "#334155"
-  secondary: "#64748B"
-  muted: "#94A3B8"
-  neutral: "#F8FAFC"
-  surface: "#FFFFFF"
-  border: "#E2E8F0"
-  success: "#047857"
-  success-container: "#D1FAE5"
-  warning: "#B45309"
-  warning-container: "#FEF3C7"
-  critical: "#B91C1C"
-  critical-container: "#FEE2E2"
-  no-show: "#C2410C"
-  no-show-container: "#FFEDD5"
-  accent-cyan: "#0E7490"
-  accent-indigo: "#4338CA"
-  accent-violet: "#6D28D9"
-  chart-1: "#2563EB"
-  chart-2: "#F59E0B"
-  chart-3: "#8B5CF6"
-  chart-4: "#10B981"
-  chart-5: "#64748B"
+  # Brand (Primary)
+  primary: "#2563eb"              # main brand — CTA buttons, links, active state, focus ring
+  primary-foreground: "#ffffff"   # text/icon on primary background
+  primary-strong: "#1d4ed8"       # hover/active on primary, secondary-foreground
+  primary-container: "#eff6ff"    # pale primary fill (chip, badge, soft hover)
+
+  # Surfaces
+  background: "#ffffff"           # default page background
+  foreground: "#0f172a"           # primary text color (slate-900)
+  card: "#ffffff"                 # card background
+  card-foreground: "#0f172a"      # text on card
+  popover: "#ffffff"              # popover/dropdown/modal background
+  popover-foreground: "#0f172a"   # text on popover
+  surface: "#f8fafc"              # secondary surface (section bg, sidebar)
+
+  # Secondary / Muted
+  secondary: "#f8fafc"            # secondary button background, secondary blocks
+  secondary-foreground: "#1d4ed8" # text on secondary background (reuses primary-strong)
+  muted: "#f8fafc"                # muted background (skeleton, disabled block)
+  muted-foreground: "#64748b"     # secondary text, caption, meta (slate-500)
+  ink-soft: "#334155"             # secondary strong text in Admin
+  neutral-muted: "#94a3b8"        # faintest icon/label
+
+  # Accent
+  accent: "#b8f3f1"                # secondary accent fill (pale teal), light hover/highlight
+  accent-foreground: "#1d4ed8"     # text on accent background
+  teal: "#b8f3f1"                  # alias of accent — brand extra
+  gold: "#f7c948"                  # rare secondary accent (e.g. rating, special highlight)
+  gold-ink: "#5a4500"              # text on gold background
+  accent-cyan: "#0e7490"           # extended accent for Admin/Staff
+  accent-indigo: "#4338ca"         # extended accent for Admin/Staff
+  accent-violet: "#6d28d9"         # extended accent for Admin/Staff
+
+  # Membership tiers (Đồng / Bạc / Vàng / Bạch Kim / Kim Cương)
+  tier-bronze: "#b07b4f"           # Đồng — badge/fill
+  tier-bronze-ink: "#8c5a32"       # Đồng — text
+  tier-silver: "#94a3b8"           # Bạc
+  tier-silver-ink: "#64748b"       # Bạc — text
+  tier-gold: "#f59e0b"             # Vàng
+  tier-gold-ink: "#b8860b"         # Vàng — text
+  tier-platinum: "#3b82f6"         # Bạch Kim
+  tier-diamond: "#8b5cf6"          # Kim Cương
+
+  # Borders
+  border: "#e2e8f0"                # default border (slate-200)
+  input: "#e2e8f0"                 # input border
+  ring: "#2563eb"                  # focus ring — same as primary
+
+  # Semantic / State — consistent across all 3 portals
+  destructive: "#b91c1c"           # error, delete, cancel
+  success: "#047857"               # success
+  success-container: "#d1fae5"     # pale success background
+  warning: "#b45309"               # warning
+  warning-container: "#fef3c7"     # pale warning background
+  critical: "#b91c1c"              # severe error (same as destructive, used separately in Admin)
+  critical-container: "#fee2e2"    # pale critical background
+  no-show: "#c2410c"               # customer no-show state (Admin/Staff)
+  no-show-container: "#ffedd5"     # pale no-show background
+
+  # Chart
+  chart-1: "#2563eb"
+  chart-2: "#f59e0b"
+  chart-3: "#8b5cf6"
+  chart-4: "#10b981"
+  chart-5: "#64748b"
+
 typography:
-  h1:
-    fontFamily: Be Vietnam Pro
-    fontSize: 1.875rem
-    fontWeight: 800
-    lineHeight: 1.2
-  h2-section:
-    fontFamily: Be Vietnam Pro
-    fontSize: 1rem
-    fontWeight: 800
-    lineHeight: 1.4
-  kpi-value:
-    fontFamily: Be Vietnam Pro
-    fontSize: 1.375rem
-    fontWeight: 900
-    lineHeight: 1.2
-    letterSpacing: -0.01em
-  body-md:
-    fontFamily: Be Vietnam Pro
-    fontSize: 0.875rem
-    fontWeight: 400
-    lineHeight: 1.5
-  label:
-    fontFamily: Be Vietnam Pro
-    fontSize: 0.75rem
-    fontWeight: 700
-    lineHeight: 1.4
-  label-caps:
-    fontFamily: Be Vietnam Pro
-    fontSize: 0.625rem
-    fontWeight: 700
-    lineHeight: 1.3
-    letterSpacing: 0.05em
+  # A single font for the whole system — no separate mono/serif face.
+  sans:
+    fontFamily: "Be Vietnam Pro, ui-sans-serif, system-ui, sans-serif"
+  heading:
+    fontFamily: "Be Vietnam Pro, ui-sans-serif, system-ui, sans-serif"   # = --font-sans, no separate heading face
+  mono:
+    fontFamily: "Be Vietnam Pro, ui-monospace, monospace"                 # named "mono" but still Be Vietnam Pro, not a real mono face
+
 rounded:
-  sm: 8px
-  md: 12px
-  lg: 16px
-  pill: 999px
-spacing:
-  xs: 4px
-  sm: 8px
-  md: 16px
-  lg: 24px
-  xl: 32px
+  # Mapping SỬ DỤNG chốt theo code thực tế (Plan C):
+  xl: "12px"    # button / input / select / control (rounded-xl)
+  "2xl": "20px" # card / panel / modal (rounded-2xl) — bước mặc định
+  "3xl": "24px" # hero / banner lớn — bước lớn duy nhất, cấm arbitrary rounded-[...]
+  pill: "999px" # badge, chip, avatar (rounded-full)
+
+shadow:
+  # 3 token duy nhất — cấm shadow-[...] arbitrary. Khai báo trong @theme inline (index.css).
+  card: "0 1px 3px rgba(15,23,42,0.06), 0 8px 24px -12px rgba(15,23,42,0.12)"   # bóng card mềm
+  floating: "0 8px 32px rgba(15,23,42,0.18)"                                     # bar nổi / popover / modal
+  cta: "0 4px 15px rgba(37,99,235,0.4)"  # nhấn CTA xanh — tên "cta" vì shadow-primary/NN đã dùng làm colored shadow
+
 components:
   button-primary:
     backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
+    textColor: "{colors.primary-foreground}"
     rounded: "{rounded.md}"
-    padding: 12px
-    height: 40px
+    padding: "10px 20px"
   button-primary-hover:
     backgroundColor: "{colors.primary-strong}"
-    textColor: "{colors.on-primary}"
+    textColor: "{colors.primary-foreground}"
   button-secondary:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink-soft}"
+    backgroundColor: "{colors.secondary}"
+    textColor: "{colors.secondary-foreground}"
+    borderColor: "{colors.border}"
     rounded: "{rounded.md}"
-    padding: 12px
-    height: 40px
-  button-soft:
-    backgroundColor: "{colors.primary-container}"
-    textColor: "{colors.primary-strong}"
+    padding: "10px 20px"
+  input-text:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.foreground}"
+    borderColor: "{colors.input}"
     rounded: "{rounded.md}"
-    padding: 12px
-    height: 40px
+    padding: "10px 12px"
   card:
-    backgroundColor: "{colors.surface}"
+    backgroundColor: "{colors.card}"
+    textColor: "{colors.card-foreground}"
+    borderColor: "{colors.border}"
     rounded: "{rounded.lg}"
-    padding: 20px
-  page:
-    backgroundColor: "{colors.neutral}"
-    textColor: "{colors.ink}"
-  sidebar:
-    backgroundColor: "{colors.ink}"
-    textColor: "{colors.muted}"
+    padding: "24px"
   badge-success:
     backgroundColor: "{colors.success-container}"
     textColor: "{colors.success}"
     rounded: "{rounded.pill}"
-    typography: "{typography.label-caps}"
-    padding: 4px
   badge-warning:
     backgroundColor: "{colors.warning-container}"
     textColor: "{colors.warning}"
     rounded: "{rounded.pill}"
-    typography: "{typography.label-caps}"
-    padding: 4px
   badge-critical:
     backgroundColor: "{colors.critical-container}"
     textColor: "{colors.critical}"
     rounded: "{rounded.pill}"
-    typography: "{typography.label-caps}"
-    padding: 4px
-  badge-info:
-    backgroundColor: "{colors.primary-container}"
-    textColor: "{colors.primary-strong}"
-    rounded: "{rounded.pill}"
-    typography: "{typography.label-caps}"
-    padding: 4px
   badge-no-show:
     backgroundColor: "{colors.no-show-container}"
     textColor: "{colors.no-show}"
     rounded: "{rounded.pill}"
-    typography: "{typography.label-caps}"
-    padding: 4px
-  input:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.md}"
-    height: 40px
-    padding: 12px
-  kpi-card:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    typography: "{typography.kpi-value}"
-    rounded: "{rounded.lg}"
-    padding: 20px
-  divider:
-    backgroundColor: "{colors.border}"
-    height: 1px
-  status-checked-in:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.accent-cyan}"
-    rounded: "{rounded.pill}"
-  status-washing:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.accent-violet}"
-    rounded: "{rounded.pill}"
-  stat-neutral:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.accent-indigo}"
-    rounded: "{rounded.pill}"
-  chart-series-1:
-    backgroundColor: "{colors.chart-1}"
-  chart-series-2:
-    backgroundColor: "{colors.chart-2}"
-  chart-series-3:
-    backgroundColor: "{colors.chart-3}"
-  chart-series-4:
-    backgroundColor: "{colors.chart-4}"
-  chart-series-5:
-    backgroundColor: "{colors.chart-5}"
 ---
 
-## Overview
+# Design System: WashMate
 
-WashMate là hệ điều hành của một chuỗi gara rửa xe, gồm ba khu vực dùng chung
-một ngôn ngữ thị giác: Khách hàng, Nhân viên và Quản trị.
+## 1. Overview
 
-Điểm tham chiếu: **dashboard vận hành của một SaaS thanh toán hiện đại
-(Stripe Dashboard / Linear)** — phẳng, viền hairline, nền gần trắng, thẻ trắng
-đặc, một màu xanh dương duy nhất cầm toàn bộ tương tác. Không kính mờ, không
-ảnh nền, không gradient trang trí diện rộng (ngoại lệ duy nhất: banner chào
-trong khu khách hàng). Cảm giác cần đạt: một công cụ làm việc mà nhân viên
-mở 8 tiếng mỗi ngày không mỏi mắt — trung tính, mật độ cao nhưng trật tự,
-mọi con số đọc được ngay.
+WashMate is a laundry booking platform with 3 UI areas sharing one global token set: the **Customer Portal**, the **Staff Portal**, and the **Admin Portal**. All tokens (including semantic states, extended accents, and membership tiers) are declared once in `src/index.css` and apply to every portal — there are no per-portal scopes anymore.
 
-Mỗi trang theo cùng một nhịp: header (tiêu đề + mô tả một câu + hành động) →
-bộ lọc → KPI → nội dung phân tích/bảng. Khu khách hàng dùng sidebar trắng,
-khu nhân viên và quản trị dùng sidebar Ink — cùng cấu trúc, khác tông để phân
-vai, nhưng chung primary, chung font, chung nhịp bo góc và spacing.
+**Key characteristics**
 
-## Colors
+- Blue (`#2563eb`) is the primary brand color, used for every CTA, link, active state, and focus ring.
+- Light mode only. There is no dark mode — `color-scheme: light` is fixed in `:root`.
+- Large, consistent rounding: base radius `16px` (`--radius: 1rem`), buttons/inputs use `12px`.
+- Crisp white background (`#ffffff`) with dark slate text (`#0f172a`) — never pure black, never neon.
+- A single font: **Be Vietnam Pro** for all headings, body copy, and even the "mono" label (no real mono face, no serif).
+- Semantic states (success/warning/critical/no-show) always pair a dark foreground color with a pale container background, kept consistent between Admin and Staff.
 
-Bảng màu neo trên bộ trung tính slate và một primary xanh dương duy nhất.
+## 2. Source of Truth
 
-- **Primary (#2563EB):** màu hành động duy nhất — nút chính, link, tab active,
-  đường doanh thu trên chart. Không dùng cho trang trí diện rộng.
-- **Primary strong (#1D4ED8)** trên **Primary container (#EFF6FF):** trạng thái
-  hover và các khối nhấn nhẹ (soft button, badge info).
-- **Ink (#0F172A):** tiêu đề, số liệu KPI và nền sidebar. **Ink soft (#334155)**
-  cho chữ trên nút thứ cấp.
-- **Secondary (#64748B)** cho mô tả; **Muted (#94A3B8)** cho metadata, nhãn cột,
-  chữ điều hướng trên sidebar tối.
-- **Neutral (#F8FAFC)** là nền trang; **Surface (#FFFFFF)** là nền thẻ;
-  **Border (#E2E8F0)** cho toàn bộ viền.
-- Ngữ nghĩa trạng thái: **Success (#047857 / nền #D1FAE5)** cho hoàn thành và
-  hoạt động; **Warning (#B45309 / nền #FEF3C7)** cho chờ xử lý, quá tải — LUÔN
-  dùng thang amber, không dùng orange; **Critical (#B91C1C / nền #FEE2E2)** cho
-  hủy, lỗi, cảnh báo nghiêm trọng — LUÔN dùng thang red, không dùng rose.
-- Accent mở rộng chỉ dành cho phân biệt trạng thái/danh mục khi các màu ngữ
-  nghĩa đã dùng hết: **accent-cyan** (đã check-in), **accent-indigo** (nhóm
-  đếm trung tính), **accent-violet** (đang rửa, vai trò quản lý).
-- Data-viz dùng đúng thứ tự **chart-1 → chart-5**; hai chuỗi trên cùng một
-  biểu đồ phải khác họ màu rõ rệt (xanh dương + cam), không đặt xanh dương
-  cạnh tím.
+- **`src/index.css`** — the ONLY source of tokens. Declares all base tokens in `:root` and maps them into Tailwind v4 utilities via the `@theme inline` block (`--color-success: var(--success)` → `bg-success`, `text-success`, ...). All three portals consume the same tokens.
+- **`src/lib/chart-colors.js`** — the ONLY file in `src/` allowed to contain hex values besides `index.css`. It statically mirrors `--chart-*` plus a few chart helpers (grid, axis, tooltip ink) because Recharts needs concrete color strings, and exports `STATUS_COLORS` for booking-status charts. Keep it in sync with `--chart-*` in `index.css`.
 
-## Typography
+The former `src/styles/design-tokens.css` (`.wm-admin`/`.wm-staff` scoped `--adm-*` tokens + Tailwind palette bridge) and `src/styles/theme.css` (font import + legacy `--brand-*` vars) have been **removed** — the migration they bridged is complete. When changing a color, edit `src/index.css`, cross-check `src/lib/chart-colors.js`, and update this file.
 
-Toàn hệ thống dùng một font **Be Vietnam Pro** (đã nạp toàn cục) — hỗ trợ đầy đủ
-tiếng Việt, nét hình học hiện đại.
+### Long-term rules (enforced by grep gates)
 
-- **h1 (30px/800):** tiêu đề trang, mỗi trang đúng một lần.
-- **h2-section (16px/800):** tiêu đề thẻ/khối nội dung.
-- **kpi-value (22px/900, tracking âm nhẹ):** con số lớn trên KPI card; giá trị
-  tiền tệ không bao giờ bị cắt cụt — dùng dạng rút gọn có nghĩa ("125,68 Tr đ")
-  kèm giá trị đầy đủ cỡ nhỏ bên dưới.
-- **body-md (14px/400):** nội dung, mô tả.
-- **label (12px/700):** nhãn phụ, nút cỡ nhỏ, ô bảng.
-- **label-caps (10px/700, giãn cách 5%):** đầu cột bảng viết hoa, badge.
+All of these must return **0** matches at all times:
 
-## Layout
+```
+rg -n "#[0-9a-fA-F]{3,8}\b" src --glob "*.jsx"                      # no hex in JSX (chart-colors.js is a .js file and the only allowed hex source)
+rg -n "dark:" src/components/ui                                      # light-only system
+rg -n "\[#" src --glob "*.jsx"                                       # no arbitrary hex classes
+rg -n "(bg|text|border|ring|divide|from|to|via|fill|shadow)-(slate|gray|emerald|green|amber|yellow|red|rose|orange|blue|sky|cyan|indigo|violet|purple|teal|pink|fuchsia)-[0-9]" src   # no raw Tailwind palette — use tokens
+rg -n "design-tokens.css|styles/theme.css" src                       # deleted files must stay deleted
+rg -n "bg-white" src --glob "*.jsx"                                  # surface qua token: bg-card / bg-background
+rg -n "shadow-\[" src --glob "*.jsx"                                 # chỉ shadow-card / shadow-floating / shadow-cta
+rg -n "shadow-(md|lg|xl|2xl)\b|drop-shadow" src --glob "*.jsx"       # shadow qua 3 token, không dùng scale Tailwind (shadow-sm đang dọn dần)
+rg -n "rounded-\[" src --glob "*.jsx" -g "!src/components/ui/**"     # radius theo scale, không arbitrary
+rg -n "text-\[[0-9.]+(px|rem)\]" src --glob "*.jsx"                  # type theo ramp 5 bậc, không arbitrary px/rem
+rg -n "SparkleAI|AutoWash" src                                        # brand duy nhất: WashMate
+rg -n "tracking-\[0\.1[0-9]em\]" src --glob "*.jsx"                  # eyebrow duy nhất tracking-[0.2em]
+rg -n "uppercase" src --glob "*.jsx" -g "!**/PageHeader.jsx"         # uppercase chỉ ở eyebrow PageHeader (ngoại lệ: input value như mã ưu đãi)
+rg -n "dicebear|Nguyễn Văn A" src -g "!**/RegisterPage.jsx"          # danh tính thật từ session, không avatar/tên giả (placeholder form OK)
+rg -n "[🔍👋🚨📞🏅✨]" src                                            # không emoji trang trí trong UI — dùng icon lucide
+rg -n "\balert\(|window\.confirm\(" src -g "!**/ConfirmDialog.jsx"   # feedback qua toast/confirmDialog
+rg -n "common/StatusBadge|BookingStatusBadge" src                    # 1 StatusBadge duy nhất (shared/)
+rg -n "toggle-mobile-menu" src                                       # không dùng CustomEvent cho UI state
+```
 
-Trang admin dùng khung `max-width 1600px`, căn giữa, padding 32px trên desktop
-(16px mobile). Sidebar cố định 256px nền Ink. Lưới nội dung chia
-`1fr + 340–400px` khi có cột phụ (insight/cảnh báo). Nhịp spacing theo thang
-4/8/16/24/32px: 16px giữa phần tử trong thẻ, 20px padding thẻ, 20–24px giữa các
-thẻ. Bảng dài bắt buộc phân trang 10 dòng; không trang nào cuộn vô hạn.
+## 3. Colors
 
-## Elevation & Depth
+### Brand
 
-Ba mức: nền phẳng (neutral) → thẻ nổi nhẹ (`shadow-sm`, viền border) → lớp nổi
-khi hover (`shadow-md`) và modal (overlay slate-900/40 + `shadow-xl`).
-Không dùng bóng đổ đậm màu; chiều sâu đến từ viền + bóng mảnh, giữ cảm giác matte.
+- **Primary** (`#2563eb`): CTAs, links, active state, focus ring (`ring`). This is the single color that represents the brand — no second color competes for this role.
+- **Primary Strong** (`#1d4ed8`): hover/active on primary, text on secondary background.
+- **Primary Container** (`#eff6ff`): very pale blue fill for chips/badges related to primary.
 
-## Shapes
+### Surfaces
 
-Bo góc là dấu ấn nhận diện: thẻ và modal dùng **lg (16px)**; nút, input, select
-dùng **md (12px)**; ô nhỏ trong thẻ dùng **sm (8px)**; badge và chip trạng thái
-dùng **pill**. Icon đặt trong ô vuông bo md/lg với nền container nhạt cùng họ màu.
+- **Background** (`#ffffff`): default page background across every area.
+- **Foreground** (`#0f172a`): primary text color on light backgrounds.
+- **Card / Popover** (`#ffffff`): same background color, differentiated by border (`border`) and a subtle shadow rather than a different fill.
+- **Surface** (`#f8fafc`): secondary surface for sections, sidebars, neutral blocks.
 
-## Components
+### Secondary and Neutral
 
-- **button-primary:** nền primary, chữ trắng, cao 40px — mỗi khu vực chỉ một
-  hành động chính.
-- **button-secondary:** nền surface + viền border, chữ ink-soft — hành động phụ
-  ("Tải lại", "Hủy").
-- **button-soft:** nền primary-container, chữ primary-strong — hành động nhấn
-  nhẹ ("Làm mới phân tích").
-- **card:** surface, bo lg, padding 20px, viền border + shadow-sm; hover nâng
-  lên shadow-md với thẻ tương tác được.
-- **badge-{success|warning|critical|info}:** pill, label-caps, cặp màu
-  container/text theo đúng ngữ nghĩa; trạng thái booking ánh xạ: COMPLETED →
-  success, PENDING/WASHING chờ xử lý → warning/violet, CANCELLED/REJECTED/
-  NO_SHOW → critical, CONFIRMED → info.
-- **input:** cao 40px, bo md, viền border, focus đổi viền sang primary (không
-  đổ bóng ngoài).
-- **kpi-card:** icon trong ô container màu nhạt góc phải, nhãn label, số
-  kpi-value, phụ đề muted, chip trend (xanh success khi tốt lên, critical khi
-  xấu đi — chiều "tốt" phụ thuộc chỉ số).
-- **sidebar:** nền ink, item bo md, active nền primary chữ trắng, còn lại chữ
-  muted hover sáng dần.
+- **Secondary** (`#f8fafc` bg / `#1d4ed8` text): secondary buttons, secondary blocks — near-white background, text still carries the brand hue.
+- **Muted** (`#f8fafc` bg / `#64748b` text): descriptive text, captions, disabled state.
+- **Ink Soft** (`#334155`) and **Neutral Muted** (`#94a3b8`): two supporting gray levels used in Admin for text hierarchy.
 
-## Do's and Don'ts
+### Accent
 
-- **Do:** gọi API thật; mọi khu vực dữ liệu phải có đủ loading (skeleton),
-  error (kèm nút thử lại) và empty state có hướng dẫn.
-- **Do:** format tiền `vi-VN` ("10.020.000 đ"), ngày `dd/MM/yyyy`; số lớn dùng
-  formatMoneyShort kèm giá trị đầy đủ.
-- **Do:** biểu đồ phải có legend, tooltip, trục rõ; ≤ 32 điểm thì hiện chấm
-  tại từng điểm dữ liệu.
-- **Don't:** không hardcode dữ liệu giả hoặc fake trạng thái thành công khi
-  backend chưa hỗ trợ — hiển thị trạng thái "chờ BE" trung thực.
-- **Don't:** không dùng orange thay amber, không dùng rose thay red, không thêm
-  màu mới ngoài palette khi chưa bổ sung vào file này. Ngoại lệ duy nhất của họ
-  orange là cặp token **no-show** — hue riêng cho trạng thái NO_SHOW để không
-  trùng PENDING (amber) và REJECTED (red).
-- **Don't:** không để giá trị số bị truncate, không render bảng quá 10 dòng
-  không phân trang, không dùng quá một nút primary trong một khu vực.
-- **Don't:** không dùng glassmorphism — không `backdrop-blur`, không bề mặt
-  bán trong suốt (`bg-white/40`...), không ảnh nền sau nội dung, không bóng đổ
-  màu. Stripe không làm thế, WashMate cũng không.
-- **Don't:** không dùng bo góc lớn hơn 16px cho container (không `rounded-3xl`);
-  sidebar ẩn-hiện theo hover là cấm — điều hướng phải luôn đọc được nhãn.
+- **Accent / Teal** (`#b8f3f1`): pale mint used for light hover or secondary highlighting — not the brand color, used sparingly.
+- **Gold** (`#f7c948`): rare accent for special details (rating, special highlight) — never used as a large fill.
+- **Accent Cyan/Indigo/Violet** (`#0e7490` / `#4338ca` / `#6d28d9`): reserved for Admin/Staff when multiple data groups need distinct categorization (e.g. charts, category tags).
+
+### Semantic (State)
+
+Each state pairs a "dark text/icon color" with a "pale container background":
+
+- **Success**: `#047857` on `#d1fae5` — completed, successful.
+- **Warning**: `#b45309` on `#fef3c7` — needs attention, pending.
+- **Critical / Destructive**: `#b91c1c` on `#fee2e2` — error, delete, cancel.
+- **No-show**: `#c2410c` on `#ffedd5` — customer did not show up (booking-domain-specific state).
+
+### Chart
+
+`chart-1` through `chart-5` (`#2563eb`, `#f59e0b`, `#8b5cf6`, `#10b981`, `#64748b`) are used for statistical charts in Admin — up to 5 series per chart, and they should not be reused for semantic-state colors within the same chart to avoid implying a status that isn't there.
+
+### Color Rules
+
+**Primary Carries The Brand.** If only one color can represent WashMate, it's blue `#2563eb`, not teal or gold.
+
+**Semantic Colors Are Not Decoration.** success/warning/critical/no-show must only be used for their exact matching business state, never as random decoration.
+
+**Do Not Improvise New Colors.** Don't add a new hex value outside the table above when building UI. If a token is missing, add it to `src/index.css`/`design-tokens.css` first, then update this file — never hard-code a stray color inside a component.
+
+**Light-Only.** There is no dark mode. Don't write CSS assuming a `.dark` class or `prefers-color-scheme: dark` for these tokens.
+
+## 4. Typography
+
+**Single font:** Be Vietnam Pro, ui-sans-serif, system-ui, sans-serif — used for headings, body text, and even the token named "mono" (there is no real mono face in this system).
+
+**Type ramp (5 bậc — chốt Plan C):**
+
+| Vai trò | Class | Ghi chú |
+|---|---|---|
+| Page title | `text-2xl sm:text-3xl font-extrabold` | CHỈ qua `PageHeader` — không tự viết `h1` trong page |
+| Section title | `text-lg font-bold` | heading trong card/section |
+| KPI number | `text-2xl font-extrabold` | số liệu lớn trên stat tile |
+| Body | `text-sm` | mặc định |
+| Caption / table meta | `text-xs font-medium` (nhấn: `font-bold`) | **cỡ nhỏ nhất của hệ thống** |
+
+- **Cấm cỡ arbitrary** `text-[10px]`, `text-[11px]`, `text-[13px]`… — nhỏ nhất là `text-xs` (12px).
+- **Eyebrow label** duy nhất một kiểu: `text-xs font-bold uppercase tracking-[0.2em] text-primary` (nằm sẵn trong `PageHeader`). Không dùng tracking khác (`0.16em`/`0.18em`/`widest`).
+- **Icon (lucide)** 4 mức: 14 (inline text/badge), 16 (button), 18 (nav/header), 20 (feature/tile).
+
+## 5. Rounded Corners & Shadows
+
+Mapping sử dụng (chuẩn hóa theo code thực tế — Plan C):
+
+- `rounded-xl` (12px) — button, input, select, control
+- `rounded-2xl` (20px) — card, panel, modal — **bước mặc định**
+- `rounded-3xl` — hero/banner lớn, bước lớn duy nhất
+- `rounded-full` — badge, chip, avatar
+- **Cấm** `rounded-[…]` arbitrary (`[2rem]`, `[4px]`…) ngoài `src/components/ui/`.
+
+Shadow — chỉ 3 utility từ token (khai báo `@theme inline` trong `index.css`):
+
+- `shadow-card` — bóng card mềm (thường không cần: card phân tách bằng border trước).
+- `shadow-floating` — bar nổi, dropdown, modal.
+- `shadow-cta` — nhấn CTA xanh (tên "cta" vì `shadow-primary/NN` đã được dùng làm colored shadow).
+- **Cấm** `shadow-[…]` arbitrary.
+
+Don't use square corners (`rounded-none`) on cards or primary buttons — WashMate's UI is always rounded.
+
+## 6. Components
+
+- **Button** (`src/components/ui/button.jsx`, Base UI): nút hành động DUY NHẤT cho cả 3 portal — mọi CTA/nút form/dialog dùng primitive này, không tự viết `<button>` styled. Base: `rounded-xl`, `text-sm font-bold`, icon svg mặc định 16px. Variants: `default` (bg-primary, hover `primary-strong`) / `outline` / `secondary` / `ghost` / `destructive` (đỏ nhạt) / `link`. Sizes: `sm` h-9 · `default` h-10 · `lg` h-11 · `xl` h-12 · `icon` / `icon-sm`. Link kiểu nút: `<Button render={<Link to=... />}>`. Ngoại lệ không migrate: tab pill, filter chip có selected-state, pagination, toggle, nav link.
+- **Input**: `background` fill, `input` border, `xl` rounding.
+- **Card**: `card` fill (`bg-card`, KHÔNG `bg-white`), `border` outline, `2xl` rounding, no heavy shadow — differentiate with a thin border first; only `shadow-card`/`shadow-floating` when a surface truly floats.
+- **StatusBadge** (`src/components/shared/StatusBadge.jsx`): badge trạng thái booking/payment DUY NHẤT cho cả 3 portal — tone + label lấy từ `src/lib/status-tones.js`, size `sm` (bảng) / `md` (card). Không tự chế tone map trạng thái mới.
+- **PageHeader** (`src/components/shared/PageHeader.jsx`): header chuẩn mọi page (eyebrow + h1 + description + actions) — nơi duy nhất định nghĩa cỡ page-title.
+- **PageContainer** (`src/components/shared/PageContainer.jsx`): khung page — `admin` (Admin+Staff, `max-w-[1600px]`), `customer` (`max-w-7xl`), `narrow` (`max-w-5xl`); padding `p-4 sm:p-6 lg:p-8`, nhịp dọc `space-y-6`.
+- **EmptyState** (`src/components/shared/EmptyState.jsx`): trạng thái rỗng chuẩn (icon + title + description + action) — không tự viết "Chưa có dữ liệu…" trần.
+- **PortalShell** (`src/components/shared/PortalShell.jsx`): khung dark-sidebar + drawer mobile dùng chung cho Admin + Staff layout.
+- **Toast / ConfirmDialog**: mọi feedback thao tác qua `toast` (`ui/toast.jsx`) và `confirmDialog()` (`shared/ConfirmDialog.jsx`) — cấm `alert()`/`window.confirm()`.
+
+## 7. Do and Do Not
+
+### Do
+
+- Use `#2563eb` (primary) as the CTA and active-state color across all 3 portals.
+- Use the correct container/text pairing for each semantic state (success/warning/critical/no-show).
+- Keep backgrounds white, rounding generous (`12px`+ for buttons/cards), and borders thin (`#e2e8f0`) to separate blocks.
+- Use Be Vietnam Pro for all text — don't mix in another font.
+- When any portal needs a new color token, declare it in `src/index.css` (`:root` + `@theme inline` mirror), then document it here — never override a color directly in a component.
+
+### Do Not
+
+- Do not use random accents (gold, teal, cyan, indigo, violet, ...) as a large background or primary CTA color — these are secondary accents only, used sparingly.
+- Do not add dark mode or a dark theme for these tokens.
+- Do not hard-code a new hex value in a component when an equivalent token already exists.
+- Do not use a semantic color (success/warning/critical/no-show) outside its exact matching state.
+- Do not introduce a second font — the whole system uses only Be Vietnam Pro.

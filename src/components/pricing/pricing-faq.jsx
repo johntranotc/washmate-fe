@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     q: "Tôi có thể thanh toán bằng những hình thức nào?",
-    a: "SparkleAI hỗ trợ thanh toán qua thẻ, ví điện tử và tiền mặt tại gara. Mọi giao dịch đều minh bạch và có hóa đơn.",
+    a: "WashMate hỗ trợ thanh toán qua thẻ, ví điện tử và tiền mặt tại gara. Mọi giao dịch đều minh bạch và có hóa đơn.",
   },
   {
     q: "Các gói dịch vụ có áp dụng cho mọi loại xe không?",
@@ -40,10 +40,10 @@ export function PricingFaq() {
               value={`item-${i}`}
               className="mb-3 rounded-2xl border border-border bg-card px-5 shadow-sm last:mb-0"
             >
-              <AccordionTrigger className="text-left text-[16px] font-semibold text-foreground hover:no-underline">
+              <AccordionTrigger className="text-left text-base font-semibold text-foreground hover:no-underline">
                 {item.q}
               </AccordionTrigger>
-              <AccordionContent className="text-[15px] leading-relaxed text-muted-foreground">
+              <AccordionContent className="text-base leading-relaxed text-muted-foreground">
                 {item.a}
               </AccordionContent>
             </AccordionItem>

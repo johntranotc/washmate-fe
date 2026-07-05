@@ -9,6 +9,7 @@ import {
   Star,
   X,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { getGarageId } from "@/lib/booking-flow";
 import { cn } from "@/lib/utils";
 
@@ -109,7 +110,7 @@ export function GarageStep({ garages, selectedId, onSelect }) {
               onClick={() => setSearch("")}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
-              <X size={15} />
+              <X size={16} />
             </button>
           )}
         </div>
@@ -124,7 +125,7 @@ export function GarageStep({ garages, selectedId, onSelect }) {
               className={cn(
                 "rounded-full px-4 py-2 text-xs font-bold transition",
                 sortBy === key
-                  ? "bg-primary text-primary-foreground shadow"
+                  ? "bg-primary text-primary-foreground"
                   : "border border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-primary",
               )}
             >
@@ -196,18 +197,18 @@ export function GarageStep({ garages, selectedId, onSelect }) {
 function GarageCard({ garage, selected, onSelect, onHover, onLeave }) {
   const slotsInfo =
     garage.availableSlots === 0
-      ? { label: "Hết slot hôm nay", color: "text-red-600" }
+      ? { label: "Hết slot hôm nay", color: "text-critical" }
       : garage.availableSlots <= 2
-        ? { label: `${garage.availableSlots} slot còn trống — sắp đầy`, color: "text-amber-600" }
-        : { label: `${garage.availableSlots} slot còn trống`, color: "text-emerald-600" };
+        ? { label: `${garage.availableSlots} slot còn trống — sắp đầy`, color: "text-warning" }
+        : { label: `${garage.availableSlots} slot còn trống`, color: "text-success" };
 
   return (
     <article
       className={cn(
         "cursor-pointer rounded-2xl border-2 bg-card p-5 shadow-sm transition-all duration-200",
         selected
-          ? "border-primary bg-primary/5 shadow-[0_8px_24px_-8px_rgba(37,99,235,.3)]"
-          : "border-border hover:border-primary/40 hover:shadow-md",
+          ? "border-primary bg-primary/5 shadow-cta"
+          : "border-border hover:border-primary/40 hover:shadow-card",
         !garage.isOpen && !selected && "opacity-60",
       )}
       onMouseEnter={onHover}
@@ -226,11 +227,11 @@ function GarageCard({ garage, selected, onSelect, onHover, onLeave }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate font-extrabold text-foreground">{garage.name}</h3>
-            <span className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
+            <span className="rounded-md border border-border bg-surface px-1.5 py-0.5 text-xs font-bold text-muted-foreground">
               Mã gara: {garage.id ?? garage.garageId ?? "?"}
             </span>
             {!garage.isOpen && (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold text-muted-foreground">
                 Tạm đóng
               </span>
             )}
@@ -241,11 +242,11 @@ function GarageCard({ garage, selected, onSelect, onHover, onLeave }) {
                 <span
                   key={badge}
                   className={cn(
-                    "rounded-full px-2 py-0.5 text-[10px] font-extrabold",
-                    badge === "Gần bạn nhất" && "bg-blue-100 text-blue-700",
-                    badge === "Đề xuất" && "bg-emerald-100 text-emerald-700",
-                    badge === "Đang mở cửa" && "bg-teal-100 text-teal-700",
-                    badge === "Đánh giá cao" && "bg-amber-100 text-amber-700",
+                    "rounded-full px-2 py-0.5 text-xs font-extrabold",
+                    badge === "Gần bạn nhất" && "bg-primary-container text-primary-strong",
+                    badge === "Đề xuất" && "bg-success-container text-success",
+                    badge === "Đang mở cửa" && "bg-teal/60 text-accent-cyan",
+                    badge === "Đánh giá cao" && "bg-warning-container text-warning",
                     !["Gần bạn nhất", "Đề xuất", "Đang mở cửa", "Đánh giá cao"].includes(badge) &&
                       "bg-primary/10 text-primary",
                   )}
@@ -259,7 +260,7 @@ function GarageCard({ garage, selected, onSelect, onHover, onLeave }) {
 
         {/* Rating */}
         <div className="flex shrink-0 items-center gap-1">
-          <Star size={13} className="fill-amber-400 text-amber-400" />
+          <Star size={14} className="fill-gold text-gold" />
           <span className="text-sm font-extrabold text-foreground">
             {garage.rating?.toFixed(1)}
           </span>
@@ -272,26 +273,26 @@ function GarageCard({ garage, selected, onSelect, onHover, onLeave }) {
       {/* Info rows */}
       <div className="mt-4 space-y-2 text-xs text-muted-foreground">
         <p className="flex items-start gap-2">
-          <MapPin size={13} className="mt-0.5 shrink-0 text-primary" />
+          <MapPin size={14} className="mt-0.5 shrink-0 text-primary" />
           <span>{garage.address}</span>
         </p>
         <div className="flex flex-wrap items-center gap-4">
           {garage.distanceKm != null && (
-            <p className="flex items-center gap-1.5 font-semibold text-blue-600">
-              <Navigation size={13} /> {garage.distanceKm} km
+            <p className="flex items-center gap-1.5 font-semibold text-primary">
+              <Navigation size={14} /> {garage.distanceKm} km
             </p>
           )}
           <p className="flex items-center gap-1.5">
-            <Clock3 size={13} className="text-primary" /> {garage.openingHours}
+            <Clock3 size={14} className="text-primary" /> {garage.openingHours}
           </p>
           {garage.phone && (
             <p className="flex items-center gap-1.5">
-              <Phone size={13} className="text-primary" /> {garage.phone}
+              <Phone size={14} className="text-primary" /> {garage.phone}
             </p>
           )}
         </div>
         <p className={cn("flex items-center gap-1.5 font-bold", slotsInfo.color)}>
-          <Calendar size={13} /> {slotsInfo.label}
+          <Calendar size={14} /> {slotsInfo.label}
         </p>
       </div>
 
@@ -332,7 +333,7 @@ function MapPreviewPanel({
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       {/* Map area */}
-      <div className="relative h-72 overflow-hidden bg-[#dbeafe]">
+      <div className="relative h-72 overflow-hidden bg-primary-container">
         {/* Grid texture */}
         <svg
           className="absolute inset-0 h-full w-full opacity-25"
@@ -340,7 +341,7 @@ function MapPreviewPanel({
         >
           <defs>
             <pattern id="mapgrid" width="36" height="36" patternUnits="userSpaceOnUse">
-              <path d="M 36 0 L 0 0 0 36" fill="none" stroke="#3b82f6" strokeWidth="0.5" />
+              <path d="M 36 0 L 0 0 0 36" fill="none" className="stroke-primary" strokeWidth="0.5" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#mapgrid)" />
@@ -348,15 +349,15 @@ function MapPreviewPanel({
 
         {/* Simulated roads */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[32%] left-0 right-0 h-2 rounded bg-white" />
-          <div className="absolute top-[62%] left-0 right-0 h-1.5 rounded bg-white" />
-          <div className="absolute top-0 bottom-0 left-[42%] w-2 rounded bg-white" />
-          <div className="absolute top-0 bottom-0 left-[68%] w-1.5 rounded bg-white" />
+          <div className="absolute top-[32%] left-0 right-0 h-2 rounded bg-card" />
+          <div className="absolute top-[62%] left-0 right-0 h-1.5 rounded bg-card" />
+          <div className="absolute top-0 bottom-0 left-[42%] w-2 rounded bg-card" />
+          <div className="absolute top-0 bottom-0 left-[68%] w-1.5 rounded bg-card" />
         </div>
 
         {/* Radius circle (shows when location found) */}
         {userLocation && (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-28 rounded-full border-2 border-blue-400/50 bg-blue-100/20" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-28 rounded-full border-2 border-primary/50/50 bg-primary-container/20" />
         )}
 
         {/* Garage pins */}
@@ -386,22 +387,22 @@ function MapPreviewPanel({
               >
                 <span
                   className={cn(
-                    "mb-0.5 rounded-full px-2 py-0.5 text-[9px] font-extrabold whitespace-nowrap shadow-md",
+                    "mb-0.5 rounded-full px-2 py-0.5 text-xs font-extrabold whitespace-nowrap",
                     isSelected
                       ? "bg-primary text-white"
-                      : "bg-white text-foreground border border-border",
+                      : "bg-card text-foreground border border-border",
                   )}
                 >
                   {garage.name.replace("WashMate ", "")}
                 </span>
                 <span
                   className={cn(
-                    "size-3.5 rounded-full border-2 border-white shadow",
+                    "size-3.5 rounded-full border-2 border-white",
                     isSelected
                       ? "bg-primary"
                       : !garage.isOpen
-                        ? "bg-slate-400"
-                        : "bg-emerald-500",
+                        ? "bg-neutral-muted"
+                        : "bg-success",
                   )}
                 />
               </div>
@@ -417,46 +418,46 @@ function MapPreviewPanel({
           )}
         >
           <div className="relative">
-            <div className="size-3.5 rounded-full border-2 border-white bg-blue-500 shadow-lg" />
-            <div className="absolute inset-0 animate-ping rounded-full bg-blue-400/40" />
+            <div className="size-3.5 rounded-full border-2 border-white bg-primary" />
+            <div className="absolute inset-0 animate-ping rounded-full bg-primary/40" />
           </div>
         </div>
 
         {/* Legend */}
-        <div className="absolute bottom-2 right-2 space-y-1 rounded-xl bg-white px-3 py-2 text-[10px] shadow-sm">
+        <div className="absolute bottom-2 right-2 space-y-1 rounded-xl bg-card px-3 py-2 text-xs shadow-sm">
           <p className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-emerald-500" /> Mở cửa
+            <span className="size-2 rounded-full bg-success" /> Mở cửa
           </p>
           <p className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-slate-400" /> Tạm đóng
+            <span className="size-2 rounded-full bg-neutral-muted" /> Tạm đóng
           </p>
           <p className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-blue-500" /> Bạn
+            <span className="size-2 rounded-full bg-primary" /> Bạn
           </p>
         </div>
 
         {/* "Map simulation" label */}
-        <div className="absolute left-2 top-2 rounded-lg bg-white px-2 py-1 text-[10px] font-semibold text-slate-500">
+        <div className="absolute left-2 top-2 rounded-lg bg-card px-2 py-1 text-xs font-semibold text-muted-foreground">
           Bản đồ minh họa
         </div>
       </div>
 
       {/* Controls */}
       <div className="space-y-3 p-4">
-        <button
-          type="button"
+        <Button
+          variant="outline"
           onClick={onRequestLocation}
           disabled={geoLoading}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/10 disabled:opacity-60"
+          className="w-full border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
         >
-          <Navigation size={15} />
+          <Navigation />
           {geoLoading ? "Đang lấy vị trí..." : "Dùng vị trí hiện tại"}
-        </button>
+        </Button>
         {geoError && (
-          <p className="text-center text-xs text-amber-600">{geoError}</p>
+          <p className="text-center text-xs text-warning">{geoError}</p>
         )}
         {userLocation && !geoError && (
-          <p className="text-center text-xs font-semibold text-emerald-600">
+          <p className="text-center text-xs font-semibold text-success">
             Đã lấy vị trí. Gara được sắp xếp theo khoảng cách.
           </p>
         )}

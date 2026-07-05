@@ -1,8 +1,12 @@
-import { Building2, PackagePlus, ScrollText, UsersRound } from "lucide-react";
+import { Building2, PackagePlus, Phone, ScrollText, UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { garageApi } from "../../api/garageApi";
 import { adminApi } from "../../api/adminApi";
 import { servicePackageApi } from "../../api/servicePackageApi";
+import { toast } from "@/components/ui/toast";
+import PageContainer from "@/components/shared/PageContainer";
+import PageHeader from "@/components/shared/PageHeader";
+import { Button } from "@/components/ui/button";
 
 const tabs = [
   ["USERS", "Người dùng", UsersRound],
@@ -97,28 +101,23 @@ function AdminManagementPage() {
       setGarages((prev) => [...prev, created]);
       setNewGarage({ name: "", address: "" });
     } catch (err) {
-      alert(err?.message || "Không thể tạo gara. Vui lòng thử lại.");
+      toast.error("Không thể tạo gara", { description: err?.message || "Vui lòng thử lại." });
     } finally {
       setSavingGarage(false);
     }
   }
 
   return (
-    <div className="space-y-5">
-      <header>
-        <h1 className="text-2xl font-extrabold">Quản trị hệ thống</h1>
-        <p className="mt-2 text-xs text-slate-500">
-          Quản lý người dùng, phạm vi cơ sở, danh mục dịch vụ.
-        </p>
-      </header>
+    <PageContainer>
+      <PageHeader title="Quản trị hệ thống" description="Quản lý người dùng, phạm vi cơ sở, danh mục dịch vụ." />
 
-      <nav className="flex gap-2 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2">
+      <nav className="flex gap-2 overflow-x-auto rounded-xl border border-border bg-card p-2">
         {tabs.map(([value, label, Icon]) => (
           <button
             key={value}
             onClick={() => setTab(value)}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-[10px] font-bold ${
-              tab === value ? "bg-blue-600 text-white" : "text-slate-500"
+            className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-xs font-bold ${
+              tab === value ? "bg-primary text-white" : "text-muted-foreground"
             }`}
           >
             <Icon size={14} />
@@ -129,14 +128,14 @@ function AdminManagementPage() {
 
       {/* USERS */}
       {tab === "USERS" && (
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <section className="overflow-hidden rounded-xl border border-border bg-card">
           {loadingUsers ? (
-            <p className="py-12 text-center text-sm text-slate-500">Đang tải danh sách người dùng...</p>
+            <p className="py-12 text-center text-sm text-muted-foreground">Đang tải danh sách người dùng...</p>
           ) : users.length === 0 ? (
-            <p className="py-12 text-center text-sm text-slate-400">Chưa có dữ liệu người dùng.</p>
+            <p className="py-12 text-center text-sm text-neutral-muted">Chưa có dữ liệu người dùng.</p>
           ) : (
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-[9px] uppercase text-slate-500">
+              <thead className="bg-surface text-xs font-semibold text-muted-foreground">
                 <tr>
                   <th className="p-4">Người dùng</th>
                   <th className="p-4">Email</th>
@@ -144,11 +143,11 @@ function AdminManagementPage() {
                   <th className="p-4">Trạng thái</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-border">
                 {users.map((user) => (
                   <tr key={user.id}>
                     <td className="p-4 font-bold">{user.fullName ?? user.name ?? "–"}</td>
-                    <td className="p-4 text-slate-500">{user.email}</td>
+                    <td className="p-4 text-muted-foreground">{user.email}</td>
                     <td className="p-4">{(user.roles ?? []).join(", ") || "–"}</td>
                     <td className="p-4">{user.status ?? "–"}</td>
                   </tr>
@@ -164,40 +163,37 @@ function AdminManagementPage() {
         <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
           <section className="space-y-3">
             {loadingGarages ? (
-              <p className="py-10 text-center text-sm text-slate-500">Đang tải danh sách gara...</p>
+              <p className="py-10 text-center text-sm text-muted-foreground">Đang tải danh sách gara...</p>
             ) : garages.length === 0 ? (
-              <p className="py-10 text-center text-sm text-slate-400">Chưa có gara nào.</p>
+              <p className="py-10 text-center text-sm text-neutral-muted">Chưa có gara nào.</p>
             ) : (
               garages.map((item) => (
-                <article key={item.id ?? item.garageId} className="rounded-xl border border-slate-200 bg-white p-5">
+                <article key={item.id ?? item.garageId} className="rounded-xl border border-border bg-card p-5">
                   <b>{item.name ?? item.garageName}</b>
-                  <p className="mt-2 text-xs text-slate-500">{item.address ?? item.location ?? "–"}</p>
-                  {item.phone && <p className="mt-1 text-xs text-slate-400">📞 {item.phone}</p>}
+                  <p className="mt-2 text-xs text-muted-foreground">{item.address ?? item.location ?? "–"}</p>
+                  {item.phone && <p className="mt-1 flex items-center gap-1.5 text-xs text-neutral-muted"><Phone size={14} /> {item.phone}</p>}
                 </article>
               ))
             )}
           </section>
-          <form onSubmit={submitGarage} className="h-fit rounded-xl border border-slate-200 bg-white p-5">
+          <form onSubmit={submitGarage} className="h-fit rounded-xl border border-border bg-card p-5">
             <h2 className="font-extrabold">Thêm cơ sở mới</h2>
             <input
               value={newGarage.name}
               onChange={(e) => setNewGarage({ ...newGarage, name: e.target.value })}
               placeholder="Tên cơ sở"
               required
-              className="mt-4 h-10 w-full rounded-lg border border-slate-200 px-3 text-xs"
+              className="mt-4 h-10 w-full rounded-lg border border-border px-3 text-xs"
             />
             <input
               value={newGarage.address}
               onChange={(e) => setNewGarage({ ...newGarage, address: e.target.value })}
               placeholder="Địa chỉ"
-              className="mt-3 h-10 w-full rounded-lg border border-slate-200 px-3 text-xs"
+              className="mt-3 h-10 w-full rounded-lg border border-border px-3 text-xs"
             />
-            <button
-              disabled={savingGarage}
-              className="mt-4 h-10 w-full rounded-lg bg-blue-600 text-xs font-bold text-white disabled:bg-slate-300"
-            >
+            <Button type="submit" disabled={savingGarage} className="mt-4 w-full text-xs">
               {savingGarage ? "Đang tạo..." : "Tạo cơ sở"}
-            </button>
+            </Button>
           </form>
         </div>
       )}
@@ -207,11 +203,11 @@ function AdminManagementPage() {
         <div className="space-y-4">
           {garages.length > 0 && (
             <div className="flex items-center gap-3">
-              <label className="text-xs font-bold text-slate-600">Lọc theo gara:</label>
+              <label className="text-xs font-bold text-muted-foreground">Lọc theo gara:</label>
               <select
                 value={selectedGarageId}
                 onChange={(e) => loadServices(e.target.value)}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-xs"
+                className="rounded-lg border border-border px-3 py-2 text-xs"
               >
                 {garages.map((g) => (
                   <option key={g.id ?? g.garageId} value={g.id ?? g.garageId}>{g.name ?? g.garageName}</option>
@@ -221,18 +217,18 @@ function AdminManagementPage() {
           )}
           <section className="grid gap-3 sm:grid-cols-2">
             {loadingServices ? (
-              <p className="col-span-2 py-10 text-center text-sm text-slate-500">Đang tải gói dịch vụ...</p>
+              <p className="col-span-2 py-10 text-center text-sm text-muted-foreground">Đang tải gói dịch vụ...</p>
             ) : services.length === 0 ? (
-              <p className="col-span-2 py-10 text-center text-sm text-slate-400">Chưa có gói dịch vụ nào.</p>
+              <p className="col-span-2 py-10 text-center text-sm text-neutral-muted">Chưa có gói dịch vụ nào.</p>
             ) : (
               services.map((item) => (
-                <article key={item.id ?? item.serviceId ?? item.servicePackageId} className="rounded-xl border border-slate-200 bg-white p-5">
+                <article key={item.id ?? item.serviceId ?? item.servicePackageId} className="rounded-xl border border-border bg-card p-5">
                   <b>{item.name ?? item.serviceName ?? item.servicePackageName}</b>
-                  <p className="mt-3 text-xl font-extrabold text-blue-600">
+                  <p className="mt-3 text-xl font-extrabold text-primary">
                     {new Intl.NumberFormat("vi-VN").format(item.price ?? 0)} đ
                   </p>
-                  <p className="mt-2 text-xs text-slate-500">{item.duration ?? item.durationMinutes ?? 0} phút</p>
-                  {item.description && <p className="mt-2 text-xs text-slate-400">{item.description}</p>}
+                  <p className="mt-2 text-xs text-muted-foreground">{item.duration ?? item.durationMinutes ?? 0} phút</p>
+                  {item.description && <p className="mt-2 text-xs text-neutral-muted">{item.description}</p>}
                 </article>
               ))
             )}
@@ -242,13 +238,13 @@ function AdminManagementPage() {
 
       {/* AUDIT */}
       {tab === "AUDIT" && (
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <p className="p-8 text-center text-xs text-slate-400">
+        <section className="overflow-hidden rounded-xl border border-border bg-card">
+          <p className="p-8 text-center text-xs text-neutral-muted">
             Nhật ký kiểm toán chưa có endpoint tại BE.
           </p>
         </section>
       )}
-    </div>
+    </PageContainer>
   );
 }
 

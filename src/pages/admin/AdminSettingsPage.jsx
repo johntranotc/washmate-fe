@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import PageContainer from "@/components/shared/PageContainer";
+import PageHeader from "@/components/shared/PageHeader";
 import { Building2, UserCircle, Star, Megaphone, Bell, ShieldCheck, CreditCard, Hourglass } from "lucide-react";
 
 const shortcuts = [
@@ -17,21 +19,18 @@ const pendingSections = [
 
 export default function AdminSettingsPage() {
   return (
-    <div className="mx-auto max-w-[1600px] space-y-6 p-4 sm:p-8">
-      <header>
-        <h1 className="text-3xl font-extrabold text-slate-900">Cài đặt</h1>
-        <p className="mt-1 text-sm text-slate-500">Quản lý cấu hình chung của doanh nghiệp.</p>
-      </header>
+    <PageContainer>
+      <PageHeader title="Cài đặt" description="Quản lý cấu hình chung của doanh nghiệp." />
 
       <section>
-        <h2 className="mb-3 text-sm font-extrabold uppercase tracking-wider text-slate-400">Quản lý nhanh</h2>
+        <h2 className="mb-3 text-sm font-extrabold text-neutral-muted">Quản lý nhanh</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {shortcuts.map(({ to, icon: Icon, title, desc }) => (
-            <Link key={to} to={to} className="group flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow-md">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600"><Icon size={20} /></span>
+            <Link key={to} to={to} className="group flex items-start gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:border-primary/30 hover:shadow-card">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-container text-primary"><Icon size={20} /></span>
               <div>
-                <b className="block text-slate-800">{title}</b>
-                <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">{desc}</span>
+                <b className="block text-foreground">{title}</b>
+                <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">{desc}</span>
               </div>
             </Link>
           ))}
@@ -39,23 +38,23 @@ export default function AdminSettingsPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-sm font-extrabold uppercase tracking-wider text-slate-400">Cấu hình nâng cao</h2>
+        <h2 className="mb-3 text-sm font-extrabold text-neutral-muted">Cấu hình nâng cao</h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {pendingSections.map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="rounded-2xl border border-dashed border-slate-300 bg-white p-5">
+            <div key={title} className="rounded-2xl border border-dashed border-border bg-card p-5">
               <div className="flex items-start justify-between">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-slate-100 text-slate-400"><Icon size={20} /></span>
-                <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-600"><Hourglass size={10} /> Chờ BE</span>
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-muted text-neutral-muted"><Icon size={20} /></span>
+                <span className="flex items-center gap-1 rounded-full bg-warning-container px-2 py-1 text-xs font-bold text-warning"><Hourglass size={14} /> Chờ BE</span>
               </div>
-              <b className="mt-3 block text-slate-700">{title}</b>
-              <p className="mt-0.5 text-xs leading-relaxed text-slate-500">{desc}</p>
+              <b className="mt-3 block text-ink-soft">{title}</b>
+              <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{desc}</p>
             </div>
           ))}
         </div>
-        <p className="mt-3 text-[11px] font-semibold text-slate-400">
+        <p className="mt-3 text-xs font-semibold text-neutral-muted">
           Các thiết lập trên sẽ tự kích hoạt khi Backend cung cấp API cấu hình tương ứng — giao diện không giả lập trạng thái lưu thành công.
         </p>
       </section>
-    </div>
+    </PageContainer>
   );
 }

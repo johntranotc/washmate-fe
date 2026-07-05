@@ -45,14 +45,14 @@ export default function Pagination({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row",
+        "flex flex-col items-center justify-between gap-3 border-t border-border px-4 py-3 sm:flex-row",
         className,
       )}
     >
-      <p className="text-xs font-semibold text-slate-500">
-        Đang xem <b className="text-slate-700">{from}</b>–
-        <b className="text-slate-700">{to}</b> trên tổng{" "}
-        <b className="text-slate-700">{safeTotal}</b>
+      <p className="text-xs font-semibold text-muted-foreground">
+        Đang xem <b className="text-ink-soft">{from}</b>–
+        <b className="text-ink-soft">{to}</b> trên tổng{" "}
+        <b className="text-ink-soft">{safeTotal}</b>
       </p>
 
       <div className="flex items-center gap-1">
@@ -61,7 +61,7 @@ export default function Pagination({
           onClick={() => go(current - 1)}
           disabled={current === 1}
           aria-label="Trang trước"
-          className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="grid h-8 w-8 place-items-center rounded-lg border border-border text-muted-foreground transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronLeft size={16} />
         </button>
@@ -69,7 +69,7 @@ export default function Pagination({
         {realStart > 1 && (
           <>
             <PageButton n={1} current={current} onClick={go} />
-            <span className="px-1 text-slate-400">…</span>
+            <span className="px-1 text-neutral-muted">…</span>
           </>
         )}
 
@@ -79,7 +79,7 @@ export default function Pagination({
 
         {end < totalPages && (
           <>
-            <span className="px-1 text-slate-400">…</span>
+            <span className="px-1 text-neutral-muted">…</span>
             <PageButton n={totalPages} current={current} onClick={go} />
           </>
         )}
@@ -89,7 +89,7 @@ export default function Pagination({
           onClick={() => go(current + 1)}
           disabled={current === totalPages}
           aria-label="Trang sau"
-          className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="grid h-8 w-8 place-items-center rounded-lg border border-border text-muted-foreground transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronRight size={16} />
         </button>
@@ -108,8 +108,8 @@ function PageButton({ n, current, onClick }) {
       className={cn(
         "h-8 min-w-8 rounded-lg px-2 text-xs font-bold transition",
         active
-          ? "bg-blue-600 text-white shadow-sm"
-          : "border border-slate-200 text-slate-600 hover:bg-slate-50",
+          ? "bg-primary text-white shadow-sm"
+          : "border border-border text-muted-foreground hover:bg-surface",
       )}
     >
       {n}

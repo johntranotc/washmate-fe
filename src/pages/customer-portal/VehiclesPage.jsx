@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import PageContainer from "@/components/shared/PageContainer";
+import PageHeader from "@/components/shared/PageHeader";
 import { useNavigate } from "react-router-dom";
-import { Car, Plus, X, Sparkles, Calendar, Edit2, Trash2, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Car, Plus, X, Droplets, Calendar, Edit2, Trash2, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,12 +16,12 @@ const emptyForm = { licensePlate: "", brand: "", customBrand: "", model: "", cus
 function StatusBadge({ status }) {
   if (status === "ACTIVE" || !status) {
     return (
-      <Badge className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 shadow-sm">
-        <CheckCircle2 size={13} className="text-emerald-600" /> Đang sử dụng
+      <Badge className="flex items-center gap-1.5 rounded-full bg-success-container px-3 py-1 text-xs font-bold text-success shadow-sm">
+        <CheckCircle2 size={14} className="text-success" /> Đang sử dụng
       </Badge>
     );
   }
-  return <Badge className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-800">Đã ngừng sử dụng</Badge>;
+  return <Badge className="rounded-full bg-critical-container px-3 py-1 text-xs font-bold text-critical">Đã ngừng sử dụng</Badge>;
 }
 
 export default function VehiclesPage() {
@@ -238,23 +240,21 @@ export default function VehiclesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl p-6 sm:p-8">
-      <div className="mb-8 flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="mb-2 text-3xl font-extrabold leading-tight tracking-tight text-foreground sm:text-4xl">Xe của tôi</h1>
-          <p className="text-base font-medium text-muted-foreground sm:text-lg">
-            Quản lý danh sách phương tiện để trải nghiệm đặt lịch nhanh và thuận tiện hơn.
-          </p>
-        </div>
-        <Button onClick={openAddModal} className="h-12 rounded-2xl bg-primary px-6 font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 hover:shadow-xl">
-          <Plus size={20} className="mr-2" />
-          Thêm xe mới
-        </Button>
-      </div>
+    <PageContainer variant="customer">
+      <PageHeader
+        title="Xe của tôi"
+        description="Quản lý danh sách phương tiện để trải nghiệm đặt lịch nhanh và thuận tiện hơn."
+        actions={
+          <Button size="xl" onClick={openAddModal} className="shadow-cta">
+            <Plus />
+            Thêm xe mới
+          </Button>
+        }
+      />
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
-        <div className="flex items-center gap-4 rounded-2xl border border-border/80 bg-gradient-to-br from-white to-slate-50/50 p-5 shadow-sm">
-          <div className="rounded-2xl bg-blue-500/10 p-3.5 text-blue-600">
+        <div className="flex items-center gap-4 rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
+          <div className="rounded-2xl bg-primary/10 p-3.5 text-primary">
             <Car size={26} />
           </div>
           <div>
@@ -262,8 +262,8 @@ export default function VehiclesPage() {
             <p className="text-2xl font-black text-foreground">{vehicles.length} xe</p>
           </div>
         </div>
-        <div className="flex items-center gap-4 rounded-2xl border border-border/80 bg-gradient-to-br from-white to-slate-50/50 p-5 shadow-sm">
-          <div className="rounded-2xl bg-emerald-500/10 p-3.5 text-emerald-600">
+        <div className="flex items-center gap-4 rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
+          <div className="rounded-2xl bg-success/10 p-3.5 text-success">
             <CheckCircle2 size={26} />
           </div>
           <div>
@@ -271,8 +271,8 @@ export default function VehiclesPage() {
             <p className="text-2xl font-black text-foreground">{activeCount} xe</p>
           </div>
         </div>
-        <div className="flex items-center gap-4 rounded-2xl border border-border/80 bg-gradient-to-br from-white to-slate-50/50 p-5 shadow-sm">
-          <div className="rounded-2xl bg-amber-500/10 p-3.5 text-amber-600">
+        <div className="flex items-center gap-4 rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
+          <div className="rounded-2xl bg-warning/10 p-3.5 text-warning">
             <Calendar size={26} />
           </div>
           <div>
@@ -283,27 +283,27 @@ export default function VehiclesPage() {
       </div>
 
       {successMessage && (
-        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50/80 p-4 font-semibold text-green-800 shadow-sm">
-          <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-success/25 bg-success-container/80 p-4 font-semibold text-success shadow-sm">
+          <CheckCircle2 className="h-5 w-5 shrink-0 text-success" />
           {successMessage}
         </div>
       )}
 
       {errorMessage && (
-        <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-center font-semibold text-red-700 shadow-sm">
+        <div className="mb-6 rounded-2xl border border-critical/25 bg-critical-container p-4 text-center font-semibold text-critical shadow-sm">
           {errorMessage}
         </div>
       )}
 
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Input
-          placeholder="🔍 Tìm theo biển số, hãng xe hoặc dòng xe..."
+          placeholder="Tìm theo biển số, hãng xe hoặc dòng xe..."
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
-          className="h-12 max-w-md rounded-2xl border-border bg-white px-4 font-medium shadow-sm focus-visible:border-primary focus-visible:ring-primary/20"
+          className="h-12 max-w-md rounded-2xl border-border bg-card px-4 font-medium shadow-sm focus-visible:border-primary focus-visible:ring-primary/20"
         />
 
-        <div className="flex gap-2 rounded-2xl border border-border bg-slate-100/80 p-1.5">
+        <div className="flex gap-2 rounded-2xl border border-border bg-muted/80 p-1.5">
           {["all", "using"].map((status) => (
             <button
               key={status}
@@ -311,7 +311,7 @@ export default function VehiclesPage() {
               onClick={() => setFilterStatus(status)}
               className={`rounded-xl px-5 py-2 font-bold text-sm transition-all ${
                 filterStatus === status
-                  ? "bg-white text-primary shadow-md"
+                  ? "bg-card text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -334,10 +334,10 @@ export default function VehiclesPage() {
             const formattedModel = vehicle.model ? vehicle.model.charAt(0).toUpperCase() + vehicle.model.slice(1) : "";
 
             return (
-              <Card key={vehicleId} className="group relative overflow-hidden rounded-2xl border border-border/80 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl">
+              <Card key={vehicleId} className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-card">
                 <div className="mb-6 flex items-start justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-blue-600 text-white shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-white group-hover:scale-105 transition-transform">
                       <Car size={30} />
                     </div>
                     <div>
@@ -345,7 +345,7 @@ export default function VehiclesPage() {
                         {formattedBrand} <span className="font-bold text-muted-foreground">{formattedModel}</span>
                       </h3>
                       <div className="mt-1 flex items-center gap-2">
-                        <span className="inline-block rounded-lg border border-slate-300 bg-slate-100 px-3 py-0.5 font-mono text-sm font-bold tracking-wider text-slate-800 shadow-inner">
+                        <span className="inline-block rounded-lg border border-border bg-muted px-3 py-0.5 font-mono text-sm font-bold tracking-wider text-foreground">
                           {vehicle.licensePlate}
                         </span>
                       </div>
@@ -354,31 +354,32 @@ export default function VehiclesPage() {
                   <StatusBadge status={vehicle.status} />
                 </div>
 
-                <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+                <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-2xl bg-surface p-4 border border-border">
                   <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dòng xe</p>
+                    <p className="mb-1 text-xs font-semibold text-muted-foreground">Dòng xe</p>
                     <p className="font-bold text-foreground">{formattedModel || "Sedan/SUV"}</p>
                   </div>
                   <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Màu sơn</p>
+                    <p className="mb-1 text-xs font-semibold text-muted-foreground">Màu sơn</p>
                     <p className="font-bold text-foreground">{vehicle.color || "Trắng"}</p>
                   </div>
                   <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Lần chăm sóc</p>
+                    <p className="mb-1 text-xs font-semibold text-muted-foreground">Lần chăm sóc</p>
                     <p className="font-bold text-foreground">{vehicle.lastServiceDate || "Chưa có"}</p>
                   </div>
                   <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tổng đặt lịch</p>
+                    <p className="mb-1 text-xs font-semibold text-muted-foreground">Tổng đặt lịch</p>
                     <p className="font-black text-primary">{vehicle.totalBookings || 0} lần</p>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between gap-3 pt-2">
                   <Button
+                    size="lg"
                     onClick={() => navigate("/khach-hang/dat-lich-moi")}
-                    className="h-11 flex-1 rounded-xl bg-primary font-bold text-white shadow-md transition-all hover:bg-primary/90 hover:shadow-lg"
+                    className="flex-1"
                   >
-                    <Sparkles size={16} className="mr-1.5" /> Đặt lịch rửa xe ngay
+                    <Droplets /> Đặt lịch rửa xe ngay
                   </Button>
 
                   <div className="flex items-center gap-2">
@@ -387,7 +388,7 @@ export default function VehiclesPage() {
                       size="icon"
                       onClick={() => openEditModal(vehicle)}
                       title="Sửa thông tin xe"
-                      className="h-11 w-11 rounded-xl border-border bg-white text-muted-foreground hover:border-primary hover:bg-primary/5 hover:text-primary"
+                      className="text-muted-foreground hover:border-primary hover:bg-primary/5 hover:text-primary"
                     >
                       <Edit2 size={18} />
                     </Button>
@@ -396,7 +397,7 @@ export default function VehiclesPage() {
                       size="icon"
                       onClick={() => openDeleteModal(vehicle)}
                       title="Xóa xe"
-                      className="h-11 w-11 rounded-xl border-red-200 bg-white text-red-500 hover:border-red-400 hover:bg-red-50 hover:text-red-600"
+                      className="border-critical/25 text-critical hover:border-critical hover:bg-critical-container hover:text-critical"
                     >
                       <Trash2 size={18} />
                     </Button>
@@ -415,15 +416,15 @@ export default function VehiclesPage() {
           <p className="mb-6 font-medium text-muted-foreground">
             Thêm xe để đặt lịch rửa xe nhanh hơn và theo dõi lịch sử chăm sóc dễ dàng.
           </p>
-          <Button onClick={openAddModal} className="h-12 rounded-2xl bg-primary px-8 font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary/90">
-            <Plus size={20} className="mr-2" /> Thêm xe mới ngay
+          <Button size="xl" onClick={openAddModal} className="shadow-cta">
+            <Plus /> Thêm xe mới ngay
           </Button>
         </Card>
       )}
 
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <Card className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+          <Card className="w-full max-w-md rounded-2xl bg-card p-8 shadow-floating">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-2xl font-bold leading-tight text-foreground">Thêm xe mới</h2>
               <button type="button" onClick={() => setShowAddModal(false)}>
@@ -432,12 +433,12 @@ export default function VehiclesPage() {
             </div>
             <div className="mb-6 space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Hãng xe <span className="text-red-500">*</span></label>
+                <label className="mb-2 block text-sm font-semibold text-foreground">Hãng xe <span className="text-critical">*</span></label>
                 <select
                   name="brand"
                   value={formData.brand}
                   onChange={handleFormChange}
-                  className="w-full h-11 rounded-xl border border-border bg-white px-3.5 font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full h-11 rounded-xl border border-border bg-card px-3.5 font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="">-- Chọn hãng xe --</option>
                   {CAR_BRANDS.map((item) => (
@@ -455,13 +456,13 @@ export default function VehiclesPage() {
                 )}
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Dòng xe <span className="text-red-500">*</span></label>
+                <label className="mb-2 block text-sm font-semibold text-foreground">Dòng xe <span className="text-critical">*</span></label>
                 <select
                   name="model"
                   value={formData.model}
                   onChange={handleFormChange}
                   disabled={!formData.brand}
-                  className="w-full h-11 rounded-xl border border-border bg-white px-3.5 font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-slate-100 disabled:text-muted-foreground"
+                  className="w-full h-11 rounded-xl border border-border bg-card px-3.5 font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-muted disabled:text-muted-foreground"
                 >
                   <option value="">{formData.brand ? "-- Chọn dòng xe --" : "-- Vui lòng chọn hãng xe trước --"}</option>
                   {availableModels.map((m) => (
@@ -479,7 +480,7 @@ export default function VehiclesPage() {
                 )}
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Biển số xe <span className="text-red-500">*</span></label>
+                <label className="mb-2 block text-sm font-semibold text-foreground">Biển số xe <span className="text-critical">*</span></label>
                 <Input name="licensePlate" value={formData.licensePlate} onChange={handleFormChange} placeholder="VD: 51A-238.88" className="h-11 rounded-xl border-border font-mono font-semibold" />
               </div>
               <div>
@@ -488,10 +489,10 @@ export default function VehiclesPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowAddModal(false)} className="h-11 flex-1 rounded-xl border-border font-semibold hover:bg-slate-50">
+              <Button variant="outline" size="lg" onClick={() => setShowAddModal(false)} className="flex-1">
                 Hủy
               </Button>
-              <Button onClick={handleAddVehicle} className="h-11 flex-1 rounded-xl bg-primary font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary/90">
+              <Button size="lg" onClick={handleAddVehicle} className="flex-1 shadow-cta">
                 Thêm xe
               </Button>
             </div>
@@ -501,7 +502,7 @@ export default function VehiclesPage() {
 
       {showEditModal && selectedVehicle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <Card className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+          <Card className="w-full max-w-md rounded-2xl bg-card p-8 shadow-floating">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-2xl font-bold leading-tight text-foreground">Sửa thông tin xe</h2>
               <button type="button" onClick={() => setShowEditModal(false)}>
@@ -510,12 +511,12 @@ export default function VehiclesPage() {
             </div>
             <div className="mb-6 space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Hãng xe <span className="text-red-500">*</span></label>
+                <label className="mb-2 block text-sm font-semibold text-foreground">Hãng xe <span className="text-critical">*</span></label>
                 <select
                   name="brand"
                   value={formData.brand}
                   onChange={handleFormChange}
-                  className="w-full h-11 rounded-xl border border-border bg-white px-3.5 font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full h-11 rounded-xl border border-border bg-card px-3.5 font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="">-- Chọn hãng xe --</option>
                   {CAR_BRANDS.map((item) => (
@@ -533,13 +534,13 @@ export default function VehiclesPage() {
                 )}
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Dòng xe <span className="text-red-500">*</span></label>
+                <label className="mb-2 block text-sm font-semibold text-foreground">Dòng xe <span className="text-critical">*</span></label>
                 <select
                   name="model"
                   value={formData.model}
                   onChange={handleFormChange}
                   disabled={!formData.brand}
-                  className="w-full h-11 rounded-xl border border-border bg-white px-3.5 font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-slate-100 disabled:text-muted-foreground"
+                  className="w-full h-11 rounded-xl border border-border bg-card px-3.5 font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-muted disabled:text-muted-foreground"
                 >
                   <option value="">{formData.brand ? "-- Chọn dòng xe --" : "-- Vui lòng chọn hãng xe trước --"}</option>
                   {availableModels.map((m) => (
@@ -557,7 +558,7 @@ export default function VehiclesPage() {
                 )}
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Biển số xe <span className="text-red-500">*</span></label>
+                <label className="mb-2 block text-sm font-semibold text-foreground">Biển số xe <span className="text-critical">*</span></label>
                 <Input name="licensePlate" value={formData.licensePlate} onChange={handleFormChange} className="h-11 rounded-xl border-border font-mono font-semibold" />
               </div>
               <div>
@@ -566,10 +567,10 @@ export default function VehiclesPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowEditModal(false)} className="h-11 flex-1 rounded-xl border-border font-semibold hover:bg-slate-50">
+              <Button variant="outline" size="lg" onClick={() => setShowEditModal(false)} className="flex-1">
                 Hủy
               </Button>
-              <Button onClick={handleUpdateVehicle} className="h-11 flex-1 rounded-xl bg-primary font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary/90">
+              <Button size="lg" onClick={handleUpdateVehicle} className="flex-1 shadow-cta">
                 Cập nhật
               </Button>
             </div>
@@ -579,22 +580,22 @@ export default function VehiclesPage() {
 
       {showDeleteModal && selectedVehicle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <Card className="w-full max-w-md rounded-2xl bg-white p-8">
+          <Card className="w-full max-w-md rounded-2xl bg-card p-8">
             <h2 className="mb-4 text-2xl font-bold leading-tight text-foreground">Xóa xe?</h2>
             <p className="mb-6 font-medium text-muted-foreground">
               Bạn có chắc chắn muốn xóa xe {selectedVehicle.licensePlate}? Hành động này không thể hoàn tác.
             </p>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowDeleteModal(false)} className="flex-1 rounded-lg border-border font-semibold">
+              <Button variant="outline" onClick={() => setShowDeleteModal(false)} className="flex-1">
                 Hủy
               </Button>
-              <Button onClick={handleDeleteVehicle} className="flex-1 rounded-lg bg-red-600 font-bold text-white hover:bg-red-700">
+              <Button onClick={handleDeleteVehicle} className="flex-1 bg-critical text-white hover:bg-critical/90">
                 Xóa
               </Button>
             </div>
           </Card>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

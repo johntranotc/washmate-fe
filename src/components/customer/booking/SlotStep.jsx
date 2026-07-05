@@ -3,10 +3,10 @@ import { nextDates } from "@/lib/booking-flow";
 import { cn } from "@/lib/utils";
 
 function slotLabel(slot) {
-  if (slot.status === "CLOSED") return { text: "Tạm đóng", color: "bg-slate-100 text-slate-500" };
-  if (slot.disabled) return { text: "Đã đầy", color: "bg-red-50 text-red-600" };
-  if (slot.almostFull) return { text: "Sắp đầy", color: "bg-amber-50 text-amber-700" };
-  return { text: "Còn chỗ", color: "bg-emerald-50 text-emerald-700" };
+  if (slot.status === "CLOSED") return { text: "Tạm đóng", color: "bg-muted text-muted-foreground" };
+  if (slot.disabled) return { text: "Đã đầy", color: "bg-critical-container text-critical" };
+  if (slot.almostFull) return { text: "Sắp đầy", color: "bg-warning-container text-warning" };
+  return { text: "Còn chỗ", color: "bg-success-container text-success" };
 }
 
 export function SlotStep({ date, onDateChange, slots, selectedId, onSelect, loading }) {
@@ -31,7 +31,7 @@ export function SlotStep({ date, onDateChange, slots, selectedId, onSelect, load
                   : "border-border bg-muted text-foreground hover:border-primary",
               )}
             >
-              <span className="block text-[10px] font-bold">{item.weekday}</span>
+              <span className="block text-xs font-bold">{item.weekday}</span>
               <strong className="mt-1 block text-lg">{item.day}</strong>
             </button>
           ))}
@@ -74,8 +74,8 @@ export function SlotStep({ date, onDateChange, slots, selectedId, onSelect, load
                     </strong>
                     <span
                       className={cn(
-                        "rounded-full px-2.5 py-1 text-[10px] font-bold",
-                        selected ? "bg-white/20 text-primary-foreground" : labelColor,
+                        "rounded-full px-2.5 py-1 text-xs font-bold",
+                        selected ? "bg-card/20 text-primary-foreground" : labelColor,
                       )}
                     >
                       {labelText}

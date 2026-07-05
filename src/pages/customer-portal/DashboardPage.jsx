@@ -1,4 +1,5 @@
 import { DashboardHero } from "@/components/customer-portal/dashboard-hero";
+import PageContainer from "@/components/shared/PageContainer";
 import { DashboardStatsGrid } from "@/components/customer-portal/stats-grid";
 import { QuickActions } from "@/components/customer-portal/quick-actions";
 import { UpcomingBookings } from "@/components/customer-portal/upcoming-bookings";
@@ -9,7 +10,7 @@ import { RecentNotifications } from "@/components/customer-portal/recent-notific
 
 export default function DashboardPage() {
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-8 pb-16">
+    <PageContainer variant="customer" className="pb-16">
       <DashboardHero />
       <DashboardStatsGrid />
       <div className="grid gap-6 lg:grid-cols-2">
@@ -22,6 +23,6 @@ export default function DashboardPage() {
         <RecentNotifications />
       </div>
       <CareTips />
-    </div>
+    </PageContainer>
   );
 }

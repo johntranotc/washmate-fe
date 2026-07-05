@@ -15,12 +15,12 @@ export function StaffKpiCards({
   deltas = null,
 }) {
   const cards = [
-    { key: "total", label: "Lịch hôm nay", value: total, Icon: CalendarDays, tone: "text-blue-600 bg-blue-50" },
-    { key: "waitingCheckIn", label: "Chờ check-in", value: waitingCheckIn, Icon: Clock3, tone: "text-amber-600 bg-amber-50" },
-    { key: "washing", label: "Đang rửa", value: washing, Icon: Droplets, tone: "text-violet-600 bg-violet-50" },
-    { key: "completed", label: "Hoàn tất hôm nay", value: completed, Icon: CheckCircle2, tone: "text-emerald-600 bg-emerald-50" },
-    { key: "noShow", label: "Không đến / No-show", value: noShow, Icon: XCircle, tone: "text-rose-600 bg-rose-50" },
-    { key: "overdue", label: "Quá giờ / cần xử lý", value: overdue, Icon: AlertTriangle, tone: "text-orange-600 bg-orange-50" },
+    { key: "total", label: "Lịch hôm nay", value: total, Icon: CalendarDays, tone: "text-primary bg-primary-container" },
+    { key: "waitingCheckIn", label: "Chờ check-in", value: waitingCheckIn, Icon: Clock3, tone: "text-warning bg-warning-container" },
+    { key: "washing", label: "Đang rửa", value: washing, Icon: Droplets, tone: "text-accent-violet bg-accent-violet/10" },
+    { key: "completed", label: "Hoàn tất hôm nay", value: completed, Icon: CheckCircle2, tone: "text-success bg-success-container" },
+    { key: "noShow", label: "Không đến / No-show", value: noShow, Icon: XCircle, tone: "text-critical bg-critical-container" },
+    { key: "overdue", label: "Quá giờ / cần xử lý", value: overdue, Icon: AlertTriangle, tone: "text-warning bg-warning-container" },
   ];
 
   return (
@@ -30,14 +30,14 @@ export function StaffKpiCards({
         const hasD = typeof d === "number" && Number.isFinite(d);
         const up = hasD && d >= 0;
         return (
-          <article key={key} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <article key={key} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <span className={`inline-grid h-11 w-11 place-items-center rounded-xl ${tone}`}>
               <Icon size={20} />
             </span>
-            <p className="mt-4 text-xs font-semibold text-slate-500">{label}</p>
-            <b className="mt-1 block text-2xl font-black text-slate-800">{value}</b>
+            <p className="mt-4 text-xs font-semibold text-muted-foreground">{label}</p>
+            <b className="mt-1 block text-2xl font-black text-foreground">{value}</b>
             {hasD && (
-              <p className={`mt-1 text-[11px] font-bold ${up ? "text-emerald-500" : "text-rose-500"}`}>
+              <p className={`mt-1 text-xs font-bold ${up ? "text-success" : "text-critical"}`}>
                 {up ? "↗" : "↘"} {up ? "+" : ""}{d} so với hôm qua
               </p>
             )}

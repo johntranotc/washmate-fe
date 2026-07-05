@@ -21,13 +21,13 @@ export function PointsHistoryList({ transactions, loading }) {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <b className="text-sm font-semibold text-foreground">{item.description}</b>
-                  <span className="rounded-full bg-secondary px-2 py-1 text-[9px] font-bold text-secondary-foreground">
+                  <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-bold text-secondary-foreground">
                     {loyaltyTransactionLabels[item.type] || item.type}
                   </span>
                 </div>
-                <p className="mt-1 text-[11px] text-muted-foreground">{new Date(item.createdAt).toLocaleString("vi-VN")}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{new Date(item.createdAt).toLocaleString("vi-VN")}</p>
               </div>
-              <strong className={item.points >= 0 ? "text-green-600" : "text-red-600"}>
+              <strong className={item.points >= 0 ? "text-success" : "text-critical"}>
                 {item.points > 0 ? "+" : ""}{item.points.toLocaleString("vi-VN")}
               </strong>
             </div>

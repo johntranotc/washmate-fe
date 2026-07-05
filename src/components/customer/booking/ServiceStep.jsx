@@ -1,4 +1,4 @@
-import { Clock3, Sparkles } from "lucide-react";
+import { Clock3, Droplets } from "lucide-react";
 import { formatCurrency } from "@/lib/booking-flow";
 import { cn } from "@/lib/utils";
 
@@ -6,7 +6,7 @@ export function ServiceStep({ services, selectedId, onSelect, garageName }) {
   if (!services.length) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-        <Sparkles className="mx-auto size-10 text-primary" />
+        <Droplets className="mx-auto size-10 text-primary" />
         <h2 className="mt-4 text-xl font-extrabold text-foreground">
           Không có dịch vụ
         </h2>
@@ -39,16 +39,16 @@ export function ServiceStep({ services, selectedId, onSelect, garageName }) {
             >
               <div className="flex items-center justify-between gap-3">
                 <span className="grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary">
-                  <Sparkles />
+                  <Droplets />
                 </span>
                 <div className="flex flex-wrap justify-end gap-1.5">
                   {service.recommended && (
-                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-extrabold text-emerald-700">
+                    <span className="rounded-full bg-success-container px-2.5 py-1 text-xs font-extrabold text-success">
                       Đề xuất
                     </span>
                   )}
                   {service.badge && (
-                    <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-extrabold text-amber-700">
+                    <span className="rounded-full bg-warning-container px-2.5 py-1 text-xs font-extrabold text-warning">
                       {service.badge}
                     </span>
                   )}
@@ -65,7 +65,7 @@ export function ServiceStep({ services, selectedId, onSelect, garageName }) {
                   {formatCurrency(service.price)}
                 </strong>
                 <span className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
-                  <Clock3 size={15} /> {service.duration || "—"} phút
+                  <Clock3 size={16} /> {service.duration || "—"} phút
                 </span>
               </div>
               <button

@@ -1,6 +1,7 @@
 import { Clock, CreditCard, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import { StatusBadge } from "./BookingStatusBadge";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 
 export function PaymentStatusCard({ booking }) {
   const bookingStatus = booking.bookingStatus;
@@ -10,15 +11,15 @@ export function PaymentStatusCard({ booking }) {
 
   if (bookingStatus === "PENDING") {
     return (
-      <aside className="rounded-2xl border border-orange-200 bg-orange-50 p-6 shadow-sm">
+      <aside className="rounded-2xl border border-warning/30 bg-warning-container p-6 shadow-sm">
         <div className="flex items-start justify-between gap-4">
-          <span className="grid size-12 place-items-center rounded-2xl bg-orange-100 text-orange-600"><Clock size={22} /></span>
+          <span className="grid size-12 place-items-center rounded-2xl bg-warning-container text-warning"><Clock size={20} /></span>
         </div>
-        <h2 className="mt-5 text-lg font-extrabold text-orange-800">Chờ gara xác nhận</h2>
-        <p className="mt-2 text-sm leading-6 text-orange-700">
+        <h2 className="mt-5 text-lg font-extrabold text-warning">Chờ gara xác nhận</h2>
+        <p className="mt-2 text-sm leading-6 text-warning">
           Lịch đặt đang chờ gara xác nhận. Bạn chỉ có thể thanh toán sau khi gara xác nhận lịch.
         </p>
-        <div className="mt-4 rounded-2xl border border-orange-200 bg-white px-4 py-3 text-xs text-orange-700 font-semibold">
+        <div className="mt-4 rounded-2xl border border-warning/30 bg-card px-4 py-3 text-xs text-warning font-semibold">
           Vui lòng chờ gara xác nhận trước khi thanh toán.
         </div>
       </aside>
@@ -27,17 +28,17 @@ export function PaymentStatusCard({ booking }) {
 
   if (bookingStatus === "REJECTED") {
     return (
-      <aside className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
+      <aside className="rounded-2xl border border-critical/25 bg-critical-container p-6 shadow-sm">
         <div className="flex items-start justify-between gap-4">
-          <span className="grid size-12 place-items-center rounded-2xl bg-red-100 text-red-600"><XCircle size={22} /></span>
+          <span className="grid size-12 place-items-center rounded-2xl bg-critical-container text-critical"><XCircle size={20} /></span>
         </div>
-        <h2 className="mt-5 text-lg font-extrabold text-red-800">Gara từ chối lịch đặt</h2>
-        <p className="mt-2 text-sm leading-6 text-red-700">
+        <h2 className="mt-5 text-lg font-extrabold text-critical">Gara từ chối lịch đặt</h2>
+        <p className="mt-2 text-sm leading-6 text-critical">
           Gara không thể nhận lịch này. Vui lòng đặt lịch mới hoặc chọn gara khác.
         </p>
-        <Link to="/khach-hang/dat-lich-moi" className="mt-6 block rounded-2xl bg-red-600 px-4 py-3 text-center text-sm font-bold text-white">
+        <Button size="lg" className="mt-6 w-full bg-critical text-white hover:bg-critical/90" render={<Link to="/khach-hang/dat-lich-moi" />}>
           Đặt lịch mới
-        </Link>
+        </Button>
       </aside>
     );
   }
@@ -50,13 +51,13 @@ export function PaymentStatusCard({ booking }) {
         : { label: "Tiếp tục thanh toán", path: paymentPath };
 
   return (
-    <aside className="rounded-2xl border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+    <aside className="rounded-2xl border border-border bg-card p-6 shadow-sm">
       <div className="flex items-start justify-between gap-4">
-        <span className="grid size-12 place-items-center rounded-2xl bg-[var(--brand-blue)]/10 text-[var(--brand-blue)]"><CreditCard /></span>
+        <span className="grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary"><CreditCard /></span>
         <StatusBadge status={status} type="payment" />
       </div>
       <h2 className="mt-5 text-lg font-extrabold">Trạng thái thanh toán</h2>
-      <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">
         {status === "PAID"
           ? "Thanh toán đã hoàn tất và lịch đặt đã được xác nhận."
           : status === "FAILED"
@@ -65,9 +66,9 @@ export function PaymentStatusCard({ booking }) {
               ? "Thanh toán đã bị hủy. Lịch vẫn đang chờ thanh toán."
               : "Gara đã xác nhận lịch. Hoàn tất thanh toán để giữ khung giờ."}
       </p>
-      <Link to={action.path} className="mt-6 block rounded-2xl bg-[var(--brand-blue)] px-4 py-3 text-center text-sm font-bold text-white">
+      <Button size="lg" className="mt-6 w-full" render={<Link to={action.path} />}>
         {action.label}
-      </Link>
+      </Button>
     </aside>
   );
 }

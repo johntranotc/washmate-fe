@@ -12,7 +12,7 @@ export function PlaceholderPageContent({ title, description, icon, note }) {
       >
         <ArrowLeft size={20} /> Quay lại Tổng quan
       </Link>
-      <Card className="rounded-2xl border border-border bg-white p-12 text-center">
+      <Card className="rounded-2xl border border-border bg-card p-12 text-center">
         <div className="mb-6 flex justify-center">
           <div className="rounded-2xl bg-primary/10 p-6">
             <div className="mx-auto flex h-16 w-16 items-center justify-center text-primary">{icon}</div>
@@ -23,10 +23,7 @@ export function PlaceholderPageContent({ title, description, icon, note }) {
         <div className="mb-8 rounded-2xl border border-border bg-secondary p-4">
           <p className="text-sm font-medium text-muted-foreground">{note}</p>
         </div>
-        <Button
-          render={<Link to="/khach-hang" />}
-          className="rounded-xl bg-primary font-semibold text-primary-foreground hover:bg-brand-dark"
-        >
+        <Button render={<Link to="/khach-hang" />}>
           Quay lại Tổng quan
         </Button>
       </Card>

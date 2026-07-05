@@ -24,7 +24,7 @@ export function CareTips() {
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {careTips.map((tip) => (
-          <Card key={tip.id} className="rounded-2xl border border-border p-6 transition-all hover:shadow-lg">
+          <Card key={tip.id} className="rounded-2xl border border-border p-6 transition-all hover:shadow-card">
             <div className="mb-4 inline-block rounded-xl bg-primary/10 p-3">
               <div className="text-primary">{iconMap[tip.icon] || <Droplets size={32} />}</div>
             </div>
@@ -33,7 +33,7 @@ export function CareTips() {
             <Button
               size="sm"
               onClick={() => navigate("/khach-hang/dat-lich-moi")}
-              className="w-full rounded-lg bg-primary font-bold text-primary-foreground hover:bg-brand-dark"
+              className="w-full"
             >
               Đặt lịch ngay
             </Button>

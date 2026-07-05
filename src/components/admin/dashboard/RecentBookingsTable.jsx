@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import StatusBadge from "../../common/StatusBadge";
+import StatusBadge from "@/components/shared/StatusBadge";
 import Pagination from "../../common/Pagination";
 import { formatDate, formatTime } from "@/lib/format";
 
@@ -15,49 +15,49 @@ export function RecentBookingsTable({ bookings = [] }) {
   }, [bookings, page]);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
+    <div className="bg-card rounded-2xl border border-border shadow-sm">
       <div className="flex justify-between items-center p-5 pb-4">
-        <h3 className="font-extrabold text-slate-800">Danh sách lịch đặt</h3>
-        <Link to="/quan-tri/bookings" className="text-xs font-bold text-blue-600 hover:underline">
+        <h3 className="font-extrabold text-foreground">Danh sách lịch đặt</h3>
+        <Link to="/quan-tri/bookings" className="text-xs font-bold text-primary hover:underline">
           Xem tất cả lịch hẹn
         </Link>
       </div>
       <div className="overflow-x-auto px-5">
         <table className="w-full text-left text-xs whitespace-nowrap">
           <thead>
-            <tr className="border-b border-slate-200 text-slate-400">
-              <th className="py-3 px-2 font-bold uppercase tracking-wider">Mã lịch</th>
-              <th className="py-3 px-2 font-bold uppercase tracking-wider">Khách hàng</th>
-              <th className="py-3 px-2 font-bold uppercase tracking-wider">Biển số</th>
-              <th className="py-3 px-2 font-bold uppercase tracking-wider">Dịch vụ</th>
-              <th className="py-3 px-2 font-bold uppercase tracking-wider">Chi nhánh</th>
-              <th className="py-3 px-2 font-bold uppercase tracking-wider">Giờ hẹn</th>
-              <th className="py-3 px-2 font-bold uppercase tracking-wider">Trạng thái</th>
-              <th className="py-3 px-2 font-bold uppercase tracking-wider">Thanh toán</th>
+            <tr className="border-b border-border text-neutral-muted">
+              <th className="py-3 px-2 font-semibold">Mã lịch</th>
+              <th className="py-3 px-2 font-semibold">Khách hàng</th>
+              <th className="py-3 px-2 font-semibold">Biển số</th>
+              <th className="py-3 px-2 font-semibold">Dịch vụ</th>
+              <th className="py-3 px-2 font-semibold">Chi nhánh</th>
+              <th className="py-3 px-2 font-semibold">Giờ hẹn</th>
+              <th className="py-3 px-2 font-semibold">Trạng thái</th>
+              <th className="py-3 px-2 font-semibold">Thanh toán</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-border">
             {pageItems.length > 0 ? pageItems.map((booking) => (
-              <tr key={booking.id} className="hover:bg-slate-50 transition-colors">
-                <td className="py-3 px-2 font-bold text-slate-800">{booking.code}</td>
-                <td className="py-3 px-2 font-semibold text-slate-700">{booking.customerName}</td>
+              <tr key={booking.id} className="hover:bg-surface transition-colors">
+                <td className="py-3 px-2 font-bold text-foreground">{booking.code}</td>
+                <td className="py-3 px-2 font-semibold text-ink-soft">{booking.customerName}</td>
                 <td className="py-3 px-2">
-                  <span className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[10px] font-mono font-bold text-slate-700">
+                  <span className="bg-muted border border-border px-2 py-0.5 rounded text-xs font-mono font-bold text-ink-soft">
                     {booking.plate}
                   </span>
                 </td>
-                <td className="py-3 px-2 text-slate-600 truncate max-w-[150px]">{booking.serviceName}</td>
-                <td className="py-3 px-2 text-slate-600 truncate max-w-[150px]">{booking.garageName}</td>
-                <td className="py-3 px-2 text-slate-600">
+                <td className="py-3 px-2 text-muted-foreground truncate max-w-[150px]">{booking.serviceName}</td>
+                <td className="py-3 px-2 text-muted-foreground truncate max-w-[150px]">{booking.garageName}</td>
+                <td className="py-3 px-2 text-muted-foreground">
                   {formatDate(booking.bookingDate)}
-                  {booking.slotTime && <span className="ml-1 font-bold text-blue-600">{formatTime(booking.slotTime)}</span>}
+                  {booking.slotTime && <span className="ml-1 font-bold text-primary">{formatTime(booking.slotTime)}</span>}
                 </td>
-                <td className="py-3 px-2"><StatusBadge status={booking.bookingStatus} type="booking" /></td>
-                <td className="py-3 px-2"><StatusBadge status={booking.paymentStatus} type="payment" /></td>
+                <td className="py-3 px-2"><StatusBadge status={booking.bookingStatus} type="booking" size="sm" /></td>
+                <td className="py-3 px-2"><StatusBadge status={booking.paymentStatus} type="payment" size="sm" /></td>
               </tr>
             )) : (
               <tr>
-                <td colSpan="8" className="py-8 text-center text-slate-400">Chưa có lịch hẹn nào trong kỳ đã chọn.</td>
+                <td colSpan="8" className="py-8 text-center text-neutral-muted">Chưa có lịch hẹn nào trong kỳ đã chọn.</td>
               </tr>
             )}
           </tbody>

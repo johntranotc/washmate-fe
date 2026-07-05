@@ -5,6 +5,7 @@ import { AuthHeading } from "@/components/auth/auth-heading";
 import { Field } from "@/components/auth/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { authApi } from "@/api/authApi";
 
 export default function RegisterPage() {
@@ -75,7 +76,7 @@ export default function RegisterPage() {
         </div>
       )}
       {status.success && (
-        <div className="mb-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+        <div className="mb-5 flex items-center gap-2 rounded-xl border border-success/25 bg-success-container px-4 py-3 text-sm font-medium text-success">
           <CheckCircle2 className="size-4 shrink-0" />
           {status.success}
         </div>
@@ -97,9 +98,9 @@ export default function RegisterPage() {
                 Tôi đồng ý với <a href="#" className="font-semibold text-primary">Điều khoản dịch vụ</a> và <a href="#" className="font-semibold text-primary">Chính sách bảo mật</a>.
               </Label>
             </div>
-            <button type="submit" disabled={loading} className="mt-1 h-12 rounded-xl bg-primary font-bold text-white shadow-[0_12px_28px_-10px_rgba(37,99,235,.75)] hover:bg-brand-dark disabled:opacity-60">
+            <Button type="submit" size="xl" disabled={loading} className="mt-1 w-full shadow-cta">
               {loading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
-            </button>
+            </Button>
           </>
         ) : (
           <>
@@ -116,9 +117,9 @@ export default function RegisterPage() {
                 onChange={update("otp")}
               />
             </div>
-            <button type="submit" disabled={loading} className="mt-2 h-12 rounded-xl bg-primary font-bold text-white shadow-[0_12px_28px_-10px_rgba(37,99,235,.75)] hover:bg-brand-dark disabled:opacity-60">
+            <Button type="submit" size="xl" disabled={loading} className="mt-2 w-full shadow-cta">
               {loading ? "Đang xác thực..." : "Kích hoạt tài khoản"}
-            </button>
+            </Button>
             <div className="mt-3 flex items-center justify-between text-sm">
               <button type="button" onClick={() => setStep(1)} className="font-semibold text-muted-foreground hover:text-foreground">
                 &larr; Quay lại sửa thông tin
@@ -133,7 +134,7 @@ export default function RegisterPage() {
       </form>
 
       {step === 1 && (
-        <p className="mt-7 text-center text-[15px] text-muted-foreground">
+        <p className="mt-7 text-center text-base text-muted-foreground">
           Đã có tài khoản? <Link to="/dang-nhap" className="font-semibold text-primary hover:underline">Đăng nhập</Link>
         </p>
       )}

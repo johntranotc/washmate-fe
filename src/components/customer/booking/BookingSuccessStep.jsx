@@ -1,5 +1,6 @@
-import { ArrowRight, CalendarDays, Car, Clock3, MapPin, SendHorizonal, Sparkles, Wallet, Tag } from "lucide-react";
+import { ArrowRight, CalendarDays, Car, Clock3, Droplets, MapPin, SendHorizonal, Wallet, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { formatDate, formatCurrency } from "@/lib/booking-flow";
 
 export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", promotion, discountAmount }) {
@@ -10,7 +11,7 @@ export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", 
 
   const summaryRows = [
     { icon: MapPin, label: "Gara", value: selection.garage?.name },
-    { icon: Sparkles, label: "Dịch vụ", value: `${selection.service?.name} — ${formatCurrency(basePrice)}` },
+    { icon: Droplets, label: "Dịch vụ", value: `${selection.service?.name} — ${formatCurrency(basePrice)}` },
     ...(promo || disc > 0 ? [
       {
         icon: Tag,
@@ -38,11 +39,11 @@ export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", 
       {/* Card */}
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         {/* Top accent */}
-        <div className="h-2 bg-gradient-to-r from-primary to-cyan-500" />
+        <div className="h-1.5 bg-primary" />
 
         <div className="p-8 sm:p-10 text-center">
           {/* Icon */}
-          <span className="mx-auto grid size-20 place-items-center rounded-2xl bg-emerald-100 text-emerald-600">
+          <span className="mx-auto grid size-20 place-items-center rounded-2xl bg-success-container text-success">
             <SendHorizonal size={36} />
           </span>
 
@@ -61,9 +62,9 @@ export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", 
           </p>
 
           {/* Status badge */}
-          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-5 py-2.5">
-            <span className="size-2 rounded-full bg-orange-400" />
-            <span className="text-sm font-extrabold text-orange-700">Chờ gara xác nhận</span>
+          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-warning/30 bg-warning-container px-5 py-2.5">
+            <span className="size-2 rounded-full bg-warning" />
+            <span className="text-sm font-extrabold text-warning">Chờ gara xác nhận</span>
           </div>
 
           {/* Booking code */}
@@ -79,16 +80,16 @@ export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", 
 
         {/* Summary */}
         <div className="border-t border-border bg-muted/40 px-8 py-6 sm:px-10">
-          <h3 className="mb-4 text-xs font-extrabold uppercase tracking-wider text-muted-foreground">
+          <h3 className="mb-4 text-xs font-semibold text-muted-foreground">
             Thông tin đặt lịch
           </h3>
           <dl className="space-y-3">
             {summaryRows.map(({ icon: Icon, label, value, highlight, isTotal }) => (
               <div key={label} className={`flex items-start gap-3 ${isTotal ? "border-t border-dashed border-border pt-3 font-extrabold" : ""}`}>
-                <Icon size={15} className={`mt-0.5 shrink-0 ${highlight ? "text-emerald-600" : "text-primary"}`} />
+                <Icon size={16} className={`mt-0.5 shrink-0 ${highlight ? "text-success" : "text-primary"}`} />
                 <div className="flex-1 flex items-start justify-between gap-2 text-sm">
                   <dt className="text-muted-foreground shrink-0">{label}</dt>
-                  <dd className={`font-semibold text-right ${highlight ? "text-emerald-600 font-extrabold bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200" : isTotal ? "text-primary font-black text-base" : "text-foreground"}`}>{value || "—"}</dd>
+                  <dd className={`font-semibold text-right ${highlight ? "text-success font-extrabold bg-success-container px-2.5 py-0.5 rounded-md border border-success/25" : isTotal ? "text-primary font-black text-base" : "text-foreground"}`}>{value || "—"}</dd>
                 </div>
               </div>
             ))}
@@ -96,8 +97,8 @@ export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", 
         </div>
 
         {/* Payment note */}
-        <div className="border-t border-border bg-amber-50/60 px-8 py-4 sm:px-10">
-          <p className="text-xs text-amber-700 text-center font-semibold">
+        <div className="border-t border-border bg-warning-container/60 px-8 py-4 sm:px-10">
+          <p className="text-xs text-warning text-center font-semibold">
             {paymentMethod === "CASH"
               ? "Vui lòng chuẩn bị tiền mặt thanh toán sau khi gara hoàn tất rửa xe."
               : "Lịch hẹn đang xử lý. Bạn sẽ tiến hành quét mã chuyển khoản sau khi gara xác nhận."}
@@ -107,18 +108,12 @@ export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", 
         {/* Actions */}
         <div className="border-t border-border p-6 sm:p-8">
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link
-              to="/khach-hang/lich-dat"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow-[0_8px_20px_-8px_rgba(37,99,235,.6)]"
-            >
-              Xem lịch đặt <ArrowRight size={17} />
-            </Link>
-            <Link
-              to="/khach-hang"
-              className="inline-flex items-center justify-center rounded-2xl border border-border px-6 py-3 font-bold text-foreground"
-            >
+            <Button size="lg" className="shadow-cta" render={<Link to="/khach-hang/lich-dat" />}>
+              Xem lịch đặt <ArrowRight />
+            </Button>
+            <Button variant="outline" size="lg" render={<Link to="/khach-hang" />}>
               Về trang khách hàng
-            </Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -126,7 +121,7 @@ export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", 
       {result?.isDemo && (
         <p className="mt-4 text-center text-xs text-muted-foreground">
           Dữ liệu demo — booking đã được lưu vào{" "}
-          <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">
+          <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">
             washmate_demo_bookings
           </code>{" "}
           (localStorage) để Staff xem.

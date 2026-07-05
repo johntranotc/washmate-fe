@@ -1,9 +1,14 @@
 import { CheckCircle2, CircleAlert, Clock3, Droplets, LogIn, UserX } from "lucide-react";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import PageHeader from "@/components/shared/PageHeader";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { staffApi } from "../../api/staffApi";
 
-import { bookingStatusLabels, normalizeStaffBooking, paymentStatusLabels } from "../../lib/staff-booking-data";
+import { normalizeStaffBooking } from "../../lib/staff-booking-data";
+import { paymentStatusLabels } from "../../lib/status-tones";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
 
 const actionByStatus = {
   CONFIRMED: { next: "CHECKED_IN", label: "Check-in khách", icon: LogIn, api: "checkInBooking" },
@@ -39,15 +44,15 @@ export default function StaffWorkflowPage() {
       setBooking((item) => ({ ...item, bookingStatus: nextStatus }));
     } catch (err) {
       console.error("Failed to update status:", err);
-      alert(err?.message || "Không thể cập nhật trạng thái. Vui lòng thử lại.");
+      toast.error("Không thể cập nhật trạng thái", { description: err?.message || "Vui lòng thử lại." });
     } finally {
       setUpdating(false);
     }
   };
 
-  if (loading) return <div className="rounded-2xl bg-white p-10 text-center text-sm text-slate-500">Đang tải chi tiết lịch đặt...</div>;
-  if (error) return <div className="rounded-2xl border border-red-200 bg-red-50 p-10 text-center text-sm text-red-600">{error}</div>;
-  if (!booking) return <div className="rounded-2xl bg-white p-10 text-center text-sm text-slate-500">Không tìm thấy lịch đặt.</div>;
+  if (loading) return <div className="rounded-2xl bg-card p-10 text-center text-sm text-muted-foreground">Đang tải chi tiết lịch đặt...</div>;
+  if (error) return <div className="rounded-2xl border border-critical/25 bg-critical-container p-10 text-center text-sm text-critical">{error}</div>;
+  if (!booking) return <div className="rounded-2xl bg-card p-10 text-center text-sm text-muted-foreground">Không tìm thấy lịch đặt.</div>;
 
   const action = actionByStatus[booking.bookingStatus];
   const ActionIcon = action?.icon;
@@ -55,25 +60,21 @@ export default function StaffWorkflowPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Chi tiết vận hành</p>
-          <h1 className="mt-2 text-3xl font-extrabold">{booking.code}</h1>
-          <p className="mt-2 text-sm text-slate-500">{booking.customerName} · {booking.vehicle} · {booking.plate}</p>
-        </div>
-        <span className="w-fit rounded-full bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700">
-          {bookingStatusLabels[booking.bookingStatus] ?? booking.bookingStatus}
-        </span>
-      </header>
+      <PageHeader
+        eyebrow="Chi tiết vận hành"
+        title={booking.code}
+        description={`${booking.customerName} · ${booking.vehicle} · ${booking.plate}`}
+        actions={<StatusBadge status={booking.bookingStatus} />}
+      />
 
       {booking.bookingStatus === "PENDING" && (
-        <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          <CircleAlert size={19} />Lịch này đang chờ gara xác nhận nên chưa thể check-in.
+        <div className="flex gap-3 rounded-2xl border border-warning/25 bg-warning-container p-4 text-sm text-warning">
+          <CircleAlert size={18} />Lịch này đang chờ gara xác nhận nên chưa thể check-in.
         </div>
       )}
 
       <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
-        <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
+        <section className="space-y-5 rounded-2xl border border-border bg-card p-6">
           <h2 className="font-extrabold">Thông tin booking</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {[
@@ -84,15 +85,15 @@ export default function StaffWorkflowPage() {
               ["Ngày giờ", `${booking.bookingDate ?? "–"} · ${booking.slotTime ?? "–"}`],
               ["Thanh toán", paymentStatusLabels[booking.paymentStatus] ?? booking.paymentStatus],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-xl bg-slate-50 p-4">
-                <p className="text-[10px] text-slate-400">{label}</p>
+              <div key={label} className="rounded-xl bg-surface p-4">
+                <p className="text-xs text-neutral-muted">{label}</p>
                 <b className="mt-1 block text-sm">{value}</b>
               </div>
             ))}
           </div>
           <div>
             <p className="text-xs font-bold">Ghi chú</p>
-            <p className="mt-2 rounded-xl border border-slate-100 p-4 text-sm text-slate-500">{booking.note || "Không có ghi chú."}</p>
+            <p className="mt-2 rounded-xl border border-border p-4 text-sm text-muted-foreground">{booking.note || "Không có ghi chú."}</p>
           </div>
           <div>
             <h2 className="font-extrabold">Dòng thời gian trạng thái</h2>
@@ -102,19 +103,19 @@ export default function StaffWorkflowPage() {
                 ["Bắt đầu rửa", booking.serviceStartTime],
                 ["Hoàn tất", booking.completedTime],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-xl border border-slate-100 p-4">
-                  <Clock3 className="text-blue-600" size={16} />
+                <div key={label} className="rounded-xl border border-border p-4">
+                  <Clock3 className="text-primary" size={16} />
                   <p className="mt-2 text-xs font-bold">{label}</p>
-                  <p className="mt-1 text-[10px] text-slate-500">{value ? new Date(value).toLocaleString("vi-VN") : "Chưa ghi nhận"}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{value ? new Date(value).toLocaleString("vi-VN") : "Chưa ghi nhận"}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6">
+        <aside className="h-fit rounded-2xl border border-border bg-card p-6">
           <h2 className="font-extrabold">Thao tác xử lý</h2>
-          <p className="mt-2 text-xs leading-5 text-slate-500">
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
             {terminal
               ? booking.bookingStatus === "COMPLETED"
                 ? "Dịch vụ đã hoàn tất."
@@ -124,25 +125,28 @@ export default function StaffWorkflowPage() {
               : "Booking chưa đủ điều kiện xử lý."}
           </p>
           {action && (
-            <button
+            <Button
+              size="lg"
               disabled={updating}
               onClick={() => transition(action.next, action.api)}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-xs font-bold text-white disabled:bg-slate-300"
+              className="mt-5 w-full"
             >
-              <ActionIcon size={16} />
+              <ActionIcon />
               {updating ? "Đang cập nhật..." : action.label}
-            </button>
+            </Button>
           )}
           {booking.bookingStatus === "CONFIRMED" && (
-            <button
+            <Button
+              variant="destructive"
+              size="lg"
               disabled={updating}
               onClick={() => transition("NO_SHOW", "markNoShow")}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 py-3 text-xs font-bold text-rose-600"
+              className="mt-3 w-full"
             >
-              <UserX size={16} />Đánh dấu không đến
-            </button>
+              <UserX />Đánh dấu không đến
+            </Button>
           )}
-          <Link to="/staff/bookings" className="mt-4 block text-center text-xs font-bold text-blue-600">
+          <Link to="/staff/bookings" className="mt-4 block text-center text-xs font-bold text-primary">
             Quay lại danh sách
           </Link>
         </aside>

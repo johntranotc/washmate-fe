@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import PageContainer from "@/components/shared/PageContainer";
+import PageHeader from "@/components/shared/PageHeader";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
@@ -9,25 +11,22 @@ import {
   Car,
   CheckCircle,
   Edit3,
-  Eye,
-  EyeOff,
   Home,
   LogOut,
   Mail,
   MapPin,
   Phone,
   Save,
-  Shield,
   Star,
   Trash2,
   User,
   X,
-  XCircle,
 } from "lucide-react";
 import { tiers as membershipTiers } from "@/lib/site-data";
 import { tierCodeToBadgeName } from "@/lib/customer-engagement-data";
 
 import { TierBadge } from "@/components/site/tier-badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { jwtDecode } from "jwt-decode";
 
@@ -93,19 +92,19 @@ const defaultNotifications = {
 // ── Profile Hero Card ──────────────────────────────────────────
 function ProfileHeroCard({ profile }) {
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-slate-900/60 border border-white/10 p-8 text-white shadow-2xl">
+    <section className="relative overflow-hidden rounded-2xl bg-foreground/60 border border-white/10 p-8 text-white shadow-floating">
       {/* Decorative blur */}
-      <div className="pointer-events-none absolute -right-10 -top-10 size-64 rounded-full bg-blue-500/20 blur-[80px]" />
-      <div className="pointer-events-none absolute -left-10 -bottom-10 size-64 rounded-full bg-purple-500/20 blur-[80px]" />
+      <div className="pointer-events-none absolute -right-10 -top-10 size-64 rounded-full bg-primary/20 blur-[80px]" />
+      <div className="pointer-events-none absolute -left-10 -bottom-10 size-64 rounded-full bg-accent-violet/20 blur-[80px]" />
 
       <div className="relative grid gap-6 md:grid-cols-[auto_1fr] md:items-center lg:grid-cols-[auto_1fr_210px] z-10">
         {/* Tier badge + glow */}
         <div className="relative flex justify-center md:justify-start">
           <div
             className="absolute -inset-6 rounded-full blur-[40px] opacity-40"
-            style={{ backgroundColor: currentTier?.color ?? "#2563eb" }}
+            style={{ backgroundColor: currentTier?.color ?? "var(--primary)" }}
           />
-          <div className="relative drop-shadow-2xl">
+          <div className="relative">
             <TierBadge tier={currentTier} size="lg" />
           </div>
         </div>
@@ -115,23 +114,23 @@ function ProfileHeroCard({ profile }) {
           {/* Name + chips */}
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-3xl font-extrabold">{profile.name}</h2>
-            <span className="inline-flex rounded-full bg-white/10 border border-white/20 shadow-inner px-4 py-1.5 text-[12px] font-bold tracking-wide">
+            <span className="inline-flex rounded-full bg-card/10 border border-white/20 px-4 py-1.5 text-xs font-bold tracking-wide">
               Hạng {loyaltyData.tierName}
             </span>
-            <span className="inline-flex rounded-full bg-green-500/20 border border-green-500/30 px-4 py-1.5 text-[12px] font-semibold text-green-300">
+            <span className="inline-flex rounded-full bg-success/20 border border-success/30 px-4 py-1.5 text-xs font-semibold text-success-container">
               ● Đang hoạt động
             </span>
           </div>
 
           {/* Contact */}
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-300">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-muted">
             <span className="flex items-center gap-2">
-              <Mail size={16} className="shrink-0 text-slate-400" />
+              <Mail size={16} className="shrink-0 text-neutral-muted" />
               {profile.email}
             </span>
             {profile.phone && (
               <span className="flex items-center gap-2">
-                <Phone size={16} className="shrink-0 text-slate-400" />
+                <Phone size={16} className="shrink-0 text-neutral-muted" />
                 {profile.phone}
               </span>
             )}
@@ -139,24 +138,24 @@ function ProfileHeroCard({ profile }) {
 
           {/* Points */}
           <div className="pt-2">
-            <p className="text-sm font-medium text-slate-400">Điểm khả dụng</p>
-            <p className="mt-1 text-4xl font-extrabold leading-tight text-white drop-shadow-md">
+            <p className="text-sm font-medium text-neutral-muted">Điểm khả dụng</p>
+            <p className="mt-1 text-4xl font-extrabold leading-tight text-white">
               {loyaltyData.availablePoints.toLocaleString("vi-VN")}
             </p>
           </div>
 
           {/* Progress – mobile/tablet only; desktop shows in mini panel */}
           <div className="lg:hidden pt-2">
-            <div className="mb-2 flex justify-between text-xs font-semibold text-slate-300">
+            <div className="mb-2 flex justify-between text-xs font-semibold text-neutral-muted">
               <span>Hạng {loyaltyData.tierName}</span>
               <span>
                 Còn {loyaltyData.pointsToNextTier.toLocaleString("vi-VN")} điểm →{" "}
                 {loyaltyData.nextTierName}
               </span>
             </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-white/10 border border-white/10">
+            <div className="h-2.5 overflow-hidden rounded-full bg-card/10 border border-white/10">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 shadow-[0_0_10px_rgba(96,165,250,0.5)] transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-primary to-accent-indigo shadow-cta transition-all duration-500"
                 style={{ width: `${Math.min(loyaltyData.progressPercent, 100)}%` }}
               />
             </div>
@@ -165,26 +164,26 @@ function ProfileHeroCard({ profile }) {
 
         {/* Mini info panel – desktop only */}
         <div className="hidden lg:flex lg:flex-col lg:gap-4">
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-5 hover:bg-white/10 transition-colors duration-300">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
+          <div className="rounded-2xl bg-card/5 border border-white/10 p-5 hover:bg-card/10 transition-colors duration-300">
+            <p className="text-xs font-semibold text-neutral-muted mb-2">
               Gara thường dùng
             </p>
             <div className="flex items-center gap-2">
-              <Home size={16} className="shrink-0 text-blue-400" />
-              <span className="text-sm font-bold text-slate-100">WashMate Quận 7</span>
+              <Home size={16} className="shrink-0 text-primary" />
+              <span className="text-sm font-bold text-surface">WashMate Quận 7</span>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-5 hover:bg-white/10 transition-colors duration-300">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
+          <div className="rounded-2xl bg-card/5 border border-white/10 p-5 hover:bg-card/10 transition-colors duration-300">
+            <p className="text-xs font-semibold text-neutral-muted mb-2">
               Tiến độ lên hạng {loyaltyData.nextTierName}
             </p>
             <p className="text-lg font-extrabold text-white">
               Còn {loyaltyData.pointsToNextTier.toLocaleString("vi-VN")} điểm
             </p>
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10 border border-white/10">
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-card/10 border border-white/10">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 shadow-[0_0_10px_rgba(96,165,250,0.5)] transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-primary to-accent-indigo shadow-cta transition-all duration-500"
                 style={{ width: `${Math.min(loyaltyData.progressPercent, 100)}%` }}
               />
             </div>
@@ -202,25 +201,25 @@ function StatsRow() {
       label: "Tổng lịch đã đặt",
       value: 0,
       icon: BookOpen,
-      cls: "text-blue-600 bg-blue-50",
+      cls: "text-primary bg-primary-container",
     },
     {
       label: "Xe đang quản lý",
       value: 0,
       icon: Car,
-      cls: "text-teal-600 bg-teal-50",
+      cls: "text-accent-cyan bg-teal/40",
     },
     {
       label: "Điểm tích luỹ",
       value: loyaltyData.availablePoints.toLocaleString("vi-VN"),
       icon: Star,
-      cls: "text-amber-600 bg-amber-50",
+      cls: "text-warning bg-warning-container",
     },
     {
       label: "Gara thường dùng",
       value: "WashMate Q7",
       icon: Home,
-      cls: "text-purple-600 bg-purple-50",
+      cls: "text-accent-violet bg-accent-violet/10",
     },
   ];
 
@@ -229,7 +228,7 @@ function StatsRow() {
       {stats.map((s) => (
         <div
           key={s.label}
-          className="rounded-2xl border border-border bg-white p-4 shadow-sm transition hover:border-primary/30 hover:shadow"
+          className="rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/30 hover:shadow-card"
         >
           <div
             className={cn(
@@ -313,10 +312,10 @@ function PersonalInfoCard({ profile, onSave }) {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-border bg-white px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition";
+    "w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition";
 
   return (
-    <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       {/* Card header */}
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -327,36 +326,32 @@ function PersonalInfoCard({ profile, onSave }) {
         </div>
 
         {!editing ? (
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setEditing(true)}
-            className="flex items-center gap-2 rounded-xl border border-primary px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary/5"
+            className="border-primary text-primary hover:bg-primary/5"
           >
-            <Edit3 size={15} />
+            <Edit3 />
             Chỉnh sửa
-          </button>
+          </Button>
         ) : (
           <div className="flex gap-2">
-            <button
-              onClick={handleCancel}
-              className="flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-secondary"
-            >
-              <X size={15} />
+            <Button variant="outline" size="sm" onClick={handleCancel} className="text-muted-foreground">
+              <X />
               Huỷ
-            </button>
-            <button
-              onClick={handleSave}
-              className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark"
-            >
-              <Save size={15} />
+            </Button>
+            <Button size="sm" onClick={handleSave}>
+              <Save />
               Lưu thay đổi
-            </button>
+            </Button>
           </div>
         )}
       </div>
 
       {/* Success toast */}
       {saved && (
-        <div className="mb-5 flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
+        <div className="mb-5 flex items-center gap-2 rounded-xl bg-success-container px-4 py-3 text-sm font-semibold text-success">
           <CheckCircle size={16} />
           Đã lưu thông tin thành công!
         </div>
@@ -367,8 +362,8 @@ function PersonalInfoCard({ profile, onSave }) {
         <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
           {profileFields.map((field) => (
             <div key={field.name} className={viewColClass(field)}>
-              <dt className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                <field.icon size={11} />
+              <dt className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                <field.icon size={14} />
                 {field.label}
               </dt>
               <dd className="text-sm font-semibold text-foreground">
@@ -384,8 +379,8 @@ function PersonalInfoCard({ profile, onSave }) {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {profileFields.map((field) => (
             <div key={field.name} className={editColClass(field)}>
-              <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                <field.icon size={11} />
+              <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                <field.icon size={14} />
                 {field.label}
               </label>
 
@@ -469,10 +464,10 @@ function NotificationsCard() {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div className="mb-4">
         <h2 className="flex items-center gap-2 text-lg font-extrabold text-foreground">
-          <Bell size={19} className="text-primary" />
+          <Bell size={18} className="text-primary" />
           Tuỳ chọn thông báo
         </h2>
         <p className="mt-0.5 text-sm text-muted-foreground">
@@ -505,7 +500,7 @@ function NotificationsCard() {
             >
               <span
                 className={cn(
-                  "inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform",
+                  "inline-block h-5 w-5 rounded-full bg-card shadow-sm transition-transform",
                   prefs[key] ? "translate-x-5" : "translate-x-0.5",
                 )}
               />
@@ -538,7 +533,7 @@ function SessionCard() {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div className="mb-4">
         <h2 className="text-lg font-extrabold text-foreground">Quản lý phiên đăng nhập</h2>
         <p className="mt-0.5 text-sm text-muted-foreground">
@@ -547,36 +542,30 @@ function SessionCard() {
       </div>
 
       {/* Soft warning notice */}
-      <div className="mb-4 flex items-start gap-3 rounded-2xl bg-amber-50 px-4 py-3">
-        <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-500" />
-        <p className="text-xs font-medium text-amber-700">
+      <div className="mb-4 flex items-start gap-3 rounded-2xl bg-warning-container px-4 py-3">
+        <AlertTriangle size={16} className="mt-0.5 shrink-0 text-warning" />
+        <p className="text-xs font-medium text-warning">
           Đăng xuất sẽ kết thúc phiên làm việc hiện tại. Xoá dữ liệu demo sẽ đặt lại thông tin
           hồ sơ và cài đặt về mặc định.
         </p>
       </div>
 
       {cleared && (
-        <div className="mb-4 flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
+        <div className="mb-4 flex items-center gap-2 rounded-xl bg-success-container px-4 py-3 text-sm font-semibold text-success">
           <CheckCircle size={16} />
           Đã xoá dữ liệu demo. Đang tải lại...
         </div>
       )}
 
       <div className="flex flex-col gap-3">
-        <button
-          onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 py-2.5 text-sm font-bold text-white transition hover:bg-red-600"
-        >
-          <LogOut size={16} />
+        <Button onClick={handleLogout} className="w-full bg-critical text-white hover:bg-critical/90">
+          <LogOut />
           Đăng xuất khỏi thiết bị này
-        </button>
-        <button
-          onClick={handleClearDemo}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border py-2.5 text-sm font-bold text-muted-foreground transition hover:bg-secondary"
-        >
-          <Trash2 size={16} />
+        </Button>
+        <Button variant="outline" onClick={handleClearDemo} className="w-full text-muted-foreground">
+          <Trash2 />
           Xoá dữ liệu demo local
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -637,17 +626,12 @@ export default function AccountPage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-4 p-5 lg:p-7">
-      {/* Page header */}
-      <header className="bg-white border border-white/50 p-6 sm:p-8 rounded-2xl shadow-sm mb-6">
-        <span className="inline-block rounded-full bg-blue-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 mb-3">Tài khoản</span>
-        <h1 className="text-3xl font-extrabold leading-tight text-slate-900">
-          Tài khoản của tôi
-        </h1>
-        <p className="mt-2 text-sm font-medium text-slate-600">
-          Quản lý thông tin cá nhân, bảo mật và tuỳ chọn nhận thông báo.
-        </p>
-      </header>
+    <PageContainer variant="customer">
+      <PageHeader
+        eyebrow="Tài khoản"
+        title="Tài khoản của tôi"
+        description="Quản lý thông tin cá nhân, bảo mật và tuỳ chọn nhận thông báo."
+      />
 
       {/* Hero profile card */}
       <ProfileHeroCard profile={profile} />
@@ -665,6 +649,6 @@ export default function AccountPage() {
           <SessionCard />
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

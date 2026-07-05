@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Check } from "lucide-react";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { Field } from "@/components/auth/field";
+import { Button } from "@/components/ui/button";
 import { authApi } from "@/api/authApi";
 import { cn } from "@/lib/utils";
 
@@ -57,15 +58,15 @@ export default function ForgotPasswordPage() {
         })}
       </ol>
       {message.error && <div role="alert" className="mb-5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">{message.error}</div>}
-      {message.success && <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{message.success}</div>}
+      {message.success && <div className="mb-5 rounded-xl border border-success/25 bg-success-container px-4 py-3 text-sm font-medium text-success">{message.success}</div>}
       {!resetDone ? (
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {step === 1 && <Field id="identifier" label="Email hoặc số điện thoại" placeholder="ban@email.com hoặc 09xx xxx xxx" icon="mail" value={form.identifier} onChange={update("identifier")} />}
           {step === 2 && <Field id="otp" label="Mã xác thực" placeholder="Nhập mã gồm 6 chữ số" icon="shield" inputMode="numeric" maxLength={6} value={form.otp} onChange={update("otp")} />}
           {step === 3 && <><Field id="password" label="Mật khẩu mới" type="password" placeholder="Tối thiểu 8 ký tự" icon="lock" minLength={8} value={form.password} onChange={update("password")} /><Field id="confirmPassword" label="Xác nhận mật khẩu mới" type="password" placeholder="Nhập lại mật khẩu" icon="lock" value={form.confirmPassword} onChange={update("confirmPassword")} /></>}
-          <button type="submit" disabled={loading} className="h-12 rounded-xl bg-primary font-bold text-white hover:bg-brand-dark disabled:opacity-60">{loading ? "Đang xử lý..." : step === 1 ? "Gửi mã xác thực" : step === 2 ? "Xác thực mã" : "Lưu mật khẩu mới"}</button>
+          <Button type="submit" size="xl" disabled={loading} className="w-full shadow-cta">{loading ? "Đang xử lý..." : step === 1 ? "Gửi mã xác thực" : step === 2 ? "Xác thực mã" : "Lưu mật khẩu mới"}</Button>
         </form>
-      ) : <Link to="/dang-nhap" className="flex h-12 items-center justify-center rounded-xl bg-primary font-bold text-white">Đăng nhập ngay</Link>}
+      ) : <Button size="xl" render={<Link to="/dang-nhap" />} className="w-full shadow-cta">Đăng nhập ngay</Button>}
       <Link to="/dang-nhap" className="mt-7 flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground hover:text-primary"><ArrowLeft className="size-4" /> Quay lại đăng nhập</Link>
     </div>
   );

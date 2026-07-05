@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
+import PageContainer from "@/components/shared/PageContainer";
+import PageHeader from "@/components/shared/PageHeader";
 import { CalendarDays, ClipboardList, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
-import { StatusBadge } from "@/components/customer/BookingStatusBadge";
-import {
-  bookingStatusLabels,
-  formatBookingDate,
-  formatMoney,
-  paymentStatusLabels,
-} from "@/lib/customer-booking-data";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { formatBookingDate, formatMoney } from "@/lib/customer-booking-data";
+import { bookingStatusLabels, paymentStatusLabels } from "@/lib/status-tones";
 import { loadCustomerBookingList } from "@/lib/customer-bookings";
 
 export default function MyBookingsPage() {
@@ -45,28 +44,28 @@ export default function MyBookingsPage() {
   }, [load]);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-8 pb-32">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-[var(--brand-blue)]">Lịch đặt của tôi</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Lịch đặt rửa xe</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">Theo dõi trạng thái các lịch đặt và tiếp tục thanh toán nếu cần.</p>
-        </div>
-        <Link to="/khach-hang/dat-lich-moi" className="inline-flex items-center justify-center gap-2 self-start rounded-2xl bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_-10px_rgba(37,99,235,.75)]">
-          Đặt lịch mới
-        </Link>
-      </header>
+    <PageContainer variant="customer" className="pb-32">
+      <PageHeader
+        eyebrow="Lịch đặt của tôi"
+        title="Lịch đặt rửa xe"
+        description="Theo dõi trạng thái các lịch đặt và tiếp tục thanh toán nếu cần."
+        actions={
+          <Button size="lg" className="shadow-cta" render={<Link to="/khach-hang/dat-lich-moi" />}>
+            Đặt lịch mới
+          </Button>
+        }
+      />
 
 
 
       {loading ? (
-        <div className="rounded-2xl bg-white p-12 text-center text-[var(--text-muted)]">Đang tải lịch đặt...</div>
+        <div className="rounded-2xl bg-card p-12 text-center text-muted-foreground">Đang tải lịch đặt...</div>
       ) : !bookings.length ? (
-        <div className="rounded-2xl border border-[var(--border-soft)] bg-white p-12 text-center">
-          <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[var(--brand-blue)]/10 text-[var(--brand-blue)]"><ClipboardList size={26} /></span>
+        <div className="rounded-2xl border border-border bg-card p-12 text-center">
+          <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary"><ClipboardList size={26} /></span>
           <h2 className="mt-4 text-xl font-extrabold">Bạn chưa có lịch đặt nào</h2>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">Đặt lịch rửa xe ngay để trải nghiệm dịch vụ của WashMate.</p>
-          <Link to="/khach-hang/dat-lich-moi" className="mt-5 inline-flex rounded-2xl bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white">Đặt lịch ngay</Link>
+          <p className="mt-2 text-sm text-muted-foreground">Đặt lịch rửa xe ngay để trải nghiệm dịch vụ của WashMate.</p>
+          <Button size="lg" className="mt-5" render={<Link to="/khach-hang/dat-lich-moi" />}>Đặt lịch ngay</Button>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -78,7 +77,7 @@ export default function MyBookingsPage() {
             const isRejected = booking.bookingStatus === "REJECTED";
 
             return (
-              <div key={booking.id} className="rounded-2xl border border-[var(--border-soft)] bg-white shadow-sm transition hover:border-[var(--brand-blue)]">
+              <div key={booking.id} className="rounded-2xl border border-border bg-card shadow-sm transition hover:border-primary">
                 <Link
                   to={`/khach-hang/lich-dat/${booking.id}`}
                   className="block p-6"
@@ -98,41 +97,42 @@ export default function MyBookingsPage() {
                         )}
                     </div>
                   </div>
-                  <div className="mt-4 grid gap-3 text-sm text-[var(--text-muted)] sm:grid-cols-3">
+                  <div className="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
                     <span className="inline-flex items-center gap-2"><MapPin size={16} /> {booking.garageName}</span>
                     <span className="inline-flex items-center gap-2"><CalendarDays size={16} /> {formatBookingDate(booking.bookingDate)} · {booking.slotTime}</span>
-                    <span className="font-bold text-[var(--brand-blue)] sm:text-right">{formatMoney(booking.finalAmount)}</span>
+                    <span className="font-bold text-primary sm:text-right">{formatMoney(booking.finalAmount)}</span>
                   </div>
                 </Link>
 
                 {/* Conditional action row */}
                 {(isPendingConfirm || isConfirmedUnpaid || isRejected) && (
-                  <div className="border-t border-[var(--border-soft)] px-6 py-3">
+                  <div className="border-t border-border px-6 py-3">
                     {isPendingConfirm && (
-                      <p className="text-xs text-orange-600 font-semibold">
+                      <p className="text-xs text-warning font-semibold">
                         Vui lòng chờ gara xác nhận trước khi thanh toán.
                       </p>
                     )}
                     {isRejected && (
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs text-red-600 font-semibold">Gara đã từ chối lịch này.</p>
-                        <Link
-                          to="/khach-hang/dat-lich-moi"
-                          className="rounded-xl bg-red-600 px-3 py-1.5 text-xs font-bold text-white"
+                        <p className="text-xs text-critical font-semibold">Gara đã từ chối lịch này.</p>
+                        <Button
+                          size="sm"
+                          className="bg-critical text-white hover:bg-critical/90"
+                          render={<Link to="/khach-hang/dat-lich-moi" />}
                         >
                           Đặt lịch mới
-                        </Link>
+                        </Button>
                       </div>
                     )}
                     {isConfirmedUnpaid && (
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs text-emerald-700 font-semibold">Gara đã xác nhận. Hãy hoàn tất thanh toán.</p>
-                        <Link
-                          to={`/khach-hang/thanh-toan/${booking.id}`}
-                          className="rounded-xl bg-[var(--brand-blue)] px-3 py-1.5 text-xs font-bold text-white"
+                        <p className="text-xs text-success font-semibold">Gara đã xác nhận. Hãy hoàn tất thanh toán.</p>
+                        <Button
+                          size="sm"
+                          render={<Link to={`/khach-hang/thanh-toan/${booking.id}`} />}
                         >
                           Thanh toán ngay
-                        </Link>
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -142,6 +142,6 @@ export default function MyBookingsPage() {
           })}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

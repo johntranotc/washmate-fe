@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import PageHeader from "@/components/shared/PageHeader";
 import { RefreshCw, AlertTriangle, CalendarClock } from "lucide-react";
 import { staffApi } from "@/api/staffApi";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
 import { normalizeBookingList, normalizeStaffBooking } from "@/lib/staff-booking-data";
 import { todayISO } from "@/lib/format";
 import { StaffKpiCards } from "@/components/staff/StaffKpiCards";
@@ -112,7 +115,7 @@ export default function StaffDashboardPage() {
       ));
     } catch (e) {
       console.error("Staff action failed:", e);
-      alert(`Thao tác thất bại: ${e?.message || "Lỗi không xác định"}`);
+      toast.error("Thao tác thất bại", { description: e?.message || "Lỗi không xác định" });
     } finally {
       setBusyId(null);
     }
@@ -122,36 +125,32 @@ export default function StaffDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Trung tâm vận hành</p>
-          <h1 className="mt-2 text-3xl font-extrabold">Xin chào, {readName()} 👋</h1>
-          <p className="mt-1 text-sm text-slate-500">Hôm nay là {dateLabel}. Theo dõi công việc và lịch phục vụ trong ngày.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600">
+      <PageHeader
+        eyebrow="Trung tâm vận hành"
+        title={`Xin chào, ${readName()}`}
+        description={`Hôm nay là ${dateLabel}. Theo dõi công việc và lịch phục vụ trong ngày.`}
+        actions={
+          <>
+          <span className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
             <CalendarClock size={14} /> Hôm nay
           </span>
-          <button
-            type="button"
-            onClick={load}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
-          >
-            <RefreshCw size={14} /> Tải lại
-          </button>
-        </div>
-      </header>
+          <Button variant="outline" size="sm" onClick={load}>
+            <RefreshCw /> Tải lại
+          </Button>
+          </>
+        }
+      />
 
       {loading && !allBookings.length ? (
-        <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
           <RefreshCw className="mb-3 animate-spin" size={28} />
           <p className="text-sm">Đang tải dữ liệu hôm nay...</p>
         </div>
       ) : error && !allBookings.length ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
-          <AlertTriangle className="mx-auto mb-3 text-red-500" size={28} />
-          <p className="text-sm font-bold text-red-700">{error}</p>
-          <button onClick={load} className="mt-4 rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white">Thử lại</button>
+        <div className="rounded-2xl border border-critical/25 bg-critical-container p-8 text-center">
+          <AlertTriangle className="mx-auto mb-3 text-critical" size={28} />
+          <p className="text-sm font-bold text-critical">{error}</p>
+          <Button size="sm" onClick={load} className="mt-4 bg-critical text-white hover:bg-critical/90">Thử lại</Button>
         </div>
       ) : (
         <>

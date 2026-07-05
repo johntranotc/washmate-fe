@@ -1,21 +1,6 @@
 import { extractBookingArray } from "@/api/staffApi";
 
-export const bookingStatusLabels = {
-  PENDING: "Chờ gara xác nhận",
-  CONFIRMED: "Đã xác nhận",
-  CHECKED_IN: "Đã check-in",
-  WASHING: "Đang rửa",
-  COMPLETED: "Đã hoàn tất",
-  CANCELLED: "Đã hủy",
-  REJECTED: "Gara từ chối",
-  NO_SHOW: "Không đến",
-};
-
-export const paymentStatusLabels = {
-  PENDING: "Chờ thanh toán",
-  PAID: "Đã thanh toán",
-  REFUNDED: "Đã hoàn tiền",
-};
+// Label trạng thái booking/payment: dùng src/lib/status-tones.js (nguồn duy nhất).
 
 function formatSafeString(val, fallback) {
   if (typeof val === "string" && val.trim() !== "") return val;
@@ -132,14 +117,3 @@ export function getNextStaffAction(booking) {
   }
 }
 
-// Badge color for each status
-export const bookingStatusTone = {
-  PENDING: "bg-amber-100 text-amber-700",
-  CONFIRMED: "bg-blue-100 text-blue-700",
-  CHECKED_IN: "bg-cyan-100 text-cyan-700",
-  WASHING: "bg-violet-100 text-violet-700",
-  COMPLETED: "bg-emerald-100 text-emerald-700",
-  CANCELLED: "bg-slate-100 text-slate-600",
-  REJECTED: "bg-red-100 text-red-700",
-  NO_SHOW: "bg-orange-100 text-orange-700",
-};
