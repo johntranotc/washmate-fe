@@ -1,19 +1,38 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/shared/PageHeader";
-import { RefreshCw, AlertTriangle, CalendarClock } from "lucide-react";
+import { AlertTriangle, CalendarClock } from "lucide-react";
 import { staffApi } from "@/api/staffApi";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/toast";
-import { normalizeBookingList, normalizeStaffBooking } from "@/lib/staff-booking-data";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useStaffBookingActions } from "@/lib/use-staff-booking-actions";
+import {
+  normalizeBookingList,
+  normalizeStaffBooking,
+  isOverdue,
+  minutesUntilSlot,
+} from "@/lib/staff-booking-data";
 import { todayISO } from "@/lib/format";
+import { STAFF_ASSETS } from "@/lib/staff-assets";
 import { StaffKpiCards } from "@/components/staff/StaffKpiCards";
 import { StaffNextTasks } from "@/components/staff/StaffNextTasks";
+import { StaffCheckInModal } from "@/components/staff/StaffCheckInModal";
 import { StaffQuickActions } from "@/components/staff/StaffQuickActions";
-import { StaffGarageStatusDonut } from "@/components/staff/StaffGarageStatusDonut";
-import { StaffNotifications } from "@/components/staff/StaffNotifications";
+import { StaffUpcomingCustomers } from "@/components/staff/StaffUpcomingCustomers";
+import { StaffRulesCard } from "@/components/staff/StaffRulesCard";
+import { StaffIncidentCard } from "@/components/staff/StaffIncidentCard";
 import { StaffBookingTable } from "@/components/staff/StaffBookingTable";
 
 const ACTIONABLE = ["PENDING", "CONFIRMED", "CHECKED_IN", "WASHING"];
+
+// Ưu tiên "Việc cần làm tiếp theo": quá giờ → chưa thanh toán → chờ check-in →
+// đã check-in → đang rửa; trong cùng nhóm xếp theo giờ hẹn.
+function taskPriority(b) {
+  if (isOverdue(b)) return 0;
+  if (["PENDING", "CONFIRMED"].includes(b.bookingStatus) && b.paymentStatus !== "PAID") return 1;
+  if (b.bookingStatus === "CONFIRMED") return 2;
+  if (b.bookingStatus === "CHECKED_IN") return 3;
+  return 4; // WASHING
+}
 
 function readName() {
   try {
@@ -24,24 +43,45 @@ function readName() {
   }
 }
 
-function yesterdayISO() {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {Array.from({ length: 6 }, (_, i) => (
+          <Skeleton key={i} className="h-36 rounded-2xl" />
+        ))}
+      </div>
+      <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
+        <div className="space-y-5">
+          <Skeleton className="h-64 rounded-2xl" />
+          <Skeleton className="h-80 rounded-2xl" />
+        </div>
+        <div className="space-y-5">
+          <Skeleton className="h-48 rounded-2xl" />
+          <Skeleton className="h-56 rounded-2xl" />
+          <Skeleton className="h-40 rounded-2xl" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function StaffDashboardPage() {
   const [allBookings, setAllBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [busyId, setBusyId] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [checkInBooking, setCheckInBooking] = useState(null);
 
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
     staffApi
       .getAllBookings()
-      .then((data) => setAllBookings(normalizeBookingList(data).map(normalizeStaffBooking)))
+      .then((data) => {
+        setAllBookings(normalizeBookingList(data).map(normalizeStaffBooking));
+        setLastUpdated(new Date());
+      })
       .catch((e) => {
         console.error("Failed to load bookings:", e);
         setError(e?.message || "Không thể tải danh sách lịch đặt.");
@@ -53,99 +93,93 @@ export default function StaffDashboardPage() {
   useEffect(() => { load(); }, [load]);
 
   const today = todayISO();
-  const yesterday = yesterdayISO();
-  const nowHM = new Date().toTimeString().slice(0, 5);
-
   const todayBookings = useMemo(
     () => allBookings.filter((b) => b.bookingDate === today),
     [allBookings, today],
   );
-  const yesterdayBookings = useMemo(
-    () => allBookings.filter((b) => b.bookingDate === yesterday),
-    [allBookings, yesterday],
-  );
 
-  const kpiOf = useCallback((list) => {
-    const by = (s) => list.filter((b) => b.bookingStatus === s).length;
+  const kpis = useMemo(() => {
+    const by = (s) => todayBookings.filter((b) => b.bookingStatus === s).length;
     return {
-      total: list.length,
+      total: todayBookings.length,
       waitingCheckIn: by("CONFIRMED"),
+      checkedIn: by("CHECKED_IN"),
       washing: by("WASHING"),
       completed: by("COMPLETED"),
-      noShow: by("NO_SHOW"),
-      overdue: list.filter((b) => b.bookingStatus === "CONFIRMED" && b.slotTime && b.slotTime < nowHM).length,
+      needAction: todayBookings.filter((b) => isOverdue(b)).length,
     };
-  }, [nowHM]);
-
-  const kpis = useMemo(() => kpiOf(todayBookings), [kpiOf, todayBookings]);
-  const deltas = useMemo(() => {
-    if (yesterdayBookings.length === 0) return null;
-    const y = kpiOf(yesterdayBookings);
-    return Object.fromEntries(Object.keys(kpis).map((k) => [k, kpis[k] - y[k]]));
-  }, [kpiOf, yesterdayBookings, kpis]);
+  }, [todayBookings]);
 
   const nextTasks = useMemo(
     () => todayBookings
       .filter((b) => ACTIONABLE.includes(b.bookingStatus))
-      .sort((a, b) => (a.slotTime || "99:99").localeCompare(b.slotTime || "99:99"))
+      .sort((a, b) =>
+        taskPriority(a) - taskPriority(b) ||
+        (a.slotTime || "99:99").localeCompare(b.slotTime || "99:99"))
       .slice(0, 6),
     [todayBookings],
   );
 
-  const notifications = useMemo(() => {
-    const list = [];
-    const overdue = todayBookings.filter((b) => b.bookingStatus === "CONFIRMED" && b.slotTime && b.slotTime < nowHM);
-    overdue.forEach((b) =>
-      list.push({ tone: "warn", title: `Xe ${b.plate} đã quá giờ hẹn`, desc: `${b.code} · ${b.slotTime} · ${b.customerName}` }),
-    );
-    const waiting = todayBookings.filter((b) => b.bookingStatus === "CONFIRMED").length;
-    if (waiting > 0) list.push({ tone: "info", title: `Có ${waiting} lịch chờ được check-in`, desc: "Vui lòng check-in đúng khung giờ." });
-    const pending = todayBookings.filter((b) => b.bookingStatus === "PENDING").length;
-    if (pending > 0) list.push({ tone: "time", title: `${pending} lịch chờ gara xác nhận`, desc: "Xử lý trong mục Hàng đợi." });
-    return list;
-  }, [todayBookings, nowHM]);
+  const upcoming = useMemo(
+    () => todayBookings
+      .filter((b) => {
+        if (!["PENDING", "CONFIRMED"].includes(b.bookingStatus)) return false;
+        const m = minutesUntilSlot(b);
+        return typeof m === "number" && m >= 0;
+      })
+      .sort((a, b) => (a.slotTime || "99:99").localeCompare(b.slotTime || "99:99"))
+      .slice(0, 5),
+    [todayBookings],
+  );
 
-  const handleAction = useCallback(async (booking, action) => {
-    if (!action?.enabled || busyId) return;
-    setBusyId(booking.id);
-    try {
-      await staffApi[action.api](booking.id);
-      setAllBookings((items) => items.map((it) =>
-        String(it.id) === String(booking.id) ? { ...it, bookingStatus: action.next } : it,
-      ));
-    } catch (e) {
-      console.error("Staff action failed:", e);
-      toast.error("Thao tác thất bại", { description: e?.message || "Lỗi không xác định" });
-    } finally {
-      setBusyId(null);
-    }
-  }, [busyId]);
+  const { busyId, handleNextAction, handleConfirmPayment, handleNoShow } = useStaffBookingActions(load);
 
   const dateLabel = new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
+  const updatedLabel = lastUpdated
+    ? lastUpdated.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    : null;
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Trung tâm vận hành"
-        title={`Xin chào, ${readName()}`}
-        description={`Hôm nay là ${dateLabel}. Theo dõi công việc và lịch phục vụ trong ngày.`}
-        actions={
-          <>
-          <span className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
-            <CalendarClock size={14} /> Hôm nay
-          </span>
-          <Button variant="outline" size="sm" onClick={load}>
-            <RefreshCw /> Tải lại
-          </Button>
-          </>
-        }
-      />
+      {/* Hero chào ca làm — nền banner gốc staff-overview-hero-bg */}
+      <div
+        className="rounded-3xl border border-border bg-card p-5 sm:p-6"
+        style={{
+          backgroundImage: `url(${STAFF_ASSETS.banner.hero})`,
+          backgroundSize: "cover",
+          backgroundPosition: "right center",
+        }}
+      >
+        <PageHeader
+          className="mb-0"
+          eyebrow="Trung tâm vận hành"
+          title={`Xin chào, ${readName()}!`}
+          description={`Hôm nay là ${dateLabel}. Hãy cùng hoàn thành các công việc trong ngày.`}
+          actions={
+            <>
+              <span className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
+                <CalendarClock size={14} /> Hôm nay
+              </span>
+              <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+                <img
+                  src={STAFF_ASSETS.action.refresh}
+                  alt=""
+                  width={16}
+                  height={16}
+                  className={`rounded ${loading ? "animate-spin" : ""}`}
+                />
+                Làm mới
+              </Button>
+              {updatedLabel && (
+                <span className="text-xs font-medium text-muted-foreground">Cập nhật lúc {updatedLabel}</span>
+              )}
+            </>
+          }
+        />
+      </div>
 
       {loading && !allBookings.length ? (
-        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-          <RefreshCw className="mb-3 animate-spin" size={28} />
-          <p className="text-sm">Đang tải dữ liệu hôm nay...</p>
-        </div>
+        <DashboardSkeleton />
       ) : error && !allBookings.length ? (
         <div className="rounded-2xl border border-critical/25 bg-critical-container p-8 text-center">
           <AlertTriangle className="mx-auto mb-3 text-critical" size={28} />
@@ -154,25 +188,36 @@ export default function StaffDashboardPage() {
         </div>
       ) : (
         <>
-          <StaffKpiCards {...kpis} deltas={deltas} />
+          <StaffKpiCards {...kpis} />
 
           <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
             <div className="space-y-5">
-              <StaffNextTasks tasks={nextTasks} onAction={handleAction} busyId={busyId} />
-              <StaffBookingTable bookings={allBookings} />
+              <StaffNextTasks
+                tasks={nextTasks}
+                busyId={busyId}
+                onCheckIn={setCheckInBooking}
+                onAction={handleNextAction}
+                onConfirmPayment={handleConfirmPayment}
+                onNoShow={handleNoShow}
+              />
+              <StaffBookingTable bookings={todayBookings} />
             </div>
             <div className="space-y-5">
               <StaffQuickActions />
-              <StaffGarageStatusDonut
-                washing={kpis.washing}
-                waiting={kpis.waitingCheckIn}
-                completed={kpis.completed}
-              />
-              <StaffNotifications items={notifications} />
+              <StaffUpcomingCustomers bookings={upcoming} />
+              <StaffRulesCard />
+              <StaffIncidentCard />
             </div>
           </div>
         </>
       )}
+
+      <StaffCheckInModal
+        booking={checkInBooking}
+        open={Boolean(checkInBooking)}
+        onOpenChange={(open) => { if (!open) setCheckInBooking(null); }}
+        onDone={load}
+      />
     </div>
   );
 }
