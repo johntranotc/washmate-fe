@@ -17,7 +17,7 @@ export function LoyaltyTierCards({ tiers = [] }) {
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <h3 className="mb-4 flex items-center gap-2 text-lg font-extrabold text-foreground">
+      <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
         Các hạng thành viên <Info size={16} className="text-primary" />
       </h3>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
@@ -40,9 +40,9 @@ export function LoyaltyTierCards({ tiers = [] }) {
                 <Medal size={32} style={{ color: tier.color }} />
               )}
             </div>
-            <h4 className="text-base font-extrabold" style={{ color: tier.color }}>{tier.name}</h4>
+            <h4 className="text-base font-bold" style={{ color: tier.color }}>{tier.name}</h4>
             <p className="mb-2 text-xs font-semibold text-muted-foreground">Từ {fmt(tier.points)} điểm</p>
-            <span className="mb-3 inline-block rounded-full px-3 py-1 text-xs font-black text-white shadow-sm" style={{ backgroundColor: tier.color }}>
+            <span className="mb-3 inline-block rounded-full px-3 py-1 text-xs font-bold text-white shadow-sm" style={{ backgroundColor: tier.color }}>
               Giảm {tier.discount}%
             </span>
             <p className="text-xs font-semibold text-muted-foreground">{fmt(tier.customers)} khách hàng</p>

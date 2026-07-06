@@ -84,6 +84,18 @@ export function formatTime(value) {
   return String(value).slice(0, 5);
 }
 
+/**
+ * Tên hiển thị thân thiện: che các chuỗi kỹ thuật/seed/test (vd. WM_INSIGHT_SEED_V1)
+ * còn sót trong DB bằng fallback tiếng Việt. KHÔNG bịa dữ liệu — chỉ thay
+ * chuỗi rỗng/kỹ thuật bằng nhãn trung tính khi hiển thị.
+ */
+export function friendlyName(value, fallback = "Chưa cập nhật") {
+  const s = typeof value === "string" ? value.trim() : "";
+  if (!s) return fallback;
+  if (/(SEED|_V\d+$|^WM_|^TEST[_-]|[_-]TEST$|^DEMO[_-])/i.test(s)) return fallback;
+  return s;
+}
+
 /** Today's date as "yyyy-MM-dd" (local time). */
 export function todayISO() {
   const d = new Date();
