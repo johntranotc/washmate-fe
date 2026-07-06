@@ -8,14 +8,14 @@ const COLORS = [CHART.c1, CHART.c4, CHART.c2, CHART.c3, CHART.critical, CHART.c5
 export function BranchRevenueTable({ data = [] }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <h3 className="mb-4 font-extrabold text-foreground">Doanh thu theo chi nhánh</h3>
+      <h3 className="mb-4 text-lg font-bold text-foreground">Doanh thu theo chi nhánh</h3>
       {data.length > 0 ? (
         <div className="space-y-3">
           {data.map((b, i) => (
             <div key={i} className="text-xs">
               <div className="flex items-center justify-between">
                 <span className="truncate font-bold text-ink-soft">{b.name}</span>
-                <span className="shrink-0 font-black text-foreground">{formatMoney(b.revenue)}</span>
+                <span className="shrink-0 font-bold text-foreground">{formatMoney(b.revenue)}</span>
               </div>
               <div className="mt-1.5 flex items-center gap-2">
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
