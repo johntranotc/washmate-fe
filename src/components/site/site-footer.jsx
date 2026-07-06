@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Droplets, Mail, Phone, MapPin } from "lucide-react";
+import { Droplets, Globe, Mail, MapPin, Phone } from "lucide-react";
 
 function FacebookIcon({ className }) {
   return (
@@ -19,6 +19,14 @@ function InstagramIcon({ className }) {
   );
 }
 
+function TiktokIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 1 1-2.59-2.59c.27 0 .53.04.78.12V9.77a5.76 5.76 0 0 0-.78-.05 5.68 5.68 0 1 0 5.68 5.68V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3a4.28 4.28 0 0 1-3.24-1.48Z" />
+    </svg>
+  );
+}
+
 function YoutubeIcon({ className }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -29,28 +37,28 @@ function YoutubeIcon({ className }) {
 
 const columns = [
   {
-    title: "Khám phá",
+    title: "Về WashMate",
     links: [
       { label: "Trang chủ", href: "/" },
-      { label: "Dịch vụ", href: "/dich-vu" },
-      { label: "Bảng giá", href: "/bang-gia" },
-      { label: "Hạng thành viên", href: "/hang-thanh-vien" },
+      { label: "Dịch vụ", href: "/services" },
+      { label: "Bảng giá", href: "/pricing" },
+      { label: "Hạng thành viên", href: "/tiers" },
     ],
   },
   {
-    title: "Hỗ trợ",
+    title: "Hỗ trợ khách hàng",
     links: [
-      { label: "Quy trình sử dụng", href: "/#quy-trinh" },
+      { label: "Hướng dẫn đặt lịch", href: "/#quy-trinh" },
       { label: "Câu hỏi thường gặp", href: "/#lien-he" },
-      { label: "Đăng nhập", href: "/dang-nhap" },
-      { label: "Tạo tài khoản", href: "/dang-ky" },
+      { label: "Đăng nhập", href: "/login" },
+      { label: "Tạo tài khoản", href: "/register" },
     ],
   },
 ];
 
 export function SiteFooter() {
   return (
-    <footer id="lien-he" className="border-t border-white/10 bg-foreground">
+    <footer id="lien-he" className="scroll-mt-24 bg-navy-deep">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
           <div>
@@ -62,21 +70,21 @@ export function SiteFooter() {
                 <span className="text-lg font-extrabold tracking-tight text-white">
                   WashMate
                 </span>
-                <span className="text-xs font-bold tracking-wide text-primary">
+                <span className="text-xs font-bold tracking-wide text-primary-bright">
                   Rửa xe thông minh
                 </span>
               </span>
             </div>
-            <p className="mt-4 max-w-xs text-base leading-relaxed text-neutral-muted">
-              Hệ thống quản lý rửa xe thông minh giúp bạn đặt lịch, thanh toán,
-              theo dõi tiến độ và tích điểm thành viên trên một nền tảng hiện đại.
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-primary-container/70">
+              WashMate mang đến trải nghiệm rửa xe thông minh, tiện lợi và chuyên
+              nghiệp. Chăm sóc xe của bạn như chính chiếc xe của chúng tôi.
             </p>
             <div className="mt-5 flex items-center gap-2.5">
-              {[FacebookIcon, InstagramIcon, YoutubeIcon].map((Icon, i) => (
+              {[FacebookIcon, InstagramIcon, TiktokIcon, YoutubeIcon].map((Icon, i) => (
                 <a
                   key={i}
                   href="#"
-                  className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-card/5 text-neutral-muted transition-colors hover:border-primary hover:text-white hover:bg-primary"
+                  className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-card/5 text-primary-container/70 transition-colors hover:border-primary hover:bg-primary hover:text-white"
                   aria-label="Mạng xã hội"
                 >
                   <Icon className="size-4.5" />
@@ -93,7 +101,7 @@ export function SiteFooter() {
                   <li key={link.label}>
                     <Link
                       to={link.href}
-                      className="text-sm text-neutral-muted transition-colors hover:text-primary"
+                      className="text-sm text-primary-container/70 transition-colors hover:text-white"
                     >
                       {link.label}
                     </Link>
@@ -104,29 +112,33 @@ export function SiteFooter() {
           ))}
 
           <div>
-            <h4 className="text-sm font-bold text-white">Liên hệ</h4>
-            <ul className="mt-4 flex flex-col gap-3.5 text-sm text-neutral-muted">
+            <h4 className="text-sm font-bold text-white">Thông tin liên hệ</h4>
+            <ul className="mt-4 flex flex-col gap-3.5 text-sm text-primary-container/70">
               <li className="flex items-start gap-3">
-                <MapPin className="mt-0.5 size-4.5 shrink-0 text-primary" />
+                <MapPin className="mt-0.5 size-4.5 shrink-0 text-primary-bright" />
                 <span>123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh</span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone className="size-4.5 shrink-0 text-primary" />
+                <Phone className="size-4.5 shrink-0 text-primary-bright" />
                 <span>1900 6868</span>
               </li>
               <li className="flex items-center gap-3">
-                <Mail className="size-4.5 shrink-0 text-primary" />
+                <Mail className="size-4.5 shrink-0 text-primary-bright" />
                 <span>hotro@washmate.vn</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Globe className="size-4.5 shrink-0 text-primary-bright" />
+                <span>www.washmate.vn</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-center text-sm text-muted-foreground sm:flex-row sm:text-left">
+        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-center text-sm text-primary-container/60 sm:flex-row sm:text-left">
           <p>© 2026 WashMate. Toàn bộ quyền được bảo lưu.</p>
           <div className="flex items-center gap-5">
-            <a href="#" className="hover:text-primary">Điều khoản sử dụng</a>
-            <a href="#" className="hover:text-primary">Chính sách bảo mật</a>
+            <a href="#" className="transition-colors hover:text-white">Điều khoản sử dụng</a>
+            <a href="#" className="transition-colors hover:text-white">Chính sách bảo mật</a>
           </div>
         </div>
       </div>

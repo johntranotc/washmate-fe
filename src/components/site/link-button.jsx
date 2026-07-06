@@ -17,6 +17,8 @@ const variants = {
     "bg-secondary text-primary hover:bg-accent hover:text-accent-foreground",
   outline:
     "border border-border bg-card text-foreground hover:border-primary hover:text-primary",
+  outlinePrimary:
+    "border border-primary bg-card text-primary hover:bg-primary hover:text-primary-foreground",
   ghostWhite:
     "border border-white/30 bg-card/10 text-white backdrop-blur hover:bg-card/20",
   white:

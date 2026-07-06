@@ -1,0 +1,29 @@
+{
+  "style_name": "WashMate Premium Navy Clean",
+  "colors": {
+    "primary": "#0B66FF",
+    "primaryDark": "#0848B8",
+    "navy": "#07152F",
+    "deepNavy": "#031A3C",
+    "background": "#F4FAFF",
+    "card": "#FFFFFF",
+    "text": "#0B1533",
+    "muted": "#64748B",
+    "border": "#D8E7FF"
+  },
+  "radius": {
+    "card": "24px",
+    "button": "14px",
+    "navbar": "24px",
+    "pill": "999px"
+  },
+  "shadow": {
+    "card": "0 20px 50px rgba(15, 76, 129, 0.10)",
+    "nav": "0 16px 40px rgba(7, 21, 47, 0.22)"
+  },
+  "layout": {
+    "maxWidth": "1200px",
+    "sectionPaddingDesktop": "96px 24px",
+    "sectionPaddingMobile": "56px 16px"
+  }
+}

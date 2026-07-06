@@ -14,7 +14,7 @@ export default function AuthLayout() {
       {/* Full-width Background Image */}
       <div className="absolute inset-0 z-0">
         <img
-          src="/images/auth-side.png"
+          src="/images/home/02_hero/home_hero_desktop.png"
           alt="Gara rửa xe hiện đại của WashMate"
           className="size-full object-cover"
         />

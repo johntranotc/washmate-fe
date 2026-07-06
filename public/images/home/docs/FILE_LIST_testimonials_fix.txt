@@ -1,0 +1,4 @@
+07_testimonials/avatar_minh_anh.png
+07_testimonials/avatar_hoang_nam.png
+07_testimonials/avatar_thao_linh.png
+docs/ASSET_MANIFEST_testimonials_fix.json

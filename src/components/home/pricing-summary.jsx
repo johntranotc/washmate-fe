@@ -5,22 +5,22 @@ import { plans } from "@/lib/site-data";
 
 export function PricingSummary() {
   return (
-    <section className="bg-surface py-20 lg:py-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="bg-surface-tint py-16 lg:py-20">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="Bảng giá tóm tắt"
           title="Chọn gói dịch vụ phù hợp với bạn"
-          description="Mức giá minh bạch, rõ ràng cho từng nhu cầu chăm sóc xe của bạn."
+          description="Giá minh bạch, không phát sinh chi phí. Chất lượng dịch vụ luôn được đảm bảo."
         />
 
-        <div className="mt-16 grid gap-6 lg:grid-cols-3 lg:items-center">
+        <div className="mt-12 grid items-stretch gap-6 lg:grid-cols-3">
           {plans.map((plan) => (
             <PlanCard key={plan.name} plan={plan} />
           ))}
         </div>
 
-        <div className="mt-12 text-center">
-          <LinkButton href="/bang-gia" variant="secondary">
+        <div className="mt-10 text-center">
+          <LinkButton href="/pricing" variant="secondary">
             Xem bảng giá chi tiết
           </LinkButton>
         </div>
