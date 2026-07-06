@@ -113,8 +113,17 @@ export function getNextStaffAction(booking) {
         disabledHint: paid ? null : "Chờ khách thanh toán",
       };
     }
-    case "CHECKED_IN":
-      return { api: "startWashing", next: "WASHING", label: "Bắt đầu rửa", enabled: true };
+    case "CHECKED_IN": {
+      // Chưa thanh toán hợp lệ thì không cho tiếp tục workflow (nhắc thanh toán trước).
+      const paid = booking.paymentStatus === "PAID";
+      return {
+        api: "startWashing",
+        next: "WASHING",
+        label: "Bắt đầu rửa",
+        enabled: paid,
+        disabledHint: paid ? null : "Chờ thanh toán",
+      };
+    }
     case "WASHING": {
       // BE từ chối (409) hoàn tất khi payment chưa PAID.
       const paid = booking.paymentStatus === "PAID";
