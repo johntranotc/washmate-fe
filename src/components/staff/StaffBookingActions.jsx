@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { getNextStaffAction, canMarkNoShow, isPaymentInvalid } from "@/lib/staff-booking-data";
+import { getNextStaffAction, canMarkNoShow } from "@/lib/staff-booking-data";
 import { STAFF_ASSETS } from "@/lib/staff-assets";
 
 const ACTION_ICONS = {
@@ -14,8 +14,8 @@ const ACTION_ICONS = {
  *   PENDING              → Xác nhận · Từ chối
  *   CONFIRMED (PAID)     → Check-in (modal)
  *   Payment PENDING      → Xác nhận thanh toán (thu trực tiếp, POST /payments/{id}/confirm)
- *   Payment hủy/thất bại → "Gửi lại link" disabled (BE chỉ cho khách tạo link, payment
- *                          phải PENDING) + nút check-in disabled "Không thể check-in"
+ *   Payment hủy/thất bại → nút bước kế tiếp disabled "Không thể check-in" (tooltip lý do);
+ *                          BE không có API cho staff gửi lại link thanh toán
  *   CHECKED_IN           → Bắt đầu rửa
  *   WASHING (PAID)       → Hoàn tất
  *   Quá grace period     → No-show (chỉ CONFIRMED, đúng ràng buộc BE)
@@ -39,8 +39,6 @@ export function StaffBookingActions({
     booking.paymentStatus === "PENDING" &&
     booking.paymentId &&
     ["PENDING", "CONFIRMED"].includes(booking.bookingStatus);
-  const paymentInvalid = isPaymentInvalid(booking);
-
   // Nút bước kế tiếp: check-in bị chặn thanh toán → label rõ "Không thể check-in".
   const nextDisabled = action && !action.enabled;
   const nextLabel =
@@ -73,35 +71,20 @@ export function StaffBookingActions({
         </Button>
       )}
 
-      {paymentInvalid && (
-        // Chưa nối được: BE chỉ cho phép khách hàng tự tạo link khi payment còn PENDING.
-        <span className="inline-flex flex-col items-end">
-          <Button size="sm" variant="outline" disabled title="Tính năng đang được hoàn thiện">
-            <img src={STAFF_ASSETS.action.paymentReminder} alt="" width={16} height={16} className="rounded" />
-            Gửi lại link
-          </Button>
-          <span className="mt-0.5 text-xs font-medium text-muted-foreground">Link thanh toán</span>
-        </span>
-      )}
-
       {action && (
-        <span className="inline-flex flex-col items-end">
-          <Button
-            size="sm"
-            disabled={nextDisabled || busy}
-            onClick={() =>
-              action.api === "checkInBooking" ? onCheckIn?.(booking) : onNextAction?.(booking, action)
-            }
-          >
-            {ACTION_ICONS[action.api] && (
-              <img src={ACTION_ICONS[action.api]} alt="" width={16} height={16} className="rounded" />
-            )}
-            {busy ? "..." : nextLabel}
-          </Button>
-          {nextHint && (
-            <span className="mt-0.5 text-xs font-semibold text-warning">{nextHint}</span>
+        <Button
+          size="sm"
+          disabled={nextDisabled || busy}
+          title={nextHint || undefined}
+          onClick={() =>
+            action.api === "checkInBooking" ? onCheckIn?.(booking) : onNextAction?.(booking, action)
+          }
+        >
+          {ACTION_ICONS[action.api] && (
+            <img src={ACTION_ICONS[action.api]} alt="" width={16} height={16} className="rounded" />
           )}
-        </span>
+          {busy ? "..." : nextLabel}
+        </Button>
       )}
 
       {booking.bookingStatus === "PENDING" && (

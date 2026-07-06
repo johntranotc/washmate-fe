@@ -103,25 +103,21 @@ export function StaffNextTasks({ tasks = [], onCheckIn, onAction, onConfirmPayme
                           </Button>
                         )}
                         {action && (
-                          <span className="inline-flex flex-col items-end">
-                            <Button
-                              size="sm"
-                              disabled={!action.enabled || busy}
-                              onClick={() =>
-                                action.api === "checkInBooking"
-                                  ? onCheckIn?.(item)
-                                  : onAction?.(item, action)
-                              }
-                            >
-                              {ACTION_ICONS[action.api] && (
-                                <img src={ACTION_ICONS[action.api]} alt="" width={16} height={16} className="rounded" />
-                              )}
-                              {busy ? "..." : action.label}
-                            </Button>
-                            {!action.enabled && action.disabledHint && (
-                              <span className="mt-0.5 text-xs font-semibold text-warning">{action.disabledHint}</span>
+                          <Button
+                            size="sm"
+                            disabled={!action.enabled || busy}
+                            title={(!action.enabled && action.disabledHint) || undefined}
+                            onClick={() =>
+                              action.api === "checkInBooking"
+                                ? onCheckIn?.(item)
+                                : onAction?.(item, action)
+                            }
+                          >
+                            {ACTION_ICONS[action.api] && (
+                              <img src={ACTION_ICONS[action.api]} alt="" width={16} height={16} className="rounded" />
                             )}
-                          </span>
+                            {busy ? "..." : action.label}
+                          </Button>
                         )}
                         {canMarkNoShow(item) && (
                           <Button size="sm" variant="destructive" disabled={busy} onClick={() => onNoShow?.(item)}>
