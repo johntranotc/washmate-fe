@@ -72,22 +72,43 @@ export default function PortalProfilePage({ backPath, role }) {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length > 0) { setFormError(errs); return; }
-    
-    if (avatarFile) {
-      setFormError({ general: "BE chưa hỗ trợ upload avatar (chưa có endpoint)." });
-      return;
-    }
-    
+
     setFormError({});
     setSaving(true);
     try {
-      const updated = await userApi.updateMe({ 
-        fullName: form.fullName.trim(), 
+      // Luôn lưu thông tin chữ trước — không để ảnh đại diện chặn việc lưu.
+      const updated = await userApi.updateMe({
+        fullName: form.fullName.trim(),
         phone: form.phone.trim(),
-        address: form.address?.trim()
+        address: form.address?.trim(),
       });
-      setProfile(updated);
-      localStorage.setItem("currentUser", JSON.stringify(updated));
+
+      // Ảnh đại diện upload riêng (POST /users/me/avatar); lỗi (vd. server chưa
+      // cấu hình storage) thì chỉ cảnh báo trung thực, thông tin chữ vẫn đã lưu.
+      let avatarUrl = profile?.avatarUrl || null;
+      let avatarError = null;
+      if (avatarFile) {
+        try {
+          const res = await userApi.uploadAvatar(avatarFile);
+          avatarUrl = res?.avatarUrl ?? avatarUrl;
+        } catch (err) {
+          avatarError = err?.message || "Không rõ nguyên nhân";
+        }
+      }
+
+      const merged = { ...updated, avatarUrl: updated?.avatarUrl ?? avatarUrl };
+      setProfile(merged);
+      localStorage.setItem("currentUser", JSON.stringify(merged));
+
+      if (avatarError) {
+        setFormError({
+          general: `Đã lưu họ tên, số điện thoại và địa chỉ. Riêng ảnh đại diện chưa lưu được: ${avatarError}`,
+        });
+        return; // giữ chế độ chỉnh sửa để người dùng thấy cảnh báo, bỏ ảnh hoặc thử lại
+      }
+
+      setAvatarFile(null);
+      setAvatarPreview(null);
       setSaveSuccess(true);
       setEditing(false);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -114,12 +135,38 @@ export default function PortalProfilePage({ backPath, role }) {
   })();
   const avatarLetter = (profile?.fullName || "U").charAt(0).toUpperCase();
 
-  const handleAvatarChange = (e) => {
+  // BE (AvatarValidator) chỉ nhận JPG/PNG/WEBP và đối chiếu magic bytes với
+  // content-type. File tải từ mạng hay bị đổi đuôi (ruột WEBP nhưng tên .jpg)
+  // → đọc header thật và gửi đúng loại; định dạng lạ thì báo ngay khi chọn.
+  async function sniffImageFile(file) {
+    const b = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+    const isJpeg = b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+    const isPng = b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47;
+    const isWebp =
+      b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
+      b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50;
+    const type = isJpeg ? "image/jpeg" : isPng ? "image/png" : isWebp ? "image/webp" : null;
+    if (!type) return null;
+    return file.type === type ? file : new File([file], file.name, { type });
+  }
+
+  const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setAvatarFile(file);
-      setAvatarPreview(URL.createObjectURL(file));
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError({ general: "Ảnh đại diện phải nhỏ hơn 5MB." });
+      return;
     }
+    const normalized = await sniffImageFile(file);
+    if (!normalized) {
+      setFormError({
+        general: "Ảnh không đúng định dạng hỗ trợ (JPG, PNG hoặc WEBP). Hãy chọn ảnh khác hoặc lưu lại ảnh dưới dạng PNG/JPG.",
+      });
+      return;
+    }
+    setFormError({});
+    setAvatarFile(normalized);
+    setAvatarPreview(URL.createObjectURL(normalized));
   };
 
   return (
@@ -170,7 +217,7 @@ export default function PortalProfilePage({ backPath, role }) {
               {editing && (
                 <label className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-xs font-semibold">Đổi ảnh</span>
-                  <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} />
+                  <input type="file" className="hidden" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={handleAvatarChange} />
                 </label>
               )}
             </div>
