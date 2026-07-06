@@ -1,83 +1,66 @@
-import { Check, Clock, Star } from "lucide-react";
+import { Check, Clock, Crown, Send, Star } from "lucide-react";
 import { LinkButton } from "./link-button";
 import { cn } from "@/lib/utils";
 
+const planIcons = {
+  "Gói Cơ Bản": Send,
+  "Gói Tiêu Chuẩn": Star,
+  "Gói Cao Cấp": Crown,
+};
+
 export function PlanCard({ plan }) {
+  const Icon = planIcons[plan.name] || Star;
   return (
     <article
       className={cn(
-        "relative flex flex-col rounded-3xl border p-7 transition-all",
+        "relative flex h-full flex-col rounded-2xl bg-card p-7",
         plan.featured
-          ? "border-primary bg-primary text-primary-foreground shadow-cta lg:-translate-y-4"
-          : "border-border bg-card text-foreground shadow-card",
+          ? "border-2 border-primary shadow-cta"
+          : "border border-border shadow-card",
       )}
     >
       {plan.badge && (
-        <span className="absolute -top-3.5 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-gold px-4 py-1.5 text-sm font-bold text-gold-ink">
+        <span className="absolute -top-3.5 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-primary px-4 py-1.5 text-sm font-bold text-primary-foreground">
           <Star className="size-3.5 fill-current" />
           {plan.badge}
         </span>
       )}
-      <h3
-        className={cn(
-          "text-xl font-bold",
-          plan.featured ? "text-primary-foreground" : "text-foreground",
-        )}
-      >
-        {plan.name}
-      </h3>
-      <div className="mt-4 flex items-end gap-1.5">
-        <span className="text-4xl font-extrabold tracking-tight">
-          {plan.price}
+
+      <div className="flex items-center gap-3.5">
+        <span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary-container text-primary">
+          <Icon className="size-5" />
         </span>
-        <span
-          className={cn(
-            "mb-1.5 text-sm font-medium",
-            plan.featured ? "text-primary-foreground/75" : "text-muted-foreground",
+        <div>
+          <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
+          {plan.tagline && (
+            <p className="mt-0.5 text-sm text-muted-foreground">{plan.tagline}</p>
           )}
-        >
-          / lần
-        </span>
+        </div>
       </div>
-      <p
-        className={cn(
-          "mt-2 flex items-center gap-1.5 text-sm font-medium",
-          plan.featured ? "text-primary-foreground/80" : "text-muted-foreground",
-        )}
-      >
+
+      <div className="mt-5 flex items-end gap-1.5">
+        <span className="text-4xl font-extrabold tracking-tight text-primary">{plan.price}</span>
+        <span className="mb-1.5 text-sm font-medium text-muted-foreground">/ lần</span>
+      </div>
+      <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
         <Clock className="size-4" />
-        Thời gian dự kiến {plan.duration}
+        {plan.duration}
       </p>
 
-      <ul className="mt-6 flex flex-1 flex-col gap-3.5">
+      <ul className="mt-6 flex flex-1 flex-col gap-3 border-t border-border pt-6">
         {plan.features.map((f) => (
           <li key={f} className="flex items-start gap-3 text-sm">
-            <span
-              className={cn(
-                "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full",
-                plan.featured
-                  ? "bg-card/20 text-primary-foreground"
-                  : "bg-secondary text-primary",
-              )}
-            >
+            <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <Check className="size-3.5" strokeWidth={3} />
             </span>
-            <span
-              className={
-                plan.featured
-                  ? "text-primary-foreground/95"
-                  : "text-foreground/90"
-              }
-            >
-              {f}
-            </span>
+            <span className="text-foreground/90">{f}</span>
           </li>
         ))}
       </ul>
 
       <LinkButton
-        href="/dang-nhap"
-        variant={plan.featured ? "white" : "primary"}
+        href="/login"
+        variant={plan.featured ? "primary" : "outlinePrimary"}
         size="lg"
         className="mt-7 w-full"
       >

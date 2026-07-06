@@ -150,6 +150,10 @@
 
   --color-brand: var(--brand);
   --color-brand-dark: var(--brand-dark);
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-primary-bright: var(--primary-bright);
+  --color-surface-tint: var(--surface-tint);
   --color-teal: var(--teal);
   --color-gold: var(--gold);
   --color-gold-ink: var(--gold-ink);
@@ -233,6 +237,10 @@
   /* Brand custom tokens */
   --brand: #2563eb;
   --brand-dark: #1d4ed8;
+  --navy: #0f3b82; /* deep brand blue — navbar, footer, section tối */
+  --navy-deep: #0a2a5e; /* đầu gradient tối hơn của navy */
+  --primary-bright: #60a5fa; /* highlight chữ xanh trên nền tối */
+  --surface-tint: #f6faff; /* nền section xanh rất nhạt xen kẽ trắng */
   --teal: #b8f3f1;
   --gold: #f7c948;
   --gold-ink: #5a4500; /* text trên nền gold */

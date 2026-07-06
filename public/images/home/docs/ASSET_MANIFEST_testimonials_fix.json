@@ -1,0 +1,37 @@
+{
+  "project": "WashMate Homepage Assets Minimal V2",
+  "fixed_group": "07_testimonials",
+  "style": "WashMate Premium Navy Clean",
+  "created_at": "2026-07-06",
+  "assets": [
+    {
+      "path": "07_testimonials/avatar_minh_anh.png",
+      "section": "10 Testimonials + CTA + Footer",
+      "usage": "Customer testimonial avatar; render circular via CSS border-radius: 50%; source file is square, no text, no frame, no rounded mask.",
+      "format": "PNG",
+      "ratio": "1:1",
+      "size_px": "1024x1024"
+    },
+    {
+      "path": "07_testimonials/avatar_hoang_nam.png",
+      "section": "10 Testimonials + CTA + Footer",
+      "usage": "Customer testimonial avatar; render circular via CSS border-radius: 50%; source file is square, no text, no frame, no rounded mask.",
+      "format": "PNG",
+      "ratio": "1:1",
+      "size_px": "1024x1024"
+    },
+    {
+      "path": "07_testimonials/avatar_thao_linh.png",
+      "section": "10 Testimonials + CTA + Footer",
+      "usage": "Customer testimonial avatar; render circular via CSS border-radius: 50%; source file is square, no text, no frame, no rounded mask.",
+      "format": "PNG",
+      "ratio": "1:1",
+      "size_px": "1024x1024"
+    }
+  ],
+  "notes": [
+    "These three files replace the earlier single composite/contact-sheet style image.",
+    "Do not use the montage/screenshot as production asset.",
+    "UI icons should remain code-based: lucide-react, React Icons, or inline SVG."
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "package": "washmate_home_assets_minimal_v2",
+  "created_at": "2026-07-06",
+  "status": "reference_ready__production_requirements_only",
+  "note": "No fake production assets are included. Add only real production-ready assets.",
+  "reference_sections": [
+    "section_01_navbar_hero.png",
+    "section_02_trust_stats.png",
+    "section_03_benefits.png",
+    "section_04_three_roles.png",
+    "section_05_services.png",
+    "section_06_process.png",
+    "section_07_pricing.png",
+    "section_08_membership.png",
+    "section_09_ai_insight.png",
+    "section_10_testimonials_cta_footer.png"
+  ],
+  "expected_production_assets": {
+    "01_brand": [
+      "logo_full_blue.svg",
+      "logo_full_white.svg",
+      "logo_mark_blue.svg",
+      "favicon.svg"
+    ],
+    "02_hero": [
+      "home_hero_desktop.jpg",
+      "home_hero_mobile.jpg",
+      "hero_worker.png",
+      "hero_car.png"
+    ],
+    "03_services/photos": [
+      "service_exterior_wash.jpg",
+      "service_interior_cleaning.jpg",
+      "service_full_detailing.jpg",
+      "service_paint_protection.jpg",
+      "service_engine_cleaning.jpg",
+      "service_express_wash.jpg"
+    ],
+    "04_membership/medals": [
+      "medal_dong.png",
+      "medal_bac.png",
+      "medal_vang.png",
+      "medal_bach_kim.png",
+      "medal_kim_cuong.png"
+    ],
+    "05_mockups": [
+      "mockup_customer_portal.png",
+      "mockup_staff_portal.png",
+      "mockup_admin_dashboard.png",
+      "mockup_ai_dashboard.png"
+    ],
+    "06_cta": [
+      "cta_banner_background.jpg",
+      "cta_worker.png",
+      "cta_car.png"
+    ],
+    "07_testimonials": [
+      "avatar_minh_anh.png",
+      "avatar_hoang_nam.png",
+      "avatar_thao_linh.png"
+    ]
+  },
+  "rules": [
+    "Do not crop reference section images for production assets.",
+    "Do not use placeholder service images or fake icon-based photos.",
+    "UI icons should be implemented in code via lucide-react / inline SVG / CSS.",
+    "Only use production asset folders for real photos, medals, mockups, CTA, avatar, logo."
+  ]
+}

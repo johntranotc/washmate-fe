@@ -1,3 +1,4 @@
+import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function SectionHeading({
@@ -22,7 +23,7 @@ export function SectionHeading({
             align === "center" && "mx-auto",
           )}
         >
-          <span className="size-1.5 rounded-full bg-primary" />
+          <Sparkles className="size-4" />
           {eyebrow}
         </span>
       )}

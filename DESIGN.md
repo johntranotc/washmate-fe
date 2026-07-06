@@ -12,6 +12,9 @@ colors:
   primary-foreground: "#ffffff"   # text/icon on primary background
   primary-strong: "#1d4ed8"       # hover/active on primary, secondary-foreground
   primary-container: "#eff6ff"    # pale primary fill (chip, badge, soft hover)
+  primary-bright: "#60a5fa"       # highlight chữ xanh trên nền tối (hero, section navy)
+  navy: "#0f3b82"                 # deep brand blue — navbar public, footer, section tối
+  navy-deep: "#0a2a5e"            # đầu gradient tối hơn của navy
 
   # Surfaces
   background: "#ffffff"           # default page background
@@ -21,6 +24,7 @@ colors:
   popover: "#ffffff"              # popover/dropdown/modal background
   popover-foreground: "#0f172a"   # text on popover
   surface: "#f8fafc"              # secondary surface (section bg, sidebar)
+  surface-tint: "#f6faff"         # nền section xanh rất nhạt xen kẽ trắng (landing)
 
   # Secondary / Muted
   secondary: "#f8fafc"            # secondary button background, secondary blocks

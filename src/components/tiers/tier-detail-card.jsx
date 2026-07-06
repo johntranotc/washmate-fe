@@ -1,10 +1,13 @@
 import { Check } from "lucide-react";
-import { TierBadge } from "@/components/site/tier-badge";
 
 export function TierDetailCard({ tier }) {
   return (
     <article className="flex flex-col items-center rounded-3xl border border-border bg-card p-7 text-center shadow-card transition-all hover:-translate-y-1.5 hover:shadow-cta">
-      <TierBadge tier={tier} size="md" />
+      <img
+        src={tier.medal}
+        alt={`Huy hiệu hạng ${tier.name}`}
+        className="size-28 object-contain"
+      />
       <h3 className="mt-5 text-2xl font-extrabold" style={{ color: tier.color }}>
         {tier.name}
       </h3>
