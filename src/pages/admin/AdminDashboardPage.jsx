@@ -1,120 +1,133 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { RefreshCcw, AlertTriangle } from "lucide-react";
 import PageContainer from "@/components/shared/PageContainer";
 import PageHeader from "@/components/shared/PageHeader";
-import { RefreshCcw, AlertTriangle, Clock, Info, TrendingUp, UserX } from "lucide-react";
-import { garageApi } from "../../api/garageApi";
-import { adminApi } from "../../api/adminApi";
-import { normalizeBookingList, normalizeStaffBooking } from "../../lib/staff-booking-data";
-import { bookingStatusLabels } from "../../lib/status-tones";
-import { todayISO } from "../../lib/format";
 import { Button } from "@/components/ui/button";
-
+import { Skeleton } from "@/components/ui/skeleton";
+import { adminApi } from "../../api/adminApi";
+import { garageApi } from "../../api/garageApi";
+import {
+  normalizeBookingList,
+  normalizeStaffBooking,
+  isOverdue,
+  isPaymentInvalid,
+  isUrgent,
+} from "../../lib/staff-booking-data";
+import { bookingStatusLabels } from "../../lib/status-tones";
+import { todayISO, formatTime, friendlyName } from "../../lib/format";
+import { STATUS_COLORS, CHART } from "../../lib/chart-colors";
 import { DashboardKpiCards } from "../../components/admin/dashboard/DashboardKpiCards";
+import { NeedActionTodayCard } from "../../components/admin/dashboard/NeedActionTodayCard";
 import { RevenueTrendChart } from "../../components/admin/dashboard/RevenueTrendChart";
-import { ServiceRevenueDonut } from "../../components/admin/dashboard/ServiceRevenueDonut";
 import { BookingStatusDonut } from "../../components/admin/dashboard/BookingStatusDonut";
+import { OperationalInsightPanel } from "../../components/admin/dashboard/OperationalInsightPanel";
+import { PaymentStatusCard } from "../../components/admin/dashboard/PaymentStatusCard";
 import { BranchRevenueTable } from "../../components/admin/dashboard/BranchRevenueTable";
+import { ServiceRevenueDonut } from "../../components/admin/dashboard/ServiceRevenueDonut";
 import { TopCustomersCard } from "../../components/admin/dashboard/TopCustomersCard";
-import { LoyaltyTierCards } from "../../components/admin/dashboard/LoyaltyTierCards";
-import { LoyaltyPointsSummary } from "../../components/admin/dashboard/LoyaltyPointsSummary";
-import { AiInsightPanel } from "../../components/admin/dashboard/AiInsightPanel";
-import { AlertsPanel } from "../../components/admin/dashboard/AlertsPanel";
-import { RecentBookingsTable } from "../../components/admin/dashboard/RecentBookingsTable";
-import { CHART, STATUS_COLORS } from "../../lib/chart-colors";
-
-// Business config (from product spec) — thresholds & discounts are real config, not data.
-const LOYALTY_TIERS = [
-  { name: "Đồng", points: 0, discount: 5, color: "var(--tier-bronze)", image: "/badges/dong.png" },
-  { name: "Bạc", points: 500, discount: 8, color: "var(--tier-silver)", image: "/badges/bac.png" },
-  { name: "Vàng", points: 1500, discount: 12, color: "var(--tier-gold)", image: "/badges/vang.png" },
-  { name: "Bạch Kim", points: 3500, discount: 15, color: "var(--tier-platinum)", image: "/badges/bach-kim.png" },
-  { name: "Kim Cương", points: 8000, discount: 20, color: "var(--tier-diamond)", image: "/badges/kim-cuong.png" },
-];
+import { AttentionBookingsCard } from "../../components/admin/dashboard/AttentionBookingsCard";
+import { RecentActivityCard } from "../../components/admin/dashboard/RecentActivityCard";
 
 const COMPLETED = "COMPLETED";
-const PROCESSING_STATUSES = ["CONFIRMED", "CHECKED_IN", "WASHING"];
-const CANCELLED_STATUSES = ["CANCELLED", "REJECTED", "NO_SHOW"];
+const SERVING_STATUSES = ["CHECKED_IN", "WASHING"];
 
-
-// --- date helpers -----------------------------------------------------------
 function toISO(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 function addDays(iso, delta) {
-  const d = new Date(iso + "T00:00:00");
+  const d = new Date(`${iso}T00:00:00`);
   d.setDate(d.getDate() + delta);
   return toISO(d);
 }
-function daysBetween(fromISO, toISOStr) {
-  const a = new Date(fromISO + "T00:00:00");
-  const b = new Date(toISOStr + "T00:00:00");
-  return Math.round((b - a) / 86400000) + 1;
+function daysBetween(from, to) {
+  return Math.round((new Date(`${to}T00:00:00`) - new Date(`${from}T00:00:00`)) / 86400000);
+}
+
+// Chuỗi kỹ thuật/seed còn sót trong DB — không đưa lên UI Admin.
+const isTechnicalText = (s) => /(SEED|_V\d+|^WM_|TEST_)/i.test(s || "");
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+        {Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}
+      </div>
+      <Skeleton className="h-32 rounded-2xl" />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <Skeleton className="h-96 rounded-2xl" />
+        <div className="space-y-6">
+          <Skeleton className="h-44 rounded-2xl" />
+          <Skeleton className="h-44 rounded-2xl" />
+        </div>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2 2xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-72 rounded-2xl" />)}
+      </div>
+    </div>
+  );
 }
 
 export default function AdminDashboardPage() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [garages, setGarages] = useState([]);
   const [allBookings, setAllBookings] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [beInsights, setBeInsights] = useState(null); // null = chưa tải / lỗi
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const [selectedGarage, setSelectedGarage] = useState("all");
   const [dateRange, setDateRange] = useState("month");
   const [customFrom, setCustomFrom] = useState(todayISO());
   const [customTo, setCustomTo] = useState(todayISO());
 
-  const loadData = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const [gRes, bRes, uRes] = await Promise.allSettled([
-        garageApi.getAll(),
-        adminApi.getBookings(),
-        adminApi.getAllUsers(),
-      ]);
-      if (gRes.status === "fulfilled") setGarages(Array.isArray(gRes.value) ? gRes.value : []);
-      if (bRes.status === "fulfilled") {
-        const list = normalizeBookingList(bRes.value).map(normalizeStaffBooking);
-        list.sort((a, b) => Number(b.id) - Number(a.id));
-        setAllBookings(list);
-      }
-      if (uRes.status === "fulfilled") {
-        const u = uRes.value;
-        setUsers(Array.isArray(u?.content) ? u.content : Array.isArray(u?.data?.content) ? u.data.content : Array.isArray(u) ? u : []);
-      }
-      if (bRes.status === "rejected") setError(bRes.reason?.message || "Không thể tải dữ liệu lịch hẹn.");
-    } catch (e) {
-      console.error("Dashboard data load error:", e);
-      setError(e?.message || "Không thể tải dữ liệu bảng điều khiển.");
-    } finally {
-      setLoading(false);
+    const [gRes, bRes] = await Promise.allSettled([garageApi.getAll(), adminApi.getBookings()]);
+    if (gRes.status === "fulfilled" && Array.isArray(gRes.value)) setGarages(gRes.value);
+    if (bRes.status === "fulfilled") {
+      setAllBookings(normalizeBookingList(bRes.value).map(normalizeStaffBooking));
+      setLastUpdated(new Date());
+    } else {
+      console.error("[AdminDashboard] load bookings failed:", bRes.reason);
+      setError(bRes.reason?.message || "Không thể tải dữ liệu tổng quan.");
+      setAllBookings([]);
     }
+    setLoading(false);
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { load(); }, [load]);
 
+  // Khoảng thời gian đang chọn + kỳ liền trước (cùng độ dài) để so sánh.
   const { start, end, prevStart, prevEnd } = useMemo(() => {
     const today = todayISO();
-    let s = today, e = today;
-    if (dateRange === "today") { s = today; e = today; }
-    else if (dateRange === "week") { s = addDays(today, -6); e = today; }
-    else if (dateRange === "month") {
-      const d = new Date();
-      s = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-      e = today;
-    } else if (dateRange === "custom") {
+    let s = today;
+    let e = today;
+    if (dateRange === "week") s = addDays(today, -6);
+    else if (dateRange === "month") s = `${today.slice(0, 8)}01`;
+    else if (dateRange === "custom") {
       s = customFrom <= customTo ? customFrom : customTo;
       e = customFrom <= customTo ? customTo : customFrom;
     }
-    const len = daysBetween(s, e);
+    const len = daysBetween(s, e) + 1;
     return { start: s, end: e, prevStart: addDays(s, -len), prevEnd: addDays(s, -1) };
   }, [dateRange, customFrom, customTo]);
+
+  // Insight vận hành thật từ BE theo đúng kỳ đang xem (rule-based aggregate).
+  useEffect(() => {
+    let mounted = true;
+    adminApi
+      .getOwnerInsights({ fromDate: start, toDate: end })
+      .then((res) => { if (mounted) setBeInsights(res); })
+      .catch(() => { if (mounted) setBeInsights(null); });
+    return () => { mounted = false; };
+  }, [start, end, lastUpdated]);
 
   const matchesGarage = useCallback(
     (b) => selectedGarage === "all" || String(b.garageId) === String(selectedGarage),
     [selectedGarage],
   );
-  const inRange = (b, s, e) => b.bookingDate && b.bookingDate >= s && b.bookingDate <= e;
+  const inRange = (b, s, e) => b.bookingDate >= s && b.bookingDate <= e;
 
   const currentBookings = useMemo(
     () => allBookings.filter((b) => matchesGarage(b) && inRange(b, start, end)),
@@ -125,258 +138,327 @@ export default function AdminDashboardPage() {
     [allBookings, matchesGarage, prevStart, prevEnd],
   );
 
-  const sumRevenue = (list) => list.filter((b) => b.bookingStatus === COMPLETED).reduce((s, b) => s + Number(b.finalAmount || 0), 0);
-  const cnt = (list, statuses) => list.filter((b) => statuses.includes(b.bookingStatus)).length;
-
-  // "Khách hàng mới" thật sự: khách có booking ĐẦU TIÊN (trên toàn bộ lịch sử) rơi vào kỳ đang xem.
-  const firstBookingByCustomer = useMemo(() => {
-    const m = {};
-    allBookings.forEach((b) => {
-      if (!b.bookingDate) return;
-      if (selectedGarage !== "all" && String(b.garageId) !== String(selectedGarage)) return;
-      const k = b.customerId ?? b.customerName;
-      if (!k) return;
-      if (!m[k] || b.bookingDate < m[k]) m[k] = b.bookingDate;
+  // ===== KPI =====
+  const metricsOf = useCallback((list, s, e) => {
+    const completedList = list.filter((b) => b.bookingStatus === COMPLETED);
+    // Khách mới = khách có booking ĐẦU TIÊN (toàn lịch sử, theo chi nhánh) nằm trong kỳ
+    const firstByCustomer = new Map();
+    allBookings.filter(matchesGarage).forEach((b) => {
+      const key = b.customerId ?? b.customerName;
+      if (!key || !b.bookingDate) return;
+      const cur = firstByCustomer.get(key);
+      if (!cur || b.bookingDate < cur) firstByCustomer.set(key, b.bookingDate);
     });
-    return m;
-  }, [allBookings, selectedGarage]);
-  const countNewCustomers = useCallback(
-    (s, e) => Object.values(firstBookingByCustomer).filter((d) => d >= s && d <= e).length,
-    [firstBookingByCustomer],
-  );
-
-  const metrics = useMemo(() => ({
-    revenue: sumRevenue(currentBookings),
-    bookings: currentBookings.length,
-    completed: cnt(currentBookings, [COMPLETED]),
-    processing: cnt(currentBookings, PROCESSING_STATUSES) + cnt(currentBookings, ["PENDING"]),
-    cancelled: cnt(currentBookings, CANCELLED_STATUSES),
-    newCustomers: countNewCustomers(start, end),
-  }), [currentBookings, countNewCustomers, start, end]);
-
-  const changes = useMemo(() => {
-    const pct = (cur, prev) => (prev > 0 ? ((cur - prev) / prev) * 100 : null);
-    const prev = {
-      revenue: sumRevenue(prevBookings),
-      bookings: prevBookings.length,
-      completed: cnt(prevBookings, [COMPLETED]),
-      processing: cnt(prevBookings, PROCESSING_STATUSES) + cnt(prevBookings, ["PENDING"]),
-      cancelled: cnt(prevBookings, CANCELLED_STATUSES),
-      newCustomers: countNewCustomers(prevStart, prevEnd),
+    let newCustomers = 0;
+    firstByCustomer.forEach((firstDate) => {
+      if (firstDate >= s && firstDate <= e) newCustomers += 1;
+    });
+    return {
+      revenue: completedList.reduce((sum, b) => sum + (b.finalAmount || 0), 0),
+      bookings: list.length,
+      completed: completedList.length,
+      serving: list.filter((b) => SERVING_STATUSES.includes(b.bookingStatus)).length,
+      needAction: list.filter((b) => isUrgent(b)).length,
+      newCustomers,
     };
+  }, [allBookings, matchesGarage]);
+
+  const metrics = useMemo(() => metricsOf(currentBookings, start, end), [metricsOf, currentBookings, start, end]);
+  const changes = useMemo(() => {
+    if (prevBookings.length === 0) return {};
+    const prev = metricsOf(prevBookings, prevStart, prevEnd);
+    const pct = (cur, p) => (p > 0 ? ((cur - p) / p) * 100 : null);
     return {
       revenue: pct(metrics.revenue, prev.revenue),
       bookings: pct(metrics.bookings, prev.bookings),
       completed: pct(metrics.completed, prev.completed),
-      processing: pct(metrics.processing, prev.processing),
-      cancelled: pct(metrics.cancelled, prev.cancelled),
       newCustomers: pct(metrics.newCustomers, prev.newCustomers),
+      // serving/needAction là trạng thái tức thời — không so kỳ trước để tránh gây hiểu nhầm
     };
-  }, [metrics, prevBookings, countNewCustomers, prevStart, prevEnd]);
+  }, [metricsOf, prevBookings, prevStart, prevEnd, metrics]);
 
-  const revenueData = useMemo(() => {
-    const len = daysBetween(start, end);
-    const byDay = (list) => {
-      const m = {};
-      list.forEach((b) => { if (b.bookingStatus === COMPLETED && b.bookingDate) m[b.bookingDate] = (m[b.bookingDate] || 0) + Number(b.finalAmount || 0); });
-      return m;
-    };
-    const curMap = byDay(currentBookings);
-    const prevMap = byDay(prevBookings);
-    const out = [];
+  // ===== Cần xử lý hôm nay (luôn tính theo NGÀY HÔM NAY, theo chi nhánh) =====
+  const today = todayISO();
+  const todayBookings = useMemo(
+    () => allBookings.filter((b) => matchesGarage(b) && b.bookingDate === today),
+    [allBookings, matchesGarage, today],
+  );
+  const needActionToday = useMemo(() => ({
+    pending: todayBookings.filter((b) => b.bookingStatus === "PENDING").length,
+    overdue: todayBookings.filter((b) => isOverdue(b)).length,
+    failedPayments: todayBookings.filter((b) => b.paymentStatus === "FAILED").length,
+    refunded: currentBookings.filter((b) => b.paymentStatus === "REFUNDED").length,
+  }), [todayBookings, currentBookings]);
+
+  // ===== Doanh thu theo ngày (line chart, tối đa 92 ngày gần nhất trong kỳ) =====
+  const { revenueData, hasPrevRevenue } = useMemo(() => {
+    const len = Math.min(daysBetween(start, end) + 1, 92);
+    const s = addDays(end, -(len - 1));
+    const byDay = new Map();
+    const prevByDay = new Map();
+    currentBookings.forEach((b) => {
+      if (b.bookingStatus !== COMPLETED) return;
+      byDay.set(b.bookingDate, (byDay.get(b.bookingDate) || 0) + (b.finalAmount || 0));
+    });
+    prevBookings.forEach((b) => {
+      if (b.bookingStatus !== COMPLETED) return;
+      prevByDay.set(b.bookingDate, (prevByDay.get(b.bookingDate) || 0) + (b.finalAmount || 0));
+    });
+    const data = [];
+    let anyPrev = false;
     for (let i = 0; i < len; i += 1) {
-      const dCur = addDays(start, i);
-      const dPrev = addDays(prevStart, i);
-      out.push({ dateISO: dCur, revenue: curMap[dCur] || 0, previousRevenue: prevMap[dPrev] || 0 });
+      const dateISO = addDays(s, i);
+      const prevISO = addDays(prevStart, i);
+      const previousRevenue = prevByDay.get(prevISO) || 0;
+      if (previousRevenue > 0) anyPrev = true;
+      data.push({ dateISO, revenue: byDay.get(dateISO) || 0, previousRevenue });
     }
-    return out.length > 92 ? out.slice(-92) : out;
+    return { revenueData: data, hasPrevRevenue: anyPrev };
   }, [currentBookings, prevBookings, start, end, prevStart]);
 
-  const hasPrevRevenue = revenueData.some((d) => d.previousRevenue > 0);
+  // ===== Donut trạng thái (gộp CHECKED_IN + WASHING = "Xe đang phục vụ") =====
+  const statusData = useMemo(() => {
+    const counts = new Map();
+    currentBookings.forEach((b) => {
+      const key = SERVING_STATUSES.includes(b.bookingStatus) ? "SERVING" : b.bookingStatus;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    const total = currentBookings.length || 1;
+    const order = ["COMPLETED", "SERVING", "CONFIRMED", "PENDING", "NO_SHOW", "REJECTED", "CANCELLED"];
+    return order
+      .filter((k) => counts.get(k) > 0)
+      .map((k) => ({
+        name: k === "SERVING" ? "Xe đang phục vụ" : bookingStatusLabels[k] || k,
+        value: counts.get(k),
+        percentage: Math.round((counts.get(k) / total) * 100),
+        color: k === "SERVING" ? STATUS_COLORS.WASHING : STATUS_COLORS[k] || CHART.compare,
+      }));
+  }, [currentBookings]);
+
+  // ===== Doanh thu theo chi nhánh / hiệu suất dịch vụ =====
+  const branchRevenue = useMemo(() => {
+    const map = new Map();
+    currentBookings.forEach((b) => {
+      if (b.bookingStatus !== COMPLETED) return;
+      const name = friendlyName(b.garageName, "Chi nhánh chưa cập nhật");
+      const cur = map.get(name) || { name, revenue: 0, bookings: 0 };
+      cur.revenue += b.finalAmount || 0;
+      cur.bookings += 1;
+      map.set(name, cur);
+    });
+    const rows = [...map.values()].sort((a, b) => b.revenue - a.revenue);
+    const max = rows[0]?.revenue || 1;
+    return rows.map((r) => ({ ...r, percentage: Math.round((r.revenue / max) * 100) }));
+  }, [currentBookings]);
 
   const serviceRevenue = useMemo(() => {
-    const m = {};
-    currentBookings.forEach((b) => { if (b.bookingStatus === COMPLETED && b.serviceName) m[b.serviceName] = (m[b.serviceName] || 0) + Number(b.finalAmount || 0); });
-    return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name, value }));
-  }, [currentBookings]);
-
-  const branchRevenue = useMemo(() => {
-    const m = {};
+    const map = new Map();
     currentBookings.forEach((b) => {
-      if (b.bookingStatus === COMPLETED) {
-        const key = b.garageName || "Chưa rõ chi nhánh";
-        if (!m[key]) m[key] = { revenue: 0, bookings: 0 };
-        m[key].revenue += Number(b.finalAmount || 0);
-        m[key].bookings += 1;
-      }
+      if (b.bookingStatus !== COMPLETED) return;
+      const name = friendlyName(b.serviceName, "Dịch vụ chưa cập nhật");
+      map.set(name, (map.get(name) || 0) + (b.finalAmount || 0));
     });
-    const total = Object.values(m).reduce((s, i) => s + i.revenue, 0) || 1;
-    return Object.entries(m).sort((a, b) => b[1].revenue - a[1].revenue).map(([name, st]) => ({
-      name, revenue: st.revenue, bookings: st.bookings, percentage: Math.round((st.revenue / total) * 100),
-    }));
+    return [...map.entries()].map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
   }, [currentBookings]);
 
-  const statusData = useMemo(() => {
-    const m = {};
-    currentBookings.forEach((b) => { const st = b.bookingStatus || "PENDING"; m[st] = (m[st] || 0) + 1; });
-    const total = currentBookings.length || 1;
-    return Object.entries(m).map(([k, v]) => ({
-      name: bookingStatusLabels[k] || k, value: v, percentage: Math.round((v / total) * 100), color: STATUS_COLORS[k] || CHART.compare,
-    })).sort((a, b) => b.value - a.value);
-  }, [currentBookings]);
-
+  // ===== Top khách hàng thân thiết (tối đa 5) =====
   const topCustomers = useMemo(() => {
-    const m = {};
+    const map = new Map();
     currentBookings.forEach((b) => {
-      if (b.bookingStatus === COMPLETED && b.customerName) {
-        if (!m[b.customerName]) m[b.customerName] = { bookings: 0, spend: 0 };
-        m[b.customerName].bookings += 1;
-        m[b.customerName].spend += Number(b.finalAmount || 0);
-      }
+      if (b.bookingStatus !== COMPLETED) return;
+      const name = friendlyName(b.customerName, "Khách hàng chưa cập nhật");
+      const cur = map.get(name) || { name, bookings: 0, spend: 0 };
+      cur.bookings += 1;
+      cur.spend += b.finalAmount || 0;
+      map.set(name, cur);
     });
-    return Object.entries(m).sort((a, b) => b[1].bookings - a[1].bookings).slice(0, 5).map(([name, st]) => ({ name, bookings: st.bookings, spend: st.spend }));
+    return [...map.values()].sort((a, b) => b.bookings - a.bookings || b.spend - a.spend).slice(0, 5);
   }, [currentBookings]);
 
-  const tiersWithCounts = useMemo(() => {
-    const pf = (u) => u?.lifetimePoints ?? u?.loyaltyPoints ?? u?.points;
-    const hasPoints = users.some((u) => pf(u) != null);
-    return LOYALTY_TIERS.map((t, idx) => {
-      let customers = null;
-      if (hasPoints) {
-        const nextMin = LOYALTY_TIERS[idx + 1]?.points ?? Infinity;
-        customers = users.filter((u) => { const p = Number(pf(u) || 0); return p >= t.points && p < nextMin; }).length;
+  // ===== Tình trạng thanh toán (từ payment status thật gắn trên booking) =====
+  const paymentCounts = useMemo(() => ({
+    paid: currentBookings.filter((b) => b.paymentStatus === "PAID").length,
+    pending: currentBookings.filter((b) => b.paymentStatus === "PENDING").length,
+    failed: currentBookings.filter((b) => b.paymentStatus === "FAILED").length,
+    refunded: currentBookings.filter((b) => b.paymentStatus === "REFUNDED").length,
+  }), [currentBookings]);
+
+  // ===== Lịch cần chú ý (5 dòng) =====
+  const attentionBookings = useMemo(() => {
+    const rows = [];
+    currentBookings.forEach((b) => {
+      if (isOverdue(b)) {
+        rows.push({ ...b, priority: 0, issue: "Quá giờ chưa check-in", tone: "bg-no-show-container text-no-show" });
+      } else if (isPaymentInvalid(b)) {
+        rows.push({ ...b, priority: 1, issue: "Payment cần đối soát", tone: "bg-critical-container text-critical" });
+      } else if (b.bookingStatus === "PENDING") {
+        rows.push({ ...b, priority: 2, issue: "Chờ xác nhận", tone: "bg-warning-container text-warning" });
+      } else if (b.bookingStatus === "CONFIRMED" && b.paymentStatus !== "PAID") {
+        rows.push({ ...b, priority: 3, issue: "Chờ thanh toán", tone: "bg-warning-container text-warning" });
       }
-      return { ...t, customers };
     });
-  }, [users]);
+    return rows
+      .sort((a, b) => a.priority - b.priority || (a.slotTime || "99:99").localeCompare(b.slotTime || "99:99"))
+      .slice(0, 5);
+  }, [currentBookings]);
 
-  const loyaltyTotals = useMemo(() => {
-    const pf = (u) => u?.lifetimePoints ?? u?.loyaltyPoints ?? u?.points;
-    const af = (u) => u?.availablePoints ?? u?.points;
-    const hasPoints = users.some((u) => pf(u) != null);
-    if (!hasPoints) return { totalIssued: null, totalUsed: null, totalRemaining: null, customersWithPoints: null };
-    const totalIssued = users.reduce((s, u) => s + Number(pf(u) || 0), 0);
-    const totalRemaining = users.reduce((s, u) => s + Number(af(u) || 0), 0);
-    return { totalIssued, totalUsed: Math.max(0, totalIssued - totalRemaining), totalRemaining, customersWithPoints: users.filter((u) => Number(pf(u) || 0) > 0).length };
-  }, [users]);
-
+  // ===== Insight vận hành: ưu tiên BE (rule-based thật), fallback rule FE từ booking thật =====
   const insights = useMemo(() => {
+    const severityOrder = { CRITICAL: 0, WARNING: 1, OPPORTUNITY: 2, POSITIVE: 3 };
+    const fromBE = (beInsights?.insights || [])
+      .filter((it) => it.status !== "DISMISSED")
+      .filter((it) => !isTechnicalText(it.title) && !isTechnicalText(it.summary))
+      .sort((a, b) => (severityOrder[a.severity] ?? 9) - (severityOrder[b.severity] ?? 9))
+      .slice(0, 2)
+      .map((it) => ({ title: it.title, description: it.summary, severity: it.severity }));
+    if (fromBE.length > 0) return fromBE;
+
+    // Fallback: 2 rule tính từ booking thật trong kỳ
     const list = [];
-    const byCustomer = {};
-    allBookings.filter(matchesGarage).forEach((b) => {
-      if (b.bookingStatus === COMPLETED && b.bookingDate) {
-        const k = b.customerId ?? b.customerName;
-        if (!byCustomer[k]) byCustomer[k] = { count: 0, last: b.bookingDate };
-        byCustomer[k].count += 1;
-        if (b.bookingDate > byCustomer[k].last) byCustomer[k].last = b.bookingDate;
+    const growth = new Map();
+    currentBookings.forEach((b) => {
+      if (b.bookingStatus !== COMPLETED) return;
+      const name = friendlyName(b.serviceName, "");
+      if (name) growth.set(name, (growth.get(name) || 0) + 1);
+    });
+    const prevGrowth = new Map();
+    prevBookings.forEach((b) => {
+      if (b.bookingStatus !== COMPLETED) return;
+      const name = friendlyName(b.serviceName, "");
+      if (name) prevGrowth.set(name, (prevGrowth.get(name) || 0) + 1);
+    });
+    let best = null;
+    growth.forEach((cur, name) => {
+      const prev = prevGrowth.get(name) || 0;
+      if (prev > 0 && cur > prev) {
+        const pct = Math.round(((cur - prev) / prev) * 100);
+        if (!best || pct > best.pct) best = { name, pct };
       }
     });
-    const cutoff = addDays(todayISO(), -30);
-    const vipInactive = Object.values(byCustomer).filter((c) => c.count >= 2 && c.last < cutoff).length;
-    if (vipInactive > 0) list.push({ title: `${vipInactive} khách thân thiết hơn 30 ngày chưa quay lại`, description: "Cân nhắc gửi ưu đãi giữ chân nhóm khách này.", colorBg: "bg-warning-container", colorText: "text-warning", icon: <UserX size={16} /> });
+    if (best) {
+      list.push({
+        title: `Dịch vụ ${best.name} tăng ${best.pct}%`,
+        description: "So với kỳ liền trước, theo số lượt hoàn tất.",
+        severity: "OPPORTUNITY",
+      });
+    }
+    const slotCount = new Map();
+    currentBookings.forEach((b) => {
+      if (b.slotTime) slotCount.set(b.slotTime, (slotCount.get(b.slotTime) || 0) + 1);
+    });
+    const busiest = [...slotCount.entries()].sort((a, b) => b[1] - a[1])[0];
+    if (busiest && busiest[1] >= 3) {
+      list.push({
+        title: `Khung giờ ${formatTime(busiest[0])} đang quá tải`,
+        description: `${busiest[1]} lịch hẹn trong cùng khung giờ ở kỳ này.`,
+        severity: "WARNING",
+      });
+    }
+    return list.slice(0, 2);
+  }, [beInsights, currentBookings, prevBookings]);
 
-    const svc = (arr) => arr.reduce((m, b) => { if (b.serviceName) m[b.serviceName] = (m[b.serviceName] || 0) + 1; return m; }, {});
-    const cur = svc(currentBookings), prv = svc(prevBookings);
-    let best = null;
-    Object.entries(cur).forEach(([name, c]) => { const p = prv[name] || 0; if (p > 0) { const g = ((c - p) / p) * 100; if (!best || g > best.growth) best = { name, growth: g }; } });
-    if (best && best.growth > 0) list.push({ title: `Dịch vụ "${best.name}" tăng ${best.growth.toFixed(0)}%`, description: "Nhu cầu tăng so với kỳ trước — có thể ưu tiên nhân lực.", colorBg: "bg-success-container", colorText: "text-success", icon: <TrendingUp size={16} /> });
-
-    const slot = {};
-    currentBookings.forEach((b) => { if (b.slotTime) slot[b.slotTime] = (slot[b.slotTime] || 0) + 1; });
-    const busiest = Object.entries(slot).sort((a, b) => b[1] - a[1])[0];
-    if (busiest && busiest[1] >= 3) list.push({ title: `Khung giờ ${busiest[0]} đang quá tải (${busiest[1]} lịch)`, description: "Cân nhắc mở thêm slot hoặc phân bổ lại nhân sự.", colorBg: "bg-accent-violet/15", colorText: "text-accent-violet", icon: <Clock size={16} /> });
-    return list;
-  }, [allBookings, currentBookings, prevBookings, matchesGarage]);
-
-  const alerts = useMemo(() => {
-    const list = [];
-    const scope = allBookings.filter(matchesGarage);
-    const pending = scope.filter((b) => b.bookingStatus === "PENDING").length;
-    if (pending > 0) list.push({ title: `${pending} lịch hẹn đang chờ xác nhận`, description: "Vui lòng kiểm tra và xác nhận sớm.", colorText: "text-critical bg-critical-container p-1.5 rounded-full", icon: <AlertTriangle size={14} /> });
-    const today = todayISO();
-    const nowHM = new Date().toTimeString().slice(0, 5);
-    const overdue = scope.filter((b) => b.bookingStatus === "CONFIRMED" && b.bookingDate === today && b.slotTime && b.slotTime < nowHM).length;
-    if (overdue > 0) list.push({ title: `${overdue} lịch đã qua giờ nhưng chưa check-in`, description: "Kiểm tra để tránh khách chờ lâu.", colorText: "text-warning bg-warning-container p-1.5 rounded-full", icon: <Clock size={14} /> });
-    const noShow = scope.filter((b) => b.bookingStatus === "NO_SHOW" && b.bookingDate === today).length;
-    if (noShow > 0) list.push({ title: `${noShow} khách không đến hôm nay`, description: "Theo dõi tỷ lệ no-show để có phương án.", colorText: "text-primary bg-primary-container p-1.5 rounded-full", icon: <Info size={14} /> });
-    return list;
-  }, [allBookings, matchesGarage]);
+  const updatedLabel = lastUpdated
+    ? lastUpdated.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    : null;
 
   return (
     <PageContainer>
-      {/* Header */}
       <PageHeader
+        eyebrow="Quản trị hệ thống"
         title="Tổng quan doanh nghiệp"
         description="Cập nhật tình hình hoạt động kinh doanh toàn hệ thống."
         actions={
-          <>
-        <div className="flex flex-wrap items-center gap-3">
-          <select className="h-10 rounded-xl border border-border bg-card px-4 text-sm font-semibold shadow-sm outline-none focus:border-primary" value={selectedGarage} onChange={(e) => setSelectedGarage(e.target.value)}>
-            <option value="all">Tất cả chi nhánh</option>
-            {garages.map((g) => (<option key={g.id || g.garageId} value={g.id || g.garageId}>{g.name || g.garageName}</option>))}
-          </select>
-          <select className="h-10 rounded-xl border border-border bg-card px-4 text-sm font-semibold shadow-sm outline-none focus:border-primary" value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
-            <option value="today">Hôm nay</option>
-            <option value="week">7 ngày qua</option>
-            <option value="month">Tháng này</option>
-            <option value="custom">Tùy chọn</option>
-          </select>
-          {dateRange === "custom" && (
-            <>
-              <input type="date" value={customFrom} max={customTo} onChange={(e) => setCustomFrom(e.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm font-semibold shadow-sm outline-none focus:border-primary" />
-              <span className="text-sm text-neutral-muted">→</span>
-              <input type="date" value={customTo} min={customFrom} onChange={(e) => setCustomTo(e.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm font-semibold shadow-sm outline-none focus:border-primary" />
-            </>
-          )}
-          <Button variant="outline" onClick={loadData} className="text-ink-soft">
-            <RefreshCcw /> Tải lại
-          </Button>
-        </div>
-          </>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={selectedGarage}
+              onChange={(e) => setSelectedGarage(e.target.value)}
+              className="h-10 rounded-xl border border-input bg-background px-3 text-xs font-bold text-foreground outline-none focus:border-ring"
+              aria-label="Chọn chi nhánh"
+            >
+              <option value="all">Tất cả chi nhánh</option>
+              {garages.map((g) => (
+                <option key={g.id ?? g.garageId} value={g.id ?? g.garageId}>
+                  {friendlyName(g.name ?? g.garageName, "Chi nhánh chưa cập nhật")}
+                </option>
+              ))}
+            </select>
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className="h-10 rounded-xl border border-input bg-background px-3 text-xs font-bold text-foreground outline-none focus:border-ring"
+              aria-label="Chọn khoảng thời gian"
+            >
+              <option value="today">Hôm nay</option>
+              <option value="week">7 ngày qua</option>
+              <option value="month">Tháng này</option>
+              <option value="custom">Tùy chọn</option>
+            </select>
+            {dateRange === "custom" && (
+              <>
+                <input
+                  type="date"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                  className="h-10 rounded-xl border border-input px-2.5 text-xs font-bold text-muted-foreground outline-none"
+                  aria-label="Từ ngày"
+                />
+                <input
+                  type="date"
+                  value={customTo}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                  className="h-10 rounded-xl border border-input px-2.5 text-xs font-bold text-muted-foreground outline-none"
+                  aria-label="Đến ngày"
+                />
+              </>
+            )}
+            <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+              <RefreshCcw className={loading ? "animate-spin" : ""} /> Tải lại
+            </Button>
+            {updatedLabel && (
+              <span className="text-xs font-medium text-muted-foreground">Cập nhật lúc {updatedLabel}</span>
+            )}
+          </div>
         }
       />
 
       {loading && !allBookings.length ? (
-        <div className="py-20 text-center">
-          <RefreshCcw className="mx-auto mb-4 h-8 w-8 animate-spin text-primary" />
-          <p className="font-semibold text-muted-foreground">Đang tổng hợp dữ liệu doanh nghiệp...</p>
-        </div>
+        <DashboardSkeleton />
       ) : error && !allBookings.length ? (
         <div className="rounded-2xl border border-critical/25 bg-critical-container p-8 text-center">
           <AlertTriangle className="mx-auto mb-3 text-critical" size={28} />
           <p className="text-sm font-bold text-critical">{error}</p>
-          <Button variant="destructive" size="sm" onClick={loadData} className="mt-4">Thử lại</Button>
+          <Button size="sm" onClick={load} className="mt-4 bg-critical text-white hover:bg-critical/90">Thử lại</Button>
         </div>
       ) : (
         <>
           <DashboardKpiCards {...metrics} changes={changes} />
 
+          <NeedActionTodayCard {...needActionToday} />
+
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-            {/* Main content */}
             <div className="min-w-0 space-y-6">
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-                <RevenueTrendChart data={revenueData} showPrevious={hasPrevRevenue} />
-                <ServiceRevenueDonut data={serviceRevenue} />
-              </div>
-
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <BookingStatusDonut data={statusData} />
-                <BranchRevenueTable data={branchRevenue} />
-                <TopCustomersCard data={topCustomers} />
-              </div>
+              <RevenueTrendChart data={revenueData} showPrevious={hasPrevRevenue} />
+              <BookingStatusDonut data={statusData} />
             </div>
-
-            {/* Right rail */}
             <div className="min-w-0 space-y-6">
-              <AiInsightPanel insights={insights} />
-              <AlertsPanel alerts={alerts} />
-              <LoyaltyPointsSummary totals={loyaltyTotals} />
+              <OperationalInsightPanel insights={insights} />
+              <PaymentStatusCard {...paymentCounts} />
             </div>
           </div>
 
-          {/* Full-width sections */}
-          <LoyaltyTierCards tiers={tiersWithCounts} />
-          <RecentBookingsTable bookings={currentBookings} />
+          {/* Bottom grid — đã bỏ "Tóm tắt tích điểm"; chi tiết loyalty ở trang Tích điểm & Thành viên */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-4">
+            {selectedGarage === "all" ? (
+              <BranchRevenueTable data={branchRevenue} />
+            ) : (
+              <ServiceRevenueDonut data={serviceRevenue} />
+            )}
+            <TopCustomersCard data={topCustomers} />
+            <AttentionBookingsCard bookings={attentionBookings} />
+            <RecentActivityCard />
+          </div>
         </>
       )}
     </PageContainer>

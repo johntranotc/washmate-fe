@@ -6,7 +6,7 @@ export function BookingStatusDonut({ data = [] }) {
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <h3 className="mb-4 font-extrabold text-foreground">Tình trạng lịch hẹn</h3>
+      <h3 className="mb-4 text-lg font-bold text-foreground">Tình trạng lịch hẹn</h3>
       <div className="flex items-center gap-4">
         <div className="relative h-28 w-28 shrink-0">
           {data.length > 0 ? (
@@ -20,7 +20,7 @@ export function BookingStatusDonut({ data = [] }) {
                 </PieChart>
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xl font-black text-foreground">{total}</span>
+                <span className="text-xl font-bold text-foreground">{total}</span>
                 <span className="text-center text-xs font-semibold leading-none text-muted-foreground">Tổng<br />lịch hẹn</span>
               </div>
             </>

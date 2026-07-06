@@ -10,7 +10,7 @@ export function ServiceRevenueDonut({ data = [] }) {
 
   return (
     <div className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <h3 className="mb-4 font-extrabold text-foreground">Doanh thu theo dịch vụ</h3>
+      <h3 className="mb-4 text-lg font-bold text-foreground">Doanh thu theo dịch vụ</h3>
       <div className="flex flex-1 flex-col items-center gap-5">
         <div className="relative h-40 w-40 shrink-0">
           {data.length > 0 ? (
@@ -24,7 +24,7 @@ export function ServiceRevenueDonut({ data = [] }) {
                 </PieChart>
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-lg font-black text-foreground">{formatMoneyCompact(total)}</span>
+                <span className="text-lg font-bold text-foreground">{formatMoneyCompact(total)}</span>
                 <span className="mt-0.5 text-xs font-semibold text-muted-foreground">Tổng doanh thu</span>
               </div>
             </>

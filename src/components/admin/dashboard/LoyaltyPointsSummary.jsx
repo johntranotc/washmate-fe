@@ -13,14 +13,14 @@ export function LoyaltyPointsSummary({ totals = {} }) {
   ];
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <h3 className="mb-4 flex items-center gap-2 font-extrabold text-foreground">
+      <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
         <span className="grid h-6 w-6 place-items-center rounded-full bg-primary-container text-primary"><Star size={14} /></span>
         Tổng quan tích điểm
       </h3>
       <div className="grid grid-cols-2 gap-4">
         {items.map((it, i) => (
           <div key={i}>
-            <p className={`text-xl font-black ${it.cls}`}>{fmt(it.value)}</p>
+            <p className={`text-xl font-bold ${it.cls}`}>{fmt(it.value)}</p>
             <p className="mt-0.5 text-xs font-semibold text-muted-foreground">{it.label}</p>
           </div>
         ))}
