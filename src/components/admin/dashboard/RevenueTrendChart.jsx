@@ -71,7 +71,7 @@ export function RevenueTrendChart({ data = [], showPrevious = false }) {
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-extrabold text-foreground">Doanh thu theo thời gian</h3>
+          <h3 className="text-lg font-bold text-foreground">Doanh thu theo thời gian</h3>
           <p className="mt-0.5 text-xs font-semibold text-neutral-muted">Chỉ tính lịch hẹn đã hoàn thành trong kỳ đã chọn</p>
         </div>
         <div className="flex gap-1 rounded-lg bg-muted p-1">
@@ -95,15 +95,15 @@ export function RevenueTrendChart({ data = [], showPrevious = false }) {
       <div className="mb-4 grid grid-cols-3 gap-3 rounded-xl bg-surface p-3">
         <div>
           <p className="text-xs font-semibold text-neutral-muted">Tổng doanh thu kỳ</p>
-          <p className="mt-0.5 text-sm font-black text-foreground">{formatMoneyShort(stats.total)}</p>
+          <p className="mt-0.5 text-sm font-bold text-foreground">{formatMoneyShort(stats.total)}</p>
         </div>
         <div className="border-l border-border pl-3">
           <p className="text-xs font-semibold text-neutral-muted">Trung bình / ngày</p>
-          <p className="mt-0.5 text-sm font-black text-foreground">{formatMoneyShort(stats.avg)}</p>
+          <p className="mt-0.5 text-sm font-bold text-foreground">{formatMoneyShort(stats.avg)}</p>
         </div>
         <div className="border-l border-border pl-3">
           <p className="text-xs font-semibold text-neutral-muted">Cao nhất</p>
-          <p className="mt-0.5 text-sm font-black text-foreground">
+          <p className="mt-0.5 text-sm font-bold text-foreground">
             {stats.peak ? formatMoneyShort(stats.peak.revenue) : "—"}
             {stats.peak && <span className="ml-1 text-xs font-semibold text-neutral-muted">({labelFor(stats.peak.dateISO, "day")})</span>}
           </p>

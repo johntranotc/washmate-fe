@@ -1,4 +1,4 @@
-import { CircleDollarSign, CalendarDays, CheckCircle2, Clock, XOctagon, UserPlus } from "lucide-react";
+import { CircleDollarSign, CalendarDays, CheckCircle2, Car, AlertTriangle, UserPlus } from "lucide-react";
 import { formatMoney, formatMoneyShort, formatNumber } from "@/lib/format";
 
 /**
@@ -16,8 +16,8 @@ export function DashboardKpiCards({
   revenue = 0,
   bookings = 0,
   completed = 0,
-  processing = 0,
-  cancelled = 0,
+  serving = 0,
+  needAction = 0,
   newCustomers = 0,
   changes = {},
 }) {
@@ -31,45 +31,52 @@ export function DashboardKpiCards({
     },
     { key: "bookings", title: "Tổng lịch hẹn", value: formatNumber(bookings), icon: <CalendarDays size={20} className="text-accent-indigo" />, color: "bg-accent-indigo/10", ring: "ring-accent-indigo/15" },
     { key: "completed", title: "Đã hoàn thành", value: formatNumber(completed), icon: <CheckCircle2 size={20} className="text-success" />, color: "bg-success-container", ring: "ring-success/15" },
-    { key: "processing", title: "Đang xử lý", value: formatNumber(processing), icon: <Clock size={20} className="text-warning" />, color: "bg-warning-container", ring: "ring-warning/15" },
-    { key: "cancelled", title: "Đã hủy / No-show", value: formatNumber(cancelled), icon: <XOctagon size={20} className="text-critical" />, color: "bg-critical-container", ring: "ring-critical/15" },
-    { key: "newCustomers", title: "Khách hàng mới", value: formatNumber(newCustomers), icon: <UserPlus size={20} className="text-accent-cyan" />, color: "bg-accent-cyan/10", ring: "ring-accent-cyan/15" },
+    { key: "serving", title: "Xe đang phục vụ", value: formatNumber(serving), icon: <Car size={20} className="text-accent-violet" />, color: "bg-accent-violet/10", ring: "ring-accent-violet/15" },
+    { key: "needAction", title: "Cần xử lý", value: formatNumber(needAction), icon: <AlertTriangle size={20} className="text-warning" />, color: "bg-warning-container", ring: "ring-warning/15" },
+    {
+      key: "newCustomers", title: "Khách hàng mới", value: formatNumber(newCustomers),
+      // 0 khách mới: subtext trung tính thay vì badge -100% tiêu cực
+      subtitle: newCustomers === 0 ? "Chưa có khách mới trong kỳ" : null,
+      hideChange: newCustomers === 0,
+      icon: <UserPlus size={20} className="text-accent-cyan" />, color: "bg-accent-cyan/10", ring: "ring-accent-cyan/15",
+    },
   ];
 
   return (
     <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
       {kpis.map((kpi) => {
-        const change = changes?.[kpi.key];
+        const change = kpi.hideChange ? null : changes?.[kpi.key];
         const hasChange = typeof change === "number" && Number.isFinite(change);
         const up = hasChange && change >= 0;
-        // For "cancelled", an increase is bad news — tint accordingly.
-        const positive = kpi.key === "cancelled" ? !up : up;
+        // Với "Cần xử lý", tăng là tin xấu — đảo màu.
+        const positive = kpi.key === "needAction" ? !up : up;
         return (
-          <div key={kpi.key} className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:shadow-card">
+          <div key={kpi.key} className="flex flex-col rounded-2xl border border-border bg-card p-5 transition hover:shadow-card">
+            {/* Tiêu đề luôn chiếm đủ 2 dòng để con số của mọi thẻ thẳng hàng nhau */}
             <div className="flex items-start justify-between gap-2">
-              <p className="text-xs font-bold text-muted-foreground">{kpi.title}</p>
+              <p className="min-h-8 text-xs font-bold leading-4 text-muted-foreground">{kpi.title}</p>
               <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ring-4 ${kpi.color} ${kpi.ring}`}>
                 {kpi.icon}
               </div>
             </div>
-            <div className="mt-1 min-w-0">
-              <h3 className="text-2xl font-extrabold leading-tight tracking-tight text-foreground" title={kpi.subtitle || undefined}>
+            <div className="mt-2 min-w-0">
+              <h3 className="text-2xl font-bold leading-tight text-foreground" title={kpi.subtitle || undefined}>
                 {kpi.value}
               </h3>
-              {kpi.subtitle && (
-                <p className="mt-0.5 text-xs font-semibold text-neutral-muted">{kpi.subtitle}</p>
+              <p className="mt-0.5 min-h-4 text-xs font-semibold leading-4 text-neutral-muted">
+                {kpi.subtitle || " "}
+              </p>
+            </div>
+            <div className="mt-3 flex min-h-5 items-center gap-1.5">
+              {hasChange && (
+                <>
+                  <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-bold ${positive ? "bg-success-container text-success" : "bg-critical-container text-critical"}`}>
+                    {up ? "↗" : "↘"} {up ? "+" : ""}{change.toFixed(1)}%
+                  </span>
+                  <span className="text-xs font-semibold text-neutral-muted">so với kỳ trước</span>
+                </>
               )}
             </div>
-            {hasChange ? (
-              <div className="mt-3 flex items-center gap-1.5">
-                <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-black ${positive ? "bg-success-container text-success" : "bg-critical-container text-critical"}`}>
-                  {up ? "↗" : "↘"} {up ? "+" : ""}{change.toFixed(1)}%
-                </span>
-                <span className="text-xs font-semibold text-neutral-muted">so với kỳ trước</span>
-              </div>
-            ) : (
-              <div className="mt-3 h-[17px]" />
-            )}
           </div>
         );
       })}

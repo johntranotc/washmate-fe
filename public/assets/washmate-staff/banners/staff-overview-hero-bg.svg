@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="420" viewBox="0 0 1600 420">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="420">
+      <stop stop-color="#F8FBFF"/><stop offset="0.55" stop-color="#ECF5FF"/><stop offset="1" stop-color="#DBECFF"/>
+    </linearGradient>
+    <linearGradient id="car" x1="1000" y1="90" x2="1500" y2="330">
+      <stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#BBD9FF"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#0B63F6" flood-opacity="0.16"/></filter>
+  </defs>
+  <rect width="1600" height="420" rx="0" fill="url(#bg)"/>
+  <circle cx="1230" cy="95" r="48" fill="#FFFFFF" opacity=".55"/>
+  <circle cx="1120" cy="185" r="24" fill="#FFFFFF" opacity=".7"/>
+  <circle cx="1440" cy="58" r="22" fill="#FFFFFF" opacity=".65"/>
+  <g opacity=".65" filter="url(#shadow)">
+    <path d="M945 246c22-75 76-110 170-110h160c72 0 126 31 164 88l54 80H899l46-58Z" fill="url(#car)"/>
+    <path d="M1022 200h372" stroke="#7DB5FF" stroke-width="10" stroke-linecap="round" opacity=".45"/>
+    <circle cx="1055" cy="310" r="38" fill="#0B1B49" opacity=".22"/>
+    <circle cx="1372" cy="310" r="38" fill="#0B1B49" opacity=".22"/>
+    <rect x="1030" y="160" width="120" height="70" rx="14" fill="#FFFFFF" opacity=".9"/>
+    <rect x="1180" y="160" width="150" height="70" rx="14" fill="#FFFFFF" opacity=".85"/>
+  </g>
+  <path d="M0 370C210 325 338 410 512 358c156-47 303-34 458 5 150 38 310 24 630-66v123H0Z" fill="#D7E9FF" opacity=".45"/>
+</svg>

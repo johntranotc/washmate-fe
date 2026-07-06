@@ -7,13 +7,14 @@ import { NavLink, Outlet } from "react-router-dom";
  * mobile, cố định từ lg) + header trắng + vùng content cuộn.
  *
  * Props:
- *   navLinks       — [{ icon, label, to, end }]
- *   brand          — { title, subtitle }
+ *   navLinks       — [{ icon, label, to, end }] (icon: component lucide hoặc component nhận { size })
+ *   brand          — { title, subtitle, logoSrc? } (logoSrc: ảnh logo thay ô Car mặc định)
  *   documentTitle  — tiêu đề tab trình duyệt
  *   headerRight    — slot bên phải header (chuông, avatar, dropdown...)
  *   sidebarTop     — slot đầu nav, trước navLinks (vd. CTA đặt lịch Customer)
  *   sidebarExtra   — slot cuối nav (vd. promo card Admin)
  *   sidebarFooter  — slot đáy sidebar (user card, logout)
+ *   sidebarBackground — url ảnh nền sidebar (vd. gradient asset Staff); fallback bg-foreground
  *   contentClassName — class thêm cho vùng content (vd. padding Staff)
  */
 export default function PortalShell({
@@ -24,6 +25,7 @@ export default function PortalShell({
   sidebarTop,
   sidebarExtra,
   sidebarFooter,
+  sidebarBackground,
   contentClassName = "",
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -49,6 +51,11 @@ export default function PortalShell({
           "fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col bg-foreground text-neutral-muted transition-transform duration-300 lg:static lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
+        style={
+          sidebarBackground
+            ? { backgroundImage: `url(${sidebarBackground})`, backgroundSize: "cover", backgroundPosition: "center" }
+            : undefined
+        }
       >
         <button
           type="button"
@@ -60,9 +67,13 @@ export default function PortalShell({
         </button>
 
         <div className="flex h-16 shrink-0 items-center gap-3 px-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <Car size={18} className="text-white" />
-          </div>
+          {brand.logoSrc ? (
+            <img src={brand.logoSrc} alt={`Logo ${brand.title}`} className="h-9 w-9 shrink-0" />
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
+              <Car size={18} className="text-white" />
+            </div>
+          )}
           <div>
             <p className="text-sm font-extrabold leading-none text-white">{brand.title}</p>
             <p className="mt-1 text-xs leading-none text-primary-container">{brand.subtitle}</p>

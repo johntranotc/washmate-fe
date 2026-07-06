@@ -21,6 +21,10 @@ export const adminApi = {
   getAdminSummary: () => axiosClient.get("/analytics/summary"),
   // GET /api/admin/invoices (paginated)
   getInvoices: (params = {}) => axiosClient.get("/admin/invoices", { params: { size: 1000, sort: 'id,desc', ...params } }),
+  // GET /api/owner/insights (ADMIN/OWNER) — insight rule-based thật từ BE.
+  // params: { fromDate, toDate, type?, status? } → AutoWashInsightsResponse
+  // { period, summary, insights: BusinessInsightResponse[], analysisStatus, message }
+  getOwnerInsights: (params = {}) => axiosClient.get("/owner/insights", { params }),
   // No list-all payments endpoint yet — return empty
   getPayments: () => Promise.resolve([]),
   // No reports endpoint yet
