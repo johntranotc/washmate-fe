@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronDown, LogOut, User } from "lucide-react";
 import { authApi } from "../../api/authApi";
 import { getAuthItem } from "@/utils/authUtils";
+import { userRoleLabel } from "@/lib/status-tones";
 
 /**
  * AccountDropdown — dùng chung cho AdminLayout và StaffLayout.
@@ -40,7 +41,8 @@ export default function AccountDropdown({ profilePath, colorScheme = "light" }) 
     return r;
   })();
   
-  const roleLabel = roles[0] || "–";
+  // Map enum role → tiếng Việt, không hiển thị enum thô trên UI
+  const roleLabel = userRoleLabel(roles[0], "–");
 
   const avatarLetter = displayName.charAt(0).toUpperCase() || "U";
 

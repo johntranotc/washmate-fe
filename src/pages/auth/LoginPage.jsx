@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { GoogleLogin } from "@react-oauth/google";
 import { authApi } from "@/api/authApi";
-import { getCurrentRole, ROLES } from "@/lib/auth-role";
+import { getCurrentRole, homePathForRole } from "@/lib/auth-role";
 
 function setAuthValue(key, value) {
   sessionStorage.setItem(key, value);
@@ -43,13 +43,11 @@ export default function LoginPage() {
       }
       setAuthValue("userEmail", email);
 
-      const role = getCurrentRole();
-      if (role === ROLES.ADMIN) {
-        navigate("/quan-tri");
-      } else if (role === ROLES.STAFF) {
-        navigate("/nhan-vien");
+      const homePath = homePathForRole(getCurrentRole());
+      if (homePath) {
+        navigate(homePath);
       } else {
-        navigate("/khach-hang");
+        setError("Vai trò tài khoản chưa được hỗ trợ. Vui lòng liên hệ quản trị viên.");
       }
     } catch (err) {
       setError(err?.message || "Đăng nhập thất bại. Vui lòng thử lại.");
@@ -130,13 +128,11 @@ export default function LoginPage() {
               }
               if (data?.refreshToken) setAuthValue("refreshToken", data.refreshToken);
               if (data?.user) setAuthValue("currentUser", JSON.stringify(data.user));
-              const role = getCurrentRole();
-              if (role === ROLES.ADMIN) {
-                navigate("/quan-tri");
-              } else if (role === ROLES.STAFF) {
-                navigate("/nhan-vien");
+              const homePath = homePathForRole(getCurrentRole());
+              if (homePath) {
+                navigate(homePath);
               } else {
-                navigate("/khach-hang");
+                setError("Vai trò tài khoản chưa được hỗ trợ. Vui lòng liên hệ quản trị viên.");
               }
             } catch (err) {
               setError(err?.message || "Đăng nhập Google thất bại. Vui lòng thử lại.");

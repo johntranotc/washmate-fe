@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { formatDate, formatTime, formatMoney, formatNumber, friendlyName } from "@/lib/format";
+import { userRoleLabel } from "@/lib/status-tones";
 
 export const GARAGE_STATUS_META = {
   ACTIVE: { label: "Đang hoạt động", tone: "bg-success-container text-success" },
@@ -112,7 +113,7 @@ export function AdminGarageDrawer({ branch, open, onOpenChange, periodLabel }) {
                   <span className="truncate font-semibold text-ink-soft">
                     {friendlyName(u.fullName, "Nhân viên chưa cập nhật")}
                   </span>
-                  <span className="shrink-0 text-muted-foreground">{u.role || "STAFF"}</span>
+                  <span className="shrink-0 text-muted-foreground">{userRoleLabel(u.role, "Nhân viên")}</span>
                 </div>
               ))}
               {staff.length > 6 && (
