@@ -459,23 +459,22 @@ export default function AdminGaragePage() {
                       <article key={b.id} className="flex flex-col rounded-2xl border border-border bg-card p-5">
                         {/* Hàng 1: icon + badge trạng thái; tên chiếm trọn bề ngang ở hàng 2
                             — mọi khu có chiều cao cố định để các card đều và thẳng hàng nhau */}
-                        <div className="flex items-center justify-between gap-2">
+                        {/* Icon + badge nằm gọn cùng hàng, sát bên trái */}
+                        <div className="flex items-center gap-2">
                           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-container text-primary">
                             <Building2 size={18} />
                           </span>
-                          <div className="flex flex-wrap items-center justify-end gap-1.5">
-                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${st.tone}`}>
-                              {st.label}
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${st.tone}`}>
+                            {st.label}
+                          </span>
+                          {b.needsUpdate.length > 0 && (
+                            <span
+                              className="rounded-full bg-warning-container px-2 py-0.5 text-xs font-bold text-warning"
+                              title={b.needsUpdate.join(" · ")}
+                            >
+                              Cần cập nhật
                             </span>
-                            {b.needsUpdate.length > 0 && (
-                              <span
-                                className="rounded-full bg-warning-container px-2.5 py-0.5 text-xs font-bold text-warning"
-                                title={b.needsUpdate.join(" · ")}
-                              >
-                                Cần cập nhật
-                              </span>
-                            )}
-                          </div>
+                          )}
                         </div>
                         <h3 className="mt-2.5 min-h-10 break-words text-sm font-bold leading-5 text-foreground">
                           {friendlyName(b.name, "Chi nhánh chưa cập nhật")}
