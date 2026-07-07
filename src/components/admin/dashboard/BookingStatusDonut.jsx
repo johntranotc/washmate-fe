@@ -20,7 +20,7 @@ export function BookingStatusDonut({ data = [] }) {
                 </PieChart>
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xl font-bold text-foreground">{total}</span>
+                <span className="text-lg font-semibold text-foreground">{total}</span>
                 <span className="text-center text-xs font-semibold leading-none text-muted-foreground">Tổng<br />lịch hẹn</span>
               </div>
             </>
