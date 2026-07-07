@@ -27,18 +27,18 @@ export function DashboardKpiCards({
     {
       key: "revenue", title: "Tổng doanh thu", value: revenueShort,
       subtitle: revenueShort !== revenueFull ? revenueFull : null,
-      icon: <CircleDollarSign size={20} className="text-primary" />, color: "bg-primary-container", ring: "ring-primary/15",
+      icon: <CircleDollarSign size={16} className="text-primary" />, color: "bg-primary-container", ring: "ring-primary/15",
     },
-    { key: "bookings", title: "Tổng lịch hẹn", value: formatNumber(bookings), icon: <CalendarDays size={20} className="text-accent-indigo" />, color: "bg-accent-indigo/10", ring: "ring-accent-indigo/15" },
-    { key: "completed", title: "Đã hoàn thành", value: formatNumber(completed), icon: <CheckCircle2 size={20} className="text-success" />, color: "bg-success-container", ring: "ring-success/15" },
-    { key: "serving", title: "Xe đang phục vụ", value: formatNumber(serving), icon: <Car size={20} className="text-accent-violet" />, color: "bg-accent-violet/10", ring: "ring-accent-violet/15" },
-    { key: "needAction", title: "Cần xử lý", value: formatNumber(needAction), icon: <AlertTriangle size={20} className="text-warning" />, color: "bg-warning-container", ring: "ring-warning/15" },
+    { key: "bookings", title: "Tổng lịch hẹn", value: formatNumber(bookings), icon: <CalendarDays size={16} className="text-accent-indigo" />, color: "bg-accent-indigo/10", ring: "ring-accent-indigo/15" },
+    { key: "completed", title: "Đã hoàn thành", value: formatNumber(completed), icon: <CheckCircle2 size={16} className="text-success" />, color: "bg-success-container", ring: "ring-success/15" },
+    { key: "serving", title: "Xe đang phục vụ", value: formatNumber(serving), icon: <Car size={16} className="text-accent-violet" />, color: "bg-accent-violet/10", ring: "ring-accent-violet/15" },
+    { key: "needAction", title: "Cần xử lý", value: formatNumber(needAction), icon: <AlertTriangle size={16} className="text-warning" />, color: "bg-warning-container", ring: "ring-warning/15" },
     {
       key: "newCustomers", title: "Khách hàng mới", value: formatNumber(newCustomers),
       // 0 khách mới: subtext trung tính thay vì badge -100% tiêu cực
       subtitle: newCustomers === 0 ? "Chưa có khách mới trong kỳ" : null,
       hideChange: newCustomers === 0,
-      icon: <UserPlus size={20} className="text-accent-cyan" />, color: "bg-accent-cyan/10", ring: "ring-accent-cyan/15",
+      icon: <UserPlus size={16} className="text-accent-cyan" />, color: "bg-accent-cyan/10", ring: "ring-accent-cyan/15",
     },
   ];
 
@@ -55,12 +55,12 @@ export function DashboardKpiCards({
             {/* Tiêu đề luôn chiếm đủ 2 dòng để con số của mọi thẻ thẳng hàng nhau */}
             <div className="flex items-start justify-between gap-2">
               <p className="min-h-8 text-xs font-bold leading-4 text-muted-foreground">{kpi.title}</p>
-              <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ring-4 ${kpi.color} ${kpi.ring}`}>
+              <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ring-2 ${kpi.color} ${kpi.ring}`}>
                 {kpi.icon}
               </div>
             </div>
             <div className="mt-2 min-w-0">
-              <h3 className="text-2xl font-bold leading-tight text-foreground" title={kpi.subtitle || undefined}>
+              <h3 className="text-xl font-semibold leading-tight text-foreground" title={kpi.subtitle || undefined}>
                 {kpi.value}
               </h3>
               <p className="mt-0.5 min-h-4 text-xs font-semibold leading-4 text-neutral-muted">

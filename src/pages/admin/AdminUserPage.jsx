@@ -324,7 +324,7 @@ export default function AdminUserPage() {
                 </span>
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground">{label}</p>
-                  <b className="mt-0.5 block text-2xl font-bold text-foreground">
+                  <b className="mt-0.5 block text-xl font-semibold text-foreground">
                     {pendingApi ? "—" : formatNumber(kpis[key])}
                   </b>
                   {pendingApi && <p className="text-xs text-neutral-muted">Chưa có dữ liệu</p>}

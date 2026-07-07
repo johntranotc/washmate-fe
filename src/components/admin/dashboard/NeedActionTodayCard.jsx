@@ -41,7 +41,7 @@ export function NeedActionTodayCard({
                 <Icon size={18} />
               </span>
               <span className="min-w-0">
-                <b className="block text-xl font-bold text-foreground">{formatNumber(value)}</b>
+                <b className="block text-lg font-semibold text-foreground">{formatNumber(value)}</b>
                 <span className="block text-xs leading-4 text-muted-foreground">{label}</span>
               </span>
             </>

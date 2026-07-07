@@ -297,7 +297,7 @@ export default function AdminBookingPage() {
                 </span>
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground">{label}</p>
-                  <b className="mt-0.5 block text-2xl font-bold text-foreground">{formatNumber(kpis[key])}</b>
+                  <b className="mt-0.5 block text-xl font-semibold text-foreground">{formatNumber(kpis[key])}</b>
                 </div>
               </article>
             ))}
