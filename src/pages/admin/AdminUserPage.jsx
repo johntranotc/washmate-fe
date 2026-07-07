@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import PageContainer from "@/components/shared/PageContainer";
 import PageHeader from "@/components/shared/PageHeader";
+import { KpiCard } from "@/components/shared/KpiCard";
 import Pagination from "../../components/common/Pagination";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -318,18 +319,14 @@ export default function AdminUserPage() {
           {/* KPI */}
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
             {KPI_CARDS.map(({ key, label, Icon, tone, pendingApi }) => (
-              <article key={key} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${tone}`}>
-                  <Icon size={18} />
-                </span>
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground">{label}</p>
-                  <b className="mt-0.5 block text-xl font-semibold text-foreground">
-                    {pendingApi ? "—" : formatNumber(kpis[key])}
-                  </b>
-                  {pendingApi && <p className="text-xs text-neutral-muted">Chưa có dữ liệu</p>}
-                </div>
-              </article>
+              <KpiCard
+                key={key}
+                label={label}
+                value={pendingApi ? "—" : formatNumber(kpis[key])}
+                icon={<Icon size={18} />}
+                tone={tone}
+                subtitle={pendingApi ? <p className="text-xs text-neutral-muted">Chưa có dữ liệu</p> : null}
+              />
             ))}
           </section>
 

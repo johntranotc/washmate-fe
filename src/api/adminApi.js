@@ -17,8 +17,6 @@ export const adminApi = {
   getServicesByGarage: (garageId) => axiosClient.get(`/v1/services/garage/${garageId}`),
   // GET /api/analytics/summary (ADMIN/OWNER) — số liệu tổng hợp thật từ BE
   getAnalyticsSummary: () => axiosClient.get("/analytics/summary"),
-  // Giữ alias cũ để tương thích (trỏ về endpoint thật)
-  getAdminSummary: () => axiosClient.get("/analytics/summary"),
   // GET /api/admin/invoices (paginated)
   getInvoices: (params = {}) => axiosClient.get("/admin/invoices", { params: { size: 1000, sort: 'id,desc', ...params } }),
   // GET /api/owner/insights (ADMIN/OWNER) — insight rule-based thật từ BE.
@@ -36,20 +34,4 @@ export const adminApi = {
   aiEnrichInsight: (id) => axiosClient.post(`/owner/insights/${id}/ai-enrich`),
   // GET /api/owner/insights/ai-health → { configured, model, promptVersion, message }
   getAiHealth: () => axiosClient.get("/owner/insights/ai-health"),
-  // No list-all payments endpoint yet — return empty
-  getPayments: () => Promise.resolve([]),
-  // No reports endpoint yet
-  getReports: () => Promise.resolve({}),
-  // Compat aliases for AdminDataPage component
-  getServicePackages: () => axiosClient.get("/v1/garages").then((res) => {
-    const actualData = res?.data ? res.data : res;
-    const list = Array.isArray(actualData) ? actualData : [];
-    if (list.length === 0) return [];
-    const firstId = list[0].id ?? list[0].garageId;
-    if (!firstId) return [];
-    return axiosClient.get(`/v1/services/garage/${firstId}`)
-      .then(sRes => (sRes?.data ? sRes.data : sRes))
-      .catch(() => []);
-  }),
-  getSlots: () => Promise.resolve([]),
 };

@@ -194,8 +194,8 @@ export default function AdminLoyaltyPage() {
 
   // BE chưa có API cập nhật hạng (DTO rỗng) — không fake.
   function handleEditTier() {
-    toast.info("Chức năng đang chờ API", {
-      description: "Hệ thống chưa hỗ trợ chỉnh sửa hạng thành viên.",
+    toast.info("Chức năng chưa được hệ thống hỗ trợ", {
+      description: "Chỉnh sửa hạng thành viên sẽ được kích hoạt khi hệ thống hỗ trợ cấu hình tương ứng.",
     });
   }
 

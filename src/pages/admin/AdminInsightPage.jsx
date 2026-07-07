@@ -338,7 +338,7 @@ export default function AdminInsightPage() {
       return;
     }
     if (aiHealth && aiHealth.configured === false) {
-      toast.info("Chức năng gợi ý AI chưa được backend hỗ trợ.");
+      toast.info("Chức năng gợi ý AI chưa được hệ thống hỗ trợ.");
       return;
     }
     setAiLoading(true);

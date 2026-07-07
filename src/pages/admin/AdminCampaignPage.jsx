@@ -203,7 +203,7 @@ export default function AdminCampaignPage() {
 
   // BE chưa có API tạo/sửa chiến dịch — không fake.
   const notSupported = (label) =>
-    toast.info(`Chức năng ${label} chưa được backend hỗ trợ.`);
+    toast.info(`Chức năng ${label} chưa được hệ thống hỗ trợ.`);
 
   const hasFilter = keyword.trim() !== "" || statusFilter !== "ALL" || typeFilter !== "ALL" || fromDate || toDate || tab !== "ALL";
   const clearFilters = () => {

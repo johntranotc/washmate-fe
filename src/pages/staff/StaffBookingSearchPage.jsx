@@ -207,7 +207,7 @@ export default function StaffBookingSearchPage() {
       <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary-container px-4 py-2.5">
         <img src={STAFF_ASSETS.action.info} alt="" width={18} height={18} className="shrink-0 rounded" />
         <p className="text-xs font-semibold text-primary-strong">
-          Chỉ xử lý workflow khi booking đã xác nhận và thanh toán hợp lệ.
+          Chỉ xử lý quy trình khi lịch hẹn đã xác nhận và thanh toán hợp lệ.
         </p>
       </div>
 
@@ -319,7 +319,8 @@ export default function StaffBookingSearchPage() {
                     )}
                   </div>
 
-                  <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-[1.3fr_1fr_1fr_auto]">
+                  {/* Cột 2/3/4 cố định bề rộng để mọi card thẳng hàng nhau */}
+                  <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_13rem_14rem_16rem]">
                     <div className="text-xs">
                       <p className="text-sm font-bold text-foreground">{b.customerName}</p>
                       <p className="mt-0.5 text-muted-foreground">SĐT: {b.phone}</p>
@@ -345,12 +346,12 @@ export default function StaffBookingSearchPage() {
                       <p
                         className={`mt-1.5 font-bold ${condition.eligible ? "text-success" : "text-warning"}`}
                       >
-                        {condition.eligible ? "Đủ điều kiện workflow" : "Không đủ điều kiện workflow"}
+                        {condition.eligible ? "Đủ điều kiện xử lý" : "Chưa đủ điều kiện xử lý"}
                       </p>
                       <p className="mt-0.5 text-muted-foreground">{condition.reason}</p>
                     </div>
 
-                    <div className="flex items-center lg:justify-end">
+                    <div className="flex flex-wrap items-center gap-1.5 lg:justify-end">
                       {scope === false ? (
                         <div className="flex flex-col items-end gap-1.5">
                           <Button size="sm" variant="outline" disabled title="Booking không thuộc garage bạn phụ trách">
