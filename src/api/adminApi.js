@@ -36,9 +36,6 @@ export const adminApi = {
   aiEnrichInsight: (id) => axiosClient.post(`/owner/insights/${id}/ai-enrich`),
   // GET /api/owner/insights/ai-health → { configured, model, promptVersion, message }
   getAiHealth: () => axiosClient.get("/owner/insights/ai-health"),
-  // POST /api/owner/insights/ai-chat — chat AI THẬT (Gemini phía BE)
-  // body { question, insightId?, fromDate?, toDate? } → { answer, suggestedActions[] }
-  aiChat: (payload) => axiosClient.post("/owner/insights/ai-chat", payload),
   // No list-all payments endpoint yet — return empty
   getPayments: () => Promise.resolve([]),
   // No reports endpoint yet

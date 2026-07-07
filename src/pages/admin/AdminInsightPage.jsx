@@ -22,7 +22,6 @@ import {
 import { CHART } from "../../lib/chart-colors";
 import { cn } from "@/lib/utils";
 import { InsightRuleDrawer } from "../../components/admin/insights/InsightRuleDrawer";
-import { AiChatWidget } from "../../components/admin/insights/AiChatWidget";
 
 const COMPLETED = "COMPLETED";
 const CLOSED_NEGATIVE = ["CANCELLED", "NO_SHOW"];
@@ -843,14 +842,6 @@ export default function AdminInsightPage() {
         open={ruleDrawerOpen}
         onOpenChange={setRuleDrawerOpen}
         onChanged={loadInsights}
-      />
-
-      {/* Nút tròn trò chuyện AI — chat thật qua POST /owner/insights/ai-chat */}
-      <AiChatWidget
-        fromDate={start}
-        toDate={end}
-        insightId={selectedInsight?.id ?? null}
-        aiConfigured={aiHealth ? Boolean(aiHealth.configured) : null}
       />
     </PageContainer>
   );
