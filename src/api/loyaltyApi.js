@@ -20,4 +20,8 @@ export const loyaltyApi = {
     axiosClient.post(`/v1/rewards/${rewardId}/redeem`, payload),
   adjustPoints: (accountId, payload) =>
     axiosClient.post(`/v1/customer/loyalty/adjust`, payload),
+  // GET /api/v1/admin/loyalty-tiers — LƯU Ý: DTO của BE hiện là stub rỗng,
+  // response về dạng [{}] không có field. FE gọi để thăm dò; không dùng được
+  // thì hiển thị cấu hình nghiệp vụ + báo chờ API.
+  getAdminTiers: () => axiosClient.get("/v1/admin/loyalty-tiers"),
 };
