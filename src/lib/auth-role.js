@@ -1,33 +1,35 @@
 import { getCurrentUser } from "../utils/authUtils";
 
-const STORAGE_KEY = "washmate_user_role"; // Kept for backward compatibility or future use if needed, but not used for main role check anymore.
-
 export const ROLES = {
   CUSTOMER: "CUSTOMER",
   STAFF: "STAFF",
   ADMIN: "ADMIN",
+  MANAGER: "MANAGER",
+  OWNER: "OWNER",
 };
 
+// Nhóm role được phép vào từng portal — MANAGER/OWNER dùng Admin Portal
+// (BE xếp OWNER/MANAGER vào nhóm quản trị trong ROLE_PRIORITY của MeResponse).
+export const ADMIN_PORTAL_ROLES = [ROLES.ADMIN, ROLES.OWNER, ROLES.MANAGER];
+export const STAFF_PORTAL_ROLES = [ROLES.STAFF];
+export const CUSTOMER_PORTAL_ROLES = [ROLES.CUSTOMER];
+
+/**
+ * Role hiện tại lấy DUY NHẤT từ session đăng nhập thật (JWT/currentUser).
+ * Trả về null khi chưa đăng nhập hoặc role không nằm trong danh sách hỗ trợ —
+ * không còn fallback localStorage (backdoor test cũ đã gỡ).
+ */
 export function getCurrentRole() {
   const user = getCurrentUser();
-  // To avoid breaking the UI while waiting for BE, we fallback to uppercase of decoded role.
-  if (user && user.role) {
-    const role = String(user.role).toUpperCase();
-    if (role === "ADMIN") return ROLES.ADMIN;
-    if (role === "STAFF") return ROLES.STAFF;
-    return ROLES.CUSTOMER;
-  }
-  
-  // Fallback for testing while BE is not ready:
-  return sessionStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY) || null;
+  if (!user?.role) return null;
+  const role = String(user.role).toUpperCase();
+  return ROLES[role] || null;
 }
 
-export function setCurrentRole(role) {
-  sessionStorage.setItem(STORAGE_KEY, role);
-  localStorage.setItem(STORAGE_KEY, role);
-}
-
-export function clearCurrentRole() {
-  localStorage.removeItem(STORAGE_KEY);
-  sessionStorage.removeItem(STORAGE_KEY);
+/** Trang chủ tương ứng với role sau đăng nhập; null nếu role chưa được hỗ trợ. */
+export function homePathForRole(role) {
+  if (ADMIN_PORTAL_ROLES.includes(role)) return "/quan-tri";
+  if (STAFF_PORTAL_ROLES.includes(role)) return "/nhan-vien";
+  if (CUSTOMER_PORTAL_ROLES.includes(role)) return "/khach-hang";
+  return null;
 }

@@ -112,6 +112,9 @@ function AppRoutes() {
             </RequireRole>
           }
         >
+          {/* Route chuẩn tiếng Việt + alias tiếng Anh cũ (giữ link cũ hoạt động) */}
+          <Route path="/nhan-vien/tra-cuu" element={<StaffBookingSearchPage />} />
+          <Route path="/nhan-vien/tra-cuu/:bookingId/workflow" element={<StaffWorkflowPage />} />
           <Route path="/staff/bookings" element={<StaffBookingSearchPage />} />
           <Route path="/staff/bookings/:bookingId/workflow" element={<StaffWorkflowPage />} />
           <Route path="/nhan-vien" element={<StaffDashboardPage />} />
@@ -121,10 +124,10 @@ function AppRoutes() {
           <Route path="/nhan-vien/profile" element={<StaffProfilePage />} />
         </Route>
 
-        {/* Admin — role-protected */}
+        {/* Admin — role-protected (MANAGER/OWNER dùng chung Admin Portal) */}
         <Route
           element={
-            <RequireRole role={ROLES.ADMIN}>
+            <RequireRole roles={[ROLES.ADMIN, ROLES.MANAGER, ROLES.OWNER]}>
               <AdminLayout />
             </RequireRole>
           }

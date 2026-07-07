@@ -301,7 +301,7 @@ export default function CustomerBookingFlowPage() {
         console.error("Sync error:", err);
         const errStr = err?.message || "";
         const guide = (errStr.toLowerCase().includes("internal server error") || err?.status === 500)
-          ? `Bản ghi xe cũ "${selection.vehicle.licensePlate}" bị lỗi dữ liệu trên máy chủ Backend. Bạn vui lòng vào tab "Xe của tôi", bấm Xóa xe này đi rồi bấm "Thêm phương tiện" tạo lại xe này là đặt lịch thành công 100%!`
+          ? `Bản ghi xe cũ "${selection.vehicle.licensePlate}" bị lỗi dữ liệu trên hệ thống. Bạn vui lòng vào tab "Xe của tôi", bấm Xóa xe này đi rồi bấm "Thêm phương tiện" tạo lại xe này là đặt lịch thành công 100%!`
           : `Lỗi đồng bộ xe (${selection.vehicle.licensePlate}): ${errStr || "Máy chủ từ chối cập nhật"}. Vui lòng sang tab "Xe của tôi" bấm Chỉnh sửa và Lưu lại xe này.`;
         setSubmitError(guide);
         setSubmitting(false);

@@ -146,7 +146,7 @@ export default function StaffWorkflowPage() {
               <UserX />Đánh dấu không đến
             </Button>
           )}
-          <Link to="/staff/bookings" className="mt-4 block text-center text-xs font-bold text-primary">
+          <Link to="/nhan-vien/tra-cuu" className="mt-4 block text-center text-xs font-bold text-primary">
             Quay lại danh sách
           </Link>
         </aside>

@@ -73,7 +73,7 @@ export default function StaffBookingWorkflowPage() {
           <p className="mt-2 text-xs leading-5 text-muted-foreground">{terminal ? (booking.bookingStatus === "COMPLETED" ? "Dịch vụ đã hoàn tất." : "Lịch đã kết thúc, không còn thao tác xử lý.") : action ? `Bước hợp lệ tiếp theo: ${action.label}.` : "Booking chưa đủ điều kiện xử lý."}</p>
           {action && <Button size="lg" disabled={updating} onClick={() => transition(action.next, action.api)} className="mt-5 w-full"><ActionIcon />{updating ? "Đang cập nhật..." : action.label}</Button>}
           {booking.bookingStatus === "CONFIRMED" && <Button variant="destructive" size="lg" disabled={updating} onClick={() => transition("NO_SHOW", "markNoShow")} className="mt-3 w-full"><UserX />Đánh dấu không đến</Button>}
-          <Link to="/staff/bookings" className="mt-4 block text-center text-xs font-bold text-primary">Quay lại danh sách</Link>
+          <Link to="/nhan-vien/danh-sach" className="mt-4 block text-center text-xs font-bold text-primary">Quay lại danh sách</Link>
         </aside>
       </div>
     </div>

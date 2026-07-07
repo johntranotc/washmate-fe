@@ -44,7 +44,7 @@ export default function RewardsPage() {
       <PageHeader
         eyebrow="Kho quà thành viên"
         title="Đổi điểm lấy quà"
-        description="Điểm chỉ thay đổi sau khi backend xác nhận đổi thưởng thành công."
+        description="Điểm chỉ thay đổi sau khi hệ thống xác nhận đổi thưởng thành công."
         actions={<div className="rounded-2xl bg-primary px-5 py-3 text-white"><p className="text-xs text-primary-container">Điểm khả dụng</p><b className="text-2xl">{points.toLocaleString("vi-VN")}</b></div>}
       />
 

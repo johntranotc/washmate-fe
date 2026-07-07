@@ -22,7 +22,7 @@ const navLinks = [
   { icon: assetIcon(STAFF_ASSETS.nav.overview), label: "Tổng quan", to: "/nhan-vien", end: true },
   { icon: assetIcon(STAFF_ASSETS.nav.queue), label: "Hàng đợi", to: "/nhan-vien/hang-doi", end: false },
   { icon: assetIcon(STAFF_ASSETS.nav.calendar), label: "Lịch hôm nay", to: "/nhan-vien/danh-sach", end: false },
-  { icon: assetIcon(STAFF_ASSETS.nav.search), label: "Tra cứu booking", to: "/staff/bookings", end: false },
+  { icon: assetIcon(STAFF_ASSETS.nav.search), label: "Tra cứu lịch hẹn", to: "/nhan-vien/tra-cuu", end: false },
   { icon: assetIcon(STAFF_ASSETS.nav.user), label: "Hồ sơ nhân viên", to: "/nhan-vien/profile", end: false },
 ];
 

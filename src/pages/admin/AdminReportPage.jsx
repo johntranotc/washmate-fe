@@ -362,7 +362,7 @@ export default function AdminReportPage() {
               <RefreshCw className={loading ? "animate-spin" : ""} /> Tải lại
             </Button>
             {/* BE chưa có API export báo cáo — disabled, không tạo file giả */}
-            <Button variant="outline" size="sm" disabled title="Chức năng xuất báo cáo chưa được backend hỗ trợ.">
+            <Button variant="outline" size="sm" disabled title="Chức năng xuất báo cáo chưa được hệ thống hỗ trợ.">
               <Download /> Xuất báo cáo
             </Button>
             {updatedLabel && (
