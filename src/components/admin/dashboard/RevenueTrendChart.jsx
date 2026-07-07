@@ -95,15 +95,15 @@ export function RevenueTrendChart({ data = [], showPrevious = false }) {
       <div className="mb-4 grid grid-cols-3 gap-3 rounded-xl bg-surface p-3">
         <div>
           <p className="text-xs font-semibold text-neutral-muted">Tổng doanh thu kỳ</p>
-          <p className="mt-0.5 text-sm font-bold text-foreground">{formatMoneyShort(stats.total)}</p>
+          <p className="mt-0.5 text-sm font-semibold text-foreground">{formatMoneyShort(stats.total)}</p>
         </div>
         <div className="border-l border-border pl-3">
           <p className="text-xs font-semibold text-neutral-muted">Trung bình / ngày</p>
-          <p className="mt-0.5 text-sm font-bold text-foreground">{formatMoneyShort(stats.avg)}</p>
+          <p className="mt-0.5 text-sm font-semibold text-foreground">{formatMoneyShort(stats.avg)}</p>
         </div>
         <div className="border-l border-border pl-3">
           <p className="text-xs font-semibold text-neutral-muted">Cao nhất</p>
-          <p className="mt-0.5 text-sm font-bold text-foreground">
+          <p className="mt-0.5 text-sm font-semibold text-foreground">
             {stats.peak ? formatMoneyShort(stats.peak.revenue) : "—"}
             {stats.peak && <span className="ml-1 text-xs font-semibold text-neutral-muted">({labelFor(stats.peak.dateISO, "day")})</span>}
           </p>

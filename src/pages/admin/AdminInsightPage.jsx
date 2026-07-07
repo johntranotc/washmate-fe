@@ -1,684 +1,848 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import PageContainer from "@/components/shared/PageContainer";
-import PageHeader from "@/components/shared/PageHeader";
 import { Link } from "react-router-dom";
 import {
-  ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend,
+  ComposedChart, BarChart, Bar, Cell, LabelList, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip as RechartsTooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import {
-  BrainCircuit, RefreshCw, Settings2, AlertTriangle, TrendingDown, TrendingUp, Clock, UserX,
-  CircleDollarSign, ClipboardList, CheckCircle2, XCircle, Users, Droplets, Lightbulb, ChevronRight,
-  BarChart3, ShieldAlert, X, Hourglass, ServerCrash, CalendarDays,
+  RefreshCw, Settings2, AlertTriangle, Sparkles, Lightbulb, ArrowRight,
+  CircleDollarSign, CalendarDays, CheckCircle2, XCircle, Wrench, Users, Clock3,
 } from "lucide-react";
-import { adminApi } from "../../api/adminApi";
-import { analyticsApi } from "../../api/analyticsApi";
-import { normalizeBookingList, normalizeStaffBooking } from "../../lib/staff-booking-data";
-import { formatDate, formatMoney, formatMoneyShort, formatNumber, todayISO } from "../../lib/format";
-import { CHART } from "../../lib/chart-colors";
+import PageContainer from "@/components/shared/PageContainer";
+import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/components/ui/toast";
+import { adminApi } from "../../api/adminApi";
+import { garageApi } from "../../api/garageApi";
+import { normalizeBookingList, normalizeStaffBooking } from "../../lib/staff-booking-data";
+import {
+  todayISO, formatDate, formatMoney, formatMoneyShort, formatMoneyCompact, formatNumber, friendlyName,
+} from "../../lib/format";
+import { CHART } from "../../lib/chart-colors";
+import { cn } from "@/lib/utils";
+import { InsightRuleDrawer } from "../../components/admin/insights/InsightRuleDrawer";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+const COMPLETED = "COMPLETED";
+const CLOSED_NEGATIVE = ["CANCELLED", "NO_SHOW"];
+
+const TIME_CHIPS = [
+  { key: "today", label: "Hôm nay" },
+  { key: "week", label: "7 ngày" },
+  { key: "month", label: "Tháng này" },
+  { key: "lastMonth", label: "Tháng trước" },
+  { key: "custom", label: "Tùy chọn" },
+];
+
+const SEVERITY_META = {
+  CRITICAL: { label: "Nghiêm trọng", tone: "bg-critical-container text-critical", dot: "bg-critical" },
+  WARNING: { label: "Cảnh báo", tone: "bg-warning-container text-warning", dot: "bg-warning" },
+  OPPORTUNITY: { label: "Cơ hội", tone: "bg-primary-container text-primary-strong", dot: "bg-primary" },
+  POSITIVE: { label: "Tích cực", tone: "bg-success-container text-success", dot: "bg-success" },
+};
+
+const INSIGHT_FILTERS = [
+  { key: "ALL", label: "Tất cả" },
+  { key: "ALERT", label: "Cảnh báo" },
+  { key: "REVENUE", label: "Doanh thu" },
+  { key: "ORDER", label: "Lịch hẹn" },
+  { key: "SERVICE", label: "Dịch vụ" },
+  { key: "CUSTOMER", label: "Khách hàng" },
+];
+
 function toISO(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 function addDays(iso, delta) {
-  const d = new Date(iso + "T00:00:00");
+  const d = new Date(`${iso}T00:00:00`);
   d.setDate(d.getDate() + delta);
   return toISO(d);
 }
-function daysBetween(a, b) {
-  return Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 86400000) + 1;
+function daysBetween(from, to) {
+  return Math.round((new Date(`${to}T00:00:00`) - new Date(`${from}T00:00:00`)) / 86400000);
 }
-function weekLabel(iso) {
-  const d = new Date(iso + "T00:00:00");
-  const day = (d.getDay() + 6) % 7;
-  d.setDate(d.getDate() - day);
-  return `Tuần ${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+function fmtPct(v) {
+  if (!Number.isFinite(v)) return "0%";
+  const rounded = Math.round(v * 10) / 10;
+  return `${String(rounded).replace(".", ",")}%`;
+}
+// Chuỗi kỹ thuật/seed — không đưa lên UI.
+const isTechnicalText = (s) => /(SEED|_V\d+|^WM_|TEST_|AI Seed|AI Demo)/i.test(s || "");
+
+/** Nút "Gợi ý từ AI" kiểu Gemini — sparkle + gradient xanh→tím (token hệ thống). */
+function AiSuggestButton({ onClick, loading, className }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={loading}
+      className={cn(
+        "inline-flex h-9 items-center gap-2 rounded-full bg-gradient-to-r from-primary via-accent-indigo to-accent-violet px-4 text-xs font-bold text-white shadow-cta transition hover:opacity-90 disabled:opacity-60",
+        className,
+      )}
+    >
+      <Sparkles size={14} className={loading ? "animate-pulse" : ""} />
+      {loading ? "Đang tạo gợi ý..." : "Gợi ý từ AI"}
+    </button>
+  );
 }
 
-const RANGES = [
-  ["today", "Hôm nay"],
-  ["week", "7 ngày"],
-  ["month", "Tháng này"],
-  ["lastMonth", "Tháng trước"],
-  ["custom", "Tùy chọn"],
-];
+function InsightSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-16 rounded-2xl" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+      </div>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="space-y-6">
+          <Skeleton className="h-80 rounded-2xl" />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Skeleton className="h-64 rounded-2xl" />
+            <Skeleton className="h-64 rounded-2xl" />
+          </div>
+        </div>
+        <div className="space-y-6">
+          <Skeleton className="h-72 rounded-2xl" />
+          <Skeleton className="h-80 rounded-2xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
-const GROUPS = [
-  ["day", "Theo ngày"],
-  ["week", "Theo tuần"],
-  ["month", "Theo tháng"],
-];
-
-const CANCEL_STATUSES = ["CANCELLED", "REJECTED", "NO_SHOW"];
-
-// Ngưỡng rule-based dùng để sinh insight — đây là CẤU HÌNH thật của FE, không phải dữ liệu giả.
-const RULES = [
-  { key: "revenue-drop", label: "Doanh thu giảm", desc: "So sánh doanh thu kỳ hiện tại với kỳ liền trước có cùng độ dài.", threshold: "Giảm ≥ 5% → CRITICAL, giảm < 5% → WARNING" },
-  { key: "cancel-rate", label: "Tỷ lệ hủy / no-show", desc: "Tính trên tổng lịch hẹn trong kỳ đã chọn.", threshold: "≥ 20% → CRITICAL, ≥ 10% → WARNING" },
-  { key: "peak-hour", label: "Khung giờ quá tải", desc: "Khung giờ chiếm tỷ trọng lịch hẹn cao nhất trong kỳ.", threshold: "≥ 25% tổng lịch và ≥ 3 lịch → WARNING" },
-  { key: "vip-inactive", label: "Khách VIP chưa quay lại", desc: "Khách có ≥ 2 lần rửa hoàn thành nhưng không quay lại.", threshold: "> 30 ngày không quay lại → INFO" },
-  { key: "service-growth", label: "Dịch vụ tăng trưởng", desc: "Dịch vụ có số đơn tăng mạnh nhất so với kỳ trước.", threshold: "Tăng > 0% → INFO" },
-];
-
-const SEVERITY = {
-  CRITICAL: { label: "CRITICAL", text: "text-critical", bg: "bg-critical-container", chip: "bg-critical-container text-critical", border: "border-critical/25", iconBg: "bg-critical-container text-critical" },
-  WARNING: { label: "WARNING", text: "text-warning", bg: "bg-warning-container", chip: "bg-warning-container text-warning", border: "border-warning/25", iconBg: "bg-warning-container text-warning" },
-  INFO: { label: "INFO", text: "text-primary", bg: "bg-primary-container", chip: "bg-primary-container text-primary", border: "border-primary/20", iconBg: "bg-primary-container text-primary" },
-};
-
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+/**
+ * Trang Insight vận hành (Admin).
+ * - Insight rule-based + gợi ý AI: API thật của BE (owner/insights, ai-enrich — Gemini).
+ * - KPI/chart/dịch vụ/khách/khung giờ: tổng hợp từ GET /bookings theo bộ lọc.
+ * Lưu ý: danh sách insight của BE tính trên TOÀN HỆ THỐNG theo kỳ (không theo
+ * chi nhánh) — phần "Nguồn dữ liệu" trong chi tiết insight ghi rõ điều này.
+ */
 export default function AdminInsightPage() {
+  const [garages, setGarages] = useState([]);
   const [bookings, setBookings] = useState([]);
-  const [segments, setSegments] = useState([]);
-  const [behaviorLogs, setBehaviorLogs] = useState([]);
+  const [insightsRes, setInsightsRes] = useState(null); // AutoWashInsightsResponse | null
+  const [insightsError, setInsightsError] = useState(false);
+  const [rules, setRules] = useState([]);
+  const [aiHealth, setAiHealth] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [analyzedAt, setAnalyzedAt] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
-  const [range, setRange] = useState("month");
-  const [customFrom, setCustomFrom] = useState(addDays(todayISO(), -13));
+  const [garageId, setGarageId] = useState("all");
+  const [rangeKey, setRangeKey] = useState("month");
+  const [customFrom, setCustomFrom] = useState(todayISO());
   const [customTo, setCustomTo] = useState(todayISO());
-  const [group, setGroup] = useState("day");
+  const [insightFilter, setInsightFilter] = useState("ALL");
   const [selectedId, setSelectedId] = useState(null);
-  const [showRules, setShowRules] = useState(false);
 
-  const load = useCallback(() => {
+  const [ruleDrawerOpen, setRuleDrawerOpen] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResults, setAiResults] = useState({}); // insightId -> enrichment
+
+  // Kỳ phân tích: "Tháng này/Tháng trước" là TRỌN THÁNG theo spec.
+  const { start, end } = useMemo(() => {
+    const today = todayISO();
+    const d = new Date(`${today}T00:00:00`);
+    if (rangeKey === "today") return { start: today, end: today };
+    if (rangeKey === "week") return { start: addDays(today, -6), end: today };
+    if (rangeKey === "month") {
+      const first = `${today.slice(0, 8)}01`;
+      const last = toISO(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+      return { start: first, end: last };
+    }
+    if (rangeKey === "lastMonth") {
+      const first = toISO(new Date(d.getFullYear(), d.getMonth() - 1, 1));
+      const last = toISO(new Date(d.getFullYear(), d.getMonth(), 0));
+      return { start: first, end: last };
+    }
+    const s = customFrom <= customTo ? customFrom : customTo;
+    const e = customFrom <= customTo ? customTo : customFrom;
+    return { start: s, end: e };
+  }, [rangeKey, customFrom, customTo]);
+  const prevStart = useMemo(() => addDays(start, -(daysBetween(start, end) + 1)), [start, end]);
+  const prevEnd = useMemo(() => addDays(start, -1), [start]);
+
+  const loadBase = useCallback(async () => {
     setLoading(true);
     setError(null);
-    Promise.allSettled([
+    const [gRes, bRes, hRes, rRes] = await Promise.allSettled([
+      garageApi.getAll(),
       adminApi.getBookings({ size: 1000 }),
-      analyticsApi.getCustomerSegments(),
-      analyticsApi.getCustomerBehavior(),
-    ]).then(([bks, segs, logs]) => {
-      if (bks.status === "fulfilled") {
-        setBookings(normalizeBookingList(bks.value).map(normalizeStaffBooking));
-      } else {
-        setError(bks.reason?.message || "Không thể tải dữ liệu phân tích.");
-        setBookings([]);
-      }
-      setSegments(segs.status === "fulfilled" && Array.isArray(segs.value) ? segs.value : []);
-      setBehaviorLogs(logs.status === "fulfilled" && Array.isArray(logs.value) ? logs.value : []);
-      setAnalyzedAt(new Date());
-    }).finally(() => setLoading(false));
+      adminApi.getAiHealth(),
+      adminApi.getInsightRules(),
+    ]);
+    setGarages(gRes.status === "fulfilled" && Array.isArray(gRes.value) ? gRes.value : []);
+    setAiHealth(hRes.status === "fulfilled" ? hRes.value : null);
+    setRules(rRes.status === "fulfilled" && Array.isArray(rRes.value) ? rRes.value : []);
+    if (bRes.status === "fulfilled") {
+      setBookings(normalizeBookingList(bRes.value).map(normalizeStaffBooking));
+      setLastUpdated(new Date());
+    } else {
+      console.error("[AdminInsight] load bookings failed:", bRes.reason);
+      setError(bRes.reason?.message || "Không thể tải insight vận hành. Vui lòng thử lại.");
+      setBookings([]);
+    }
+    setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  const loadInsights = useCallback(() => {
+    setInsightsError(false);
+    adminApi.getOwnerInsights({ fromDate: start, toDate: end })
+      .then((res) => setInsightsRes(res))
+      .catch(() => { setInsightsRes(null); setInsightsError(true); });
+  }, [start, end]);
 
-  // ---- Kỳ phân tích & kỳ so sánh ------------------------------------------
-  const { start, end, prevStart, prevEnd } = useMemo(() => {
-    const today = todayISO();
-    let s = today, e = today;
-    if (range === "week") { s = addDays(today, -6); e = today; }
-    else if (range === "month") { s = `${today.slice(0, 7)}-01`; e = today; }
-    else if (range === "lastMonth") {
-      const d = new Date(); d.setDate(1); d.setDate(0); // ngày cuối tháng trước
-      e = toISO(d);
-      s = `${e.slice(0, 7)}-01`;
-    } else if (range === "custom") {
-      s = customFrom <= customTo ? customFrom : customTo;
-      e = customFrom <= customTo ? customTo : customFrom;
+  useEffect(() => { loadBase(); }, [loadBase]);
+  useEffect(() => { loadInsights(); }, [loadInsights]);
+
+  // "Làm mới phân tích" — chạy lại rule engine phía BE rồi tải lại toàn bộ.
+  async function handleRefreshAnalysis() {
+    setAnalyzing(true);
+    try {
+      await adminApi.generateInsights({ fromDate: start, toDate: end });
+      toast.success("Đã làm mới phân tích", { description: `Kỳ ${formatDate(start)} – ${formatDate(end)}` });
+    } catch (e) {
+      toast.error("Không thể làm mới phân tích", { description: e?.message || "Lỗi không xác định" });
+    } finally {
+      await loadBase();
+      loadInsights();
+      setAnalyzing(false);
     }
-    const len = daysBetween(s, e);
-    return { start: s, end: e, prevStart: addDays(s, -len), prevEnd: addDays(s, -1) };
-  }, [range, customFrom, customTo]);
+  }
 
-  const inRange = (b, s, e) => b.bookingDate && b.bookingDate >= s && b.bookingDate <= e;
-  const cur = useMemo(() => bookings.filter((b) => inRange(b, start, end)), [bookings, start, end]);
-  const prev = useMemo(() => bookings.filter((b) => inRange(b, prevStart, prevEnd)), [bookings, prevStart, prevEnd]);
+  const matchesGarage = useCallback(
+    (b) => garageId === "all" || String(b.garageId) === String(garageId),
+    [garageId],
+  );
+  const periodBookings = useMemo(
+    () => bookings.filter((b) => matchesGarage(b) && b.bookingDate >= start && b.bookingDate <= end),
+    [bookings, matchesGarage, start, end],
+  );
+  const prevBookings = useMemo(
+    () => bookings.filter((b) => matchesGarage(b) && b.bookingDate >= prevStart && b.bookingDate <= prevEnd),
+    [bookings, matchesGarage, prevStart, prevEnd],
+  );
 
-  const revenueOf = (list) => list.filter((b) => b.bookingStatus === "COMPLETED").reduce((s, b) => s + Number(b.finalAmount || 0), 0);
-  const pct = (c, p) => (p > 0 ? ((c - p) / p) * 100 : null);
-
-  // ---- KPI -----------------------------------------------------------------
-  const kpi = useMemo(() => {
-    const revenue = revenueOf(cur);
-    const prevRevenue = revenueOf(prev);
-    const orders = cur.length;
-    const completed = cur.filter((b) => b.bookingStatus === "COMPLETED").length;
-    const cancelled = cur.filter((b) => CANCEL_STATUSES.includes(b.bookingStatus)).length;
-    const prevCancelRate = prev.length ? (prev.filter((b) => CANCEL_STATUSES.includes(b.bookingStatus)).length / prev.length) * 100 : null;
-    const cancelRate = orders ? (cancelled / orders) * 100 : 0;
-    const days = daysBetween(start, end);
+  // ===== KPI trong kỳ (chia 0 an toàn) =====
+  const metricsOf = (list) => {
+    const total = list.length;
+    const completedList = list.filter((b) => b.bookingStatus === COMPLETED);
+    const cancelledNoShow = list.filter((b) => CLOSED_NEGATIVE.includes(b.bookingStatus)).length;
     return {
-      revenue, orders, completed, cancelled, cancelRate,
-      completionRate: orders ? (completed / orders) * 100 : 0,
-      avgPerDay: orders / days,
-      trendRevenue: pct(revenue, prevRevenue),
-      trendOrders: pct(orders, prev.length),
-      trendCompleted: pct(completed, prev.filter((b) => b.bookingStatus === "COMPLETED").length),
-      trendCancel: prevCancelRate == null ? null : cancelRate - prevCancelRate, // chênh lệch điểm %
+      total,
+      completed: completedList.length,
+      cancelledNoShow,
+      revenue: completedList.reduce((s, b) => s + (b.finalAmount || 0), 0),
+      cancelRate: total > 0 ? (cancelledNoShow / total) * 100 : 0,
     };
-  }, [cur, prev, start, end]);
+  };
+  const period = useMemo(() => metricsOf(periodBookings), [periodBookings]);
+  const prev = useMemo(() => (prevBookings.length > 0 ? metricsOf(prevBookings) : null), [prevBookings]);
 
-  // ---- Chart: doanh thu + số đơn -------------------------------------------
-  const chartData = useMemo(() => {
-    const revMap = {}, orderMap = {};
-    cur.forEach((b) => {
-      if (!b.bookingDate) return;
-      orderMap[b.bookingDate] = (orderMap[b.bookingDate] || 0) + 1;
-      if (b.bookingStatus === "COMPLETED") revMap[b.bookingDate] = (revMap[b.bookingDate] || 0) + Number(b.finalAmount || 0);
-    });
-    const len = Math.min(daysBetween(start, end), 92);
-    const daily = [];
-    for (let i = 0; i < len; i += 1) {
-      const d = addDays(start, i);
-      daily.push({ dateISO: d, revenue: revMap[d] || 0, orders: orderMap[d] || 0 });
-    }
-    if (group === "day") {
-      return daily.map((x) => ({ label: `${x.dateISO.slice(8, 10)}/${x.dateISO.slice(5, 7)}`, revenue: x.revenue, orders: x.orders }));
-    }
-    const buckets = new Map();
-    daily.forEach((x) => {
-      const key = group === "week" ? weekLabel(x.dateISO) : `${x.dateISO.slice(5, 7)}/${x.dateISO.slice(0, 4)}`;
-      const cell = buckets.get(key) || { label: key, revenue: 0, orders: 0 };
-      cell.revenue += x.revenue;
-      cell.orders += x.orders;
-      buckets.set(key, cell);
-    });
-    return Array.from(buckets.values());
-  }, [cur, start, end, group]);
+  const trendBadge = (v, invert = false, unit = "%") => {
+    if (typeof v !== "number" || !Number.isFinite(v)) return null;
+    const up = v >= 0;
+    const good = invert ? !up : up;
+    return (
+      <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-bold ${good ? "bg-success-container text-success" : "bg-critical-container text-critical"}`}>
+        {up ? "+" : ""}{String(Math.round(v * 10) / 10).replace(".", ",")}{unit}
+      </span>
+    );
+  };
+  const pctChange = (cur, p) => (p > 0 ? ((cur - p) / p) * 100 : null);
 
-  const hasChartData = chartData.some((d) => d.revenue > 0 || d.orders > 0);
-
-  // ---- Dịch vụ phổ biến ------------------------------------------------------
-  const topServices = useMemo(() => {
-    const m = {};
-    cur.forEach((b) => { if (b.serviceName) m[b.serviceName] = (m[b.serviceName] || 0) + 1; });
-    const total = cur.length || 1;
-    return Object.entries(m)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([name, count]) => ({ name, count, share: (count / total) * 100 }));
-  }, [cur]);
-
-  // ---- Khách hàng ------------------------------------------------------------
-  const customerStats = useMemo(() => {
-    const firstByCustomer = {};
-    bookings.forEach((b) => {
-      const k = b.customerId ?? b.customerName;
-      if (!k || !b.bookingDate) return;
-      if (!firstByCustomer[k] || b.bookingDate < firstByCustomer[k]) firstByCustomer[k] = b.bookingDate;
-    });
-    const inPeriod = new Set();
-    cur.forEach((b) => { const k = b.customerId ?? b.customerName; if (k) inPeriod.add(k); });
-    let newCount = 0;
-    inPeriod.forEach((k) => { if (firstByCustomer[k] >= start && firstByCustomer[k] <= end) newCount += 1; });
-    const returning = inPeriod.size - newCount;
-    const completed = cur.filter((b) => b.bookingStatus === "COMPLETED").length;
-    return {
-      total: inPeriod.size,
-      newCount,
-      returning,
-      returnRate: inPeriod.size ? (returning / inPeriod.size) * 100 : 0,
-      avgOrderValue: completed ? revenueOf(cur) / completed : 0,
-    };
-  }, [bookings, cur, start, end]);
-
-  // ---- Insight rule-based từ dữ liệu thật -------------------------------------
-  const insights = useMemo(() => {
-    const list = [];
-    const prevRevenue = revenueOf(prev);
-
-    if (prevRevenue > 0) {
-      const g = ((kpi.revenue - prevRevenue) / prevRevenue) * 100;
-      if (g < 0) {
-        list.push({
-          id: "revenue-drop",
-          severity: Math.abs(g) >= 5 ? "CRITICAL" : "WARNING",
-          icon: <TrendingDown size={18} />,
-          title: "Doanh thu đang có dấu hiệu giảm",
-          summary: `Doanh thu kỳ hiện tại giảm ${Math.abs(g).toFixed(1)}% so với kỳ trước.`,
-          cause: `Doanh thu kỳ này đạt ${formatMoneyShort(kpi.revenue)} so với ${formatMoneyShort(prevRevenue)} của kỳ liền trước. Nguyên nhân có thể do giảm lượt khách hoặc giá trị đơn trung bình giảm.`,
-          actions: [
-            "Kiểm tra hiệu quả các chiến dịch marketing trong 14 ngày qua.",
-            "Tăng cường chương trình khuyến mãi vào khung giờ thấp điểm.",
-            "Gợi ý combo dịch vụ để tăng giá trị đơn trung bình.",
-          ],
-        });
-      } else if (g > 0) {
-        list.push({
-          id: "revenue-up",
-          severity: "INFO",
-          icon: <TrendingUp size={18} />,
-          title: `Doanh thu tăng ${g.toFixed(1)}% so với kỳ trước`,
-          summary: `Đạt ${formatMoneyShort(kpi.revenue)} trong kỳ hiện tại.`,
-          cause: `Doanh thu kỳ này (${formatMoneyShort(kpi.revenue)}) cao hơn kỳ liền trước (${formatMoneyShort(prevRevenue)}).`,
-          actions: [
-            "Duy trì các chương trình đang chạy hiệu quả.",
-            "Chuẩn bị thêm nhân sự cho khung giờ cao điểm để giữ chất lượng dịch vụ.",
-          ],
-        });
-      }
-    }
-
-    if (cur.length >= 5 && kpi.cancelRate >= 10) {
-      list.push({
-        id: "cancel-rate",
-        severity: kpi.cancelRate >= 20 ? "CRITICAL" : "WARNING",
-        icon: <XCircle size={18} />,
-        title: "Tỷ lệ hủy đơn / no-show cao",
-        summary: `Tỷ lệ hủy / no-show hiện tại là ${kpi.cancelRate.toFixed(1)}%.`,
-        cause: `${kpi.cancelled}/${kpi.orders} lịch hẹn trong kỳ bị hủy hoặc khách không đến.`,
-        actions: [
-          "Bật nhắc lịch tự động trước giờ hẹn cho khách.",
-          "Yêu cầu thanh toán trước hoặc đặt cọc với khung giờ cao điểm.",
-          "Liên hệ xác nhận lại các lịch PENDING quá lâu.",
-        ],
-      });
-    }
-
-    const slotCount = {};
-    cur.forEach((b) => { if (b.slotTime) slotCount[b.slotTime] = (slotCount[b.slotTime] || 0) + 1; });
-    const busiest = Object.entries(slotCount).sort((a, b) => b[1] - a[1])[0];
-    if (busiest && busiest[1] >= 3 && busiest[1] / (cur.length || 1) >= 0.25) {
-      list.push({
-        id: "peak-hour",
-        severity: "WARNING",
-        icon: <Clock size={18} />,
-        title: `Khung giờ ${busiest[0]} quá tải`,
-        summary: `Khung giờ này chiếm ${Math.round((busiest[1] / cur.length) * 100)}% lịch hẹn trong kỳ.`,
-        cause: `${busiest[1]}/${cur.length} lịch hẹn dồn vào khung ${busiest[0]}, dễ gây chờ đợi và giảm trải nghiệm.`,
-        actions: [
-          "Tăng sức chứa slot hoặc phân bổ thêm nhân sự vào khung giờ này.",
-          "Khuyến mãi nhẹ cho các khung giờ thấp điểm để giãn tải.",
-        ],
-      });
-    }
-
-    const byCustomer = {};
-    bookings.forEach((b) => {
-      if (b.bookingStatus !== "COMPLETED" || !b.bookingDate) return;
-      const k = b.customerId ?? b.customerName;
-      if (!byCustomer[k]) byCustomer[k] = { count: 0, last: b.bookingDate };
-      byCustomer[k].count += 1;
-      if (b.bookingDate > byCustomer[k].last) byCustomer[k].last = b.bookingDate;
-    });
-    const cutoff = addDays(todayISO(), -30);
-    const vipInactive = Object.values(byCustomer).filter((c) => c.count >= 2 && c.last < cutoff).length;
-    if (vipInactive > 0) {
-      list.push({
-        id: "vip-inactive",
-        severity: "INFO",
-        icon: <UserX size={18} />,
-        title: "Khách hàng VIP chưa quay lại",
-        summary: `${vipInactive} khách thân thiết chưa quay lại trong 30 ngày qua.`,
-        cause: `Có ${vipInactive} khách từng rửa xe từ 2 lần trở lên nhưng đã hơn 30 ngày không phát sinh lịch mới.`,
-        actions: [
-          "Tạo chiến dịch chăm sóc riêng cho nhóm khách VIP lâu chưa quay lại.",
-          "Gửi ưu đãi giới hạn thời gian để kích hoạt lại nhóm khách này.",
-        ],
-      });
-    }
-
-    const svcCount = (arr) => arr.reduce((m, b) => { if (b.serviceName) m[b.serviceName] = (m[b.serviceName] || 0) + 1; return m; }, {});
-    const cs = svcCount(cur), ps = svcCount(prev);
-    let best = null;
-    Object.entries(cs).forEach(([name, c]) => {
-      const p = ps[name] || 0;
-      if (p > 0) { const g = ((c - p) / p) * 100; if (g > 0 && (!best || g > best.g)) best = { name, g, c }; }
-    });
-    if (best) {
-      list.push({
-        id: "service-growth",
-        severity: "INFO",
-        icon: <TrendingUp size={18} />,
-        title: `Dịch vụ "${best.name}" tăng ${best.g.toFixed(0)}%`,
-        summary: `${best.c} đơn trong kỳ, nhu cầu tăng so với kỳ trước.`,
-        cause: `Số đơn của dịch vụ này tăng ${best.g.toFixed(0)}% so với kỳ liền trước.`,
-        actions: [
-          "Ưu tiên nhân lực và vật tư cho dịch vụ đang tăng trưởng.",
-          "Cân nhắc combo kèm dịch vụ này để tăng giá trị đơn.",
-        ],
-      });
-    }
-
-    const order = { CRITICAL: 0, WARNING: 1, INFO: 2 };
-    return list.sort((a, b) => order[a.severity] - order[b.severity]);
-  }, [bookings, cur, prev, kpi]);
-
-  const selected = insights.find((i) => i.id === selectedId) || insights[0] || null;
-  const hasBeAiData = segments.length > 0 || behaviorLogs.length > 0;
-
-  const kpiCards = [
+  const KPI_CARDS = [
     {
-      title: "Tổng doanh thu", icon: <CircleDollarSign size={20} />, iconCls: "bg-primary-container text-primary",
-      value: formatMoneyShort(kpi.revenue), sub: formatMoney(kpi.revenue), trend: kpi.trendRevenue, goodWhenUp: true,
+      label: "Tổng doanh thu", Icon: CircleDollarSign, tone: "text-primary bg-primary-container",
+      value: formatMoneyShort(period.revenue),
+      trend: prev ? trendBadge(pctChange(period.revenue, prev.revenue)) : null,
+      sub: "Lịch hẹn hoàn thành trong kỳ",
     },
     {
-      title: "Tổng đơn rửa xe", icon: <ClipboardList size={20} />, iconCls: "bg-accent-indigo/10 text-accent-indigo",
-      value: formatNumber(kpi.orders), sub: `Trung bình ${kpi.avgPerDay.toFixed(1)} đơn/ngày`, trend: kpi.trendOrders, goodWhenUp: true,
+      label: "Tổng lịch hẹn", Icon: CalendarDays, tone: "text-accent-indigo bg-accent-indigo/10",
+      value: formatNumber(period.total),
+      trend: prev ? trendBadge(pctChange(period.total, prev.total)) : null,
+      sub: `${formatNumber(period.completed)} hoàn thành · ${formatNumber(period.cancelledNoShow)} hủy/không đến`,
     },
     {
-      title: "Đơn hoàn thành", icon: <CheckCircle2 size={20} />, iconCls: "bg-success-container text-success",
-      value: formatNumber(kpi.completed), sub: `Tỷ lệ hoàn thành ${kpi.completionRate.toFixed(1)}%`, trend: kpi.trendCompleted, goodWhenUp: true,
+      label: "Lịch hẹn hoàn thành", Icon: CheckCircle2, tone: "text-success bg-success-container",
+      value: formatNumber(period.completed),
+      trend: prev ? trendBadge(pctChange(period.completed, prev.completed)) : null,
+      sub: `${fmtPct(period.total > 0 ? (period.completed / period.total) * 100 : 0)} tổng lịch hẹn`,
     },
     {
-      title: "Tỷ lệ hủy / no-show", icon: <XCircle size={20} />, iconCls: "bg-critical-container text-critical",
-      value: `${kpi.cancelRate.toFixed(1)}%`, sub: `${formatNumber(kpi.cancelled)} đơn bị hủy`, trend: kpi.trendCancel, goodWhenUp: false, trendIsPoint: true,
+      label: "Tỷ lệ hủy / không đến", Icon: XCircle, tone: "text-no-show bg-no-show-container",
+      value: fmtPct(period.cancelRate),
+      trend: prev ? trendBadge(period.cancelRate - prev.cancelRate, true, " điểm %") : null,
+      sub: `${formatNumber(period.cancelledNoShow)} / ${formatNumber(period.total)} lịch hẹn`,
     },
   ];
+
+  // ===== Chart xu hướng (theo ngày): cột = lịch hẹn, đường = doanh thu =====
+  const trendData = useMemo(() => {
+    const len = Math.min(daysBetween(start, end) + 1, 62);
+    const from = addDays(end, -(len - 1));
+    const countByDay = new Map();
+    const revenueByDay = new Map();
+    periodBookings.forEach((b) => {
+      countByDay.set(b.bookingDate, (countByDay.get(b.bookingDate) || 0) + 1);
+      if (b.bookingStatus === COMPLETED) {
+        revenueByDay.set(b.bookingDate, (revenueByDay.get(b.bookingDate) || 0) + (b.finalAmount || 0));
+      }
+    });
+    const data = [];
+    for (let i = 0; i < len; i += 1) {
+      const iso = addDays(from, i);
+      data.push({
+        label: `${iso.slice(8, 10)}/${iso.slice(5, 7)}`,
+        "Lịch hẹn": countByDay.get(iso) || 0,
+        "Doanh thu": revenueByDay.get(iso) || 0,
+      });
+    }
+    return data;
+  }, [periodBookings, start, end]);
+  const hasTrendData = trendData.some((d) => d["Lịch hẹn"] > 0 || d["Doanh thu"] > 0);
+
+  // ===== Insight nổi bật (BE, toàn hệ thống theo kỳ) =====
+  const insightList = useMemo(() => {
+    const severityOrder = { CRITICAL: 0, WARNING: 1, OPPORTUNITY: 2, POSITIVE: 3 };
+    return (insightsRes?.insights || [])
+      .filter((it) => it.status !== "DISMISSED")
+      .filter((it) => !isTechnicalText(it.title) && !isTechnicalText(it.summary))
+      .filter((it) => {
+        if (insightFilter === "ALL") return true;
+        if (insightFilter === "ALERT") return ["CRITICAL", "WARNING"].includes(it.severity);
+        return it.type === insightFilter;
+      })
+      .sort((a, b) => (severityOrder[a.severity] ?? 9) - (severityOrder[b.severity] ?? 9));
+  }, [insightsRes, insightFilter]);
+
+  const selectedInsight = useMemo(
+    () => insightList.find((it) => it.id === selectedId) || insightList[0] || null,
+    [insightList, selectedId],
+  );
+  const selectedRule = useMemo(
+    () => rules.find((r) => r.ruleCode === selectedInsight?.ruleCode) || null,
+    [rules, selectedInsight],
+  );
+  const selectedAi = selectedInsight
+    ? aiResults[selectedInsight.id] || selectedInsight.aiEnrichment || null
+    : null;
+
+  // "Gợi ý từ AI" — API AI THẬT của BE (Gemini). Không cấu hình → toast, không fake.
+  async function handleAiSuggest() {
+    if (!selectedInsight) {
+      toast.info("Chưa có insight để tạo gợi ý", { description: "Hãy chọn một insight trong danh sách." });
+      return;
+    }
+    if (aiHealth && aiHealth.configured === false) {
+      toast.info("Chức năng gợi ý AI chưa được backend hỗ trợ.");
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const res = await adminApi.aiEnrichInsight(selectedInsight.id);
+      setAiResults((m) => ({ ...m, [selectedInsight.id]: res }));
+      toast.success("Đã tạo gợi ý từ AI");
+    } catch (e) {
+      toast.error("Không thể tạo gợi ý AI", { description: e?.message || "Lỗi không xác định" });
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  // ===== Dịch vụ phổ biến (theo số lịch hẹn trong kỳ) =====
+  const popularServices = useMemo(() => {
+    const map = new Map();
+    periodBookings.forEach((b) => {
+      const name = friendlyName(b.serviceName, "Dịch vụ chưa đặt tên");
+      map.set(name, (map.get(name) || 0) + 1);
+    });
+    const total = periodBookings.length || 1;
+    return [...map.entries()]
+      .map(([name, count]) => ({ name, count, pct: Math.round((count / total) * 100) }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [periodBookings]);
+
+  // ===== Khách hàng (suy từ booking thật, theo bộ lọc) =====
+  const customerStats = useMemo(() => {
+    const inPeriod = new Set();
+    periodBookings.forEach((b) => {
+      const key = b.customerId ?? b.customerName;
+      if (key) inPeriod.add(String(key));
+    });
+    const firstByCustomer = new Map();
+    bookings.filter(matchesGarage).forEach((b) => {
+      const key = String(b.customerId ?? b.customerName);
+      if (!key || !b.bookingDate) return;
+      const cur = firstByCustomer.get(key);
+      if (!cur || b.bookingDate < cur) firstByCustomer.set(key, b.bookingDate);
+    });
+    let newCustomers = 0;
+    inPeriod.forEach((key) => {
+      const first = firstByCustomer.get(key);
+      if (first && first >= start && first <= end) newCustomers += 1;
+    });
+    const total = inPeriod.size;
+    const returning = total - newCustomers;
+    return {
+      total,
+      newCustomers,
+      returning,
+      repeatRate: total > 0 ? (returning / total) * 100 : 0,
+      avgPerBooking: period.completed > 0 ? Math.round(period.revenue / period.completed) : 0,
+    };
+  }, [periodBookings, bookings, matchesGarage, start, end, period]);
+
+  // ===== Mật độ lịch theo khung giờ =====
+  const hourly = useMemo(() => {
+    const map = new Map();
+    periodBookings.forEach((b) => {
+      const h = (b.slotTime || "").slice(0, 2);
+      if (!h) return;
+      map.set(h, (map.get(h) || 0) + 1);
+    });
+    const rows = [...map.entries()]
+      .map(([h, count]) => ({ hour: `${h}:00`, count }))
+      .sort((a, b) => a.hour.localeCompare(b.hour));
+    const max = rows.reduce((m, r) => Math.max(m, r.count), 0);
+    const peak = rows.find((r) => r.count === max) || null;
+    return { rows, max, peak };
+  }, [periodBookings]);
+
+  const garageLabel = garageId === "all"
+    ? "Tất cả chi nhánh"
+    : friendlyName(garages.find((g) => String(g.id ?? g.garageId) === String(garageId))?.name, "Chi nhánh chưa cập nhật");
+  const updatedLabel = lastUpdated
+    ? lastUpdated.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+    : null;
 
   return (
     <PageContainer>
       <PageHeader
-        title={
-          <span className="flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-white"><BrainCircuit size={20} /></span>
-            AI Insight
-          </span>
-        }
-        description="Phân tích dữ liệu kinh doanh & gợi ý vận hành bằng AI để tối ưu hiệu quả."
+        eyebrow="Quản trị hệ thống"
+        title="Insight vận hành"
+        description="Phân tích xu hướng, cảnh báo rủi ro và gợi ý hành động từ dữ liệu thực."
         actions={
-          <>
-            <Button variant="outline" onClick={() => setShowRules(true)} className="text-ink-soft">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setRuleDrawerOpen(true)}>
               <Settings2 /> Cấu hình rule
             </Button>
-            <Button variant="secondary" onClick={load} className="border border-primary/20 text-primary">
-              <RefreshCw className={loading ? "animate-spin" : ""} /> Làm mới phân tích
+            <Button size="sm" onClick={handleRefreshAnalysis} disabled={analyzing || loading}>
+              <RefreshCw className={analyzing ? "animate-spin" : ""} />
+              {analyzing ? "Đang phân tích..." : "Làm mới phân tích"}
             </Button>
-          </>
+          </div>
         }
       />
 
-      {/* Filter bar */}
-      <section className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
-        <span className="text-sm font-semibold text-muted-foreground">Khoảng thời gian:</span>
-        <div className="flex flex-wrap gap-2">
-          {RANGES.map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setRange(key)}
-              className={`h-9 rounded-xl px-4 text-sm font-bold transition ${range === key ? "bg-primary text-white shadow-sm" : "border border-border bg-card text-muted-foreground hover:bg-surface"}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        {range === "custom" ? (
-          <div className="flex items-center gap-2">
-            <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} className="h-9 rounded-xl border border-border bg-card px-3 text-sm font-semibold outline-none focus:border-primary" />
-            <span className="text-sm text-neutral-muted">→</span>
-            <input type="date" value={customTo} min={customFrom} onChange={(e) => setCustomTo(e.target.value)} className="h-9 rounded-xl border border-border bg-card px-3 text-sm font-semibold outline-none focus:border-primary" />
-          </div>
-        ) : (
-          <span className="ml-auto flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-semibold text-muted-foreground">
-            <CalendarDays size={16} className="text-neutral-muted" /> {formatDate(start)} – {formatDate(end)}
-          </span>
-        )}
-      </section>
-
-      {loading ? (
-        <div className="space-y-5">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {[0, 1, 2, 3].map((i) => <div key={i} className="h-40 animate-pulse rounded-2xl bg-muted" />)}
-          </div>
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
-            <div className="h-[360px] animate-pulse rounded-2xl bg-muted" />
-            <div className="h-[360px] animate-pulse rounded-2xl bg-muted" />
-          </div>
-        </div>
-      ) : error ? (
-        <div className="rounded-2xl border border-critical/25 bg-critical-container p-10 text-center">
+      {loading && !bookings.length ? (
+        <InsightSkeleton />
+      ) : error && !bookings.length ? (
+        <div className="rounded-2xl border border-critical/25 bg-critical-container p-8 text-center">
           <AlertTriangle className="mx-auto mb-3 text-critical" size={28} />
           <p className="text-sm font-bold text-critical">{error}</p>
-          <Button variant="destructive" size="sm" onClick={load} className="mt-4">Thử lại</Button>
+          <Button size="sm" onClick={loadBase} className="mt-4 bg-critical text-white hover:bg-critical/90">Thử lại</Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
-          {/* ===================== CỘT TRÁI ===================== */}
-          <div className="min-w-0 space-y-5">
-            {/* KPI cards */}
-            <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
-              {kpiCards.map((c) => {
-                const hasTrend = typeof c.trend === "number" && Number.isFinite(c.trend);
-                const up = hasTrend && c.trend >= 0;
-                const positive = c.goodWhenUp ? up : !up;
-                return (
-                  <article key={c.title} className="rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:shadow-card">
-                    <div className="flex items-start justify-between">
-                      <span className={`grid h-11 w-11 place-items-center rounded-xl ${c.iconCls}`}>{c.icon}</span>
-                      {hasTrend && (
-                        <span className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-black ${positive ? "bg-success-container text-success" : "bg-critical-container text-critical"}`}>
-                          {up ? "↗" : "↘"} {up ? "+" : ""}{c.trend.toFixed(1)}{c.trendIsPoint ? " điểm %" : "%"}
-                          <span className="hidden font-semibold text-neutral-muted sm:inline">so với kỳ trước</span>
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-3 text-xs font-bold text-muted-foreground">{c.title}</p>
-                    <p className="mt-1 text-2xl font-extrabold leading-tight tracking-tight text-foreground" title={c.sub}>{c.value}</p>
-                    {c.sub && c.sub !== c.value && <p className="mt-1 text-xs font-semibold text-neutral-muted">{c.sub}</p>}
-                  </article>
-                );
-              })}
+        <>
+          {/* Filter phạm vi phân tích */}
+          <section className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={garageId}
+                onChange={(e) => setGarageId(e.target.value)}
+                className="h-9 rounded-xl border border-input bg-background px-3 text-xs font-bold outline-none focus:border-ring"
+                aria-label="Chọn chi nhánh"
+              >
+                <option value="all">Tất cả chi nhánh</option>
+                {garages.map((g) => (
+                  <option key={g.id ?? g.garageId} value={g.id ?? g.garageId}>
+                    {friendlyName(g.name ?? g.garageName, "Chi nhánh chưa cập nhật")}
+                  </option>
+                ))}
+              </select>
+              <div className="flex gap-1 rounded-xl border border-border bg-surface p-1">
+                {TIME_CHIPS.map((c) => (
+                  <button
+                    key={c.key}
+                    type="button"
+                    onClick={() => setRangeKey(c.key)}
+                    className={cn(
+                      "rounded-lg px-3 py-1.5 text-xs font-bold transition",
+                      rangeKey === c.key ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+              {rangeKey === "custom" && (
+                <>
+                  <input
+                    type="date"
+                    value={customFrom}
+                    onChange={(e) => setCustomFrom(e.target.value)}
+                    className="h-9 rounded-xl border border-input px-2.5 text-xs font-bold text-muted-foreground outline-none"
+                    aria-label="Từ ngày"
+                  />
+                  <input
+                    type="date"
+                    value={customTo}
+                    onChange={(e) => setCustomTo(e.target.value)}
+                    className="h-9 rounded-xl border border-input px-2.5 text-xs font-bold text-muted-foreground outline-none"
+                    aria-label="Đến ngày"
+                  />
+                </>
+              )}
+              <span className="rounded-full bg-primary-container px-3 py-1.5 text-xs font-bold text-primary-strong">
+                {formatDate(start)} – {formatDate(end)}
+              </span>
+              {updatedLabel && (
+                <span className="ml-auto text-xs font-medium text-muted-foreground">Cập nhật lúc {updatedLabel}</span>
+              )}
             </div>
+            {/* Phạm vi phân tích — số liệu khớp KPI bên dưới */}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border pt-3 text-xs text-muted-foreground">
+              <span>Kỳ phân tích: <b className="text-foreground">{formatDate(start)} – {formatDate(end)}</b></span>
+              <span>Chi nhánh: <b className="text-foreground">{garageLabel}</b></span>
+              <span>
+                Dữ liệu: <b className="text-foreground">{formatNumber(period.total)} lịch hẹn</b>
+                {" · "}{formatNumber(period.completed)} hoàn thành
+                {" · "}{formatNumber(period.cancelledNoShow)} hủy/không đến
+              </span>
+            </div>
+          </section>
 
-            {/* Chart chính */}
-            <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="flex items-center gap-2 font-extrabold text-foreground">
-                  <BarChart3 size={18} className="text-primary" /> Xu hướng doanh thu &amp; đơn rửa xe
-                </h2>
-                <select value={group} onChange={(e) => setGroup(e.target.value)} className="h-9 rounded-xl border border-border bg-card px-3 text-xs font-bold text-muted-foreground outline-none focus:border-primary">
-                  {GROUPS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-                </select>
-              </div>
-              <div className="h-[300px] w-full">
-                {hasChartData ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 0 }} barCategoryGap="35%" barGap={6}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={CHART.grid} />
-                      <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: CHART.axis }} dy={8} interval="preserveStartEnd" minTickGap={22} padding={{ left: 16, right: 16 }} />
-                      <YAxis yAxisId="rev" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: CHART.axis }} tickFormatter={(v) => new Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 1 }).format(v)} width={48} />
-                      <YAxis yAxisId="ord" orientation="right" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: CHART.axis }} allowDecimals={false} width={34} />
-                      <RechartsTooltip
-                        formatter={(v, name) => (name === "orders" ? [`${v} đơn`, "Số đơn rửa xe"] : [formatMoney(v), "Doanh thu"])}
-                        labelStyle={{ fontWeight: 700, color: CHART.ink }}
-                        contentStyle={{ borderRadius: 12, border: `1px solid ${CHART.grid}`, fontSize: 12 }}
-                      />
-                      <Legend
-                        verticalAlign="top" height={32}
-                        payload={[
-                          { value: "Doanh thu (đ)", type: "line", color: CHART.c1, id: "revenue" },
-                          { value: "Số đơn rửa xe", type: "line", color: CHART.c2, id: "orders" },
-                        ]}
-                        formatter={(v) => <span className="text-xs font-semibold text-muted-foreground">{v}</span>}
-                      />
-                      {/* Đường gấp khúc (linear), 2 màu tách biệt: xanh dương = doanh thu, cam = số đơn */}
-                      <Line yAxisId="rev" type="linear" dataKey="revenue" stroke={CHART.c1} strokeWidth={2.5} dot={chartData.length <= 32 ? { r: 4, fill: CHART.c1, stroke: CHART.contrast, strokeWidth: 1.5 } : false} activeDot={{ r: 6 }} />
-                      <Line yAxisId="ord" type="linear" dataKey="orders" stroke={CHART.c2} strokeWidth={2.5} dot={chartData.length <= 32 ? { r: 4, fill: CHART.c2, stroke: CHART.contrast, strokeWidth: 1.5 } : false} activeDot={{ r: 6 }} />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex h-full flex-col items-center justify-center text-center">
-                    <BarChart3 size={36} className="text-border" />
-                    <p className="mt-3 text-sm font-bold text-muted-foreground">Chưa có dữ liệu trong kỳ đã chọn</p>
-                    <p className="mt-1 text-xs text-neutral-muted">Biểu đồ sẽ hiển thị khi có lịch hẹn phát sinh trong khoảng thời gian này.</p>
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {/* Dịch vụ phổ biến + Khách hàng */}
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-              <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="flex items-center gap-2 font-extrabold text-foreground"><Droplets size={18} className="text-primary" /> Dịch vụ phổ biến</h2>
-                  <Link to="/quan-tri/services" className="flex items-center gap-0.5 text-xs font-bold text-primary hover:underline">Xem chi tiết <ChevronRight size={14} /></Link>
+          {/* KPI */}
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {KPI_CARDS.map(({ label, value, sub, trend, Icon, tone }) => (
+              <article key={label} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
+                <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${tone}`}>
+                  <Icon size={16} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+                  <b className="mt-0.5 block text-xl font-semibold text-foreground">{value}{trend}</b>
+                  <p className="text-xs leading-4 text-neutral-muted">{sub}</p>
                 </div>
-                {topServices.length === 0 ? (
-                  <p className="py-10 text-center text-sm text-neutral-muted">Chưa có đơn dịch vụ nào trong kỳ.</p>
+              </article>
+            ))}
+          </section>
+
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+            {/* Cột trái */}
+            <div className="min-w-0 space-y-6">
+              {/* Xu hướng doanh thu & lịch hẹn */}
+              <section className="rounded-2xl border border-border bg-card p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-lg font-bold text-foreground">Xu hướng doanh thu & lịch hẹn</h2>
+                  <span className="text-xs font-semibold text-neutral-muted">Theo ngày</span>
+                </div>
+                {hasTrendData ? (
+                  <div className="mt-4 h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={trendData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+                        <CartesianGrid stroke={CHART.grid} strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="label" tick={{ fontSize: 11, fill: CHART.axis }} tickLine={false} axisLine={false} />
+                        <YAxis yAxisId="count" tick={{ fontSize: 11, fill: CHART.axis }} tickLine={false} axisLine={false} allowDecimals={false} />
+                        <YAxis yAxisId="money" orientation="right" tick={{ fontSize: 11, fill: CHART.axis }} tickLine={false} axisLine={false} tickFormatter={(v) => formatMoneyCompact(v)} />
+                        <RechartsTooltip formatter={(v, name) => (name === "Doanh thu" ? formatMoney(v) : formatNumber(v))} />
+                        <Legend wrapperStyle={{ fontSize: 12 }} />
+                        <Bar yAxisId="count" dataKey="Lịch hẹn" fill={CHART.c1} radius={[4, 4, 0, 0]} barSize={14} />
+                        <Line yAxisId="money" type="monotone" dataKey="Doanh thu" stroke={CHART.c3} strokeWidth={2} dot={false} />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
                 ) : (
-                  <>
-                    <div className="space-y-4">
-                      {topServices.map((s, i) => (
-                        <div key={s.name}>
-                          <div className="flex items-center justify-between gap-2 text-xs">
-                            <span className="flex min-w-0 items-center gap-2">
-                              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-muted text-xs font-black text-muted-foreground">{i + 1}</span>
-                              <span className="truncate font-bold text-ink-soft">{s.name}</span>
+                  <p className="py-16 text-center text-xs text-neutral-muted">Chưa có dữ liệu xu hướng trong kỳ này.</p>
+                )}
+              </section>
+
+              <div className="grid gap-6 lg:grid-cols-2">
+                {/* Dịch vụ phổ biến */}
+                <section className="rounded-2xl border border-border bg-card p-5">
+                  <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
+                    <Wrench size={18} className="text-primary" /> Dịch vụ phổ biến
+                  </h2>
+                  {popularServices.length === 0 ? (
+                    <p className="py-10 text-center text-xs text-neutral-muted">Chưa có lịch hẹn trong kỳ này.</p>
+                  ) : (
+                    <div className="mt-4 space-y-3">
+                      {popularServices.map((s) => (
+                        <div key={s.name} className="text-xs">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="truncate font-semibold text-ink-soft">{s.name}</span>
+                            <span className="shrink-0 text-muted-foreground">
+                              <b className="text-foreground">{formatNumber(s.count)} lịch</b> · {s.pct}%
                             </span>
-                            <span className="shrink-0 font-bold text-foreground">{formatNumber(s.count)} đơn <span className="font-semibold text-neutral-muted">({s.share.toFixed(1)}%)</span></span>
                           </div>
-                          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
-                            <div className="h-full rounded-full" style={{ width: `${s.share}%`, backgroundColor: [CHART.c1, CHART.c3, CHART.c4, CHART.c2, CHART.c5][i] }} />
+                          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
+                            <div className="h-full rounded-full bg-primary" style={{ width: `${s.pct}%` }} />
                           </div>
                         </div>
                       ))}
                     </div>
-                    <p className="mt-4 border-t border-border pt-3 text-xs font-semibold text-neutral-muted">Tổng {formatNumber(kpi.orders)} đơn</p>
+                  )}
+                  <Link to="/quan-tri/services" className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">
+                    Xem tất cả dịch vụ <ArrowRight size={14} />
+                  </Link>
+                </section>
+
+                {/* Khách hàng */}
+                <section className="rounded-2xl border border-border bg-card p-5">
+                  <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
+                    <Users size={18} className="text-primary" /> Khách hàng
+                  </h2>
+                  {customerStats.total === 0 ? (
+                    <p className="py-10 text-center text-xs text-neutral-muted">Chưa có khách hàng trong kỳ này.</p>
+                  ) : (
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                      {[
+                        ["Khách hàng mới", formatNumber(customerStats.newCustomers), "text-accent-cyan"],
+                        ["Khách quay lại", formatNumber(customerStats.returning), "text-success"],
+                        ["Tỷ lệ quay lại", fmtPct(customerStats.repeatRate), "text-primary-strong"],
+                        ["Giá trị TB / lịch hoàn thành", formatMoneyShort(customerStats.avgPerBooking), "text-foreground"],
+                        ["Tổng khách trong kỳ", formatNumber(customerStats.total), "text-foreground"],
+                      ].map(([label, value, cls]) => (
+                        <div key={label}>
+                          <p className={`text-lg font-semibold ${cls}`}>{value}</p>
+                          <p className="mt-0.5 text-xs font-semibold leading-4 text-muted-foreground">{label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              </div>
+
+              {/* Mật độ lịch theo khung giờ */}
+              <section className="rounded-2xl border border-border bg-card p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
+                    <Clock3 size={18} className="text-primary" /> Mật độ lịch theo khung giờ
+                  </h2>
+                  <Link to="/quan-tri/bookings" className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">
+                    Xem chi tiết <ArrowRight size={14} />
+                  </Link>
+                </div>
+                {hourly.rows.length === 0 ? (
+                  <p className="py-10 text-center text-xs text-neutral-muted">
+                    Chưa đủ dữ liệu để phân tích khung giờ cao điểm.
+                  </p>
+                ) : (
+                  <>
+                    {/* Biểu đồ cột chuẩn: trục tung + lưới nét đứt + số trên đầu cột (dữ liệu thật) */}
+                    <div className="mt-4 h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={hourly.rows} margin={{ top: 20, right: 8, bottom: 0, left: 0 }}>
+                          <CartesianGrid stroke={CHART.grid} strokeDasharray="4 4" />
+                          <XAxis
+                            dataKey="hour"
+                            tick={{ fontSize: 11, fill: CHART.axis }}
+                            tickLine={false}
+                            axisLine={{ stroke: CHART.grid }}
+                          />
+                          <YAxis
+                            tick={{ fontSize: 11, fill: CHART.axis }}
+                            tickLine={false}
+                            axisLine={{ stroke: CHART.grid }}
+                            allowDecimals={false}
+                          />
+                          <RechartsTooltip
+                            formatter={(v) => [`${formatNumber(v)} lịch hẹn`, "Số lịch"]}
+                            labelFormatter={(l) => `Khung giờ ${l}`}
+                          />
+                          <Bar dataKey="count" barSize={38} radius={[4, 4, 0, 0]}>
+                            <LabelList
+                              dataKey="count"
+                              position="top"
+                              style={{ fontSize: 12, fontWeight: 700, fill: CHART.ink }}
+                            />
+                            {hourly.rows.map((r) => (
+                              <Cell
+                                key={r.hour}
+                                fill={hourly.peak && r.hour === hourly.peak.hour ? CHART.orange : CHART.c1}
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    {hourly.peak && (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Khung giờ cao điểm: <b className="text-no-show">{hourly.peak.hour}</b> với {formatNumber(hourly.peak.count)} lịch hẹn trong kỳ.
+                      </p>
+                    )}
                   </>
                 )}
               </section>
-
-              <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="flex items-center gap-2 font-extrabold text-foreground"><Users size={18} className="text-primary" /> Khách hàng</h2>
-                  <Link to="/quan-tri/users" className="flex items-center gap-0.5 text-xs font-bold text-primary hover:underline">Xem chi tiết <ChevronRight size={14} /></Link>
-                </div>
-                {customerStats.total === 0 ? (
-                  <p className="py-10 text-center text-sm text-neutral-muted">Chưa có khách hàng phát sinh lịch trong kỳ.</p>
-                ) : (
-                  <dl className="divide-y divide-border">
-                    {[
-                      ["Khách hàng mới", `${formatNumber(customerStats.newCount)}`, customerStats.total ? `(${((customerStats.newCount / customerStats.total) * 100).toFixed(1)}%)` : "", "text-foreground"],
-                      ["Khách hàng quay lại", `${formatNumber(customerStats.returning)}`, customerStats.total ? `(${customerStats.returnRate.toFixed(1)}%)` : "", "text-foreground"],
-                      ["Tỷ lệ quay lại", `${customerStats.returnRate.toFixed(1)}%`, "", "text-primary"],
-                      ["Giá trị trung bình / đơn", formatMoney(customerStats.avgOrderValue), "", "text-foreground"],
-                    ].map(([label, value, extra, cls]) => (
-                      <div key={label} className="flex items-center justify-between py-3">
-                        <dt className="text-sm font-semibold text-muted-foreground">{label}</dt>
-                        <dd className={`text-sm font-black ${cls}`}>{value} {extra && <span className="font-semibold text-neutral-muted">{extra}</span>}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                )}
-              </section>
             </div>
 
-            {/* Trạng thái dữ liệu AI từ BE */}
-            {!hasBeAiData && (
-              <section className="flex items-start gap-3 rounded-2xl border border-dashed border-border bg-card p-4">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-muted text-neutral-muted"><ServerCrash size={18} /></span>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  <b className="text-ink-soft">Phân tích AI chuyên sâu từ Backend đang chờ dữ liệu.</b> Các endpoint
-                  <span className="mx-1 rounded bg-muted px-1.5 py-0.5 font-mono text-xs">GET /api/v1/analytics/admin/customer-segments</span> và
-                  <span className="mx-1 rounded bg-muted px-1.5 py-0.5 font-mono text-xs">GET /api/v1/analytics/admin/behavioral-logs</span>
-                  hiện trả về rỗng. Các insight bên phải được tính rule-based từ dữ liệu booking thật của hệ thống.
-                </p>
-              </section>
-            )}
-          </div>
-
-          {/* ===================== CỘT PHẢI ===================== */}
-          <div className="min-w-0 space-y-5">
-            {/* Insight nổi bật */}
-            <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 font-extrabold text-foreground"><ShieldAlert size={18} className="text-primary" /> Insight nổi bật</h2>
-                {analyzedAt && (
-                  <span className="text-xs font-semibold text-neutral-muted">Phân tích lúc {analyzedAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span>
-                )}
-              </div>
-              {insights.length === 0 ? (
-                <div className="py-10 text-center">
-                  <CheckCircle2 size={36} className="mx-auto text-success-container" />
-                  <p className="mt-3 text-sm font-bold text-muted-foreground">Không phát hiện vấn đề nổi bật</p>
-                  <p className="mt-1 text-xs text-neutral-muted">Chưa đủ dữ liệu trong kỳ hoặc mọi chỉ số đều trong ngưỡng an toàn.</p>
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {insights.map((it) => {
-                    const sv = SEVERITY[it.severity];
-                    const isSelected = selected && selected.id === it.id;
-                    return (
-                      <button
-                        key={it.id}
-                        onClick={() => setSelectedId(it.id)}
-                        className={`flex w-full items-start gap-3 rounded-xl border p-3.5 text-left transition ${isSelected ? `${sv.border} ring-2 ring-primary/60 shadow-sm` : "border-border hover:border-border hover:bg-surface"}`}
-                      >
-                        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${sv.iconBg}`}>{it.icon}</span>
-                        <span className="min-w-0">
-                          <span className={`text-xs font-black tracking-widest ${sv.text}`}>{sv.label}</span>
-                          <span className="block text-sm font-extrabold leading-snug text-foreground">{it.title}</span>
-                          <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">{it.summary}</span>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
-
-            {/* Chi tiết insight */}
-            {selected && (
-              <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="font-extrabold text-foreground">Chi tiết insight</h2>
-                  <span className="flex items-center gap-1 rounded-full bg-primary-container px-2.5 py-1 text-xs font-bold text-primary"><Lightbulb size={14} /> Gợi ý từ dữ liệu thật</span>
-                </div>
-                <h3 className={`text-base font-extrabold ${SEVERITY[selected.severity].text}`}>{selected.title}</h3>
-                <p className="mt-1.5 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground">
-                  Mức độ: <span className={`rounded-full px-2 py-0.5 text-xs font-black ${SEVERITY[selected.severity].chip}`}>{selected.severity}</span>
-                  {analyzedAt && <span className="text-neutral-muted">· Phát hiện lúc {analyzedAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span>}
-                </p>
-                <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{selected.cause}</p>
-
-                <h4 className="mt-4 text-sm font-extrabold text-primary-strong">Đề xuất hành động</h4>
-                <ul className="mt-2 space-y-1.5">
-                  {selected.actions.map((a) => (
-                    <li key={a} className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
-                      <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-primary" /> {a}
-                    </li>
+            {/* Cột phải: Insight nổi bật + Chi tiết */}
+            <div className="min-w-0 space-y-6">
+              <section className="rounded-2xl border border-border bg-card p-5">
+                <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
+                  <Lightbulb size={18} className="text-primary" /> Insight nổi bật
+                </h2>
+                <div className="no-scrollbar mt-3 flex gap-1 overflow-x-auto">
+                  {INSIGHT_FILTERS.map((f) => (
+                    <button
+                      key={f.key}
+                      type="button"
+                      onClick={() => setInsightFilter(f.key)}
+                      className={cn(
+                        "shrink-0 rounded-full px-2.5 py-1 text-xs font-bold transition",
+                        insightFilter === f.key ? "bg-primary text-white" : "bg-surface text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {f.label}
+                    </button>
                   ))}
-                </ul>
-
-                <Button
-                  render={<Link to="/quan-tri/reports" />}
-                  variant="secondary"
-                  size="sm"
-                  className="mt-5 w-full border border-primary/20 text-xs text-primary-strong"
-                >
-                  <BarChart3 /> Xem báo cáo chi tiết
-                </Button>
-              </section>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Modal Cấu hình rule (read-only — chỉnh sửa ngưỡng cần API cấu hình từ BE) */}
-      {showRules && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={() => setShowRules(false)}>
-          <div className="w-full max-w-lg rounded-2xl bg-card p-6 shadow-floating" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-4 flex items-start justify-between">
-              <div>
-                <h3 className="flex items-center gap-2 text-lg font-extrabold text-foreground"><Settings2 size={18} className="text-primary" /> Cấu hình rule phân tích</h3>
-                <p className="mt-1 text-xs text-muted-foreground">Ngưỡng đang được engine rule-based phía FE sử dụng trên dữ liệu thật.</p>
-              </div>
-              <Button variant="ghost" size="icon-sm" aria-label="Đóng" onClick={() => setShowRules(false)} className="text-neutral-muted hover:text-ink-soft"><X className="size-4.5" /></Button>
-            </div>
-            <div className="space-y-3">
-              {RULES.map((r) => (
-                <div key={r.key} className="rounded-xl border border-border bg-surface p-3.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <b className="text-sm text-foreground">{r.label}</b>
-                    <span className="shrink-0 rounded-full bg-card px-2 py-0.5 text-xs font-bold text-muted-foreground ring-1 ring-border">{r.threshold}</span>
-                  </div>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{r.desc}</p>
                 </div>
-              ))}
+                <div className="mt-3 space-y-2">
+                  {insightsError ? (
+                    <div className="py-6 text-center">
+                      <p className="text-xs font-bold text-critical">Không thể tải insight vận hành. Vui lòng thử lại.</p>
+                      <Button size="sm" variant="outline" className="mt-3" onClick={loadInsights}>Thử lại</Button>
+                    </div>
+                  ) : insightsRes === null ? (
+                    <p className="py-6 text-center text-xs text-neutral-muted">Đang tải insight...</p>
+                  ) : insightList.length === 0 ? (
+                    <p className="py-6 text-center text-xs leading-5 text-neutral-muted">
+                      Chưa đủ dữ liệu để tạo insight trong kỳ này. Hãy chọn khoảng thời gian dài hơn hoặc chi nhánh khác.
+                    </p>
+                  ) : (
+                    insightList.map((it) => {
+                      const meta = SEVERITY_META[it.severity] || SEVERITY_META.OPPORTUNITY;
+                      const selected = selectedInsight?.id === it.id;
+                      return (
+                        <button
+                          key={it.id}
+                          type="button"
+                          onClick={() => setSelectedId(it.id)}
+                          className={cn(
+                            "block w-full rounded-xl border p-3 text-left transition",
+                            selected
+                              ? "border-primary bg-primary-container/50"
+                              : "border-border bg-surface hover:border-primary/30",
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`h-2 w-2 shrink-0 rounded-full ${meta.dot}`} />
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${meta.tone}`}>{meta.label}</span>
+                            {selected && (
+                              <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white">Đang xem</span>
+                            )}
+                          </div>
+                          <p className="mt-1.5 text-sm font-bold leading-5 text-foreground">{it.title}</p>
+                          {it.summary && (
+                            <p className="mt-0.5 line-clamp-2 text-xs leading-4 text-muted-foreground">{it.summary}</p>
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </section>
+
+              {/* Chi tiết insight */}
+              <section className="rounded-2xl border border-border bg-card p-5">
+                <h2 className="text-lg font-bold text-foreground">Chi tiết insight</h2>
+                {!selectedInsight ? (
+                  <p className="py-8 text-center text-xs text-neutral-muted">Chọn một insight để xem chi tiết.</p>
+                ) : (
+                  <>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${(SEVERITY_META[selectedInsight.severity] || SEVERITY_META.OPPORTUNITY).tone}`}>
+                        {(SEVERITY_META[selectedInsight.severity] || SEVERITY_META.OPPORTUNITY).label}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm font-bold leading-5 text-foreground">{selectedInsight.title}</p>
+
+                    <dl className="mt-3 space-y-1.5 rounded-xl border border-border bg-surface p-3.5 text-xs leading-5">
+                      <div>
+                        <dt className="inline font-bold text-foreground">Nguồn dữ liệu: </dt>
+                        <dd className="inline text-muted-foreground">
+                          {formatNumber(insightsRes?.summary?.totalOrders ?? 0)} lịch hẹn trong kỳ · Tất cả chi nhánh (insight tính trên toàn hệ thống)
+                        </dd>
+                      </div>
+                      {selectedInsight.evidence && !isTechnicalText(selectedInsight.evidence) && (
+                        <div>
+                          <dt className="inline font-bold text-foreground">Cơ sở tính toán: </dt>
+                          <dd className="inline text-muted-foreground">{selectedInsight.evidence}</dd>
+                        </div>
+                      )}
+                      {selectedRule?.thresholdValue != null && (
+                        <div>
+                          <dt className="inline font-bold text-foreground">Ngưỡng cảnh báo: </dt>
+                          <dd className="inline text-muted-foreground">
+                            {selectedRule.comparisonOperator || ""} {String(selectedRule.thresholdValue)}
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+
+                    {(selectedInsight.meaning || selectedInsight.summary) && (
+                      <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                        {selectedInsight.meaning || selectedInsight.summary}
+                      </p>
+                    )}
+                    {selectedInsight.recommendation && (
+                      <div className="mt-3 rounded-xl border border-border p-3.5">
+                        <p className="text-xs font-bold text-foreground">Khuyến nghị từ hệ thống</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">{selectedInsight.recommendation}</p>
+                      </div>
+                    )}
+
+                    <div className="mt-4">
+                      <AiSuggestButton onClick={handleAiSuggest} loading={aiLoading} className="w-full justify-center" />
+                    </div>
+
+                    {selectedAi && (
+                      <div className="mt-3 rounded-xl border border-accent-violet/25 bg-accent-violet/5 p-4">
+                        <p className="flex items-center gap-1.5 text-xs font-bold text-accent-violet">
+                          <Sparkles size={14} /> Tóm tắt AI
+                        </p>
+                        {selectedAi.aiSummary && (
+                          <p className="mt-1 text-xs leading-5 text-foreground">{selectedAi.aiSummary}</p>
+                        )}
+                        {selectedAi.aiExplanation && (
+                          <>
+                            <p className="mt-3 text-xs font-bold text-foreground">Giải thích chi tiết</p>
+                            <p className="mt-1 text-xs leading-5 text-muted-foreground">{selectedAi.aiExplanation}</p>
+                          </>
+                        )}
+                        {Array.isArray(selectedAi.aiRecommendation) && selectedAi.aiRecommendation.length > 0 && (
+                          <>
+                            <p className="mt-3 text-xs font-bold text-foreground">Đề xuất hành động</p>
+                            <ul className="mt-1 space-y-1">
+                              {selectedAi.aiRecommendation.map((r, i) => (
+                                <li key={i} className="text-xs leading-5 text-muted-foreground">• {r}</li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
+                        <p className="mt-3 border-t border-accent-violet/15 pt-2 text-xs text-neutral-muted">
+                          Gợi ý được tạo từ dữ liệu lịch hẹn thực tế trong kỳ hiện tại.
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </section>
             </div>
-            <p className="mt-4 flex items-start gap-2 rounded-xl border border-warning/25 bg-warning-container p-3 text-xs leading-relaxed text-warning">
-              <Hourglass size={14} className="mt-0.5 shrink-0" /> Việc chỉnh sửa ngưỡng cần API cấu hình từ Backend — hiện chưa có nên các ngưỡng ở chế độ chỉ xem.
-            </p>
           </div>
-        </div>
+        </>
       )}
+
+      <InsightRuleDrawer
+        open={ruleDrawerOpen}
+        onOpenChange={setRuleDrawerOpen}
+        onChanged={loadInsights}
+      />
     </PageContainer>
   );
 }
