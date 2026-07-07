@@ -73,7 +73,7 @@ export default function LoginPage() {
           id="email"
           label="Email"
           type="email"
-          placeholder="ban@email.com"
+          placeholder="Nhập email của bạn"
           icon="mail"
           autoComplete="email"
           value={email}
@@ -83,7 +83,7 @@ export default function LoginPage() {
           id="password"
           label="Mật khẩu"
           type="password"
-          placeholder="••••••••"
+          placeholder="Nhập mật khẩu"
           icon="lock"
           autoComplete="current-password"
           value={password}
@@ -111,14 +111,20 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <div className="my-7 flex items-center gap-3">
+      <div className="my-5 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
         <span className="text-sm font-medium text-muted-foreground">hoặc</span>
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      <div className="mt-1 flex w-full justify-center">
-        <GoogleLogin
+      {/* Nút hiển thị là UI custom; GoogleLogin thật nằm phủ trong suốt bên trên để giữ nguyên credential/idToken flow. */}
+      <div className="relative h-12 w-full overflow-hidden rounded-xl">
+        <span className="pointer-events-none flex h-full w-full items-center justify-center gap-3 rounded-xl border border-border bg-card text-sm font-bold text-foreground shadow-sm">
+          <img src="/images/auth/icons/google.png" alt="" className="size-5" />
+          Tiếp tục với Google
+        </span>
+        <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0">
+          <GoogleLogin
           onSuccess={async (credentialResponse) => {
             setError("");
             setLoading(true);
@@ -151,10 +157,13 @@ export default function LoginPage() {
           size="large"
           text="continue_with"
           shape="pill"
+          locale="vi"
+          width="400"
         />
+        </div>
       </div>
 
-      <p className="mt-8 text-center text-base text-muted-foreground">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Chưa có tài khoản?{" "}
         <Link to="/register" className="font-semibold text-primary hover:underline">
           Đăng ký ngay
