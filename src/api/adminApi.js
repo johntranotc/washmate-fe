@@ -25,6 +25,17 @@ export const adminApi = {
   // params: { fromDate, toDate, type?, status? } → AutoWashInsightsResponse
   // { period, summary, insights: BusinessInsightResponse[], analysisStatus, message }
   getOwnerInsights: (params = {}) => axiosClient.get("/owner/insights", { params }),
+  // POST /api/owner/insights/generate — chạy lại phân tích rule-based cho kỳ
+  generateInsights: (payload) => axiosClient.post("/owner/insights/generate", payload),
+  // GET /api/owner/insight-rules — cấu hình rule thật (threshold, severity, active)
+  getInsightRules: () => axiosClient.get("/owner/insight-rules"),
+  // PATCH /api/owner/insight-rules/{id}
+  updateInsightRule: (id, payload) => axiosClient.patch(`/owner/insight-rules/${id}`, payload),
+  // POST /api/owner/insights/{id}/ai-enrich — gợi ý AI THẬT (Gemini phía BE)
+  // → { aiSummary, aiExplanation, aiRecommendation: string[], confidenceScore, ... }
+  aiEnrichInsight: (id) => axiosClient.post(`/owner/insights/${id}/ai-enrich`),
+  // GET /api/owner/insights/ai-health → { configured, model, promptVersion, message }
+  getAiHealth: () => axiosClient.get("/owner/insights/ai-health"),
   // No list-all payments endpoint yet — return empty
   getPayments: () => Promise.resolve([]),
   // No reports endpoint yet

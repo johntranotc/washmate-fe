@@ -19,7 +19,7 @@ export function PaymentStatusCard({ paid = 0, pending = 0, failed = 0, refunded 
       <div className="mt-4 grid grid-cols-2 gap-3">
         {items.map(({ label, value, cls, bg }) => (
           <div key={label} className={`rounded-xl p-3.5 ${bg}`}>
-            <b className={`block text-xl font-bold ${cls}`}>{formatNumber(value)}</b>
+            <b className={`block text-lg font-semibold ${cls}`}>{formatNumber(value)}</b>
             <span className={`mt-0.5 block text-xs font-semibold leading-4 ${cls}`}>{label}</span>
           </div>
         ))}

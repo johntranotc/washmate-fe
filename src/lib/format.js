@@ -1,7 +1,9 @@
 // Shared formatting helpers for WashMate FE.
 // Safe against null/undefined/NaN — always returns a displayable string.
 
-const vndFormatter = new Intl.NumberFormat("vi-VN");
+// maximumFractionDigits: 0 — tiền VND không có phần lẻ; tránh trường hợp phép chia
+// ra số thập phân bị hiển thị kiểu "503.333,333 đ" (đọc nhầm thành 503 triệu).
+const vndFormatter = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 });
 
 /**
  * Format a number as Vietnamese currency, e.g. 125680000 -> "125.680.000 đ".

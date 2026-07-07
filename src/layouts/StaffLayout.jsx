@@ -5,6 +5,7 @@ import { userApi } from "@/api/userApi";
 import { garageApi } from "@/api/garageApi";
 import { getAuthItem } from "@/utils/authUtils";
 import PortalShell from "@/components/shared/PortalShell";
+import AccountDropdown from "@/components/portal/AccountDropdown";
 import { Button } from "@/components/ui/button";
 import { STAFF_ASSETS } from "@/lib/staff-assets";
 
@@ -53,7 +54,6 @@ export default function StaffLayout() {
 
   const stored = readStoredUser();
   const displayName = me?.fullName || stored?.fullName || stored?.name || "Nhân viên";
-  const roleLabel = me?.role || "STAFF";
   const initial = displayName.charAt(0).toUpperCase() || "S";
 
   // Garage được phân công: garageIds từ /users/me, tên tra qua /v1/garages.
@@ -100,15 +100,8 @@ export default function StaffLayout() {
           >
             <img src={STAFF_ASSETS.action.bell} alt="" width={20} height={20} className="rounded-md" />
           </button>
-          <div className="flex items-center gap-2.5 rounded-full border border-border py-1.5 pl-1.5 pr-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent-cyan text-sm font-bold text-white">
-              {initial}
-            </span>
-            <div className="hidden sm:block">
-              <p className="text-xs font-bold leading-tight text-foreground">{displayName}</p>
-              <p className="text-xs leading-tight text-muted-foreground">{roleLabel}</p>
-            </div>
-          </div>
+          {/* Dropdown tài khoản dùng chung với Admin — 2 portal đồng bộ */}
+          <AccountDropdown profilePath="/nhan-vien/profile" colorScheme="light" />
         </>
       }
       sidebarFooter={
