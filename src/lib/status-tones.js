@@ -51,3 +51,48 @@ export const paymentStatusTones = {
 };
 
 export const NEUTRAL_TONE = "bg-muted text-muted-foreground";
+
+// ===== Vai trò & trạng thái tài khoản (dùng chung Staff + Admin portal) =====
+// Nguồn duy nhất để map enum role/UserStatus của BE sang tiếng Việt.
+
+export const userRoleLabels = {
+  ADMIN: "Quản trị viên",
+  OWNER: "Chủ hệ thống",
+  MANAGER: "Quản lý",
+  STAFF: "Nhân viên",
+  CUSTOMER: "Khách hàng",
+};
+
+export const userRoleTones = {
+  ADMIN: "bg-accent-violet/10 text-accent-violet",
+  OWNER: "bg-accent-indigo/10 text-accent-indigo",
+  MANAGER: "bg-primary-container text-primary",
+  STAFF: "bg-accent-cyan/10 text-accent-cyan",
+  CUSTOMER: NEUTRAL_TONE,
+};
+
+export const userStatusLabels = {
+  ACTIVE: "Đang hoạt động",
+  BLOCKED: "Tạm khóa",
+  INACTIVE: "Ngừng hoạt động",
+  PENDING_VERIFY: "Chờ kích hoạt",
+};
+
+export const userStatusTones = {
+  ACTIVE: "bg-success-container text-success",
+  BLOCKED: "bg-critical-container text-critical",
+  INACTIVE: NEUTRAL_TONE,
+  PENDING_VERIFY: "bg-warning-container text-warning",
+};
+
+/** Nhãn tiếng Việt cho role; không bao giờ trả enum thô ra UI. */
+export function userRoleLabel(role, fallback = "—") {
+  if (!role) return fallback;
+  return userRoleLabels[String(role).toUpperCase()] || fallback;
+}
+
+/** Nhãn tiếng Việt cho trạng thái tài khoản. */
+export function userStatusLabel(status, fallback = "—") {
+  if (!status) return fallback;
+  return userStatusLabels[String(status).toUpperCase()] || fallback;
+}

@@ -6,7 +6,7 @@ import { STAFF_ASSETS } from "@/lib/staff-assets";
  * Icon từ bộ asset gốc icons/actions & icons/navigation.
  */
 const actions = [
-  { to: "/staff/bookings", icon: STAFF_ASSETS.nav.search, title: "Tra cứu booking", desc: "Tìm nhanh theo mã / biển số / SĐT" },
+  { to: "/nhan-vien/tra-cuu", icon: STAFF_ASSETS.nav.search, title: "Tra cứu lịch hẹn", desc: "Tìm nhanh theo mã / biển số / SĐT" },
   { to: "/nhan-vien/hang-doi", icon: STAFF_ASSETS.nav.queue, title: "Mở hàng đợi", desc: "Xác nhận & theo dõi xe đang xử lý" },
   { to: "/nhan-vien/hang-doi", icon: STAFF_ASSETS.action.checkIn, title: "Check-in khách", desc: "Tiếp nhận xe đã thanh toán" },
   { to: "/nhan-vien/danh-sach", icon: STAFF_ASSETS.action.progress, title: "Cập nhật tiến độ", desc: "Xe đang rửa trong danh sách hôm nay" },

@@ -1,8 +1,10 @@
 import { STAFF_ASSETS } from "@/lib/staff-assets";
+import { KpiCard } from "@/components/shared/KpiCard";
 
 /**
  * KPI vận hành trong ngày cho staff — 6 thẻ, số đếm từ booking thật (không hardcode).
  * Icon lấy từ bộ asset gốc icons/kpi (washmate_staff_assets_package).
+ * Dùng KpiCard chung với Admin portal để typography/spacing đồng nhất.
  * `deltas` (tuỳ chọn) là chênh lệch so với hôm qua; chỉ hiển thị khi có dữ liệu hôm qua thật.
  */
 export function StaffKpiCards({
@@ -30,19 +32,20 @@ export function StaffKpiCards({
         const hasD = typeof d === "number" && Number.isFinite(d);
         const up = hasD && d >= 0;
         return (
-          <article
+          <KpiCard
             key={key}
-            className={`rounded-2xl border bg-card p-5 ${alert && value > 0 ? "border-warning/40" : "border-border"}`}
-          >
-            <img src={icon} alt="" width={44} height={44} className="rounded-xl" />
-            <p className="mt-4 text-xs font-semibold text-muted-foreground">{label}</p>
-            <b className="mt-1 block text-2xl font-extrabold text-foreground">{value}</b>
-            {hasD && (
-              <p className={`mt-1 text-xs font-bold ${up ? "text-success" : "text-critical"}`}>
-                {up ? "↗" : "↘"} {up ? "+" : ""}{d} so với hôm qua
-              </p>
-            )}
-          </article>
+            label={label}
+            value={value}
+            iconSrc={icon}
+            highlight={Boolean(alert && value > 0)}
+            subtitle={
+              hasD ? (
+                <p className={`mt-0.5 text-xs font-bold ${up ? "text-success" : "text-critical"}`}>
+                  {up ? "↑" : "↓"} {up ? "+" : ""}{d} so với hôm qua
+                </p>
+              ) : null
+            }
+          />
         );
       })}
     </section>
