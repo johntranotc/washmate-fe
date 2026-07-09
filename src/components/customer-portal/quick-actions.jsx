@@ -1,69 +1,41 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Calendar, Plus, CreditCard, Star } from "lucide-react";
 
+// 4 thao tác nhanh — chỉ route thật đang hoạt động trong Customer Portal.
 const quickActions = [
-  {
-    title: "Đặt lịch rửa xe",
-    description: "Chọn xe, dịch vụ, gara và khung giờ phù hợp.",
-    icon: Calendar,
-    buttonText: "Đặt lịch mới",
-    href: "/khach-hang/dat-lich-moi",
-  },
-  {
-    title: "Thêm xe mới",
-    description: "Lưu thông tin xe để đặt lịch nhanh hơn.",
-    icon: Plus,
-    buttonText: "Thêm xe",
-    href: "/khach-hang/xe-cua-toi",
-  },
-  {
-    title: "Xem hóa đơn",
-    description: "Theo dõi thanh toán và hóa đơn dịch vụ.",
-    icon: CreditCard,
-    buttonText: "Xem hóa đơn",
-    href: "/khach-hang/thanh-toan",
-  },
-  {
-    title: "Xem điểm thưởng",
-    description: "Kiểm tra điểm, hạng thành viên và ưu đãi.",
-    icon: Star,
-    buttonText: "Xem điểm",
-    href: "/khach-hang/diem-thanh-vien",
-  },
+  { title: "Đặt lịch rửa xe", description: "Chọn xe, dịch vụ và khung giờ.", icon: Calendar, buttonText: "Đặt lịch mới", href: "/khach-hang/dat-lich-moi" },
+  { title: "Thêm xe mới", description: "Lưu xe để đặt lịch nhanh hơn.", icon: Plus, buttonText: "Thêm xe", href: "/khach-hang/xe-cua-toi" },
+  { title: "Xem hóa đơn", description: "Theo dõi thanh toán dịch vụ.", icon: CreditCard, buttonText: "Xem hóa đơn", href: "/khach-hang/thanh-toan" },
+  { title: "Xem điểm thưởng", description: "Điểm, hạng và ưu đãi của bạn.", icon: Star, buttonText: "Xem điểm", href: "/khach-hang/diem-thanh-vien" },
 ];
 
 export function QuickActions() {
   const navigate = useNavigate();
 
   return (
-    <div className="mb-8">
-      <h2 className="mb-6 text-2xl font-bold leading-tight text-foreground">Bạn muốn làm gì hôm nay?</h2>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+    <section>
+      <h2 className="mb-4 text-lg font-bold text-foreground">Bạn muốn làm gì hôm nay?</h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
-            <Card
+            <div
               key={action.title}
-              className="group flex h-full flex-col cursor-pointer rounded-2xl border border-border p-6 transition-all hover:shadow-card"
+              className="group flex h-full flex-col rounded-2xl border border-border bg-card p-5 transition hover:shadow-card"
             >
-              <div className="mb-4 w-fit rounded-xl bg-primary/10 p-3">
-                <Icon size={24} className="text-primary" />
-              </div>
-              <h3 className="mb-1 font-bold leading-tight text-foreground">{action.title}</h3>
-              <p className="mb-4 flex-1 text-sm font-medium text-muted-foreground">{action.description}</p>
-              <Button
-                size="sm"
-                onClick={() => navigate(action.href)}
-                className="mt-auto w-full"
-              >
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary-container text-primary">
+                <Icon size={18} />
+              </span>
+              <h3 className="mt-3 text-sm font-bold leading-tight text-foreground">{action.title}</h3>
+              <p className="mt-1 flex-1 text-xs text-muted-foreground">{action.description}</p>
+              <Button size="sm" onClick={() => navigate(action.href)} className="mt-4 w-full">
                 {action.buttonText}
               </Button>
-            </Card>
+            </div>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }

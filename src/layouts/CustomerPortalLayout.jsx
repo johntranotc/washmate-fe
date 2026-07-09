@@ -17,9 +17,9 @@ import {
 import PortalShell from "@/components/shared/PortalShell";
 import { loyaltyApi } from "@/api/loyaltyApi";
 import { cn } from "@/lib/utils";
-import { jwtDecode } from "jwt-decode";
 import { resolveTierInfo } from "@/lib/customer-engagement-data";
-import { getAuthItem } from "@/utils/authUtils";
+import { getDisplayName } from "@/utils/authUtils";
+import { STAFF_ASSETS } from "@/lib/staff-assets";
 
 const defaultLoyaltyInfo = {
   tierName: "Đồng",
@@ -44,45 +44,7 @@ const navLinks = [
 ];
 
 function resolveDisplayName() {
-  try {
-    const token = getAuthItem("token") || getAuthItem("accessToken");
-    if (token) {
-      const decoded = jwtDecode(token);
-
-      let name =
-        decoded.full_name ||
-        decoded.fullName ||
-        decoded.name ||
-        decoded.username ||
-        decoded.user_name ||
-        decoded.customerName;
-
-      if (!name && decoded.user && typeof decoded.user === "object") {
-        name = decoded.user.name || decoded.user.fullName || decoded.user.full_name;
-      }
-      if (!name && decoded.customer && typeof decoded.customer === "object") {
-        name = decoded.customer.name || decoded.customer.fullName || decoded.customer.full_name;
-      }
-
-      if (name && typeof name === "string" && isNaN(Number(name))) {
-        return name;
-      }
-
-      const email = decoded.email || decoded.sub;
-      if (email && typeof email === "string" && email.includes("@")) {
-        return email.split("@")[0];
-      }
-    }
-
-    const raw = localStorage.getItem("washmate_user_profile");
-    if (raw) {
-      const p = JSON.parse(raw);
-      if (p && p.name && typeof p.name === "string") return p.name;
-    }
-  } catch (error) {
-    console.error("Lỗi bóc tách tên hiển thị tại Layout:", error);
-  }
-  return "Khách hàng";
+  return getDisplayName("Khách hàng");
 }
 
 function useLoyaltyInfo() {
@@ -179,8 +141,11 @@ function CustomerHeaderActions() {
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent-cyan text-sm font-bold text-white shadow">
           {getAvatarLetter()}
         </span>
-        <span className="hidden items-center gap-1.5 text-xs font-bold text-foreground md:flex">
-          {renderCustomerName()}
+        <span className="hidden items-center gap-1.5 md:flex">
+          <span className="text-left leading-tight">
+            <span className="block text-xs font-bold text-foreground">{renderCustomerName()}</span>
+            <span className="block text-xs font-semibold text-muted-foreground">Khách hàng</span>
+          </span>
           <ChevronDown size={16} className={cn("text-neutral-muted transition-transform", showDropdown && "rotate-180")} />
         </span>
       </button>
@@ -249,7 +214,7 @@ export default function CustomerPortalLayout() {
   return (
     <PortalShell
       navLinks={navLinks}
-      brand={{ title: "WashMate", subtitle: "Khu vực khách hàng" }}
+      brand={{ title: "WashMate", subtitle: "Khu vực khách hàng", logoSrc: STAFF_ASSETS.logo.mark }}
       documentTitle="WashMate — Khách hàng"
       headerRight={<CustomerHeaderActions />}
       sidebarTop={

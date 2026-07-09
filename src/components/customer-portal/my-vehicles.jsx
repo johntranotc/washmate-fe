@@ -1,107 +1,71 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Car, ArrowRight, Plus } from "lucide-react";
-import { vehicleApi } from "@/api/vehicleApi";
 
-export function MyVehicles() {
+/**
+ * Xe của tôi — dữ liệu thật từ trang (GET /v1/vehicles/my-vehicles).
+ * Hiển thị tối đa 2 xe gần nhất dạng gọn; xem tất cả ở trang Xe của tôi.
+ */
+export function MyVehicles({ vehicles = [] }) {
   const navigate = useNavigate();
-  const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadVehicles() {
-      try {
-        const res = await vehicleApi.getMyVehicles();
-        if (Array.isArray(res)) {
-          setVehicles(res);
-        } else if (res && Array.isArray(res.data)) {
-          setVehicles(res.data);
-        }
-      } catch {
-        setVehicles([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadVehicles();
-  }, []);
+  const shown = vehicles.slice(0, 2);
 
   return (
-    <div className="mb-8">
-      <div className="mb-6 flex items-center justify-between">
+    <section className="rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="mb-2 text-2xl font-bold leading-tight text-foreground">Xe của tôi</h2>
-          <p className="font-medium text-muted-foreground">
-            Quản lý các phương tiện của bạn để đặt lịch nhanh hơn.
-          </p>
+          <h2 className="text-lg font-bold text-foreground">Xe của tôi</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">Lưu xe để đặt lịch nhanh hơn.</p>
         </div>
-        <Button onClick={() => navigate("/khach-hang/xe-cua-toi")}>
-          <Plus /> Quản lý xe
+        <Button size="sm" variant="outline" onClick={() => navigate("/khach-hang/xe-cua-toi")}>
+          Xem tất cả xe
         </Button>
       </div>
 
-      {loading ? (
-        <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground">
-          Đang tải danh sách phương tiện...
-        </div>
-      ) : vehicles.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card p-8 text-center">
-          <Car size={36} className="mx-auto mb-2 text-muted-foreground opacity-50" />
-          <p className="font-semibold text-foreground">Bạn chưa lưu phương tiện nào</p>
-          <Button
-            variant="link"
-            onClick={() => navigate("/khach-hang/xe-cua-toi")}
-            className="mt-1 text-primary font-bold"
-          >
-            Thêm xe ngay
+      {shown.length === 0 ? (
+        <div className="mt-4 flex flex-col items-center rounded-xl border border-dashed border-border px-6 py-10 text-center">
+          <Car size={36} className="text-border" />
+          <p className="mt-3 text-sm font-semibold text-foreground">Bạn chưa thêm xe nào</p>
+          <p className="mt-1 text-xs text-muted-foreground">Thêm xe để đặt lịch rửa nhanh hơn.</p>
+          <Button size="sm" className="mt-4" onClick={() => navigate("/khach-hang/xe-cua-toi")}>
+            <Plus /> Thêm xe
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {vehicles.map((vehicle, idx) => {
-            if (!vehicle || typeof vehicle !== "object") return null;
-            return (
-              <Card key={vehicle.vehicleId || vehicle.id || idx} className="rounded-2xl border border-border p-6 transition-all hover:shadow-card">
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-full bg-primary/10 p-3">
-                      <Car size={20} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-bold leading-tight text-foreground">{vehicle.brand || "Xe"}</p>
-                      <p className="text-sm font-medium text-muted-foreground">{vehicle.model || "Khách hàng"}</p>
-                    </div>
-                  </div>
-                  <Badge className="rounded-full bg-success-container text-success">Đang sử dụng</Badge>
-                </div>
-
-                <div className="space-y-3 border-y border-border py-4">
-                  <div>
-                    <p className="mb-1 text-xs font-medium text-muted-foreground">Biển số xe</p>
-                    <p className="font-semibold leading-tight text-foreground">{vehicle.licensePlate || "Chưa cập nhật"}</p>
-                  </div>
-                  <div>
-                    <p className="mb-1 text-xs font-medium text-muted-foreground">Màu sơn</p>
-                    <p className="font-semibold leading-tight text-foreground">{vehicle.color || "Không rõ"}</p>
-                  </div>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate("/khach-hang/xe-cua-toi")}
-                  className="mt-4 w-full justify-center font-bold text-primary hover:bg-secondary"
-                >
-                  Xem chi tiết <ArrowRight />
-                </Button>
-              </Card>
-            );
-          })}
+        <div className="mt-4 space-y-3">
+          {shown.map((vehicle, idx) => (
+            <div
+              key={vehicle.vehicleId || vehicle.id || idx}
+              className="flex items-center gap-3 rounded-xl border border-border bg-surface p-4"
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-container text-primary">
+                <Car size={18} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold text-foreground">
+                  {[vehicle.brand, vehicle.model].filter(Boolean).join(" ") || "Xe của bạn"}
+                </p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                  <b className="text-ink-soft">{vehicle.licensePlate || "Chưa cập nhật biển số"}</b>
+                  {vehicle.color ? ` · ${vehicle.color}` : ""}
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full bg-success-container px-2.5 py-0.5 text-xs font-bold text-success">
+                Đang sử dụng
+              </span>
+            </div>
+          ))}
+          {vehicles.length > shown.length && (
+            <button
+              type="button"
+              onClick={() => navigate("/khach-hang/xe-cua-toi")}
+              className="flex w-full items-center justify-center gap-1 rounded-xl py-2 text-xs font-bold text-primary hover:bg-surface"
+            >
+              +{vehicles.length - shown.length} xe khác <ArrowRight size={13} />
+            </button>
+          )}
         </div>
       )}
-    </div>
+    </section>
   );
 }
