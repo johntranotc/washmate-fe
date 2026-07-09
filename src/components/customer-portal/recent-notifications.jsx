@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Bell, AlertCircle, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Bell } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { notificationApi } from "@/api/notificationApi";
+import { formatDate, formatTime } from "@/lib/format";
 
-const iconMap = {
-  0: <AlertCircle size={20} />,
-  1: <Zap size={20} />,
-  2: <Bell size={20} />,
-};
+function notiTime(value) {
+  if (!value) return "";
+  const time = formatTime(String(value).slice(11, 16));
+  const date = formatDate(value);
+  return [time, date].filter(Boolean).join(", ");
+}
 
+/**
+ * Thông báo gần đây — 3 thông báo mới nhất từ GET /v1/notifications (API thật).
+ * Rỗng → empty state, không hardcode thông báo.
+ */
 export function RecentNotifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,11 +24,8 @@ export function RecentNotifications() {
     async function load() {
       try {
         const res = await notificationApi.getNotifications();
-        if (Array.isArray(res)) {
-          setNotifications(res.slice(0, 3));
-        } else if (res && Array.isArray(res.data)) {
-          setNotifications(res.data.slice(0, 3));
-        }
+        const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+        setNotifications(list.slice(0, 3));
       } catch {
         setNotifications([]);
       } finally {
@@ -33,65 +36,66 @@ export function RecentNotifications() {
   }, []);
 
   return (
-    <div className="mb-8">
-      <div className="mb-6">
-        <h2 className="mb-2 text-2xl font-bold leading-tight text-foreground">Thông báo gần đây</h2>
-        <p className="font-medium text-muted-foreground">
-          Cập nhật các hoạt động mới nhất từ lịch đặt, điểm thưởng và ưu đãi của bạn.
-        </p>
+    <section className="rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Thông báo gần đây</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">Cập nhật từ lịch đặt, điểm thưởng và ưu đãi.</p>
+        </div>
+        <Link to="/khach-hang/thong-bao" className="text-xs font-bold text-primary hover:underline">
+          Xem tất cả
+        </Link>
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground">
-          Đang tải thông báo...
+        <div className="mt-4 space-y-3">
+          {Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
         </div>
       ) : notifications.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground">
-          <Bell size={36} className="mx-auto mb-2 opacity-50" />
-          <p className="font-semibold text-foreground">Bạn chưa có thông báo mới nào</p>
+        <div className="mt-4 flex flex-col items-center rounded-xl border border-dashed border-border px-6 py-10 text-center">
+          <Bell size={36} className="text-border" />
+          <p className="mt-3 text-sm font-semibold text-foreground">Bạn chưa có thông báo mới nào</p>
+          <p className="mt-1 text-xs text-muted-foreground">Thông báo về lịch đặt và điểm thưởng sẽ hiển thị ở đây.</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {notifications.map((notification, idx) => {
-            if (!notification || typeof notification !== "object") return null;
-            const isRead = Boolean(notification.read || notification.isRead);
+        <div className="mt-4 space-y-3">
+          {notifications.map((n, idx) => {
+            const isRead = Boolean(n.read || n.isRead || n.readAt);
             return (
-              <Card
-                key={notification.notificationId || notification.id || idx}
-                className={`rounded-2xl border p-4 transition-all ${
-                  isRead ? "border-border bg-card" : "border-primary bg-primary/5"
+              <div
+                key={n.notificationId || n.id || idx}
+                className={`flex items-start gap-3 rounded-xl border p-4 ${
+                  isRead ? "border-border bg-surface" : "border-primary/25 bg-primary-container/40"
                 }`}
               >
-                <div className="flex items-start gap-4">
-                  <div className={`rounded-lg p-3 ${isRead ? "bg-secondary" : "bg-primary/10"}`}>
-                    <div className={isRead ? "text-muted-foreground" : "text-primary"}>
-                      {iconMap[idx % 3] || <Bell size={20} />}
-                    </div>
+                <span
+                  className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${
+                    isRead ? "bg-muted text-muted-foreground" : "bg-primary-container text-primary"
+                  }`}
+                >
+                  <Bell size={16} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-bold text-foreground">{n.title || "Thông báo hệ thống"}</p>
+                    {!isRead && (
+                      <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white">
+                        Mới
+                      </span>
+                    )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-start justify-between gap-4">
-                      <h3
-                        className={`font-bold leading-tight ${
-                          isRead ? "text-foreground" : "text-primary"
-                        }`}
-                      >
-                        {notification.title || "Thông báo hệ thống"}
-                      </h3>
-                      {!isRead && (
-                        <Badge className="flex-shrink-0 rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                          Mới
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="mb-2 text-sm font-medium text-muted-foreground">{notification.message || notification.content || ""}</p>
-                    <p className="text-xs font-medium text-muted-foreground">{notification.createdAt || notification.time || "Vừa xong"}</p>
-                  </div>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                    {n.message || n.content || ""}
+                  </p>
+                  {(n.createdAt || n.sentAt) && (
+                    <p className="mt-1 text-xs text-neutral-muted">{notiTime(n.createdAt || n.sentAt)}</p>
+                  )}
                 </div>
-              </Card>
+              </div>
             );
           })}
         </div>
       )}
-    </div>
+    </section>
   );
 }

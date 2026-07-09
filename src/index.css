@@ -271,3 +271,155 @@
     text-wrap: pretty;
   }
 }
+
+/* ===== Card kính mờ cho form đăng nhập/đăng ký (glassmorphism) =====
+   Nền trắng-mờ đủ sáng để chữ tối vẫn đọc rõ; blur lộ ảnh nền phía sau.
+   Có fallback đặc khi người dùng bật giảm trong suốt. */
+.wm-glass-card {
+  background: color-mix(in srgb, var(--card) 56%, transparent);
+  -webkit-backdrop-filter: blur(32px) saturate(150%);
+  backdrop-filter: blur(32px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 24px 70px rgba(2, 12, 36, 0.3);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .wm-glass-card {
+    background: var(--card);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ===== Hiệu ứng vào trang cho hero editorial (fade + trượt lên nhẹ) ===== */
+@keyframes wm-hero-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+.wm-hero-rise {
+  animation: wm-hero-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wm-hero-rise { animation: none; }
+}
+
+/* ===== Hiệu ứng chuyển trang khi bấm "Đăng nhập" trên landing page =====
+   Xe navy rồ ga rung bánh (pha đầu) rồi bứt tốc lao ngang phải→trái,
+   kèm khói peel-out ở đuôi + vệt sáng xanh + ánh nước nhẹ.
+   Tổng thời lượng ~950ms. JS đã bỏ hiệu ứng khi prefers-reduced-motion;
+   guard CSS bên dưới là dự phòng. */
+/* Pha 0–26%: xe hiện rõ ở giữa-phải, rồ ga rung nhẹ; 26–100%: chạy ngang đều, rõ. */
+@keyframes wm-login-car-launch {
+  0%   { transform: translate(52vw, -50%) scale(0.99); opacity: 0; }
+  7%   { transform: translate(50vw, -50%) scale(0.99); opacity: 1; }
+  12%  { transform: translate(49.5vw, -50.9%) scale(0.99); }
+  17%  { transform: translate(48.8vw, -49.3%) scale(0.995); }
+  22%  { transform: translate(48.2vw, -50.7%) scale(0.995); }
+  26%  { transform: translate(47.5vw, -50%) scale(1); }
+  94%  { opacity: 1; }
+  100% { transform: translate(-145vw, -50%) scale(1.04); opacity: 0; }
+}
+@keyframes wm-login-streak-across {
+  0% { transform: translate(120vw, -50%) scaleX(0.7); opacity: 0; }
+  25% { opacity: 0.9; }
+  100% { transform: translate(-165vw, -50%) scaleX(1.3); opacity: 0; }
+}
+@keyframes wm-login-shine-sweep {
+  0% { transform: translateX(-40%) rotate(18deg); opacity: 0; }
+  35% { opacity: 0.5; }
+  70% { opacity: 0.2; }
+  100% { transform: translateX(220%) rotate(18deg); opacity: 0; }
+}
+/* Khói/bụi peel-out bung ra ở đuôi xe đúng lúc bứt tốc. */
+@keyframes wm-login-dust-puff {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+  55% { opacity: 0.55; }
+  100% { transform: translate(30%, -50%) scale(1.7); opacity: 0; }
+}
+
+.wm-login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  overflow: hidden;
+  /* Nền trong suốt hoàn toàn — không làm mờ trang, chỉ có xe lướt qua */
+  background: transparent;
+}
+.wm-login-streak {
+  position: absolute;
+  top: 54%;
+  left: 0;
+  height: clamp(70px, 16vh, 150px);
+  width: min(70vw, 900px);
+  transform: translate(120vw, -50%);
+  border-radius: 9999px;
+  background: linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0) 8%, rgba(96, 165, 250, 0.5) 55%, rgba(191, 219, 254, 0.82) 100%);
+  filter: blur(24px);
+  /* Vệt sáng chỉ xuất hiện khi xe bắt đầu chạy (~430ms sau) */
+  animation: wm-login-streak-across 1020ms cubic-bezier(0.42, 0.1, 0.32, 1) 430ms both;
+}
+.wm-login-car-rig {
+  position: absolute;
+  top: 54%;
+  left: 0;
+  /* Chiều cao xe — to hơn để thấy rõ bánh; wheel dùng lại biến này để scale theo */
+  --car-h: clamp(210px, 50vh, 620px);
+  line-height: 0;
+  transform: translate(52vw, -50%);
+  /* Rồ ga ngắn → chạy ngang đều, dễ nhìn (không blast quá nhanh) */
+  animation: wm-login-car-launch 1500ms cubic-bezier(0.42, 0.1, 0.32, 1) both;
+}
+.wm-login-car-img {
+  display: block;
+  height: var(--car-h);
+  width: auto;
+  /* Viền sáng xanh + đổ bóng để xe đen nổi rõ */
+  filter:
+    drop-shadow(0 0 26px rgba(59, 130, 246, 0.5))
+    drop-shadow(0 0 60px rgba(37, 99, 235, 0.32))
+    drop-shadow(0 24px 42px rgba(0, 0, 0, 0.55));
+}
+/* Vòng nan hoa xoay đè lên bánh xe (bánh trong ảnh phẳng không tự xoay được) */
+.wm-login-wheel {
+  position: absolute;
+  width: calc(var(--car-h) * 0.15);
+  height: calc(var(--car-h) * 0.15);
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(6, 6, 8, 0.9) 0deg 12deg, rgba(130, 130, 150, 0.22) 12deg 24deg);
+  -webkit-mask: radial-gradient(circle, transparent 20%, #000 27%, #000 90%, transparent 100%);
+  mask: radial-gradient(circle, transparent 20%, #000 27%, #000 90%, transparent 100%);
+  filter: blur(1.5px);
+  animation: wm-login-wheel-spin 0.1s linear infinite;
+}
+.wm-login-wheel--front { left: 24.6%; top: 58%; }
+.wm-login-wheel--rear { left: 71%; top: 58%; }
+.wm-login-dust {
+  position: absolute;
+  top: 68%;
+  left: 55%;
+  height: clamp(80px, 18vh, 200px);
+  width: clamp(130px, 24vw, 340px);
+  border-radius: 9999px;
+  transform: translate(-50%, -50%) scale(0.3);
+  /* Khói lốp sáng bung ở bánh sau (bên phải) lúc bứt tốc — hiện rõ trên nền tối */
+  background: radial-gradient(circle at 50% 50%, rgba(203, 213, 225, 0.4) 0%, rgba(148, 163, 184, 0.18) 46%, transparent 72%);
+  filter: blur(12px);
+  animation: wm-login-dust-puff 760ms ease-out 400ms both;
+}
+
+@keyframes wm-login-wheel-spin {
+  from { transform: translate(-50%, -50%) rotate(0); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wm-login-overlay,
+  .wm-login-streak,
+  .wm-login-car-rig,
+  .wm-login-wheel,
+  .wm-login-dust {
+    animation: none;
+  }
+}

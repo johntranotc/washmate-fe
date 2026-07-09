@@ -10,54 +10,63 @@ const trustItems = [
 
 export function Hero() {
   return (
-    // -mt-19 = chiều cao header (pt-3 + h-16) để ảnh hero tràn lên sau navbar
-    <section className="relative isolate -mt-19 overflow-hidden bg-navy-deep">
-      {/* Ảnh nền full-bleed */}
-      <picture>
-        <source media="(max-width: 640px)" srcSet="/images/home/02_hero/home_hero_mobile.png" />
+    <>
+      {/* -mt-19 = chiều cao header để ảnh hero tràn lên sau navbar. Hero editorial:
+          ảnh full-bleed (ảnh dọc, tông tối), scrim ĐEN trung tính trái→phải cho chữ nổi. */}
+      <section className="relative isolate -mt-19 flex min-h-[100dvh] overflow-hidden bg-navy-deep">
+        {/* Ảnh phủ KÍN khung, hai lề luôn là ảnh thật; canh xuống ~72% để chiếc xe lọt trọn, không cắt */}
         <img
           src="/images/home/02_hero/home_hero_desktop.png"
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 size-full object-cover object-center"
+          className="absolute inset-0 size-full object-cover object-[50%_72%]"
         />
-      </picture>
 
-      {/* Overlay navy để chữ trắng nổi rõ */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-b from-navy-deep/85 via-navy/55 to-navy-deep/90"
-      />
+        {/* Vệt tối TRUNG TÍNH (không xanh) bên trái sau chữ + đáy tối nhẹ cho CTA nổi */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[linear-gradient(to_right,rgba(8,11,18,0.86)_0%,rgba(8,11,18,0.5)_28%,rgba(8,11,18,0.12)_52%,transparent_72%)]"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-2/5 bg-[linear-gradient(to_top,rgba(8,11,18,0.55),transparent)]"
+        />
 
-      <div className="relative mx-auto flex max-w-7xl flex-col items-center px-4 pb-14 pt-32 text-center sm:px-6 lg:px-8 lg:pb-16 lg:pt-40">
-        <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-navy/60 px-4 py-2 text-sm font-bold text-primary-bright backdrop-blur">
-          <Sparkles className="size-4" />
-          Rửa xe thông minh cùng WashMate
-        </span>
+        <div className="relative mx-auto flex w-full max-w-7xl items-center px-4 pb-20 pt-24 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <span className="wm-hero-rise inline-flex items-center gap-2 rounded-full border border-white/20 bg-navy/50 px-4 py-2 text-sm font-bold text-primary-bright backdrop-blur">
+              <Sparkles className="size-4" />
+              Chăm sóc xe cùng WashMate
+            </span>
 
-        <h1 className="mt-6 max-w-4xl text-balance text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-          Rửa xe thông minh, đặt lịch nhanh,{" "}
-          <span className="text-primary-bright">chăm sóc xe</span> dễ dàng
-        </h1>
+            <h1 className="wm-hero-rise mt-6 text-balance text-4xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl" style={{ animationDelay: "80ms" }}>
+              Rửa xe thông minh,
+              <br className="hidden sm:block" /> chăm sóc xe{" "}
+              <span className="text-primary-bright">an tâm</span>.
+            </h1>
 
-        <p className="mt-5 max-w-2xl text-pretty text-lg leading-relaxed text-white/80">
-          WashMate giúp bạn đặt lịch rửa xe, thanh toán, theo dõi tiến độ và
-          tích điểm thành viên trên một nền tảng hiện đại.
-        </p>
+            <p className="wm-hero-rise mt-6 max-w-xl text-pretty text-lg leading-relaxed text-white/80" style={{ animationDelay: "160ms" }}>
+              Đặt lịch, thanh toán, theo dõi tiến độ và tích điểm thành viên
+              trên cùng một nền tảng.
+            </p>
 
-        <div className="mt-8 flex w-full max-w-sm flex-col gap-3.5 sm:w-auto sm:max-w-none sm:flex-row">
-          <LinkButton href="/register" size="xl">
-            <CalendarDays className="size-4.5" />
-            Đặt lịch ngay
-          </LinkButton>
-          <LinkButton href="/services" variant="ghostWhite" size="xl">
-            <LayoutGrid className="size-4.5" />
-            Xem dịch vụ
-          </LinkButton>
+            <div className="wm-hero-rise mt-9 flex w-full max-w-sm flex-col gap-3.5 sm:w-auto sm:max-w-none sm:flex-row" style={{ animationDelay: "240ms" }}>
+              <LinkButton href="/register" size="xl">
+                <CalendarDays className="size-4.5" />
+                Đặt lịch ngay
+              </LinkButton>
+              <LinkButton href="/services" variant="ghostWhite" size="xl">
+                <LayoutGrid className="size-4.5" />
+                Xem dịch vụ
+              </LinkButton>
+            </div>
+          </div>
         </div>
+      </section>
 
-        {/* Trust bar trắng nổi trên đáy hero */}
-        <div className="mt-14 grid w-full grid-cols-1 gap-y-5 rounded-2xl bg-card px-6 py-6 text-left shadow-floating sm:grid-cols-2 lg:mt-20 lg:grid-cols-4 lg:divide-x lg:divide-border lg:gap-y-0">
+      {/* Băng tin cậy — tách khỏi hero, đứng thành dải nội dung đầu tiên dưới poster */}
+      <section className="border-b border-border bg-card">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-6 px-4 py-8 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:gap-y-0 lg:divide-x lg:divide-border lg:px-8">
           {trustItems.map(([Icon, title, sub]) => (
             <div key={title} className="flex items-center gap-4 lg:justify-center lg:px-4">
               <span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary-container text-primary">
@@ -70,7 +79,7 @@ export function Hero() {
             </div>
           ))}
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

@@ -1,8 +1,11 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Logo } from "./logo";
 import { cn } from "@/lib/utils";
+import { LoginTransitionOverlay } from "./login-transition-overlay";
+
+const LOGIN_ROUTE = "/login";
 
 const navItems = [
   { label: "Trang chủ", href: "/" },
@@ -15,11 +18,49 @@ const navItems = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  // Header chỉ trong suốt khi đứng trên hero TỐI (trang chủ, Dịch vụ, Bảng giá) và chưa cuộn.
+  // Các trang nền sáng hoặc khi đã cuộn xuống: hiện nền xanh đặc để chữ luôn đọc rõ.
+  const DARK_HERO_ROUTES = ["/", "/services", "/pricing"];
+  const overDarkHero = DARK_HERO_ROUTES.includes(pathname);
+  const transparent = overDarkHero && !scrolled;
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Bấm "Đăng nhập": chạy hiệu ứng xe lướt ngang rồi mới sang trang đăng nhập.
+  // Tôn trọng prefers-reduced-motion → điều hướng thẳng, không animation.
+  const startLogin = () => {
+    if (transitioning) return;
+    setOpen(false);
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      navigate(LOGIN_ROUTE);
+      return;
+    }
+    setTransitioning(true);
+  };
 
   return (
+    <>
     <header className="sticky top-0 z-50 px-3 pt-3 sm:px-4">
-      <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl bg-navy shadow-floating">
+      {/* Đầu trang: trong suốt trên hero tối. Cuộn xuống: nền xanh đặc để chữ luôn rõ. */}
+      <div
+        className={cn(
+          "mx-auto max-w-7xl overflow-hidden rounded-2xl border transition-colors duration-300",
+          transparent
+            ? "border-white/15 bg-transparent"
+            : "border-white/10 bg-navy shadow-floating",
+        )}
+      >
         <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
           <Logo variant="light" />
 
@@ -47,12 +88,14 @@ export function SiteHeader() {
           </nav>
 
           <div className="hidden items-center gap-2 lg:flex">
-            <Link
-              to="/login"
-              className="rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-card/10"
+            <button
+              type="button"
+              onClick={startLogin}
+              disabled={transitioning}
+              className="rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-card/10 disabled:opacity-60"
             >
               Đăng nhập
-            </Link>
+            </button>
             <Link
               to="/register"
               className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-cta transition-all hover:-translate-y-0.5 hover:bg-primary-strong"
@@ -86,13 +129,14 @@ export function SiteHeader() {
                 </Link>
               ))}
               <div className="mt-2 flex flex-col gap-2 border-t border-white/10 pt-4">
-                <Link
-                  to="/login"
-                  onClick={() => setOpen(false)}
-                  className="rounded-xl border border-white/25 px-4 py-3 text-center text-base font-bold text-white"
+                <button
+                  type="button"
+                  onClick={startLogin}
+                  disabled={transitioning}
+                  className="rounded-xl border border-white/25 px-4 py-3 text-center text-base font-bold text-white disabled:opacity-60"
                 >
                   Đăng nhập
-                </Link>
+                </button>
                 <Link
                   to="/register"
                   onClick={() => setOpen(false)}
@@ -106,5 +150,7 @@ export function SiteHeader() {
         )}
       </div>
     </header>
+    <LoginTransitionOverlay active={transitioning} onComplete={() => navigate(LOGIN_ROUTE)} />
+    </>
   );
 }

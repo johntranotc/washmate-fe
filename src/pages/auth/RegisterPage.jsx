@@ -4,7 +4,6 @@ import { CheckCircle2, KeyRound, RefreshCw } from "lucide-react";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { Field } from "@/components/auth/field";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { authApi } from "@/api/authApi";
 
@@ -94,9 +93,10 @@ export default function RegisterPage() {
             <Field id="confirmPassword" label="Xác nhận mật khẩu" type="password" placeholder="Nhập lại mật khẩu" icon="lock" autoComplete="new-password" value={form.confirmPassword} onChange={update("confirmPassword")} />
             <div className="flex items-start gap-2.5">
               <Checkbox id="terms" className="mt-0.5" checked={agreed} onCheckedChange={(checked) => setAgreed(Boolean(checked))} />
-              <Label htmlFor="terms" className="text-sm leading-relaxed text-muted-foreground">
+              {/* label thường (không flex) để chữ + link chảy liền mạch, không vỡ cột */}
+              <label htmlFor="terms" className="text-sm leading-relaxed text-muted-foreground select-none">
                 Tôi đồng ý với <a href="#" className="font-semibold text-primary">Điều khoản dịch vụ</a> và <a href="#" className="font-semibold text-primary">Chính sách bảo mật</a>.
-              </Label>
+              </label>
             </div>
             <Button type="submit" size="xl" disabled={loading} className="mt-1 w-full shadow-cta">
               {loading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}

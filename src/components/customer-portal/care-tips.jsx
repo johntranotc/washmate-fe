@@ -1,45 +1,78 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Droplets, Home, Calendar } from "lucide-react";
-import { careTips } from "@/lib/customer-dashboard-data";
+import { Droplets, Car } from "lucide-react";
+import { formatDate } from "@/lib/format";
 
-const iconMap = {
-  droplet: <Droplets size={32} />,
-  sofa: <Home size={32} />,
-  calendar: <Calendar size={32} />,
-};
-
-export function CareTips() {
+/**
+ * Gợi ý chăm sóc định kỳ — tính từ dữ liệu THẬT: lần rửa hoàn tất gần nhất
+ * của từng xe (booking COMPLETED khớp biển số). Không đủ dữ liệu → ẩn block.
+ * Không gọi là AI, không hardcode số ngày.
+ */
+export function CareTips({ bookings = [], vehicles = [] }) {
   const navigate = useNavigate();
 
-  return (
-    <div className="mb-8">
-      <div className="mb-6">
-        <h2 className="mb-2 text-2xl font-bold leading-tight text-foreground">Gợi ý chăm sóc xe</h2>
-        <p className="font-medium text-muted-foreground">
-          WashMate gợi ý thời điểm chăm sóc phù hợp dựa trên thói quen sử dụng dịch vụ của bạn.
-        </p>
-      </div>
+  const tips = useMemo(() => {
+    if (!vehicles.length) return [];
+    const now = new Date();
+    return vehicles.slice(0, 3).map((v) => {
+      const plate = v.licensePlate;
+      const lastWash = bookings
+        .filter((b) => (b.bookingStatus || b.status) === "COMPLETED" && plate && b.plate === plate)
+        .map((b) => b.bookingDate)
+        .filter(Boolean)
+        .sort()
+        .pop();
+      let days = null;
+      if (lastWash) {
+        const d = new Date(`${String(lastWash).slice(0, 10)}T00:00:00`);
+        if (!Number.isNaN(d.getTime())) days = Math.max(0, Math.floor((now - d) / 86400000));
+      }
+      return {
+        key: v.vehicleId || v.id || plate,
+        name: [v.brand, v.model].filter(Boolean).join(" ") || "Xe của bạn",
+        plate: plate || "Chưa cập nhật",
+        lastWash,
+        days,
+      };
+    });
+  }, [bookings, vehicles]);
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {careTips.map((tip) => (
-          <Card key={tip.id} className="rounded-2xl border border-border p-6 transition-all hover:shadow-card">
-            <div className="mb-4 inline-block rounded-xl bg-primary/10 p-3">
-              <div className="text-primary">{iconMap[tip.icon] || <Droplets size={32} />}</div>
+  if (!tips.length) return null;
+
+  return (
+    <section className="rounded-2xl border border-border bg-card p-5">
+      <h2 className="text-lg font-bold text-foreground">Gợi ý chăm sóc định kỳ</h2>
+      <p className="mt-0.5 text-xs text-muted-foreground">
+        Dựa trên lịch sử rửa xe thực tế của bạn tại WashMate.
+      </p>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {tips.map((tip) => (
+          <div key={tip.key} className="flex flex-col rounded-xl border border-border bg-surface p-4">
+            <div className="flex items-center gap-2.5">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-container text-primary">
+                {tip.days != null ? <Droplets size={16} /> : <Car size={16} />}
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-foreground">{tip.name}</p>
+                <p className="truncate text-xs text-muted-foreground">{tip.plate}</p>
+              </div>
             </div>
-            <h3 className="mb-2 font-bold leading-tight text-foreground">{tip.title}</h3>
-            <p className="mb-4 text-sm font-medium text-muted-foreground">{tip.description}</p>
-            <Button
-              size="sm"
-              onClick={() => navigate("/khach-hang/dat-lich-moi")}
-              className="w-full"
-            >
+            <p className="mt-3 flex-1 text-xs text-muted-foreground">
+              {tip.days == null
+                ? "Xe chưa có lịch sử rửa tại WashMate."
+                : tip.days === 0
+                  ? `Vừa rửa hôm nay (${formatDate(tip.lastWash)}).`
+                  : `Đã ${tip.days} ngày chưa rửa (lần gần nhất ${formatDate(tip.lastWash)}).`}
+              {" "}Đặt lịch để giữ xe sạch và bảo vệ lớp sơn.
+            </p>
+            <Button size="sm" className="mt-3 w-full" onClick={() => navigate("/khach-hang/dat-lich-moi")}>
               Đặt lịch ngay
             </Button>
-          </Card>
+          </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

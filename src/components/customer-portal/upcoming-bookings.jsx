@@ -1,129 +1,120 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { MapPin, ArrowRight, Calendar, Plus } from "lucide-react";
-import { loadCustomerBookingList } from "@/lib/customer-bookings";
-import { formatBookingDate, formatMoney } from "@/lib/customer-booking-data";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { MapPin, Calendar, Plus, ArrowRight, ReceiptText, CreditCard } from "lucide-react";
+import StatusBadge from "@/components/shared/StatusBadge";
+import { formatDate, formatTime, formatMoney } from "@/lib/format";
 
-export function UpcomingBookings() {
+// Trạng thái còn "sống" — được phép xuất hiện ở Lịch tiếp theo
+const ACTIVE_STATUSES = ["PENDING", "CONFIRMED", "CHECKED_IN", "WASHING"];
+
+function bookingDateTime(b) {
+  if (!b.bookingDate) return null;
+  const time = b.slotTime && /^\d{2}:\d{2}/.test(b.slotTime) ? b.slotTime.slice(0, 5) : "23:59";
+  const dt = new Date(`${String(b.bookingDate).slice(0, 10)}T${time}:00`);
+  return Number.isNaN(dt.getTime()) ? null : dt;
+}
+
+/**
+ * Lịch tiếp theo — CHỈ hiển thị booking có thời gian >= hiện tại (không lấp
+ * bằng lịch quá khứ). Action theo trạng thái thanh toán thật:
+ * PENDING → Thanh toán; FAILED/CANCELLED → Thanh toán lại; PAID → Xem hóa đơn.
+ */
+export function UpcomingBookings({ bookings = [] }) {
   const navigate = useNavigate();
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const { bookings: list } = await loadCustomerBookingList();
-        // Lấy tối đa 3 lịch mới nhất
-        setBookings((list || []).slice(0, 3));
-      } catch {
-        setBookings([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
+  const next = useMemo(() => {
+    const now = new Date();
+    return bookings
+      .filter((b) => ACTIVE_STATUSES.includes(b.bookingStatus || b.status))
+      .map((b) => ({ b, dt: bookingDateTime(b) }))
+      .filter(({ dt }) => dt && dt >= now)
+      .sort((a, z) => a.dt - z.dt)[0]?.b || null;
+  }, [bookings]);
 
   return (
-    <div className="mb-8">
-      <div className="mb-6 flex items-center justify-between">
+    <section className="rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="mb-2 text-2xl font-bold leading-tight text-foreground">Lịch đặt sắp tới</h2>
-          <p className="font-medium text-muted-foreground">
-            Theo dõi các lịch rửa xe gần nhất và trạng thái xử lý của bạn.
-          </p>
+          <h2 className="text-lg font-bold text-foreground">Lịch tiếp theo</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">Lịch rửa xe sắp tới gần nhất của bạn.</p>
         </div>
-        <Button onClick={() => navigate("/khach-hang/dat-lich-moi")}>
+        <Button size="sm" onClick={() => navigate("/khach-hang/dat-lich-moi")}>
           <Plus /> Đặt lịch mới
         </Button>
       </div>
 
-      {loading ? (
-        <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground">
-          Đang tải lịch đặt...
-        </div>
-      ) : bookings.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card p-8 text-center">
-          <Calendar size={36} className="mx-auto mb-2 text-muted-foreground opacity-50" />
-          <p className="font-semibold text-foreground">Bạn chưa có lịch đặt nào</p>
-          <Button
-            variant="link"
-            onClick={() => navigate("/khach-hang/dat-lich-moi")}
-            className="mt-1 text-primary font-bold"
-          >
-            Đặt lịch rửa xe ngay
+      {!next ? (
+        <div className="mt-4 flex flex-col items-center rounded-xl border border-dashed border-border px-6 py-10 text-center">
+          <Calendar size={36} className="text-border" />
+          <p className="mt-3 text-sm font-semibold text-foreground">Bạn chưa có lịch rửa xe sắp tới</p>
+          <p className="mt-1 text-xs text-muted-foreground">Đặt lịch mới để giữ xe luôn sạch đẹp.</p>
+          <Button size="sm" className="mt-4" onClick={() => navigate("/khach-hang/dat-lich-moi")}>
+            Đặt lịch ngay
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {bookings.map((booking, idx) => {
-            if (!booking || typeof booking !== "object") return null;
-            const rawStatus = booking.bookingStatus || booking.status || "PENDING";
+        <div className="mt-4 rounded-xl border border-border bg-surface p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-bold text-foreground">{next.serviceName}</h3>
+            <StatusBadge status={next.bookingStatus || next.status} type="booking" size="sm" />
+            {next.paymentStatus && <StatusBadge status={next.paymentStatus} type="payment" size="sm" />}
+          </div>
 
-            const renderStr = (val, fb) => {
-              if (typeof val === "string") return val;
-              if (val && typeof val === "object") {
-                return val.name || `${val.brand || ""} ${val.model || ""}`.trim() || val.licensePlate || val.title || val.garageName || fb;
-              }
-              return fb || "";
-            };
+          <div className="mt-3 grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
+            <div>
+              <p className="text-muted-foreground">Thời gian</p>
+              <p className="mt-0.5 font-bold text-foreground">
+                {formatDate(next.bookingDate)}{formatTime(next.slotTime) ? ` · ${formatTime(next.slotTime)}` : ""}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Chi nhánh</p>
+              <p className="mt-0.5 flex items-center gap-1 font-bold text-foreground">
+                <MapPin size={12} className="shrink-0 text-primary" /> {next.garageName}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Xe</p>
+              <p className="mt-0.5 font-bold text-foreground">
+                {next.plate && next.plate !== "Chưa cập nhật" ? next.plate : "Xe của bạn"}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Thanh toán</p>
+              <p className="mt-0.5 font-bold text-foreground">
+                {next.finalAmount != null ? formatMoney(next.finalAmount) : "—"}
+              </p>
+            </div>
+          </div>
 
-            const srvText = renderStr(booking.serviceName || booking.service, "Dịch vụ rửa xe");
-            const vehText = renderStr(booking.vehicle, "Xe khách hàng");
-            const plateText = renderStr(booking.plate, "");
-            const garText = renderStr(booking.garageName || booking.garage, "Gara WashMate");
-
-            return (
-              <Card key={booking.id || booking.bookingId || idx} className="rounded-2xl border border-border p-6 transition-all hover:shadow-card">
-                <div className="mb-4 flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="mb-1 text-lg font-bold leading-tight text-foreground">
-                      {srvText}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-muted-foreground">
-                      <span className="font-semibold">{vehText} {plateText && plateText !== "Chưa cập nhật" ? `– ${plateText}` : ""}</span>
-                      <span>•</span>
-                      <div className="flex items-center gap-1">
-                        <MapPin size={14} />
-                        {garText}
-                      </div>
-                    </div>
-                  </div>
-                  <StatusBadge status={rawStatus} />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 border-y border-border py-4 sm:grid-cols-3">
-                  <div>
-                    <p className="mb-1 text-xs font-medium text-muted-foreground">Thời gian</p>
-                    <p className="font-semibold leading-tight text-foreground">
-                      {booking.bookingDate ? `${formatBookingDate(booking.bookingDate)} – ${booking.slotTime || ""}` : booking.dateTime || "Đang cập nhật"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="mb-1 text-xs font-medium text-muted-foreground">Thanh toán</p>
-                    <p className="font-semibold leading-tight text-foreground">
-                      {booking.finalAmount != null ? formatMoney(booking.finalAmount) : booking.amount || "0đ"}
-                    </p>
-                  </div>
-                  <div className="flex items-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate(`/khach-hang/lich-dat/${booking.id || booking.bookingId}`)}
-                      className="font-semibold text-primary hover:bg-secondary"
-                    >
-                      Xem chi tiết <ArrowRight />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
+          <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-3">
+            {next.paymentStatus === "PENDING" && (
+              <Button size="sm" onClick={() => navigate(`/khach-hang/thanh-toan/${next.id || next.bookingId}`)}>
+                <CreditCard /> Thanh toán
+              </Button>
+            )}
+            {(next.paymentStatus === "FAILED" || next.paymentStatus === "CANCELLED") && (
+              <Button size="sm" onClick={() => navigate(`/khach-hang/thanh-toan/${next.id || next.bookingId}`)}>
+                <CreditCard /> Thanh toán lại
+              </Button>
+            )}
+            {next.paymentStatus === "PAID" && (
+              <Button size="sm" variant="outline" onClick={() => navigate(`/khach-hang/thanh-toan/${next.id || next.bookingId}/hoa-don`)}>
+                <ReceiptText /> Xem hóa đơn
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="font-bold text-primary"
+              onClick={() => navigate(`/khach-hang/lich-dat/${next.id || next.bookingId}`)}
+            >
+              Xem chi tiết <ArrowRight />
+            </Button>
+          </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

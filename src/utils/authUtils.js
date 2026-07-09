@@ -3,6 +3,25 @@ import { jwtDecode } from "jwt-decode";
 export const getAuthItem = (key) =>
     sessionStorage.getItem(key) || localStorage.getItem(key);
 
+/**
+ * Tên hiển thị từ phiên đăng nhập thật — dùng chung cho mọi portal.
+ * Ưu tiên currentUser (MeResponse.fullName) → tên trong token → email rút gọn → fallback.
+ */
+export const getDisplayName = (fallback = "Người dùng") => {
+    try {
+        const stored = JSON.parse(getAuthItem("currentUser") || "null");
+        const full = stored?.fullName || stored?.full_name || stored?.name;
+        if (typeof full === "string" && full.trim() && Number.isNaN(Number(full))) return full;
+    } catch { /* dùng token bên dưới */ }
+
+    const name = getCurrentUser()?.name;
+    if (typeof name === "string" && name.trim() && name !== "Người dùng") {
+        if (name.includes("@")) return name.split("@")[0];
+        if (Number.isNaN(Number(name))) return name;
+    }
+    return fallback;
+};
+
 export const getCurrentUser = () => {
     const token = getAuthItem("token") || getAuthItem("accessToken");
     if (!token) return null;

@@ -52,8 +52,11 @@ export default function AuthLayout() {
           aria-hidden="true"
           className="size-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy-deep/90 via-navy/60 to-navy-deep/45" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-navy-deep/80 to-transparent" />
+        {/* Vệt tối TRUNG TÍNH (không xanh) rất nhẹ ở mép trái cho chữ; ảnh lộ rõ */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[linear-gradient(to_right,rgba(8,11,18,0.68)_0%,rgba(8,11,18,0.22)_24%,transparent_44%)]"
+        />
       </div>
 
       {/* Về trang chủ */}
@@ -73,31 +76,31 @@ export default function AuthLayout() {
         <div className="hidden w-full max-w-xl flex-col lg:flex">
           <BrandMark className="w-fit" />
 
-          <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-card/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md">
-            <AuthIcon name="sparkles" className="size-4 text-primary-bright" />
+          <span className="mt-6 inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-card/10 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur-md">
+            <AuthIcon name="sparkles" className="size-3.5 text-primary-bright" />
             Nền tảng rửa xe thông minh
           </span>
 
-          <h2 className="mt-5 text-balance text-4xl font-extrabold leading-tight text-white xl:text-5xl">
+          <h2 className="mt-4 text-balance text-3xl font-extrabold leading-[1.15] text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.5)] xl:text-4xl">
             Chăm sóc xe của bạn
             <span className="block">dễ dàng hơn bao giờ hết</span>
           </h2>
 
-          <ul className="mt-8 flex flex-col gap-5">
+          <ul className="mt-6 flex flex-col gap-3.5">
             {benefits.map((benefit) => (
-              <li key={benefit.icon} className="flex items-start gap-4">
-                <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-white/15 bg-card/10 backdrop-blur-md">
-                  <AuthIcon name={benefit.icon} className="size-5 text-primary-bright" />
+              <li key={benefit.icon} className="flex items-start gap-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/15 bg-card/10 backdrop-blur-md">
+                  <AuthIcon name={benefit.icon} className="size-4 text-primary-bright" />
                 </span>
-                <span className="flex flex-col gap-1">
-                  <span className="text-lg font-bold text-white">{benefit.title}</span>
-                  <span className="text-sm text-white/70">{benefit.subtitle}</span>
+                <span className="flex flex-col gap-0.5">
+                  <span className="text-sm font-bold text-white">{benefit.title}</span>
+                  <span className="text-xs text-white/70">{benefit.subtitle}</span>
                 </span>
               </li>
             ))}
           </ul>
 
-          <ul className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-white/10 pt-5">
+          <ul className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/10 pt-4">
             {stats.map((stat) => (
               <li key={stat.icon} className="flex items-center gap-2 text-xs font-semibold text-white/85">
                 <AuthIcon name={stat.icon} className="size-4 text-primary-bright" />
@@ -112,7 +115,7 @@ export default function AuthLayout() {
 
         {/* Phải: card form */}
         <div className="flex w-full justify-center lg:w-auto lg:justify-end">
-          <div className="w-full max-w-md rounded-3xl bg-card p-6 shadow-floating sm:p-8">
+          <div className="wm-glass-card w-full max-w-md rounded-3xl p-6 sm:p-8">
             <Outlet />
           </div>
         </div>

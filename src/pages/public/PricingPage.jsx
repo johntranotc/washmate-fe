@@ -13,6 +13,7 @@ export default function PricingPage() {
         eyebrow="Bảng giá minh bạch"
         title="Bảng giá dịch vụ"
         description="Mức giá rõ ràng, không phát sinh. Càng sử dụng nhiều, bạn càng tích lũy điểm và mở khóa nhiều ưu đãi hấp dẫn."
+        image="/images/home/03_services/pricing_hero.png"
       />
 
       <section className="bg-background py-16 lg:py-20">

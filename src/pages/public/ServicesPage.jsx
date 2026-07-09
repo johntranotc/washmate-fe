@@ -10,6 +10,7 @@ export default function ServicesPage() {
         eyebrow="Dịch vụ chăm sóc xe"
         title="Dịch vụ chăm sóc xe"
         description="Lựa chọn gói dịch vụ phù hợp với nhu cầu của bạn, từ rửa nhanh hằng ngày đến chăm sóc chuyên sâu định kỳ."
+        image="/images/home/03_services/photos/services_hero.png"
       />
       <section className="bg-background py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
