@@ -1,7 +1,7 @@
 import { Calendar, Car, Star, Award } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { formatNumber } from "@/lib/format";
-import { resolveTierInfo } from "@/lib/customer-engagement-data";
+import { tierLabel } from "@/components/customer-portal/tier-badge";
 
 /**
  * StatCard (compat) — giữ export cũ cho LoyaltyStatsGrid, render qua KpiCard chung
@@ -26,9 +26,8 @@ export function StatCard({ icon, value, label, description }) {
  */
 export function DashboardStatsGrid({ bookings = [], vehicles = [], loyalty = null }) {
   const points = loyalty ? Number(loyalty.availablePoints ?? loyalty.points ?? 0) || 0 : null;
-  const tierName = loyalty
-    ? resolveTierInfo(points, loyalty.tierName || loyalty.tier || loyalty.tierCode).tierName
-    : null;
+  // Hạng lấy TRỰC TIẾP từ dữ liệu thật (tierName của BE) — không suy diễn ngưỡng.
+  const tierName = loyalty && loyalty.tierName ? tierLabel(loyalty.tierName) : null;
 
   const noLoyalty = (
     <p className="text-xs text-neutral-muted">Chưa có dữ liệu</p>

@@ -1,48 +1,27 @@
 import { useNavigate } from "react-router-dom";
-import { Star } from "lucide-react";
+import { BadgePercent, Crown, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
-import { formatNumber } from "@/lib/format";
-import { resolveTierInfo } from "@/lib/customer-engagement-data";
-import { tiers as membershipTiers } from "@/lib/site-data";
-import { TierBadge } from "@/components/site/tier-badge";
+import { TierBadge, tierLabel, tierTheme } from "@/components/customer-portal/tier-badge";
+import { computeTierProgress } from "@/lib/customer-loyalty-data";
 
-const TIER_GRADIENTS = {
-  "đồng": "from-tier-bronze/20 via-card to-tier-bronze/5 border-tier-bronze/40",
-  "bạc": "from-neutral-muted/30 via-card to-border/10 border-border",
-  "vàng": "from-tier-gold/20 via-card to-tier-gold/5 border-tier-gold/50",
-  "bạch kim": "from-accent-indigo/20 via-card to-accent-violet/10 border-accent-indigo/40",
-  "kim cương": "from-accent-cyan/20 via-card to-primary/10 border-accent-cyan/40",
-};
-
-const TIER_TEXT = {
-  "đồng": "text-tier-bronze-ink",
-  "bạc": "text-muted-foreground",
-  "vàng": "text-tier-gold-ink",
-  "bạch kim": "text-accent-indigo",
-  "kim cương": "text-accent-cyan",
-};
+const fmt = (n) => new Intl.NumberFormat("vi-VN").format(Number(n || 0));
 
 /**
- * Điểm thành viên — loyalty thật từ trang (GET loyalty/me).
- * Chưa có tài khoản loyalty (null) → empty state, không bịa 0 điểm/hạng Đồng.
- * Ngưỡng hạng/quyền lợi lấy từ cấu hình nghiệp vụ của team (TIER_CONFIG/site-data).
+ * Điểm thành viên (trang Tổng quan) — ĐỒNG BỘ với hero trang Điểm thành viên:
+ * cùng dữ liệu thật (account đã chuẩn hoá + tiers thật) và cùng tông màu theo hạng.
+ * Props: account (normalizeLoyaltyAccount) | null, tiers (normalizeTiers).
  */
-export function MembershipSummary({ loyalty = null }) {
+export function MembershipSummary({ account = null, tiers = [] }) {
   const navigate = useNavigate();
 
-  if (!loyalty) {
+  if (!account) {
     return (
       <section className="rounded-2xl border border-border bg-card p-5">
         <h2 className="text-lg font-bold text-foreground">Điểm thành viên</h2>
         <div className="mt-4 flex flex-col items-center rounded-xl border border-dashed border-border px-6 py-10 text-center">
           <Star size={36} className="text-border" />
           <p className="mt-3 text-sm font-semibold text-foreground">Bạn chưa có điểm thưởng</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Điểm sẽ được tích lũy sau mỗi lần rửa xe hoàn tất.
-          </p>
+          <p className="mt-1 text-xs text-muted-foreground">Điểm sẽ được tích lũy sau mỗi lần rửa xe hoàn tất.</p>
           <Button size="sm" className="mt-4" onClick={() => navigate("/khach-hang/dat-lich-moi")}>
             Đặt lịch rửa xe
           </Button>
@@ -51,70 +30,78 @@ export function MembershipSummary({ loyalty = null }) {
     );
   }
 
-  const points = Number(loyalty.availablePoints ?? loyalty.points ?? 0) || 0;
-  const calc = resolveTierInfo(points, loyalty.tierName || loyalty.tier || loyalty.tierCode);
-  const tierKey = calc.tierName?.toLowerCase();
-  const currentTierObj =
-    membershipTiers.find((t) => t.name.toLowerCase() === tierKey) || membershipTiers[0];
+  const theme = tierTheme(account.tierName);
+  const progress = computeTierProgress(account, tiers);
+  const hasDiscount = account.tierDiscountPercentage > 0;
 
   return (
-    <Card className={cn("rounded-2xl border bg-gradient-to-br p-6", TIER_GRADIENTS[tierKey] || "from-primary/10 via-card to-primary/5 border-border")}>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="flex flex-col items-center justify-center">
-          <TierBadge tier={currentTierObj} size="sm" />
-          <p className="mt-3 text-center text-xs font-semibold text-muted-foreground">Hạng hiện tại</p>
-          <p className={cn("text-xl font-semibold leading-tight", TIER_TEXT[tierKey] || "text-primary")}>
-            {calc.tierName}
-          </p>
+    <section className={`overflow-hidden rounded-2xl border p-5 sm:p-6 ${theme.card} ${theme.border}`}>
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center">
+        {/* Huy hiệu + hạng */}
+        <div className="flex items-center gap-4 lg:w-56 lg:flex-col lg:items-center lg:text-center">
+          <TierBadge name={account.tierName} size="size-16" className="rounded-2xl shadow-card" iconSize={30} />
+          <div className="lg:mt-2">
+            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Hạng hiện tại</p>
+            <p className={`text-xl font-extrabold ${theme.icon}`}>{tierLabel(account.tierName, "Chưa có hạng")}</p>
+          </div>
         </div>
 
-        <div className="flex flex-col justify-center lg:col-span-2">
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-semibold leading-tight text-foreground">
-                {formatNumber(points)}
-              </span>
-              <span className="text-sm font-semibold text-muted-foreground">điểm khả dụng</span>
-            </div>
+        {/* Điểm + tiến độ + quyền lợi */}
+        <div className="flex-1">
+          <p className="flex items-baseline gap-2">
+            <span className={`inline-flex items-center gap-1.5 text-2xl font-extrabold ${theme.icon}`}>
+              <Sparkles size={20} /> {fmt(account.availablePoints)}
+            </span>
+            <span className="text-sm font-semibold text-muted-foreground">điểm khả dụng</span>
+          </p>
+
+          <div className="mt-3">
+            {!progress.hasData ? (
+              <p className="text-xs text-muted-foreground">Chưa có dữ liệu tiến độ lên hạng.</p>
+            ) : progress.isMax ? (
+              <p className={`inline-flex items-center gap-1.5 text-xs font-semibold ${theme.icon}`}>
+                <Crown size={14} /> Bạn đang ở hạng cao nhất.
+              </p>
+            ) : (
+              <>
+                <div className="mb-1.5 flex items-center justify-between text-xs">
+                  <span className="font-semibold text-muted-foreground">
+                    Còn <b className={theme.icon}>{fmt(progress.pointsToNext)}</b> điểm để lên hạng {tierLabel(progress.next.name)}
+                  </span>
+                  <span className="text-muted-foreground">{progress.progressPercent}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-black/5">
+                  <div className={`h-full rounded-full transition-all ${theme.bar}`} style={{ width: `${progress.progressPercent}%` }} />
+                </div>
+              </>
+            )}
           </div>
 
-          {calc.pointsToNextTier > 0 && (
-            <div className="mt-4">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold text-muted-foreground">
-                  Tiến độ đến hạng {calc.nextTierName}
-                </p>
-                <p className="text-xs font-bold text-primary">Cần thêm {formatNumber(calc.pointsToNextTier)} điểm</p>
-              </div>
-              <Progress value={calc.progressPercent} className="h-2" />
-            </div>
-          )}
-
-          <div className="mt-4 grid grid-cols-1 gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-3 rounded-xl border border-black/5 bg-card/70 p-4 sm:grid-cols-2">
             <div>
               <p className="mb-1 text-xs font-medium text-muted-foreground">Quyền lợi</p>
-              <p className="text-sm font-semibold leading-tight text-foreground">
-                {currentTierObj.benefits?.[0] || "Tích điểm mỗi lần rửa xe"}
-              </p>
+              <p className="text-sm font-semibold text-foreground">Tích điểm sau mỗi lần rửa</p>
             </div>
             <div>
               <p className="mb-1 text-xs font-medium text-muted-foreground">Ưu đãi</p>
-              <p className="text-sm font-semibold leading-tight text-foreground">
-                {currentTierObj.discount || "Đổi voucher giảm giá"}
+              <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                {hasDiscount ? (
+                  <><BadgePercent size={14} className="text-success" /> Giảm {Number(account.tierDiscountPercentage)}% mỗi lần rửa</>
+                ) : (
+                  "Đổi điểm lấy ưu đãi"
+                )}
               </p>
             </div>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button size="sm" onClick={() => navigate("/khach-hang/diem-thanh-vien")}>
-              Xem điểm thưởng
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => navigate("/khach-hang/uu-dai")}>
-              Ưu đãi dành cho bạn
-            </Button>
+            <Button size="sm" onClick={() => navigate("/khach-hang/diem-thanh-vien")}>Xem điểm thưởng</Button>
+            <Button size="sm" variant="outline" onClick={() => navigate("/khach-hang/uu-dai")}>Ưu đãi dành cho bạn</Button>
           </div>
         </div>
       </div>
-    </Card>
+    </section>
   );
 }
+
+export default MembershipSummary;

@@ -16,6 +16,7 @@ import { NavLink, Outlet } from "react-router-dom";
  *   sidebarFooter  — slot đáy sidebar (user card, logout)
  *   sidebarBackground — url ảnh nền sidebar (vd. gradient asset Staff); fallback bg-foreground
  *   contentClassName — class thêm cho vùng content (vd. padding Staff)
+ *   glassHeader    — header kính mờ nổi đè lên nội dung cuộn (Customer portal)
  */
 export default function PortalShell({
   navLinks,
@@ -27,6 +28,10 @@ export default function PortalShell({
   sidebarFooter,
   sidebarBackground,
   contentClassName = "",
+  glassHeader = false,
+  navActiveClassName = "bg-primary text-white",
+  navIdleClassName = "text-neutral-muted hover:bg-ink-soft hover:text-white",
+  sidebarClassName = "bg-foreground",
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -48,7 +53,8 @@ export default function PortalShell({
       {/* Dark sidebar — drawer trên mobile, cố định từ lg */}
       <aside
         className={[
-          "fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col bg-foreground text-neutral-muted transition-transform duration-300 lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col text-neutral-muted transition-transform duration-300 lg:static lg:translate-x-0",
+          sidebarClassName,
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
         style={
@@ -95,10 +101,8 @@ export default function PortalShell({
               end={end}
               className={({ isActive }) =>
                 [
-                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all",
-                  isActive
-                    ? "bg-primary text-white"
-                    : "text-neutral-muted hover:bg-ink-soft hover:text-white",
+                  "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all",
+                  isActive ? navActiveClassName : navIdleClassName,
                 ].join(" ")
               }
             >
@@ -117,8 +121,15 @@ export default function PortalShell({
       </aside>
 
       {/* Main */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-4 sm:px-6">
+      <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+        {/* glassHeader: header kính mờ nổi trên nội dung — thấy nội dung nhòe phía sau khi cuộn */}
+        <header
+          className={
+            glassHeader
+              ? "wm-portal-glass-header absolute inset-x-0 top-0 z-30 flex h-16 items-center justify-between gap-3 px-4 sm:px-6"
+              : "flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-4 sm:px-6"
+          }
+        >
           <button
             type="button"
             aria-label="Mở menu"
@@ -130,7 +141,7 @@ export default function PortalShell({
           <div className="flex items-center gap-3">{headerRight}</div>
         </header>
 
-        <div className={`flex-1 overflow-y-auto ${contentClassName}`.trim()}>
+        <div className={`flex-1 overflow-y-auto ${glassHeader ? "pt-16" : ""} ${contentClassName}`.trim()}>
           <Outlet />
         </div>
       </div>
