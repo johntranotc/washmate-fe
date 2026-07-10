@@ -47,7 +47,7 @@ export function CareTips({ bookings = [], vehicles = [] }) {
         Dựa trên lịch sử rửa xe thực tế của bạn tại WashMate.
       </p>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {tips.map((tip) => (
           <div key={tip.key} className="flex flex-col rounded-xl border border-border bg-surface p-4">
             <div className="flex items-center gap-2.5">

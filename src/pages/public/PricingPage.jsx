@@ -23,6 +23,9 @@ export default function PricingPage() {
               <PlanCard key={plan.name} plan={plan} />
             ))}
           </div>
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            * Giá tham khảo — giá và dịch vụ thực tế theo từng chi nhánh sẽ hiển thị khi bạn đặt lịch.
+          </p>
         </div>
       </section>
 

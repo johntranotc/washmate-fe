@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import PageContainer from "@/components/shared/PageContainer";
-import PageHeader from "@/components/shared/PageHeader";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
-  Bell,
   BookOpen,
-  Building2,
-  Calendar,
   Car,
   CheckCircle,
+  Crown,
   Edit3,
   Home,
   LogOut,
@@ -17,176 +13,127 @@ import {
   MapPin,
   Phone,
   Save,
-  Star,
-  Trash2,
+  Sparkles,
   User,
   X,
 } from "lucide-react";
-import { tiers as membershipTiers } from "@/lib/site-data";
-import { tierCodeToBadgeName } from "@/lib/customer-engagement-data";
-
-import { TierBadge } from "@/components/site/tier-badge";
+import PageContainer from "@/components/shared/PageContainer";
+import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { toast } from "@/components/ui/toast";
 import { jwtDecode } from "jwt-decode";
+import { userApi } from "@/api/userApi";
+import { loyaltyApi } from "@/api/loyaltyApi";
+import { vehicleApi } from "@/api/vehicleApi";
+import { loadCustomerBookingList } from "@/lib/customer-bookings";
+import { friendlyError } from "@/lib/api-error";
+import { formatNumber } from "@/lib/format";
+import { TierBadge, tierLabel, tierTheme } from "@/components/customer-portal/tier-badge";
+import { computeTierProgress, normalizeLoyaltyAccount, normalizeTiers } from "@/lib/customer-loyalty-data";
 
-// ── Shared constants ───────────────────────────────────────────
 const PROFILE_KEY = "washmate_user_profile";
-const NOTIF_KEY = "washmate_notifications";
+const fmt = (n) => new Intl.NumberFormat("vi-VN").format(Number(n || 0));
 
-const loyaltyData = {
-  tier: "BRONZE",
-  tierName: "Đồng",
-  nextTierName: "Bạc",
-  availablePoints: 0,
-  pointsToNextTier: 500,
-  progressPercent: 0,
-};
+function asList(res) {
+  if (Array.isArray(res)) return res;
+  return res?.data ?? res?.content ?? [];
+}
 
-const currentTierBadgeName = tierCodeToBadgeName[loyaltyData.tier] ?? loyaltyData.tierName;
-const currentTier = membershipTiers.find((t) => t.name.toLowerCase() === currentTierBadgeName?.toLowerCase()) ?? membershipTiers[0];
-
-// ── Helpers ────────────────────────────────────────────────────
 function getStoredProfile() {
   try {
-    const raw = localStorage.getItem(PROFILE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    return JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
   } catch {
     return null;
   }
 }
 
-function getStoredNotifications() {
-  try {
-    const raw = localStorage.getItem(NOTIF_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function getEmptyProfile() {
+function getInitialProfile() {
   let name = "";
   let email = "";
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (token) {
       const decoded = jwtDecode(token);
       email = decoded.email || decoded.sub || "";
       name = decoded.full_name || decoded.fullName || decoded.name || email.split("@")[0] || "";
     }
-  } catch (e) {}
-  return {
-    name, email, phone: "", dob: "", gender: "Nam", address: "", district: "", city: "", carNote: ""
-  };
+  } catch {
+    /* token lỗi → để trống, getMe sẽ điền */
+  }
+  return getStoredProfile() || { name, email, phone: "", address: "" };
 }
 
-const defaultNotifications = {
-  reminderWash: true,
-  paymentNotif: true,
-  garageOffers: false,
-  pointsUpdate: true,
-  systemNotif: false,
-};
+// ── Hero: hạng thành viên + điểm THẬT (đồng bộ tông màu theo hạng) ──
+function ProfileHeroCard({ profile, loyalty, tiers, status }) {
+  const progress = computeTierProgress(loyalty, tiers);
+  const theme = tierTheme(loyalty?.tierName);
 
-// ── Profile Hero Card ──────────────────────────────────────────
-function ProfileHeroCard({ profile }) {
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-foreground/60 border border-white/10 p-8 text-white shadow-floating">
-      {/* Decorative blur */}
-      <div className="pointer-events-none absolute -right-10 -top-10 size-64 rounded-full bg-primary/20 blur-[80px]" />
-      <div className="pointer-events-none absolute -left-10 -bottom-10 size-64 rounded-full bg-accent-violet/20 blur-[80px]" />
-
-      <div className="relative grid gap-6 md:grid-cols-[auto_1fr] md:items-center lg:grid-cols-[auto_1fr_210px] z-10">
-        {/* Tier badge + glow */}
-        <div className="relative flex justify-center md:justify-start">
-          <div
-            className="absolute -inset-6 rounded-full blur-[40px] opacity-40"
-            style={{ backgroundColor: currentTier?.color ?? "var(--primary)" }}
-          />
-          <div className="relative">
-            <TierBadge tier={currentTier} size="lg" />
-          </div>
+    <section className={cn("overflow-hidden rounded-2xl border p-6 shadow-card sm:p-8", theme.card, theme.border)}>
+      <div className="grid gap-6 md:grid-cols-[auto_1fr] md:items-center lg:grid-cols-[auto_1fr_220px]">
+        <div className="flex justify-center md:justify-start">
+          <TierBadge name={loyalty?.tierName} size="size-28" iconSize={48} className="rounded-3xl shadow-card" />
         </div>
 
-        {/* Info column */}
         <div className="space-y-4">
-          {/* Name + chips */}
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-3xl font-extrabold">{profile.name}</h2>
-            <span className="inline-flex rounded-full bg-card/10 border border-white/20 px-4 py-1.5 text-xs font-bold tracking-wide">
-              Hạng {loyaltyData.tierName}
+            <h2 className="text-3xl font-extrabold">{profile.name || "Khách hàng"}</h2>
+            <span className={cn("inline-flex rounded-full px-3.5 py-1.5 text-xs font-bold tracking-wide", theme.bg, theme.icon)}>
+              Hạng {loyalty ? tierLabel(loyalty.tierName) : "—"}
             </span>
-            <span className="inline-flex rounded-full bg-success/20 border border-success/30 px-4 py-1.5 text-xs font-semibold text-success-container">
-              ● Đang hoạt động
-            </span>
-          </div>
-
-          {/* Contact */}
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-muted">
-            <span className="flex items-center gap-2">
-              <Mail size={16} className="shrink-0 text-neutral-muted" />
-              {profile.email}
-            </span>
-            {profile.phone && (
-              <span className="flex items-center gap-2">
-                <Phone size={16} className="shrink-0 text-neutral-muted" />
-                {profile.phone}
+            {status !== "INACTIVE" && (
+              <span className="inline-flex rounded-full bg-success-container px-3.5 py-1.5 text-xs font-semibold text-success">
+                ● Đang hoạt động
               </span>
             )}
           </div>
 
-          {/* Points */}
-          <div className="pt-2">
-            <p className="text-sm font-medium text-neutral-muted">Điểm khả dụng</p>
-            <p className="mt-1 text-4xl font-extrabold leading-tight text-white">
-              {loyaltyData.availablePoints.toLocaleString("vi-VN")}
-            </p>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+            {profile.email && (
+              <span className="flex items-center gap-2"><Mail size={16} className="shrink-0" />{profile.email}</span>
+            )}
+            {profile.phone && (
+              <span className="flex items-center gap-2"><Phone size={16} className="shrink-0" />{profile.phone}</span>
+            )}
           </div>
 
-          {/* Progress – mobile/tablet only; desktop shows in mini panel */}
-          <div className="lg:hidden pt-2">
-            <div className="mb-2 flex justify-between text-xs font-semibold text-neutral-muted">
-              <span>Hạng {loyaltyData.tierName}</span>
-              <span>
-                Còn {loyaltyData.pointsToNextTier.toLocaleString("vi-VN")} điểm →{" "}
-                {loyaltyData.nextTierName}
-              </span>
-            </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-card/10 border border-white/10">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-primary to-accent-indigo shadow-cta transition-all duration-500"
-                style={{ width: `${Math.min(loyaltyData.progressPercent, 100)}%` }}
-              />
-            </div>
+          <div className="pt-2">
+            <p className="text-sm font-medium text-muted-foreground">Điểm khả dụng</p>
+            <p className={cn("mt-1 text-4xl font-extrabold leading-tight", theme.icon)}>
+              {loyalty ? fmt(loyalty.availablePoints) : "—"}
+            </p>
           </div>
         </div>
 
-        {/* Mini info panel – desktop only */}
-        <div className="hidden lg:flex lg:flex-col lg:gap-4">
-          <div className="rounded-2xl bg-card/5 border border-white/10 p-5 hover:bg-card/10 transition-colors duration-300">
-            <p className="text-xs font-semibold text-neutral-muted mb-2">
-              Gara thường dùng
-            </p>
+        {/* Panel phải: gara + tiến độ (THẬT) */}
+        <div className="flex flex-col gap-4">
+          <div className="rounded-2xl border border-black/5 bg-card/70 p-5">
+            <p className="mb-2 text-xs font-semibold text-muted-foreground">Gara thường dùng</p>
             <div className="flex items-center gap-2">
-              <Home size={16} className="shrink-0 text-primary" />
-              <span className="text-sm font-bold text-surface">WashMate Quận 7</span>
+              <Home size={16} className={cn("shrink-0", theme.icon)} />
+              <span className="text-sm font-bold text-foreground">{loyalty?.garageName || "Chưa có"}</span>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-card/5 border border-white/10 p-5 hover:bg-card/10 transition-colors duration-300">
-            <p className="text-xs font-semibold text-neutral-muted mb-2">
-              Tiến độ lên hạng {loyaltyData.nextTierName}
-            </p>
-            <p className="text-lg font-extrabold text-white">
-              Còn {loyaltyData.pointsToNextTier.toLocaleString("vi-VN")} điểm
-            </p>
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-card/10 border border-white/10">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-primary to-accent-indigo shadow-cta transition-all duration-500"
-                style={{ width: `${Math.min(loyaltyData.progressPercent, 100)}%` }}
-              />
-            </div>
+          <div className="rounded-2xl border border-black/5 bg-card/70 p-5">
+            {!progress.hasData ? (
+              <p className="text-sm text-muted-foreground">Chưa có dữ liệu tiến độ.</p>
+            ) : progress.isMax ? (
+              <p className={cn("inline-flex items-center gap-1.5 text-sm font-bold", theme.icon)}>
+                <Crown size={16} /> Bạn đang ở hạng cao nhất
+              </p>
+            ) : (
+              <>
+                <p className="mb-2 text-xs font-semibold text-muted-foreground">
+                  Tiến độ lên hạng {tierLabel(progress.next.name)}
+                </p>
+                <p className="text-lg font-extrabold text-foreground">Còn {fmt(progress.pointsToNext)} điểm</p>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/5">
+                  <div className={cn("h-full rounded-full transition-all", theme.bar)} style={{ width: `${progress.progressPercent}%` }} />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -194,51 +141,22 @@ function ProfileHeroCard({ profile }) {
   );
 }
 
-// ── Stats Row ──────────────────────────────────────────────────
-function StatsRow() {
+// ── Stats: dữ liệu THẬT ─────────────────────────────────────────
+function StatsRow({ loyalty, bookingsCount, vehiclesCount }) {
   const stats = [
-    {
-      label: "Tổng lịch đã đặt",
-      value: 0,
-      icon: BookOpen,
-      cls: "text-primary bg-primary-container",
-    },
-    {
-      label: "Xe đang quản lý",
-      value: 0,
-      icon: Car,
-      cls: "text-accent-cyan bg-teal/40",
-    },
-    {
-      label: "Điểm tích luỹ",
-      value: loyaltyData.availablePoints.toLocaleString("vi-VN"),
-      icon: Star,
-      cls: "text-warning bg-warning-container",
-    },
-    {
-      label: "Gara thường dùng",
-      value: "WashMate Q7",
-      icon: Home,
-      cls: "text-accent-violet bg-accent-violet/10",
-    },
+    { label: "Tổng lịch đã đặt", value: formatNumber(bookingsCount), icon: BookOpen, cls: "text-primary bg-primary-container" },
+    { label: "Xe đang quản lý", value: formatNumber(vehiclesCount), icon: Car, cls: "text-accent-cyan bg-accent-cyan/10" },
+    { label: "Điểm tích luỹ", value: loyalty ? fmt(loyalty.totalPoints) : "—", icon: Sparkles, cls: "text-warning bg-warning-container" },
+    { label: "Gara thường dùng", value: loyalty?.garageName || "—", icon: Home, cls: "text-accent-violet bg-accent-violet/10" },
   ];
-
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       {stats.map((s) => (
-        <div
-          key={s.label}
-          className="rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/30 hover:shadow-card"
-        >
-          <div
-            className={cn(
-              "mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl",
-              s.cls,
-            )}
-          >
+        <div key={s.label} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <div className={cn("mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl", s.cls)}>
             <s.icon size={18} />
           </div>
-          <div className="text-xl font-extrabold text-foreground">{s.value}</div>
+          <div className="truncate text-xl font-extrabold text-foreground">{s.value}</div>
           <div className="mt-0.5 text-xs text-muted-foreground">{s.label}</div>
         </div>
       ))}
@@ -246,174 +164,85 @@ function StatsRow() {
   );
 }
 
-// ── Profile fields config ──────────────────────────────────────
+// ── Thông tin cá nhân: chỉ field backend hỗ trợ (fullName, phone, address) ──
 const profileFields = [
-  { label: "Họ và tên", name: "name", icon: User, type: "text", colSpan: 2 },
-  { label: "Email", name: "email", icon: Mail, type: "email", colSpan: 2 },
-  { label: "Số điện thoại", name: "phone", icon: Phone, type: "tel" },
-  { label: "Ngày sinh", name: "dob", icon: Calendar, type: "date" },
-  {
-    label: "Giới tính",
-    name: "gender",
-    icon: User,
-    type: "select",
-    options: ["Nam", "Nữ", "Khác"],
-  },
-  { label: "Địa chỉ", name: "address", icon: MapPin, type: "text", colSpan: 2 },
-  { label: "Quận/Huyện", name: "district", icon: Building2, type: "text" },
-  { label: "Thành phố", name: "city", icon: Building2, type: "text" },
-  {
-    label: "Ghi chú chăm sóc xe",
-    name: "carNote",
-    icon: Car,
-    type: "textarea",
-    colSpan: 3,
-  },
+  { label: "Họ và tên", name: "name", icon: User, type: "text", editable: true },
+  { label: "Email", name: "email", icon: Mail, type: "email", editable: false },
+  { label: "Số điện thoại", name: "phone", icon: Phone, type: "tel", editable: true },
+  { label: "Địa chỉ", name: "address", icon: MapPin, type: "text", editable: true, colSpan: 2 },
 ];
 
-// colSpan mapping for 3-column info grid (view) / 2-column edit grid (form)
-function viewColClass(field) {
-  if (field.colSpan === 3 || field.colSpan === 4) return "sm:col-span-2 lg:col-span-3";
-  if (field.colSpan === 2) return "sm:col-span-2";
-  return "";
-}
-function editColClass(field) {
-  if (field.colSpan === 3 || field.colSpan === 4) return "sm:col-span-2";
-  return "";
-}
-
-// ── Personal Info Card ─────────────────────────────────────────
 function PersonalInfoCard({ profile, onSave }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(profile);
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    setForm(profile);
-  }, [profile]);
+  useEffect(() => setForm(profile), [profile]);
 
-  function handleChange(e) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  }
+  const change = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  function handleSave() {
-    // API-ready: replace with API call here; localStorage is the fallback demo
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(form));
-    window.dispatchEvent(new CustomEvent("washmate-profile-updated"));
-    onSave(form);
-    setEditing(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-  }
-
-  function handleCancel() {
-    setForm(profile);
-    setEditing(false);
+  async function save() {
+    setSaving(true);
+    const ok = await onSave(form);
+    setSaving(false);
+    if (ok) setEditing(false);
   }
 
   const inputClass =
-    "w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition";
+    "w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none focus-visible:border-ring disabled:bg-muted disabled:text-muted-foreground";
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      {/* Card header */}
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-extrabold text-foreground">Thông tin cá nhân</h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Hồ sơ và thông tin liên hệ của bạn.
-          </p>
+          <p className="mt-0.5 text-sm text-muted-foreground">Hồ sơ và thông tin liên hệ của bạn.</p>
         </div>
-
         {!editing ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setEditing(true)}
-            className="border-primary text-primary hover:bg-primary/5"
-          >
-            <Edit3 />
-            Chỉnh sửa
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="border-primary text-primary hover:bg-primary/5">
+            <Edit3 /> Chỉnh sửa
           </Button>
         ) : (
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleCancel} className="text-muted-foreground">
-              <X />
-              Huỷ
+            <Button variant="outline" size="sm" onClick={() => { setForm(profile); setEditing(false); }} disabled={saving}>
+              <X /> Huỷ
             </Button>
-            <Button size="sm" onClick={handleSave}>
-              <Save />
-              Lưu thay đổi
+            <Button size="sm" onClick={save} disabled={saving}>
+              <Save /> {saving ? "Đang lưu..." : "Lưu thay đổi"}
             </Button>
           </div>
         )}
       </div>
 
-      {/* Success toast */}
-      {saved && (
-        <div className="mb-5 flex items-center gap-2 rounded-xl bg-success-container px-4 py-3 text-sm font-semibold text-success">
-          <CheckCircle size={16} />
-          Đã lưu thông tin thành công!
-        </div>
-      )}
-
-      {/* View mode – clean info grid */}
-      {!editing && (
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-          {profileFields.map((field) => (
-            <div key={field.name} className={viewColClass(field)}>
+      {!editing ? (
+        <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+          {profileFields.map((f) => (
+            <div key={f.name} className={f.colSpan === 2 ? "sm:col-span-2" : ""}>
               <dt className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                <field.icon size={14} />
-                {field.label}
+                <f.icon size={14} /> {f.label}
               </dt>
               <dd className="text-sm font-semibold text-foreground">
-                {form[field.name] || <span className="text-muted-foreground">—</span>}
+                {form[f.name] || <span className="text-muted-foreground">—</span>}
               </dd>
             </div>
           ))}
         </dl>
-      )}
-
-      {/* Edit mode – input grid */}
-      {editing && (
+      ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {profileFields.map((field) => (
-            <div key={field.name} className={editColClass(field)}>
+          {profileFields.map((f) => (
+            <div key={f.name} className={f.colSpan === 2 ? "sm:col-span-2" : ""}>
               <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                <field.icon size={14} />
-                {field.label}
+                <f.icon size={14} /> {f.label}
+                {!f.editable && <span className="text-neutral-muted">(không đổi được)</span>}
               </label>
-
-              {field.type === "select" ? (
-                <select
-                  name={field.name}
-                  value={form[field.name] ?? ""}
-                  onChange={handleChange}
-                  className={inputClass}
-                >
-                  {field.options.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              ) : field.type === "textarea" ? (
-                <textarea
-                  name={field.name}
-                  value={form[field.name] ?? ""}
-                  onChange={handleChange}
-                  rows={2}
-                  className={cn(inputClass, "resize-none")}
-                />
-              ) : (
-                <input
-                  type={field.type}
-                  name={field.name}
-                  value={form[field.name] ?? ""}
-                  onChange={handleChange}
-                  className={inputClass}
-                />
-              )}
+              <input
+                type={f.type}
+                name={f.name}
+                value={form[f.name] ?? ""}
+                onChange={change}
+                disabled={!f.editable}
+                className={inputClass}
+              />
             </div>
           ))}
         </div>
@@ -422,206 +251,91 @@ function PersonalInfoCard({ profile, onSave }) {
   );
 }
 
-
-// ── Notifications Card ─────────────────────────────────────────
-const notifItems = [
-  {
-    key: "reminderWash",
-    label: "Nhắc lịch rửa xe",
-    desc: "Nhắc khi xe lâu chưa được rửa",
-  },
-  {
-    key: "paymentNotif",
-    label: "Thông báo thanh toán",
-    desc: "Xác nhận và nhắc nhở thanh toán",
-  },
-  {
-    key: "garageOffers",
-    label: "Ưu đãi theo gara",
-    desc: "Khuyến mãi từ gara yêu thích",
-  },
-  {
-    key: "pointsUpdate",
-    label: "Cập nhật điểm thưởng",
-    desc: "Khi điểm được cộng hoặc trừ",
-  },
-  {
-    key: "systemNotif",
-    label: "Thông báo hệ thống",
-    desc: "Cập nhật chính sách và hệ thống",
-  },
-];
-
-function NotificationsCard() {
-  const [prefs, setPrefs] = useState(getStoredNotifications() ?? defaultNotifications);
-
-  function toggle(key) {
-    setPrefs((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      localStorage.setItem(NOTIF_KEY, JSON.stringify(next));
-      return next;
-    });
-  }
-
-  return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <div className="mb-4">
-        <h2 className="flex items-center gap-2 text-lg font-extrabold text-foreground">
-          <Bell size={18} className="text-primary" />
-          Tuỳ chọn thông báo
-        </h2>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Chọn loại thông báo bạn muốn nhận.
-        </p>
-      </div>
-
-      {/* 2-column toggle grid */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {notifItems.map(({ key, label, desc }) => (
-          <div
-            key={key}
-            className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-secondary/30 px-4 py-3.5 transition hover:bg-secondary/60"
-          >
-            <div className="min-w-0">
-              <div className="text-sm font-semibold text-foreground">{label}</div>
-              <div className="truncate text-xs text-muted-foreground">{desc}</div>
-            </div>
-
-            {/* Toggle switch */}
-            <button
-              type="button"
-              role="switch"
-              aria-checked={prefs[key]}
-              onClick={() => toggle(key)}
-              className={cn(
-                "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30",
-                prefs[key] ? "bg-primary" : "bg-border",
-              )}
-            >
-              <span
-                className={cn(
-                  "inline-block h-5 w-5 rounded-full bg-card shadow-sm transition-transform",
-                  prefs[key] ? "translate-x-5" : "translate-x-0.5",
-                )}
-              />
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Session Management Card ────────────────────────────────────
+// ── Phiên đăng nhập ─────────────────────────────────────────────
 function SessionCard() {
   const navigate = useNavigate();
-  const [cleared, setCleared] = useState(false);
-
-  function handleLogout() {
-    ["token", "accessToken", "refreshToken", "currentUser", "roles", "garageIds", "userEmail"].forEach((key) => {
-      sessionStorage.removeItem(key);
-      localStorage.removeItem(key);
+  function logout() {
+    ["token", "accessToken", "refreshToken", "currentUser", "roles", "garageIds", "userEmail", PROFILE_KEY].forEach((k) => {
+      sessionStorage.removeItem(k);
+      localStorage.removeItem(k);
     });
     navigate("/dang-nhap");
   }
-
-  function handleClearDemo() {
-    localStorage.removeItem(PROFILE_KEY);
-    localStorage.removeItem(NOTIF_KEY);
-    setCleared(true);
-    setTimeout(() => window.location.reload(), 1500);
-  }
-
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <div className="mb-4">
-        <h2 className="text-lg font-extrabold text-foreground">Quản lý phiên đăng nhập</h2>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Đăng xuất hoặc đặt lại dữ liệu demo.
-        </p>
-      </div>
-
-      {/* Soft warning notice */}
-      <div className="mb-4 flex items-start gap-3 rounded-2xl bg-warning-container px-4 py-3">
+      <h2 className="text-lg font-extrabold text-foreground">Phiên đăng nhập</h2>
+      <p className="mt-0.5 text-sm text-muted-foreground">Đăng xuất khỏi thiết bị này.</p>
+      <div className="mt-4 flex items-start gap-3 rounded-2xl bg-warning-container px-4 py-3">
         <AlertTriangle size={16} className="mt-0.5 shrink-0 text-warning" />
-        <p className="text-xs font-medium text-warning">
-          Đăng xuất sẽ kết thúc phiên làm việc hiện tại. Xoá dữ liệu demo sẽ đặt lại thông tin
-          hồ sơ và cài đặt về mặc định.
-        </p>
+        <p className="text-xs font-medium text-warning">Đăng xuất sẽ kết thúc phiên làm việc hiện tại trên thiết bị này.</p>
       </div>
-
-      {cleared && (
-        <div className="mb-4 flex items-center gap-2 rounded-xl bg-success-container px-4 py-3 text-sm font-semibold text-success">
-          <CheckCircle size={16} />
-          Đã xoá dữ liệu demo. Đang tải lại...
-        </div>
-      )}
-
-      <div className="flex flex-col gap-3">
-        <Button onClick={handleLogout} className="w-full bg-critical text-white hover:bg-critical/90">
-          <LogOut />
-          Đăng xuất khỏi thiết bị này
-        </Button>
-        <Button variant="outline" onClick={handleClearDemo} className="w-full text-muted-foreground">
-          <Trash2 />
-          Xoá dữ liệu demo local
-        </Button>
-      </div>
+      <Button onClick={logout} className="mt-4 w-full bg-critical text-white hover:bg-critical/90">
+        <LogOut /> Đăng xuất
+      </Button>
     </div>
   );
 }
 
-import { userApi } from "@/api/userApi";
-
-// ── Main AccountPage ───────────────────────────────────────────
+// ── Trang chính ─────────────────────────────────────────────────
 export default function AccountPage() {
-  const [profile, setProfile] = useState(() => {
-    let stored = getStoredProfile();
-    // Bỏ qua dữ liệu ảo cũ nếu người dùng chưa xoá local storage
-    if (stored && stored.email === "khachhang@washmate.vn" && stored.phone === "0901 234 567") {
-      stored = null;
-    }
-    if (stored) return stored;
-    // Write on first visit so header immediately reads the same name
-    const initial = getEmptyProfile();
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(initial));
-    window.dispatchEvent(new CustomEvent("washmate-profile-updated"));
-    return initial;
-  });
+  const [profile, setProfile] = useState(getInitialProfile);
+  const [loyalty, setLoyalty] = useState(null);
+  const [tiers, setTiers] = useState([]);
+  const [bookingsCount, setBookingsCount] = useState(0);
+  const [vehiclesCount, setVehiclesCount] = useState(0);
+  const [status, setStatus] = useState("ACTIVE");
 
   useEffect(() => {
+    // Hồ sơ THẬT từ /users/me
     userApi.getMe().then((res) => {
-      if (res) {
-        setProfile((prev) => {
-          const next = {
-            ...prev,
-            name: res.fullName || res.name || prev.name,
-            email: res.email || prev.email,
-            phone: res.phone || prev.phone,
-          };
-          localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
-          window.dispatchEvent(new CustomEvent("washmate-profile-updated"));
-          return next;
-        });
+      if (!res) return;
+      setStatus(res.status || "ACTIVE");
+      setProfile((prev) => {
+        const next = {
+          ...prev,
+          name: res.fullName || res.name || prev.name,
+          email: res.email || prev.email,
+          phone: res.phone || prev.phone,
+          address: res.address || prev.address || "",
+        };
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
+        window.dispatchEvent(new CustomEvent("washmate-profile-updated"));
+        return next;
+      });
+    }).catch(() => {});
+
+    // Loyalty + hạng + đếm lịch/xe THẬT
+    (async () => {
+      const [lRes, bRes, vRes] = await Promise.allSettled([
+        loyaltyApi.getMyLoyalty(),
+        loadCustomerBookingList(),
+        vehicleApi.getMyVehicles(),
+      ]);
+      const acc = lRes.status === "fulfilled" ? normalizeLoyaltyAccount(lRes.value) : null;
+      setLoyalty(acc);
+      if (acc?.garageId != null) {
+        try {
+          setTiers(normalizeTiers(await loyaltyApi.getCustomerTiers(acc.garageId)));
+        } catch {
+          setTiers([]);
+        }
       }
-    }).catch((err) => console.error("Lấy thông tin cá nhân lỗi:", err));
+      setBookingsCount(bRes.status === "fulfilled" ? bRes.value.bookings.length : 0);
+      setVehiclesCount(vRes.status === "fulfilled" ? asList(vRes.value).length : 0);
+    })();
   }, []);
 
-  const handleProfileSave = useCallback(async (newProfile) => {
+  const handleSave = useCallback(async (form) => {
     try {
-      await userApi.updateMe({
-        fullName: newProfile.name,
-        phone: newProfile.phone || "",
-      });
-      setProfile(newProfile);
-      localStorage.setItem(PROFILE_KEY, JSON.stringify(newProfile));
+      await userApi.updateMe({ fullName: form.name, phone: form.phone || "", address: form.address || "" });
+      setProfile(form);
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(form));
       window.dispatchEvent(new CustomEvent("washmate-profile-updated"));
+      toast.success("Đã cập nhật thông tin cá nhân.");
+      return true;
     } catch (err) {
-      console.error("Lỗi cập nhật API:", err);
-      // Vẫn lưu local nếu muốn
-      setProfile(newProfile);
-      localStorage.setItem(PROFILE_KEY, JSON.stringify(newProfile));
-      window.dispatchEvent(new CustomEvent("washmate-profile-updated"));
+      toast.error("Không lưu được thông tin.", { description: friendlyError(err, "Vui lòng thử lại sau.") });
+      return false;
     }
   }, []);
 
@@ -630,24 +344,17 @@ export default function AccountPage() {
       <PageHeader
         eyebrow="Tài khoản"
         title="Tài khoản của tôi"
-        description="Quản lý thông tin cá nhân, bảo mật và tuỳ chọn nhận thông báo."
+        description="Quản lý thông tin cá nhân và phiên đăng nhập của bạn."
       />
 
-      {/* Hero profile card */}
-      <ProfileHeroCard profile={profile} />
+      <ProfileHeroCard profile={profile} loyalty={loyalty} tiers={tiers} status={status} />
+      <StatsRow loyalty={loyalty} bookingsCount={bookingsCount} vehiclesCount={vehiclesCount} />
 
-      {/* Stats row */}
-      <StatsRow />
-
-      {/* Unified 2-col layout: left 2/3 stacked, right 1/3 stacked */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
-          <PersonalInfoCard profile={profile} onSave={handleProfileSave} />
-          <NotificationsCard />
+        <div className="lg:col-span-2">
+          <PersonalInfoCard profile={profile} onSave={handleSave} />
         </div>
-        <div className="space-y-4">
-          <SessionCard />
-        </div>
+        <SessionCard />
       </div>
     </PageContainer>
   );

@@ -82,7 +82,7 @@ export default function PortalShell({
           )}
           <div>
             <p className="text-sm font-extrabold leading-none text-white">{brand.title}</p>
-            <p className="mt-1 text-xs leading-none text-primary-container">{brand.subtitle}</p>
+            {brand.subtitle && <p className="mt-1 text-xs leading-none text-primary-container">{brand.subtitle}</p>}
           </div>
         </div>
 

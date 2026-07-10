@@ -1,5 +1,6 @@
 import { Link, Outlet } from "react-router-dom";
 import { AuthIcon } from "@/components/auth/auth-icon";
+import { STAFF_ASSETS } from "@/lib/staff-assets";
 
 const benefits = [
   {
@@ -21,17 +22,13 @@ const benefits = [
 
 const stats = [
   { icon: "shield-check", label: "An toàn & Bảo mật" },
-  { icon: "users", label: "10.000+ Khách hàng tin dùng" },
-  { icon: "star", label: "4.9/5 Đánh giá từ khách hàng" },
 ];
 
 function BrandMark({ className }) {
   return (
     <Link to="/" className={className} aria-label="WashMate - Trang chủ">
       <span className="flex items-center gap-3">
-        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-cta">
-          <AuthIcon name="washmate-drop" className="size-6" />
-        </span>
+        <img src={STAFF_ASSETS.logo.mark} alt="" className="size-11 shrink-0" />
         <span className="flex flex-col leading-none">
           <span className="text-xl font-extrabold tracking-tight text-white">WashMate</span>
           <span className="mt-1 text-xs font-bold tracking-wide text-primary-bright">Rửa xe thông minh</span>
