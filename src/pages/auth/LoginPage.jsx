@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { GoogleLogin } from "@react-oauth/google";
 import { authApi } from "@/api/authApi";
 import { getCurrentRole, homePathForRole } from "@/lib/auth-role";
+import { friendlyError } from "@/lib/api-error";
 
 function setAuthValue(key, value) {
   sessionStorage.setItem(key, value);
@@ -21,6 +22,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
+  const [googleError, setGoogleError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -50,7 +52,7 @@ export default function LoginPage() {
         setError("Vai trò tài khoản chưa được hỗ trợ. Vui lòng liên hệ quản trị viên.");
       }
     } catch (err) {
-      setError(err?.message || "Đăng nhập thất bại. Vui lòng thử lại.");
+      setError(friendlyError(err, "Đăng nhập thất bại. Vui lòng kiểm tra email và mật khẩu."));
     } finally {
       setLoading(false);
     }
@@ -121,10 +123,12 @@ export default function LoginPage() {
           <img src="/images/auth/icons/google.png" alt="" className="size-5" />
           Tiếp tục với Google
         </span>
-        <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0">
+        {/* Nút Google thật phủ trong suốt KÍN toàn bộ nút để bấm chỗ nào cũng ăn */}
+        <div className="absolute inset-0 z-10 opacity-0 [&>div]:!h-full [&>div]:!w-full [&_iframe]:!h-full [&_iframe]:!w-full">
           <GoogleLogin
           onSuccess={async (credentialResponse) => {
             setError("");
+            setGoogleError("");
             setLoading(true);
             try {
               const data = await authApi.loginWithGoogle({ idToken: credentialResponse.credential });
@@ -140,14 +144,15 @@ export default function LoginPage() {
               } else {
                 setError("Vai trò tài khoản chưa được hỗ trợ. Vui lòng liên hệ quản trị viên.");
               }
-            } catch (err) {
-              setError(err?.message || "Đăng nhập Google thất bại. Vui lòng thử lại.");
+            } catch {
+              // Lỗi kỹ thuật (vd. máy chủ chưa bật đăng nhập Google) → thông báo thân thiện, KHÔNG chặn login email.
+              setGoogleError("Đăng nhập bằng Google hiện chưa khả dụng. Vui lòng đăng nhập bằng email.");
             } finally {
               setLoading(false);
             }
           }}
           onError={() => {
-            setError("Đăng nhập bằng Google thất bại. Vui lòng kiểm tra lại kết nối mạng hoặc cấu hình Client ID.");
+            setGoogleError("Đăng nhập bằng Google hiện chưa khả dụng. Vui lòng đăng nhập bằng email.");
           }}
           theme="outline"
           size="large"
@@ -158,6 +163,10 @@ export default function LoginPage() {
         />
         </div>
       </div>
+
+      {googleError && (
+        <p className="mt-2 text-center text-xs font-medium text-muted-foreground">{googleError}</p>
+      )}
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Chưa có tài khoản?{" "}

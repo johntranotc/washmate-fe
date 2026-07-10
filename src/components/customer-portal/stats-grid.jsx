@@ -1,7 +1,10 @@
-import { Calendar, Car, Star, Award } from "lucide-react";
+import { Star } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { formatNumber } from "@/lib/format";
-import { tierLabel } from "@/components/customer-portal/tier-badge";
+import { TierBadge, tierLabel } from "@/components/customer-portal/tier-badge";
+import { BookingKpiIcon } from "@/components/customer-portal/booking-kpi-icon";
+
+const GARAGE_ICON = "/assets/washmate-staff/icons/context/context-bay-garage.svg";
 
 /**
  * StatCard (compat) — giữ export cũ cho LoyaltyStatsGrid, render qua KpiCard chung
@@ -36,12 +39,12 @@ export function DashboardStatsGrid({ bookings = [], vehicles = [], loyalty = nul
   const cards = [
     {
       key: "bookings", label: "Lịch đặt của tôi", value: formatNumber(bookings.length),
-      icon: <Calendar size={18} />, tone: "bg-primary-container text-primary",
+      icon: <BookingKpiIcon />, tone: "bg-transparent",
       subtitle: <p className="text-xs text-neutral-muted">Tổng lịch rửa xe của bạn</p>,
     },
     {
       key: "vehicles", label: "Xe đã lưu", value: formatNumber(vehicles.length),
-      icon: <Car size={18} />, tone: "bg-accent-cyan/10 text-accent-cyan",
+      iconSrc: GARAGE_ICON,
       subtitle: <p className="text-xs text-neutral-muted">Phương tiện trong tài khoản</p>,
     },
     {
@@ -51,7 +54,8 @@ export function DashboardStatsGrid({ bookings = [], vehicles = [], loyalty = nul
     },
     {
       key: "tier", label: "Hạng thành viên", value: tierName || "—",
-      icon: <Award size={18} />, tone: "bg-accent-violet/10 text-accent-violet",
+      icon: <TierBadge name={loyalty?.tierName} size="size-10" iconSize={18} className="rounded-xl" />,
+      tone: "bg-transparent",
       subtitle: tierName ? <p className="text-xs text-neutral-muted">Quyền lợi theo hạng</p> : noLoyalty,
     },
   ];

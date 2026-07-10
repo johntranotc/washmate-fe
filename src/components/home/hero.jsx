@@ -59,18 +59,18 @@ export function Hero() {
               Chăm sóc xe cùng WashMate
             </span>
 
-            <h1 className={`wm-slide-in ${inClass} mt-6 text-balance text-4xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl`} style={{ transitionDelay: "120ms" }}>
+            <h1 className={`wm-slide-in ${inClass} mt-6 text-balance text-4xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl`} style={{ transitionDelay: "250ms" }}>
               Rửa xe thông minh,
               <br className="hidden sm:block" /> chăm sóc xe{" "}
               <span className="text-primary-bright">an tâm</span>.
             </h1>
 
-            <p className={`wm-slide-in ${inClass} mt-6 max-w-xl text-pretty text-lg leading-relaxed text-white/80`} style={{ transitionDelay: "240ms" }}>
+            <p className={`wm-slide-in ${inClass} mt-6 max-w-xl text-pretty text-lg leading-relaxed text-white/80`} style={{ transitionDelay: "600ms" }}>
               Đặt lịch, thanh toán, theo dõi tiến độ và tích điểm thành viên
               trên cùng một nền tảng.
             </p>
 
-            <div className={`wm-slide-in ${inClass} mt-9 flex w-full max-w-sm flex-col gap-3.5 sm:w-auto sm:max-w-none sm:flex-row`} style={{ transitionDelay: "360ms" }}>
+            <div className={`wm-slide-in ${inClass} mt-9 flex w-full max-w-sm flex-col gap-3.5 sm:w-auto sm:max-w-none sm:flex-row`} style={{ transitionDelay: "950ms" }}>
               <LinkButton href="/register" size="xl">
                 <CalendarDays className="size-4.5" />
                 Đặt lịch ngay

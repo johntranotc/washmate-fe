@@ -9,12 +9,10 @@ import { loadCustomerBookingList } from "@/lib/customer-bookings";
 import { normalizeLoyaltyAccount, normalizeTiers } from "@/lib/customer-loyalty-data";
 import { DashboardHero } from "@/components/customer-portal/dashboard-hero";
 import { DashboardStatsGrid } from "@/components/customer-portal/stats-grid";
-import { QuickActions } from "@/components/customer-portal/quick-actions";
-import { UpcomingBookings } from "@/components/customer-portal/upcoming-bookings";
+import { DashboardOffers } from "@/components/customer-portal/dashboard-offers";
 import { MyVehicles } from "@/components/customer-portal/my-vehicles";
 import { MembershipSummary } from "@/components/customer-portal/membership-summary";
 import { CareTips } from "@/components/customer-portal/care-tips";
-import { RecentNotifications } from "@/components/customer-portal/recent-notifications";
 import { RecentHistory } from "@/components/customer-portal/recent-history";
 
 function DashboardSkeleton() {
@@ -104,16 +102,12 @@ export default function DashboardPage() {
         <>
           <DashboardStatsGrid bookings={bookings} vehicles={vehicles} loyalty={loyalty} />
           <div className="grid gap-6 lg:grid-cols-2">
-            <UpcomingBookings bookings={bookings} />
-            <MyVehicles vehicles={vehicles} />
+            <DashboardOffers />
+            <CareTips bookings={bookings} vehicles={vehicles} />
           </div>
-          <QuickActions />
+          <MyVehicles vehicles={vehicles} />
           <MembershipSummary account={loyalty} tiers={loyaltyTiers} />
-          <div className="grid gap-6 lg:grid-cols-2">
-            <RecentNotifications />
-            <RecentHistory bookings={bookings} />
-          </div>
-          <CareTips bookings={bookings} vehicles={vehicles} />
+          <RecentHistory bookings={bookings} />
         </>
       )}
       </PageContainer>

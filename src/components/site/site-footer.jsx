@@ -42,7 +42,7 @@ const columns = [
       { label: "Trang chủ", href: "/" },
       { label: "Dịch vụ", href: "/services" },
       { label: "Bảng giá", href: "/pricing" },
-      { label: "Hạng thành viên", href: "/tiers" },
+      { label: "Liên hệ", href: "/#lien-he" },
     ],
   },
   {

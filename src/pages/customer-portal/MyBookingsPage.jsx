@@ -21,6 +21,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { KpiCard } from "@/components/shared/KpiCard";
 import Pagination from "@/components/common/Pagination";
 import { BookingQuickView } from "@/components/customer-portal/booking-quick-view";
+import { BookingKpiIcon } from "@/components/customer-portal/booking-kpi-icon";
 import { formatBookingDate, formatMoney } from "@/lib/customer-booking-data";
 import { loadCustomerBookingList } from "@/lib/customer-bookings";
 import {
@@ -193,7 +194,8 @@ export default function MyBookingsPage() {
         <KpiCard
           label="Tổng lịch đặt"
           value={loading ? "—" : kpi.total}
-          icon={<ClipboardList size={18} />}
+          icon={<BookingKpiIcon />}
+          tone="bg-transparent"
         />
         <KpiCard
           label="Sắp tới"

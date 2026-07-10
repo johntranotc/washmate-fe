@@ -264,7 +264,7 @@ export default function CustomerPortalLayout() {
     <div className="wm-customer-type">
     <PortalShell
       navLinks={navLinks}
-      brand={{ title: "WashMate", subtitle: "Khu vực khách hàng", logoSrc: STAFF_ASSETS.logo.mark }}
+      brand={{ title: "WashMate", subtitle: "", logoSrc: STAFF_ASSETS.logo.mark }}
       documentTitle="WashMate — Khách hàng"
       glassHeader
       navActiveClassName={CUSTOMER_NAV_ACTIVE}

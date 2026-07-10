@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CalendarDays, Car, Clock, Armchair, Gem, ShieldCheck, Cog, Zap, Flame, Star, Crown } from "lucide-react";
+import { CalendarDays, Car, Armchair, Gem, ShieldCheck, Cog, Zap, Flame, Star, Crown } from "lucide-react";
 
 const serviceIcons = {
   "rua-ngoai-that": Car,
@@ -47,14 +47,7 @@ export function ServiceCard({ service }) {
         <p className="mt-2.5 flex-1 text-sm leading-relaxed text-muted-foreground">
           {service.description}
         </p>
-        <div className="mt-4 flex items-center justify-between border-t border-border pt-3.5">
-          <p className="font-extrabold text-primary">{service.price}</p>
-          <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-            <Clock className="size-3.5" />
-            {service.duration}
-          </p>
-        </div>
-        <div className="mt-4 flex gap-2.5">
+        <div className="mt-4 flex gap-2.5 border-t border-border pt-4">
           <Link
             to={`/services#${service.slug}`}
             className="inline-flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-bold text-foreground transition-colors hover:border-primary hover:text-primary"

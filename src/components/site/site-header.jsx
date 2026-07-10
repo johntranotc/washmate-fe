@@ -11,7 +11,6 @@ const navItems = [
   { label: "Trang chủ", href: "/" },
   { label: "Dịch vụ", href: "/services" },
   { label: "Bảng giá", href: "/pricing" },
-  { label: "Hạng thành viên", href: "/tiers" },
   { label: "Quy trình", href: "/#quy-trinh" },
   { label: "Liên hệ", href: "/#lien-he" },
 ];
@@ -20,7 +19,7 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   const navigate = useNavigate();
 
   // Header chỉ trong suốt khi đứng trên hero TỐI (trang chủ, Dịch vụ, Bảng giá) và chưa cuộn.
@@ -68,8 +67,10 @@ export function SiteHeader() {
             {navItems.map((item) => {
               const active =
                 item.href === "/"
-                  ? pathname === "/"
-                  : !item.href.includes("#") && pathname.startsWith(item.href);
+                  ? pathname === "/" && !hash // Trang chủ: chỉ active khi không ở section neo nào
+                  : item.href.includes("#")
+                    ? pathname === "/" && hash !== "" && item.href.endsWith(hash) // link neo: khớp hash
+                    : pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.href}

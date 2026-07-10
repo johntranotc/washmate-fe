@@ -19,7 +19,11 @@ export function PricingSummary() {
           ))}
         </div>
 
-        <div className="mt-10 text-center">
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          * Giá tham khảo — giá và dịch vụ thực tế theo từng chi nhánh sẽ hiển thị khi bạn đặt lịch.
+        </p>
+
+        <div className="mt-6 text-center">
           <LinkButton href="/pricing" variant="secondary">
             Xem bảng giá chi tiết
           </LinkButton>
