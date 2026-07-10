@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import PageContainer from "@/components/shared/PageContainer";
-import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { vehicleApi } from "@/api/vehicleApi";
 import { loyaltyApi } from "@/api/loyaltyApi";
 import { loadCustomerBookingList } from "@/lib/customer-bookings";
+import { normalizeLoyaltyAccount, normalizeTiers } from "@/lib/customer-loyalty-data";
 import { DashboardHero } from "@/components/customer-portal/dashboard-hero";
 import { DashboardStatsGrid } from "@/components/customer-portal/stats-grid";
 import { QuickActions } from "@/components/customer-portal/quick-actions";
@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [bookings, setBookings] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [loyalty, setLoyalty] = useState(null);
+  const [loyaltyTiers, setLoyaltyTiers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -66,21 +67,29 @@ export default function DashboardPage() {
     } else {
       setVehicles([]);
     }
-    // Loyalty có thể chưa có tài khoản — giữ null, không bịa 0 điểm/hạng Đồng.
-    setLoyalty(lRes.status === "fulfilled" && lRes.value ? lRes.value : null);
+    // Loyalty: chuẩn hoá về 1 tài khoản chính (giống trang Điểm thành viên) — không bịa 0 điểm/hạng Đồng.
+    const account = lRes.status === "fulfilled" ? normalizeLoyaltyAccount(lRes.value) : null;
+    setLoyalty(account);
+    if (account?.garageId != null) {
+      try {
+        setLoyaltyTiers(normalizeTiers(await loyaltyApi.getCustomerTiers(account.garageId)));
+      } catch {
+        setLoyaltyTiers([]);
+      }
+    } else {
+      setLoyaltyTiers([]);
+    }
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
   return (
-    <PageContainer variant="customer" className="pb-16">
-      <PageHeader
-        eyebrow="Tổng quan khách hàng"
-        title="Tổng quan"
-        description="Theo dõi lịch rửa xe, phương tiện, điểm thưởng và ưu đãi của bạn."
-      />
+    <>
+      {/* Banner full-bleed: tràn sát 2 mép + đụng header, chứa luôn eyebrow/mô tả */}
+      <DashboardHero />
 
+      <PageContainer variant="customer" className="pb-16">
       {loading ? (
         <DashboardSkeleton />
       ) : error && !bookings.length && !vehicles.length ? (
@@ -93,14 +102,13 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          <DashboardHero />
           <DashboardStatsGrid bookings={bookings} vehicles={vehicles} loyalty={loyalty} />
           <div className="grid gap-6 lg:grid-cols-2">
             <UpcomingBookings bookings={bookings} />
             <MyVehicles vehicles={vehicles} />
           </div>
           <QuickActions />
-          <MembershipSummary loyalty={loyalty} />
+          <MembershipSummary account={loyalty} tiers={loyaltyTiers} />
           <div className="grid gap-6 lg:grid-cols-2">
             <RecentNotifications />
             <RecentHistory bookings={bookings} />
@@ -108,6 +116,7 @@ export default function DashboardPage() {
           <CareTips bookings={bookings} vehicles={vehicles} />
         </>
       )}
-    </PageContainer>
+      </PageContainer>
+    </>
   );
 }

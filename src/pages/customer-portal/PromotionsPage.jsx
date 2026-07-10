@@ -1,80 +1,303 @@
-import { BadgePercent, CalendarClock, Search, Tag } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  AlertTriangle,
+  BadgePercent,
+  CalendarClock,
+  Check,
+  Copy,
+  Gift,
+  Search,
+  ShieldCheck,
+  Store,
+  Ticket,
+  Wallet,
+} from "lucide-react";
 import PageContainer from "@/components/shared/PageContainer";
 import PageHeader from "@/components/shared/PageHeader";
-import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { KpiCard } from "@/components/shared/KpiCard";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { toast } from "@/components/ui/toast";
+import { PromotionDetailDrawer } from "@/components/customer-portal/promotion-detail-drawer";
 import { promotionApi } from "@/api/promotionApi";
-import { normalizePromotions } from "@/lib/customer-engagement-data";
+import { garageApi } from "@/api/garageApi";
+import { formatBookingDate } from "@/lib/customer-booking-data";
+import {
+  PROMO_TABS,
+  daysLeft,
+  discountLabel,
+  isExpiringSoon,
+  normalizePromotion,
+  promotionState,
+  promotionSubtitle,
+  promotionTitle,
+} from "@/lib/customer-promotion-data";
 
-const filters = [
-  ["ALL", "Tất cả"],
-  ["ACTIVE", "Đang áp dụng"],
-  ["EXPIRING", "Sắp hết hạn"],
-  ["MEMBER", "Dành cho thành viên"],
-];
+const PAGE_STEP = 6;
+
+function asList(res) {
+  if (Array.isArray(res)) return res;
+  return res?.data ?? res?.content ?? [];
+}
 
 export default function PromotionsPage() {
+  const navigate = useNavigate();
+
   const [promotions, setPromotions] = useState([]);
-  const [filter, setFilter] = useState("ALL");
-  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
+  const [tab, setTab] = useState("all");
+  const [search, setSearch] = useState("");
+  const [limit, setLimit] = useState(PAGE_STEP);
+  const [detail, setDetail] = useState(null);
 
-  useEffect(() => {
-    promotionApi.getPromotions()
-      .then((response) => {
-        setPromotions(normalizePromotions(response));
-      })
-      .catch((error) => {
-        console.error("Failed to load promotions:", error);
-      });
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const garages = asList(await garageApi.getAll());
+      if (!garages.length) {
+        setPromotions([]);
+        return;
+      }
+      // Gộp ưu đãi khả dụng của mọi chi nhánh (BE lọc theo khách + hạn + lượt).
+      const results = await Promise.allSettled(
+        garages.map((g) =>
+          promotionApi
+            .getPromotions({ garageId: g.garageId ?? g.id })
+            .then((res) => asList(res).map((p) => normalizePromotion(p, g.name || g.garageName || ""))),
+        ),
+      );
+      const merged = [];
+      const seen = new Set();
+      for (const r of results) {
+        if (r.status !== "fulfilled") continue;
+        for (const p of r.value) {
+          if (!p || seen.has(p.id)) continue;
+          seen.add(p.id);
+          merged.push(p);
+        }
+      }
+      setPromotions(merged);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const visiblePromotions = useMemo(() => promotions.filter((item) => {
-    const matchesFilter = filter === "ALL" || item.status === filter || (filter === "MEMBER" && item.memberOnly);
-    const text = `${item.title} ${item.code} ${item.description}`.toLowerCase();
-    return matchesFilter && text.includes(query.trim().toLowerCase());
-  }), [filter, promotions, query]);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const kpi = useMemo(() => {
+    const expiring = promotions.filter(isExpiringSoon).length;
+    const percent = promotions.filter((p) => p.discountType === "PERCENTAGE").length;
+    const fixed = promotions.filter((p) => p.discountType === "FIXED_AMOUNT").length;
+    return { total: promotions.length, expiring, percent, fixed };
+  }, [promotions]);
+
+  const tabCounts = useMemo(() => {
+    const counts = {};
+    for (const t of PROMO_TABS) counts[t.key] = promotions.filter(t.match).length;
+    return counts;
+  }, [promotions]);
+
+  const filtered = useMemo(() => {
+    const activeTab = PROMO_TABS.find((t) => t.key === tab) || PROMO_TABS[0];
+    const q = search.trim().toLowerCase();
+    return promotions
+      .filter((p) => activeTab.match(p))
+      .filter((p) => {
+        if (!q) return true;
+        return [p.code, promotionTitle(p), promotionSubtitle(p)]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q));
+      })
+      .sort((a, b) => daysLeft(a) - daysLeft(b));
+  }, [promotions, tab, search]);
+
+  useEffect(() => setLimit(PAGE_STEP), [tab, search]);
+
+  const expiringCount = kpi.expiring;
 
   return (
-    <PageContainer variant="customer">
+    <PageContainer variant="customer" className="pb-32">
       <PageHeader
         eyebrow="Ưu đãi WashMate"
         title="Khám phá ưu đãi phù hợp"
-        description="Xem chương trình đang có. Ưu đãi chưa được tự động áp dụng vào booking."
+        description="Xem các chương trình ưu đãi hiện có và những ưu đãi bạn đủ điều kiện sử dụng."
       />
 
-      <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap gap-2">
-          {filters.map(([value, label]) => (
-            <button key={value} onClick={() => setFilter(value)} className={`rounded-full px-4 py-2 text-xs font-bold ${filter === value ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}>{label}</button>
-          ))}
+      {/* KPI */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiCard label="Ưu đãi khả dụng" value={loading ? "—" : kpi.total} icon={<Gift size={18} />} />
+        <KpiCard
+          label="Sắp hết hạn"
+          value={loading ? "—" : kpi.expiring}
+          icon={<CalendarClock size={18} />}
+          tone="bg-warning-container text-warning"
+          highlight={!loading && kpi.expiring > 0}
+        />
+        <KpiCard label="Giảm theo %" value={loading ? "—" : kpi.percent} icon={<BadgePercent size={18} />} tone="bg-primary-container text-primary" />
+        <KpiCard label="Giảm trực tiếp" value={loading ? "—" : kpi.fixed} icon={<Wallet size={18} />} tone="bg-success-container text-success" />
+      </div>
+
+      {/* Banner sắp hết hạn */}
+      {!loading && !error && expiringCount > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-warning/30 bg-warning-container/50 px-4 py-3.5 sm:px-5">
+          <p className="inline-flex items-center gap-2 text-sm font-semibold text-warning">
+            <CalendarClock size={17} />
+            {expiringCount} ưu đãi của bạn sắp hết hạn trong {7} ngày tới.
+          </p>
+          <Button variant="outline" size="sm" className="border-warning/40 text-warning hover:bg-warning-container" onClick={() => setTab("expiring")}>
+            Xem ngay
+          </Button>
         </div>
-        <label className="relative min-w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-muted" size={16} />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm theo tên hoặc mã..." className="w-full rounded-xl border border-border py-2.5 pl-10 pr-3 text-sm outline-none focus:border-primary" />
-        </label>
-      </section>
-      {visiblePromotions.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card py-16 text-center text-sm text-muted-foreground">Không có ưu đãi phù hợp bộ lọc.</div>
+      )}
+
+      {/* Toolbar */}
+      <div className="relative w-full lg:max-w-sm">
+        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm theo tên hoặc mã ưu đãi..." className="h-9 pl-9" />
+      </div>
+
+      {/* Tabs */}
+      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+        {PROMO_TABS.map((t) => {
+          const active = t.key === tab;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-bold transition ${
+                active ? "bg-primary text-primary-foreground shadow-sm" : "border border-border bg-card text-muted-foreground hover:bg-surface"
+              }`}
+            >
+              {t.label}
+              <span className={`rounded-full px-1.5 text-xs ${active ? "bg-white/25" : "bg-muted"}`}>{tabCounts[t.key] ?? 0}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Content */}
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-52 rounded-2xl" />)}
+        </div>
+      ) : error ? (
+        <div className="rounded-2xl border border-critical/25 bg-critical-container p-10 text-center">
+          <span className="mx-auto grid size-12 place-items-center rounded-full bg-critical/10 text-critical"><AlertTriangle size={22} /></span>
+          <h2 className="mt-3 text-lg font-extrabold text-critical">Không thể tải danh sách ưu đãi</h2>
+          <p className="mt-1 text-sm text-critical/90">Vui lòng thử lại sau.</p>
+          <Button onClick={load} className="mt-4 bg-critical text-white hover:bg-critical/90">Thử lại</Button>
+        </div>
+      ) : promotions.length === 0 ? (
+        <EmptyState
+          icon={Gift}
+          title="Chưa có ưu đãi khả dụng"
+          description="Các chương trình ưu đãi mới sẽ được hiển thị tại đây khi khả dụng."
+          action={<Button size="lg" render={<Link to="/khach-hang/dat-lich-moi" />}>Đặt lịch rửa xe</Button>}
+        />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={Search}
+          title="Không tìm thấy ưu đãi phù hợp"
+          description="Thử đổi bộ lọc hoặc từ khóa tìm kiếm."
+          action={<Button variant="outline" onClick={() => { setTab("all"); setSearch(""); }}>Xóa bộ lọc</Button>}
+        />
       ) : (
-        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {visiblePromotions.map((item) => (
-            <article key={item.id} className="flex min-h-72 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-              <div className="bg-primary-strong p-5 text-white">
-                <div className="flex items-center justify-between"><BadgePercent size={28} /><span className="rounded-full bg-card/20 px-3 py-1 text-xs font-bold">{item.memberOnly ? "THÀNH VIÊN" : "ƯU ĐÃI"}</span></div>
-                <p className="mt-5 text-2xl font-black">{item.discountLabel}</p>
-              </div>
-              <div className="flex flex-1 flex-col p-5">
-                <h2 className="font-extrabold text-foreground">{item.title}</h2>
-                <p className="mt-2 text-xs leading-5 text-muted-foreground">{item.description}</p>
-                <div className="mt-auto space-y-2 pt-5 text-xs text-muted-foreground">
-                  <p className="flex items-center gap-2"><Tag size={14} /> Mã: <b className="text-foreground">{item.code || "Tự động"}</b></p>
-                  <p className="flex items-center gap-2"><CalendarClock size={14} /> Hạn dùng: {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString("vi-VN") : "Theo chương trình"}</p>
-                </div>
-              </div>
-            </article>
-          ))}
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.slice(0, limit).map((promo) => (
+              <PromotionCard key={promo.id} promo={promo} onDetail={() => setDetail(promo)} onUse={() => navigate("/khach-hang/dat-lich-moi")} />
+            ))}
+          </div>
+          <p className="text-center text-xs text-muted-foreground">
+            Hiển thị {Math.min(limit, filtered.length)}–{filtered.length} trên {filtered.length} ưu đãi
+          </p>
+          {filtered.length > limit && (
+            <div className="text-center">
+              <Button variant="outline" onClick={() => setLimit((n) => n + PAGE_STEP)}>Xem thêm</Button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Lưu ý sử dụng ưu đãi */}
+      {!loading && !error && promotions.length > 0 && (
+        <section className="grid gap-3 sm:grid-cols-3">
+          <NoteCard icon={ShieldCheck} title="Áp dụng đúng điều kiện" text="Mỗi ưu đãi chỉ áp dụng cho dịch vụ và đơn hàng đủ điều kiện." />
+          <NoteCard icon={Ticket} title="Không cộng dồn" text="Một số ưu đãi không thể dùng cùng lúc với ưu đãi khác." />
+          <NoteCard icon={Store} title="Hiển thị khi thanh toán" text="Ưu đãi sẽ hiển thị ở bước thanh toán khi đơn của bạn đủ điều kiện." />
         </section>
       )}
+
+      <PromotionDetailDrawer promo={detail} onClose={() => setDetail(null)} />
     </PageContainer>
+  );
+}
+
+function PromotionCard({ promo, onDetail, onUse }) {
+  const state = promotionState(promo);
+  const [copied, setCopied] = useState(false);
+  const copyCode = (e) => {
+    e.stopPropagation();
+    if (!promo.code) return;
+    navigator.clipboard?.writeText(promo.code).catch(() => {});
+    setCopied(true);
+    toast.success("Đã sao chép mã ưu đãi.");
+    window.setTimeout(() => setCopied(false), 2000);
+  };
+  const d = daysLeft(promo);
+
+  return (
+    <article className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition hover:border-primary/40">
+      <div className="flex items-center justify-between bg-[linear-gradient(120deg,var(--primary),var(--primary-strong))] px-5 py-4 text-primary-foreground">
+        <BadgePercent size={24} />
+        <span className="text-2xl font-black">{discountLabel(promo)}</span>
+      </div>
+      <div className="flex flex-1 flex-col p-4">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-extrabold leading-snug">{promotionTitle(promo)}</h3>
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${state.key === "expiring" ? "bg-warning-container text-warning" : "bg-success-container text-success"}`}>
+            {state.label}
+          </span>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">{promotionSubtitle(promo)}</p>
+
+        <div className="mt-3 space-y-1.5 text-xs text-muted-foreground">
+          {promo.code && (
+            <button type="button" onClick={copyCode} className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-primary/40 bg-primary-container/30 px-2 py-1 font-mono font-bold text-primary transition hover:bg-primary-container/60">
+              {copied ? <Check size={13} /> : <Copy size={13} />} {promo.code}
+            </button>
+          )}
+          <p className="flex items-center gap-1.5">
+            <CalendarClock size={13} /> Hạn dùng: {promo.endDate ? formatBookingDate(promo.endDate) : "Theo chương trình"}
+          </p>
+        </div>
+
+        <div className="mt-4 flex items-center gap-2">
+          <Button size="sm" className="flex-1" onClick={onUse}>Dùng ngay</Button>
+          <Button variant="outline" size="sm" onClick={onDetail}>Chi tiết</Button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function NoteCard({ icon: Icon, title, text }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><Icon size={18} /></span>
+      <p className="mt-3 font-extrabold">{title}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+    </div>
   );
 }

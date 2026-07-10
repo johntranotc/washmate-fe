@@ -17,22 +17,22 @@ import {
 import PortalShell from "@/components/shared/PortalShell";
 import { loyaltyApi } from "@/api/loyaltyApi";
 import { cn } from "@/lib/utils";
-import { resolveTierInfo } from "@/lib/customer-engagement-data";
 import { getDisplayName } from "@/utils/authUtils";
 import { STAFF_ASSETS } from "@/lib/staff-assets";
+import { TierBadge, tierLabel, tierTheme } from "@/components/customer-portal/tier-badge";
+import {
+  computeTierProgress,
+  normalizeLoyaltyAccount,
+  normalizeTiers,
+} from "@/lib/customer-loyalty-data";
 
-const defaultLoyaltyInfo = {
-  tierName: "Đồng",
-  availablePoints: 0,
-};
+const fmtPts = (n) => new Intl.NumberFormat("vi-VN").format(Number(n || 0));
 
-const TIER_COLORS = {
-  "Đồng": "var(--tier-bronze)",
-  "Bạc": "var(--tier-silver)",
-  "Vàng": "var(--tier-gold)",
-  "Bạch Kim": "var(--tier-platinum)",
-  "Kim Cương": "var(--tier-diamond)",
-};
+// Active state: KÍNH xanh trong mờ + viền/highlight + quầng sáng + thanh nhấn trái.
+const CUSTOMER_NAV_ACTIVE =
+  "bg-[color-mix(in_srgb,var(--primary)_80%,transparent)] text-white backdrop-blur-md ring-1 ring-inset ring-white/20 shadow-[0_8px_24px_-8px_color-mix(in_srgb,var(--primary)_55%,transparent),inset_0_1px_0_rgba(255,255,255,0.22)] hover:translate-x-1 motion-reduce:hover:translate-x-0 before:absolute before:left-0 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-r-full before:bg-white/85";
+const CUSTOMER_NAV_IDLE =
+  "text-neutral-muted hover:translate-x-1 hover:bg-white/5 hover:text-white motion-reduce:hover:translate-x-0";
 
 const navLinks = [
   { icon: LayoutGrid, label: "Tổng quan", to: "/khach-hang", end: true },
@@ -48,23 +48,29 @@ function resolveDisplayName() {
 }
 
 function useLoyaltyInfo() {
-  const [loyaltyInfo, setLoyaltyInfo] = useState(defaultLoyaltyInfo);
+  const [data, setData] = useState({ account: null, tiers: [] });
   useEffect(() => {
     async function fetchLoyalty() {
       try {
-        const res = await loyaltyApi.getMyLoyalty();
-        if (res) {
-          const pts = Number(res.availablePoints ?? res.points ?? 0) || 0;
-          const calc = resolveTierInfo(pts, res.tierName || res.tier);
-          setLoyaltyInfo({ tierName: calc.tierName, availablePoints: pts });
+        // Chuẩn hoá đúng như trang Điểm thành viên (không đọc list thô → tránh 0 điểm/hạng Đồng sai).
+        const account = normalizeLoyaltyAccount(await loyaltyApi.getMyLoyalty());
+        if (!account) return;
+        let tiers = [];
+        if (account.garageId != null) {
+          try {
+            tiers = normalizeTiers(await loyaltyApi.getCustomerTiers(account.garageId));
+          } catch {
+            /* thiếu tiers → không có thanh tiến độ, vẫn hiện hạng + điểm */
+          }
         }
+        setData({ account, tiers });
       } catch {
-        // Giữ giá trị mặc định nếu API lỗi — không chặn layout
+        /* API lỗi → giữ null, card hiện dạng mời tham gia */
       }
     }
     fetchLoyalty();
   }, []);
-  return loyaltyInfo;
+  return data;
 }
 
 function CustomerHeaderActions() {
@@ -185,47 +191,96 @@ function CustomerHeaderActions() {
   );
 }
 
-/* Hạng thành viên — dữ liệu thật từ /api/loyalty/me, hiển thị ở đáy sidebar tối */
+/* Hạng thành viên — dữ liệu THẬT (đồng bộ trang Điểm thành viên): huy hiệu màu hạng + tiến độ */
 function LoyaltyFooterCard() {
-  const loyalty = useLoyaltyInfo();
-  const tierColor = TIER_COLORS[loyalty.tierName] || "var(--tier-bronze)";
+  const { account, tiers } = useLoyaltyInfo();
 
-  return (
-    <NavLink
-      to="/khach-hang/diem-thanh-vien"
-      className="block rounded-xl px-2 py-2 transition-colors hover:bg-ink-soft"
-    >
-      <div className="flex items-center gap-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white" style={{ backgroundColor: tierColor }}>
+  if (!account) {
+    return (
+      <NavLink
+        to="/khach-hang/diem-thanh-vien"
+        className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 transition-colors hover:bg-white/10"
+      >
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/10 text-primary-bright">
           <Star size={18} />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-white">Hạng {loyalty.tierName}</p>
-          <p className="truncate text-xs text-neutral-muted">
-            {new Intl.NumberFormat("vi-VN").format(loyalty.availablePoints)} điểm khả dụng
-          </p>
+          <p className="truncate text-sm font-bold text-white">Điểm thành viên</p>
+          <p className="truncate text-xs text-neutral-muted">Xem hạng & quyền lợi của bạn</p>
         </div>
-      </div>
-    </NavLink>
+      </NavLink>
+    );
+  }
+
+  const theme = tierTheme(account.tierName);
+  const progress = computeTierProgress(account, tiers);
+
+  return (
+    <div className="relative">
+      {/* Quầng sáng màu hạng phía sau để lớp kính có gì để làm mờ (frosted thật) */}
+      <span
+        aria-hidden="true"
+        className={cn("pointer-events-none absolute -right-3 -top-4 size-24 rounded-full opacity-45 blur-2xl", theme.bar)}
+      />
+      <span
+        aria-hidden="true"
+        className={cn("pointer-events-none absolute -bottom-5 left-2 size-20 rounded-full opacity-30 blur-2xl", theme.bar)}
+      />
+
+      <NavLink
+        to="/khach-hang/diem-thanh-vien"
+        className="wm-sidebar-glass relative block rounded-2xl p-3 transition-transform hover:-translate-y-0.5"
+      >
+        <div className="flex items-center gap-3">
+          <TierBadge name={account.tierName} size="size-10" iconSize={20} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-extrabold text-white">Hạng {tierLabel(account.tierName)}</p>
+            <p className="truncate text-xs text-white/70">{fmtPts(account.availablePoints)} điểm khả dụng</p>
+          </div>
+        </div>
+
+        {progress.hasData && !progress.isMax && (
+          <div className="mt-2.5">
+            <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
+              <div className={cn("h-full rounded-full", theme.bar)} style={{ width: `${progress.progressPercent}%` }} />
+            </div>
+            <p className="mt-1.5 truncate text-[11px] font-semibold text-white/70">
+              Còn <b className="text-white">{fmtPts(progress.pointsToNext)}</b> điểm để lên hạng {tierLabel(progress.next.name)}
+            </p>
+          </div>
+        )}
+        {progress.hasData && progress.isMax && (
+          <p className="mt-2.5 text-[11px] font-semibold text-primary-bright">Bạn đang ở hạng cao nhất</p>
+        )}
+      </NavLink>
+    </div>
   );
 }
 
 export default function CustomerPortalLayout() {
   return (
+    // .wm-customer-type: hạ độ đậm chữ một bậc cho toàn khu khách hàng (index.css),
+    // display:contents nên không ảnh hưởng layout.
+    <div className="wm-customer-type">
     <PortalShell
       navLinks={navLinks}
       brand={{ title: "WashMate", subtitle: "Khu vực khách hàng", logoSrc: STAFF_ASSETS.logo.mark }}
       documentTitle="WashMate — Khách hàng"
+      glassHeader
+      navActiveClassName={CUSTOMER_NAV_ACTIVE}
+      navIdleClassName={CUSTOMER_NAV_IDLE}
+      sidebarClassName="wm-customer-sidebar"
       headerRight={<CustomerHeaderActions />}
       sidebarTop={
         <NavLink
           to="/khach-hang/dat-lich-moi"
-          className="mb-3 flex items-center justify-center gap-2 rounded-xl bg-primary px-3 py-3 text-sm font-bold text-white shadow-cta transition hover:bg-primary-strong"
+          className="mb-3 flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-[color-mix(in_srgb,var(--primary)_82%,transparent)] px-3 py-3 text-sm font-bold text-white backdrop-blur-md shadow-[0_10px_30px_-10px_color-mix(in_srgb,var(--primary)_60%,transparent),inset_0_1px_0_rgba(255,255,255,0.22)] transition hover:bg-[color-mix(in_srgb,var(--primary)_92%,transparent)]"
         >
           <Plus size={18} /> Đặt lịch rửa xe
         </NavLink>
       }
       sidebarFooter={<LoyaltyFooterCard />}
     />
+    </div>
   );
 }

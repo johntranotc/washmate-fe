@@ -14,6 +14,12 @@ export const loyaltyApi = {
     axiosClient.get("/loyalty/transactions", { params: { accountId } }),
   getTransactions: (accountId) =>
     axiosClient.get("/loyalty/transactions", { params: { accountId } }),
+  // Danh sách hạng thành viên THẬT theo gara (CustomerLoyaltyTierController)
+  getCustomerTiers: (garageId) =>
+    axiosClient.get("/v1/customer/loyalty/tiers", { params: { garageId } }),
+  // Chính sách tích điểm THẬT theo gara (amountPerPoint, pointExpiryMonths)
+  getPolicy: (garageId) =>
+    axiosClient.get("/v1/customer/loyalty/policy", { params: { garageId } }),
   getRewards: (garageId) =>
     axiosClient.get("/v1/rewards", { params: { garageId } }),
   redeem: (rewardId, payload) =>

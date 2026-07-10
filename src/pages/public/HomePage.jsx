@@ -8,20 +8,24 @@ import { TierSummary } from "@/components/home/tier-summary";
 import { SmartInsight } from "@/components/home/smart-insight";
 import { Testimonials } from "@/components/home/testimonials";
 import { CtaBanner } from "@/components/home/cta-banner";
+import { Reveal } from "@/components/home/reveal";
 
 export default function HomePage() {
   return (
     <>
+      {/* Hero giữ hiệu ứng vào trang riêng (wm-hero-rise) + Ken Burns cho ảnh nền */}
       <Hero />
-      <WhyWashMate />
-      <AudienceSection />
-      <FeaturedServices />
-      <ProcessSteps />
-      <PricingSummary />
-      <TierSummary />
-      <SmartInsight />
-      <Testimonials />
-      <CtaBanner />
+
+      {/* Các section dưới hero: mờ dần + trồi lên khi cuộn tới */}
+      <Reveal><WhyWashMate /></Reveal>
+      <Reveal><AudienceSection /></Reveal>
+      <Reveal><FeaturedServices /></Reveal>
+      <Reveal><ProcessSteps /></Reveal>
+      <Reveal><PricingSummary /></Reveal>
+      <Reveal><TierSummary /></Reveal>
+      <Reveal><SmartInsight /></Reveal>
+      <Reveal><Testimonials /></Reveal>
+      <Reveal><CtaBanner /></Reveal>
     </>
   );
 }

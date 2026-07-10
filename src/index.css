@@ -292,6 +292,58 @@
   }
 }
 
+/* ===== Scroll-reveal cho các section trang chủ (mờ dần + trồi lên khi cuộn tới) ===== */
+.wm-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.wm-reveal.is-shown {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wm-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ===== Chữ hero trượt vào từ PHẢI sang trái (kích hoạt khi cuộn tới, chạy lại mỗi lần) ===== */
+.wm-slide-in {
+  opacity: 0;
+  transform: translateX(64px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.wm-slide-in.is-in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wm-slide-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ===== Ken Burns: ảnh hero phóng to + lia nhẹ, tới lui liên tục (phong cách xe sang) ===== */
+@keyframes wm-kenburns {
+  0% { transform: scale(1.03) translate3d(0, 0, 0); }
+  100% { transform: scale(1.16) translate3d(-1.8%, -1.6%, 0); }
+}
+.wm-kenburns {
+  animation: wm-kenburns 16s ease-in-out infinite alternate;
+  transform-origin: center;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wm-kenburns { animation: none; }
+}
+
 /* ===== Hiệu ứng vào trang cho hero editorial (fade + trượt lên nhẹ) ===== */
 @keyframes wm-hero-rise {
   from { opacity: 0; transform: translateY(18px); }
@@ -302,6 +354,66 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .wm-hero-rise { animation: none; }
+}
+
+/* ===== Header trong suốt cho portal (bật qua prop glassHeader của PortalShell):
+   không nền, không blur — nội dung/ảnh phía sau lộ hoàn toàn ===== */
+.wm-portal-glass-header {
+  background: transparent;
+}
+
+/* ===== Nền sidebar khách hàng: navy chuyển sắc + 2 đốm sáng brand mờ (có chiều sâu) ===== */
+.wm-customer-sidebar {
+  background:
+    radial-gradient(120% 46% at 16% 0%, color-mix(in srgb, var(--primary) 40%, transparent), transparent 64%),
+    radial-gradient(100% 38% at 94% 100%, color-mix(in srgb, var(--accent-cyan) 30%, transparent), transparent 62%),
+    linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 100%);
+}
+
+/* ===== Ô kính (frosted) cho card trong sidebar tối — dùng cùng quầng sáng phía sau ===== */
+.wm-sidebar-glass {
+  background: color-mix(in srgb, white 9%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .wm-sidebar-glass {
+    background: rgba(255, 255, 255, 0.08);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ===== Customer Portal: chữ thanh mảnh hơn (cùng font Be Vietnam Pro, hạ mỗi bậc đậm
+   xuống một nấc cho giống tông câu chào ở banner) — KHÔNG ảnh hưởng Staff/Admin ===== */
+.wm-customer-type {
+  display: contents;
+}
+.wm-customer-type .font-black { font-weight: 700; }
+.wm-customer-type .font-extrabold { font-weight: 700; }
+.wm-customer-type .font-bold { font-weight: 600; }
+.wm-customer-type .font-semibold { font-weight: 500; }
+
+/* ===== Drawer xem nhanh lịch đặt (sheet trượt phải + backdrop mờ dần) ===== */
+@keyframes wm-drawer-in {
+  from { transform: translateX(100%); }
+  to { transform: none; }
+}
+@keyframes wm-drawer-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.wm-drawer-panel {
+  animation: wm-drawer-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.wm-drawer-backdrop {
+  animation: wm-drawer-fade 0.2s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wm-drawer-panel,
+  .wm-drawer-backdrop { animation: none; }
 }
 
 /* ===== Hiệu ứng chuyển trang khi bấm "Đăng nhập" trên landing page =====
