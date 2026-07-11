@@ -55,7 +55,7 @@ function LoyaltySkeleton() {
 
 /**
  * Trang Tích điểm & Thành viên (Admin) — dữ liệu thật:
- *   ưu đãi: GET /v1/rewards/all/{garageId} (song song mọi gara) + CRUD thật
+ *   ưu đãi: GET /v1/admin/promotion-rewards?garageId (song song mọi gara) + CRUD thật
  *   điểm phát sinh/đã dùng: GET /owner/insights (rule-based aggregate, kỳ = tháng này)
  *   hạng: thăm dò GET /v1/admin/loyalty-tiers (DTO đang rỗng) → cấu hình nghiệp vụ
  * Giao dịch điểm & lượt đổi thưởng: BE chưa có API admin → empty state.
@@ -83,10 +83,9 @@ export default function AdminLoyaltyPage() {
     setLoading(true);
     setError(null);
     const today = todayISO();
-    const [gRes, iRes, tRes] = await Promise.allSettled([
+    const [gRes, iRes] = await Promise.allSettled([
       garageApi.getAll(),
       adminApi.getOwnerInsights({ fromDate: `${today.slice(0, 8)}01`, toDate: today }),
-      loyaltyApi.getAdminTiers(),
     ]);
     const garageList = gRes.status === "fulfilled" && Array.isArray(gRes.value) ? gRes.value : [];
     setGarages(garageList);
@@ -96,18 +95,36 @@ export default function AdminLoyaltyPage() {
     } else {
       setPointsSummary(null);
     }
-    setBeTiers(tRes.status === "fulfilled" && Array.isArray(tRes.value) ? tRes.value : []);
 
     if (gRes.status === "rejected") {
       setError(gRes.reason?.message || "Không thể tải dữ liệu tích điểm. Vui lòng thử lại.");
       setRewards([]);
+      setBeTiers([]);
       setLoading(false);
       return;
     }
 
-    // Ưu đãi của TẤT CẢ gara — endpoint thật theo từng gara, tải song song
+    // Hạng thành viên thật theo từng gara — gộp, khử trùng theo tên hạng.
+    const tierResults = await Promise.allSettled(
+      garageList.map((g) => loyaltyApi.getAdminTiers(g.id ?? g.garageId)),
+    );
+    const tierSeen = new Set();
+    const mergedTiers = [];
+    tierResults.forEach((r) => {
+      if (r.status !== "fulfilled") return;
+      const list = Array.isArray(r.value?.content) ? r.value.content : Array.isArray(r.value) ? r.value : [];
+      list.forEach((t) => {
+        const key = String(t.tierName ?? t.name ?? "").toLowerCase();
+        if (!key || tierSeen.has(key)) return;
+        tierSeen.add(key);
+        mergedTiers.push(t);
+      });
+    });
+    setBeTiers(mergedTiers.sort((a, b) => Number(a.minPoints ?? 0) - Number(b.minPoints ?? 0)));
+
+    // Ưu đãi của TẤT CẢ gara — endpoint admin theo từng gara, tải song song
     const results = await Promise.allSettled(
-      garageList.map((g) => rewardApi.getRewardsByGarage(g.id ?? g.garageId)),
+      garageList.map((g) => rewardApi.getAdminRewards(g.id ?? g.garageId)),
     );
     const all = [];
     results.forEach((r, i) => {
@@ -162,7 +179,7 @@ export default function AdminLoyaltyPage() {
     { key: "redemptions", label: "Lượt đổi thưởng", Icon: Gift, tone: "text-accent-cyan bg-accent-cyan/10", pendingApi: true },
   ];
 
-  // Tạm ẩn / kích hoạt ưu đãi — confirm rồi PUT /v1/rewards/{id}.
+  // Tạm ẩn / kích hoạt ưu đãi — confirm rồi PUT /v1/admin/promotion-rewards/{id}.
   async function handleToggleReward(reward) {
     const hiding = reward.status === "ACTIVE";
     const ok = await confirmDialog({

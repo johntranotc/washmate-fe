@@ -1,33 +1,43 @@
 import axiosClient from "./axiosClient";
 
-// TODO(BE): Chưa có endpoint tổng quan tích điểm cấp chủ doanh nghiệp/chi nhánh, ví dụ:
-//   GET /api/v1/loyalty/owner/summary  -> { totalIssued, totalUsed, totalRemaining, customersWithPoints }
-//   GET /api/v1/loyalty/owner/tier-distribution?garageId -> [{ tier, customerCount }]
-// Khi có, wire vào AdminDashboardPage thay cho việc suy ra từ users (hiện hiển thị "—" nếu thiếu).
-
+// Loyalty của KHÁCH dùng nhóm endpoint mới, principal lấy từ token:
+//   GET /api/v1/customer/loyalty              -> LoyaltyAccountResponse (1 tài khoản)
+//   GET /api/v1/customer/loyalty/transactions -> List<LoyaltyTransactionResponse>
+//   GET /api/v1/customer/loyalty/summary?garageId -> CustomerLoyaltySummaryResponse (tiến độ hạng do BE tính)
+//   GET /api/v1/customer/loyalty/tiers?garageId   -> List<LoyaltyTierResponse>
+//   GET /api/v1/customer/loyalty/policy?garageId   -> LoyaltyPolicyResponse
 export const loyaltyApi = {
-  getMyLoyalty: (garageId) =>
-    axiosClient.get("/loyalty/me", { params: { garageId } }),
-  getMyAccount: (garageId) =>
-    axiosClient.get("/loyalty/me", { params: { garageId } }),
-  getLoyaltyTransactions: (accountId) =>
-    axiosClient.get("/loyalty/transactions", { params: { accountId } }),
-  getTransactions: (accountId) =>
-    axiosClient.get("/loyalty/transactions", { params: { accountId } }),
-  // Danh sách hạng thành viên THẬT theo gara (CustomerLoyaltyTierController)
+  // Tài khoản điểm của tôi (BE lấy theo token).
+  getMyLoyalty: () => axiosClient.get("/v1/customer/loyalty"),
+  // Lịch sử tích/đổi điểm của tôi (BE lấy theo token).
+  getLoyaltyTransactions: () => axiosClient.get("/v1/customer/loyalty/transactions"),
+  // Tổng quan hạng + tiến độ lên/giữ hạng do BE tính sẵn theo gara.
+  getSummary: (garageId) =>
+    axiosClient.get("/v1/customer/loyalty/summary", { params: { garageId } }),
+  // Danh sách hạng thành viên thật theo gara.
   getCustomerTiers: (garageId) =>
     axiosClient.get("/v1/customer/loyalty/tiers", { params: { garageId } }),
-  // Chính sách tích điểm THẬT theo gara (amountPerPoint, pointExpiryMonths)
+  // Chính sách tích điểm thật theo gara (amountPerPoint, pointExpiryMonths, autoEnroll).
   getPolicy: (garageId) =>
     axiosClient.get("/v1/customer/loyalty/policy", { params: { garageId } }),
-  getRewards: (garageId) =>
-    axiosClient.get("/v1/rewards", { params: { garageId } }),
-  redeem: (rewardId, payload) =>
-    axiosClient.post(`/v1/rewards/${rewardId}/redeem`, payload),
-  adjustPoints: (accountId, payload) =>
-    axiosClient.post(`/v1/customer/loyalty/adjust`, payload),
-  // GET /api/v1/admin/loyalty-tiers — LƯU Ý: DTO của BE hiện là stub rỗng,
-  // response về dạng [{}] không có field. FE gọi để thăm dò; không dùng được
-  // thì hiển thị cấu hình nghiệp vụ + báo chờ API.
-  getAdminTiers: () => axiosClient.get("/v1/admin/loyalty-tiers"),
+
+  // ---- Admin: cấu hình hạng thành viên (/api/v1/admin/loyalty-tiers) ----
+  getAdminTiers: (garageId) =>
+    axiosClient.get("/v1/admin/loyalty-tiers", { params: { garageId } }),
+  // body: LoyaltyTierRequest { tierName, minPoints, maintainPoints, discountPercentage } (+ garageId query)
+  createTier: (garageId, payload) =>
+    axiosClient.post("/v1/admin/loyalty-tiers", payload, { params: { garageId } }),
+  updateTier: (id, payload) => axiosClient.put(`/v1/admin/loyalty-tiers/${id}`, payload),
+  deleteTier: (id) => axiosClient.delete(`/v1/admin/loyalty-tiers/${id}`),
+
+  // ---- Admin: chính sách tích điểm (/api/v1/admin/loyalty/policy) ----
+  getAdminPolicy: (garageId) =>
+    axiosClient.get("/v1/admin/loyalty/policy", { params: { garageId } }),
+  // body: LoyaltyPolicyRequest { amountPerPoint, pointExpiryMonths, autoEnroll }
+  createPolicy: (garageId, payload) =>
+    axiosClient.post("/v1/admin/loyalty/policy", payload, { params: { garageId } }),
+  updatePolicy: (garageId, payload) =>
+    axiosClient.put("/v1/admin/loyalty/policy", payload, { params: { garageId } }),
+  deletePolicy: (garageId) =>
+    axiosClient.delete("/v1/admin/loyalty/policy", { params: { garageId } }),
 };

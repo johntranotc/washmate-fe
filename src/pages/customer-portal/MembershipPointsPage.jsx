@@ -68,8 +68,8 @@ export default function MembershipPointsPage() {
       }
       const [tRes, rRes, txRes, pRes] = await Promise.allSettled([
         acc.garageId != null ? loyaltyApi.getCustomerTiers(acc.garageId) : Promise.resolve([]),
-        acc.garageId != null ? rewardApi.getRewardsByGarage(acc.garageId) : Promise.resolve([]),
-        loyaltyApi.getLoyaltyTransactions(acc.id),
+        acc.garageId != null ? rewardApi.getCustomerRewards(acc.garageId) : Promise.resolve([]),
+        loyaltyApi.getLoyaltyTransactions(),
         acc.garageId != null ? loyaltyApi.getPolicy(acc.garageId) : Promise.resolve(null),
       ]);
       setTiers(tRes.status === "fulfilled" ? normalizeTiers(tRes.value) : []);
@@ -129,9 +129,13 @@ export default function MembershipPointsPage() {
 
   const handleRedeem = useCallback(
     async (reward) => {
+      if (account?.garageId == null) {
+        toast.error("Chưa đổi được ưu đãi.", { description: "Không xác định được gara của tài khoản." });
+        return;
+      }
       setRedeeming(true);
       try {
-        await rewardApi.redeemReward(reward.id);
+        await rewardApi.redeemReward(reward.id, account.garageId);
         toast.success("Đổi ưu đãi thành công.", { description: "Điểm của bạn đã được cập nhật." });
         setRedeemTarget(null);
         await load();
@@ -141,7 +145,7 @@ export default function MembershipPointsPage() {
         setRedeeming(false);
       }
     },
-    [load],
+    [load, account],
   );
 
   const scrollToRewards = () => rewardsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });

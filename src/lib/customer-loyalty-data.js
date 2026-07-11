@@ -1,6 +1,6 @@
 // Chuẩn hoá + logic loyalty cho trang "Điểm thành viên".
-// Nguồn THẬT: /api/loyalty/me (account), /api/v1/customer/loyalty/tiers, /policy,
-// /api/loyalty/transactions, /api/v1/rewards/all/{garageId}. Không hardcode ngưỡng/tier/quà.
+// Nguồn THẬT: /api/v1/customer/loyalty (account), /tiers, /policy, /transactions,
+// /api/v1/customer/promotion-rewards (quà đổi điểm). Không hardcode ngưỡng/tier/quà.
 
 function unwrap(payload) {
   if (Array.isArray(payload)) return payload;

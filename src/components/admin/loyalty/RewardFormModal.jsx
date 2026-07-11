@@ -11,15 +11,31 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { rewardApi } from "@/api/rewardApi";
-import { friendlyName } from "@/lib/format";
+import { friendlyName, todayISO } from "@/lib/format";
 
-const EMPTY_FORM = { name: "", description: "", pointsRequired: "", stock: "", garageId: "", status: "ACTIVE" };
+const EMPTY_FORM = {
+  name: "",
+  description: "",
+  pointsRequired: "",
+  stock: "",
+  garageId: "",
+  status: "ACTIVE",
+  discountType: "PERCENTAGE",
+  discountValue: "",
+  maxDiscount: "",
+  minOrderValue: "0",
+  usageLimit: "",
+  startDate: "",
+  endDate: "",
+};
 
 /**
  * Form Thêm/Chỉnh sửa ưu đãi đổi điểm — API thật:
- *   POST /v1/rewards { garageId, name, description, pointsRequired, stock }
- *   PUT  /v1/rewards/{id} { name, description, pointsRequired, stock, status }
- * BE chưa hỗ trợ hạn sử dụng/giá trị ưu đãi riêng → form không có các field đó.
+ *   POST /v1/admin/promotion-rewards
+ *     { garageId, name, description, pointsRequired, stock, discountType, discountValue,
+ *       maxDiscount?, minOrderValue, usageLimit?, startDate, endDate }
+ *   PUT  /v1/admin/promotion-rewards/{id}
+ *     { name, description, pointsRequired, stock, status }
  */
 export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDone }) {
   const editing = Boolean(reward?.rewardId);
@@ -32,16 +48,28 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
     if (!open) return;
     setErrors({});
     setSubmitError(null);
-    setForm(reward
-      ? {
-          name: reward.name || "",
-          description: reward.description || "",
-          pointsRequired: String(reward.pointsRequired ?? ""),
-          stock: String(reward.stock ?? ""),
-          garageId: String(reward.garageId ?? ""),
-          status: reward.status === "OUT_OF_STOCK" ? "ACTIVE" : reward.status || "ACTIVE",
-        }
-      : { ...EMPTY_FORM, garageId: String(garages[0]?.id ?? garages[0]?.garageId ?? "") });
+    if (reward) {
+      setForm({
+        ...EMPTY_FORM,
+        name: reward.name || "",
+        description: reward.description || "",
+        pointsRequired: String(reward.pointsRequired ?? ""),
+        stock: String(reward.stock ?? ""),
+        garageId: String(reward.garageId ?? ""),
+        status: reward.status === "OUT_OF_STOCK" ? "ACTIVE" : reward.status || "ACTIVE",
+      });
+    } else {
+      const start = todayISO();
+      const end = new Date(`${start}T00:00:00`);
+      end.setDate(end.getDate() + 30);
+      const endISO = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
+      setForm({
+        ...EMPTY_FORM,
+        garageId: String(garages[0]?.id ?? garages[0]?.garageId ?? ""),
+        startDate: start,
+        endDate: endISO,
+      });
+    }
   }, [open, reward, garages]);
 
   function validate() {
@@ -55,7 +83,24 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
     if (form.stock === "" || !Number.isFinite(stock) || stock < 0) {
       errs.stock = "Số lượng phải là số ≥ 0.";
     }
-    if (!editing && !form.garageId) errs.garageId = "Vui lòng chọn gara.";
+    if (!editing) {
+      if (!form.garageId) errs.garageId = "Vui lòng chọn gara.";
+      const dv = Number(form.discountValue);
+      if (form.discountValue === "" || !Number.isFinite(dv) || dv <= 0) {
+        errs.discountValue = "Giá trị ưu đãi phải là số > 0.";
+      } else if (form.discountType === "PERCENTAGE" && dv > 100) {
+        errs.discountValue = "Giảm theo % không vượt quá 100.";
+      }
+      const minOrder = Number(form.minOrderValue);
+      if (form.minOrderValue === "" || !Number.isFinite(minOrder) || minOrder < 0) {
+        errs.minOrderValue = "Đơn tối thiểu phải là số ≥ 0.";
+      }
+      if (!form.startDate) errs.startDate = "Vui lòng chọn ngày bắt đầu.";
+      if (!form.endDate) errs.endDate = "Vui lòng chọn ngày kết thúc.";
+      if (form.startDate && form.endDate && form.startDate > form.endDate) {
+        errs.endDate = "Ngày kết thúc phải sau ngày bắt đầu.";
+      }
+    }
     return errs;
   }
 
@@ -83,6 +128,13 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
           description: form.description.trim(),
           pointsRequired: Number(form.pointsRequired),
           stock: Number(form.stock),
+          discountType: form.discountType,
+          discountValue: Number(form.discountValue),
+          maxDiscount: form.maxDiscount === "" ? null : Number(form.maxDiscount),
+          minOrderValue: Number(form.minOrderValue),
+          usageLimit: form.usageLimit === "" ? null : Number(form.usageLimit),
+          startDate: `${form.startDate}T00:00:00Z`,
+          endDate: `${form.endDate}T23:59:59Z`,
         });
         toast.success("Đã tạo ưu đãi mới", { description: form.name.trim() });
       }
@@ -194,6 +246,100 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
               </select>
               {errors.garageId && <p className="mt-1 text-xs text-critical">{errors.garageId}</p>}
             </div>
+          )}
+
+          {!editing && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-foreground">Loại ưu đãi <span className="text-critical">*</span></label>
+                  <select
+                    value={form.discountType}
+                    onChange={(e) => setForm({ ...form, discountType: e.target.value })}
+                    className="mt-1.5 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none focus:border-ring"
+                  >
+                    <option value="PERCENTAGE">Giảm theo %</option>
+                    <option value="FIXED_AMOUNT">Giảm trực tiếp (đ)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-foreground">
+                    {form.discountType === "PERCENTAGE" ? "Mức giảm (%)" : "Số tiền giảm (đ)"} <span className="text-critical">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.discountValue}
+                    onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
+                    placeholder={form.discountType === "PERCENTAGE" ? "VD: 10" : "VD: 30000"}
+                    className={inputCls(errors.discountValue)}
+                  />
+                  {errors.discountValue && <p className="mt-1 text-xs text-critical">{errors.discountValue}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-foreground">Đơn tối thiểu (đ) <span className="text-critical">*</span></label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.minOrderValue}
+                    onChange={(e) => setForm({ ...form, minOrderValue: e.target.value })}
+                    placeholder="VD: 0"
+                    className={inputCls(errors.minOrderValue)}
+                  />
+                  {errors.minOrderValue && <p className="mt-1 text-xs text-critical">{errors.minOrderValue}</p>}
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-foreground">
+                    {form.discountType === "PERCENTAGE" ? "Giảm tối đa (đ)" : "Giới hạn lượt dùng"}
+                  </label>
+                  {form.discountType === "PERCENTAGE" ? (
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.maxDiscount}
+                      onChange={(e) => setForm({ ...form, maxDiscount: e.target.value })}
+                      placeholder="Không bắt buộc"
+                      className={inputCls(false)}
+                    />
+                  ) : (
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.usageLimit}
+                      onChange={(e) => setForm({ ...form, usageLimit: e.target.value })}
+                      placeholder="Không bắt buộc"
+                      className={inputCls(false)}
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-foreground">Ngày bắt đầu <span className="text-critical">*</span></label>
+                  <input
+                    type="date"
+                    value={form.startDate}
+                    onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                    className={inputCls(errors.startDate)}
+                  />
+                  {errors.startDate && <p className="mt-1 text-xs text-critical">{errors.startDate}</p>}
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-foreground">Ngày kết thúc <span className="text-critical">*</span></label>
+                  <input
+                    type="date"
+                    value={form.endDate}
+                    onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+                    className={inputCls(errors.endDate)}
+                  />
+                  {errors.endDate && <p className="mt-1 text-xs text-critical">{errors.endDate}</p>}
+                </div>
+              </div>
+            </>
           )}
 
           <AlertDialogFooter>

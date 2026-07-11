@@ -11,26 +11,42 @@ import { normalizeLoyalty, normalizeRewards } from "@/lib/customer-engagement-da
 export default function RewardsPage() {
   const [rewards, setRewards] = useState([]);
   const [points, setPoints] = useState(0);
+  const [garageId, setGarageId] = useState(null);
 
   const [message, setMessage] = useState("");
   const [redeemingId, setRedeemingId] = useState(null);
 
+  const load = async () => {
+    try {
+      const accountResponse = await loyaltyApi.getMyLoyalty();
+      const account = accountResponse?.data ?? accountResponse ?? {};
+      const gid = account.garageId ?? null;
+      setGarageId(gid);
+      setPoints(normalizeLoyalty(accountResponse).availablePoints);
+      if (gid != null) {
+        setRewards(normalizeRewards(await rewardApi.getCustomerRewards(gid)));
+      } else {
+        setRewards([]);
+      }
+    } catch (error) {
+      console.error("Failed to load rewards", error);
+    }
+  };
+
   useEffect(() => {
-    Promise.all([loyaltyApi.getMyLoyalty(), rewardApi.getRewards()])
-      .then(([accountResponse, rewardResponse]) => {
-        setPoints(normalizeLoyalty(accountResponse).availablePoints);
-        setRewards(normalizeRewards(rewardResponse));
-      })
-      .catch((error) => {
-        console.error("Failed to load rewards", error);
-      });
+    load();
   }, []);
 
   const redeem = async (reward) => {
+    if (garageId == null) {
+      setMessage("Không xác định được gara của tài khoản.");
+      return;
+    }
     setRedeemingId(reward.id);
     try {
-      await rewardApi.redeemReward(reward.id, {});
-      setMessage("Yêu cầu đổi thưởng đã được ghi nhận.");
+      await rewardApi.redeemReward(reward.id, garageId);
+      setMessage("Đổi thưởng thành công. Điểm của bạn đã được cập nhật.");
+      await load();
     } catch {
       setMessage("Đổi thưởng thất bại, vui lòng thử lại sau.");
     } finally {
