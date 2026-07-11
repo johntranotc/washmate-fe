@@ -8,6 +8,7 @@ import {
   History,
   RotateCcw,
   Sparkles,
+  Store,
   Trophy,
 } from "lucide-react";
 import PageContainer from "@/components/shared/PageContainer";
@@ -60,22 +61,49 @@ export default function MembershipPointsPage() {
     setLoading(true);
     setError(false);
     try {
-      const acc = normalizeLoyaltyAccount(await loyaltyApi.getMyLoyalty());
+      const raw = await loyaltyApi.getMyLoyalty();
+      const accList = Array.isArray(raw) ? raw : (raw?.data ?? raw?.content ?? (raw ? [raw] : []));
+      const acc = normalizeLoyaltyAccount(raw); // tài khoản chính (điểm cao nhất) cho hạng/tiến độ
       setAccount(acc);
       if (!acc) {
         setTiers([]); setRewards([]); setTransactions([]); setPolicy(null);
         return;
       }
-      const [tRes, rRes, txRes, pRes] = await Promise.allSettled([
-        acc.garageId != null ? loyaltyApi.getCustomerTiers(acc.garageId) : Promise.resolve([]),
-        acc.garageId != null ? rewardApi.getCustomerRewards(acc.garageId) : Promise.resolve([]),
+      // Mọi gara khách có tài khoản điểm — kèm điểm khả dụng RIÊNG của từng gara.
+      const garageList = accList
+        .map((a) => ({
+          garageId: a.garageId ?? null,
+          garageName: a.garageName ?? "",
+          availablePoints: Number(a.availablePoints ?? 0),
+        }))
+        .filter((g) => g.garageId != null);
+      const garages = garageList.length
+        ? garageList
+        : [{ garageId: acc.garageId, garageName: acc.garageName, availablePoints: acc.availablePoints }];
+
+      const [tRes, txRes, pRes, ...rwRes] = await Promise.allSettled([
+        loyaltyApi.getCustomerTiers(acc.garageId),
         loyaltyApi.getLoyaltyTransactions(),
-        acc.garageId != null ? loyaltyApi.getPolicy(acc.garageId) : Promise.resolve(null),
+        loyaltyApi.getPolicy(acc.garageId),
+        ...garages.map((g) => rewardApi.getCustomerRewards(g.garageId)),
       ]);
       setTiers(tRes.status === "fulfilled" ? normalizeTiers(tRes.value) : []);
-      setRewards(rRes.status === "fulfilled" ? normalizeRewards(rRes.value) : []);
       setTransactions(txRes.status === "fulfilled" ? normalizeLoyaltyTransactions(txRes.value) : []);
       setPolicy(pRes.status === "fulfilled" ? normalizePolicy(pRes.value) : null);
+
+      // Gộp ưu đãi đổi điểm của MỌI gara, gắn gara + điểm khả dụng của gara đó để xét đủ/thiếu điểm.
+      const seen = new Set();
+      const merged = [];
+      rwRes.forEach((r, i) => {
+        if (r.status !== "fulfilled") return;
+        const g = garages[i];
+        normalizeRewards(r.value).forEach((rw) => {
+          if (rw.id == null || seen.has(rw.id)) return;
+          seen.add(rw.id);
+          merged.push({ ...rw, garageId: g.garageId, garageName: g.garageName, availablePoints: g.availablePoints });
+        });
+      });
+      setRewards(merged);
     } catch {
       setError(true);
     } finally {
@@ -99,8 +127,8 @@ export default function MembershipPointsPage() {
     return i < 0 ? 0 : i;
   }, [account, tiers]);
   const eligibleRewards = useMemo(
-    () => rewards.filter((r) => rewardState(r, available).canRedeem).length,
-    [rewards, available],
+    () => rewards.filter((r) => rewardState(r, r.availablePoints).canRedeem).length,
+    [rewards],
   );
 
   // Tab lịch sử — chỉ hiện loại thật sự có trong dữ liệu.
@@ -129,13 +157,13 @@ export default function MembershipPointsPage() {
 
   const handleRedeem = useCallback(
     async (reward) => {
-      if (account?.garageId == null) {
-        toast.error("Chưa đổi được ưu đãi.", { description: "Không xác định được gara của tài khoản." });
+      if (reward?.garageId == null) {
+        toast.error("Chưa đổi được ưu đãi.", { description: "Không xác định được gara của ưu đãi." });
         return;
       }
       setRedeeming(true);
       try {
-        await rewardApi.redeemReward(reward.id, account.garageId);
+        await rewardApi.redeemReward(reward.id, reward.garageId);
         toast.success("Đổi ưu đãi thành công.", { description: "Điểm của bạn đã được cập nhật." });
         setRedeemTarget(null);
         await load();
@@ -145,7 +173,7 @@ export default function MembershipPointsPage() {
         setRedeeming(false);
       }
     },
-    [load, account],
+    [load],
   );
 
   const scrollToRewards = () => rewardsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -322,7 +350,7 @@ export default function MembershipPointsPage() {
         ) : (
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {rewards.map((reward) => (
-              <RewardCard key={reward.id} reward={reward} state={rewardState(reward, available)} onRedeem={() => setRedeemTarget(reward)} />
+              <RewardCard key={reward.id} reward={reward} state={rewardState(reward, reward.availablePoints)} onRedeem={() => setRedeemTarget(reward)} />
             ))}
           </div>
         )}
@@ -407,7 +435,7 @@ export default function MembershipPointsPage() {
       </section>
 
       <TierDetailDrawer tier={tierView?.tier} account={account} isCurrent={tierView?.isCurrent} onClose={() => setTierView(null)} />
-      <RedeemRewardDialog reward={redeemTarget} availablePoints={available} garageName={account?.garageName} submitting={redeeming} onClose={() => !redeeming && setRedeemTarget(null)} onConfirm={handleRedeem} />
+      <RedeemRewardDialog reward={redeemTarget} availablePoints={redeemTarget?.availablePoints ?? available} garageName={redeemTarget?.garageName} submitting={redeeming} onClose={() => !redeeming && setRedeemTarget(null)} onConfirm={handleRedeem} />
     </PageContainer>
   );
 }
@@ -427,6 +455,11 @@ function RewardCard({ reward, state, onRedeem }) {
       </div>
       <h3 className="mt-3 font-extrabold">{reward.name}</h3>
       {reward.description && <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{reward.description}</p>}
+      {reward.garageName && (
+        <p className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
+          <Store size={12} /> {reward.garageName}
+        </p>
+      )}
       <div className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary-container px-3 py-1 text-sm font-bold text-primary">
         <Sparkles size={14} /> {fmt(reward.pointsRequired)} điểm
       </div>
