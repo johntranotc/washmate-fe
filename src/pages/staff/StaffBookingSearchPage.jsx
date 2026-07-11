@@ -140,9 +140,8 @@ export default function StaffBookingSearchPage() {
         if (!kw) return true;
         return `${b.code} ${b.customerName} ${b.phone} ${b.plate}`.toLowerCase().includes(kw);
       })
-      .sort((a, b) =>
-        (b.bookingDate || "").localeCompare(a.bookingDate || "") ||
-        (a.slotTime || "99:99").localeCompare(b.slotTime || "99:99"));
+      // Lịch mới tạo lên đầu: id lớn hơn = tạo sau (BE không trả createdAt).
+      .sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
   }, [bookings, keyword, statusFilter]);
 
   const summary = useMemo(() => {
@@ -354,10 +353,10 @@ export default function StaffBookingSearchPage() {
                     <div className="flex flex-wrap items-center gap-1.5 lg:justify-end">
                       {scope === false ? (
                         <div className="flex flex-col items-end gap-1.5">
-                          <Button size="sm" variant="outline" disabled title="Booking không thuộc garage bạn phụ trách">
+                          <Button size="sm" variant="outline" disabled title="Booking không thuộc garage bạn phụ trách" className="h-8 px-2.5 text-xs font-semibold">
                             Ngoài phạm vi xử lý
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => setDetailTarget(b)}>
+                          <Button size="sm" variant="outline" onClick={() => setDetailTarget(b)} className="h-8 px-2.5 text-xs font-semibold">
                             Chi tiết
                           </Button>
                         </div>

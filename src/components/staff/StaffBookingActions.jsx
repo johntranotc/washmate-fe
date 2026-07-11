@@ -9,6 +9,9 @@ const ACTION_ICONS = {
   completeBooking: STAFF_ASSETS.action.completeService,
 };
 
+// Nút gọn, cao đồng đều để mọi card thẳng hàng.
+const BTN = "h-8 gap-1 px-2.5 text-xs font-semibold";
+
 /**
  * Cụm nút thao tác cho một booking, render đúng theo status/payment thật:
  *   PENDING              → Xác nhận · Từ chối
@@ -52,9 +55,9 @@ export function StaffBookingActions({
           href={`tel:${booking.phone}`}
           aria-label={`Gọi ${booking.customerName}`}
           title={`Gọi ${booking.phone}`}
-          className="inline-grid h-8 w-8 place-items-center rounded-lg border border-border hover:bg-primary-container"
+          className="inline-grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-border hover:bg-primary-container"
         >
-          <img src={STAFF_ASSETS.action.phone} alt="" width={18} height={18} className="rounded" />
+          <img src={STAFF_ASSETS.action.phone} alt="" width={16} height={16} className="rounded" />
         </a>
       )}
 
@@ -65,8 +68,9 @@ export function StaffBookingActions({
           disabled={busy}
           onClick={() => onConfirmPayment?.(booking)}
           title="Xác nhận khách đã thanh toán (thu trực tiếp)"
+          className={BTN}
         >
-          <img src={STAFF_ASSETS.action.paymentReminder} alt="" width={16} height={16} className="rounded" />
+          <img src={STAFF_ASSETS.action.paymentReminder} alt="" width={14} height={14} className="rounded" />
           Xác nhận thanh toán
         </Button>
       )}
@@ -79,27 +83,28 @@ export function StaffBookingActions({
           onClick={() =>
             action.api === "checkInBooking" ? onCheckIn?.(booking) : onNextAction?.(booking, action)
           }
+          className={BTN}
         >
           {ACTION_ICONS[action.api] && (
-            <img src={ACTION_ICONS[action.api]} alt="" width={16} height={16} className="rounded" />
+            <img src={ACTION_ICONS[action.api]} alt="" width={14} height={14} className="rounded" />
           )}
           {busy ? "..." : nextLabel}
         </Button>
       )}
 
       {booking.bookingStatus === "PENDING" && (
-        <Button size="sm" variant="destructive" disabled={busy} onClick={() => onReject?.(booking)}>
+        <Button size="sm" variant="destructive" disabled={busy} onClick={() => onReject?.(booking)} className={BTN}>
           Từ chối
         </Button>
       )}
 
       {canMarkNoShow(booking) && (
-        <Button size="sm" variant="destructive" disabled={busy} onClick={() => onNoShow?.(booking)}>
+        <Button size="sm" variant="destructive" disabled={busy} onClick={() => onNoShow?.(booking)} className={BTN}>
           No-show
         </Button>
       )}
 
-      <Button size="sm" variant="outline" onClick={() => onDetail?.(booking)}>
+      <Button size="sm" variant="outline" onClick={() => onDetail?.(booking)} className={BTN}>
         Chi tiết
       </Button>
     </div>

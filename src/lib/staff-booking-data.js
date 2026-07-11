@@ -92,15 +92,14 @@ export function getNextStaffAction(booking) {
   if (!booking) return null;
   switch (booking.bookingStatus) {
     case "PENDING": {
-      // Luồng thật: khách thanh toán trước, gara xác nhận sau — chưa PAID thì
-      // chưa nhận lịch (staff thu tiền mặt qua "Xác nhận thanh toán" trước).
-      const paid = booking.paymentStatus === "PAID";
+      // Luồng đúng (khớp BE + UI khách): gara XÁC NHẬN TRƯỚC, khách thanh toán sau.
+      // BE confirm chỉ yêu cầu status PENDING (không cần thanh toán) → luôn cho xác nhận.
       return {
         api: "confirmBooking",
         next: "CONFIRMED",
         label: "Xác nhận",
-        enabled: paid,
-        disabledHint: paid ? null : "Chờ thanh toán",
+        enabled: true,
+        disabledHint: null,
       };
     }
     case "CONFIRMED": {

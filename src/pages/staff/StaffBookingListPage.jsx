@@ -150,9 +150,8 @@ export default function StaffBookingListPage() {
   const scoped = useMemo(
     () => bookings
       .filter((b) => b.bookingDate >= fromDate && b.bookingDate <= toDate)
-      .sort((a, b) =>
-        (a.bookingDate || "").localeCompare(b.bookingDate || "") ||
-        (a.slotTime || "99:99").localeCompare(b.slotTime || "99:99")),
+      // Lịch mới tạo lên đầu (id lớn hơn = tạo sau; BE không trả createdAt).
+      .sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0)),
     [bookings, fromDate, toDate],
   );
 

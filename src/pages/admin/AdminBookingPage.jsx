@@ -91,7 +91,7 @@ export default function AdminBookingPage() {
 
   // Filter phạm vi trang (header): chi nhánh + khoảng thời gian nhanh
   const [garageId, setGarageId] = useState("all");
-  const [rangeKey, setRangeKey] = useState("month");
+  const [rangeKey, setRangeKey] = useState("all");
   // Filter bảng: search + trạng thái + thanh toán + khoảng ngày tùy chỉnh
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -116,7 +116,15 @@ export default function AdminBookingPage() {
     const today = todayISO();
     if (rangeKey === "today") return { fromDate: today, toDate: today };
     if (rangeKey === "week") return { fromDate: isoAddDays(today, -6), toDate: today };
-    if (rangeKey === "month") return { fromDate: `${today.slice(0, 8)}01`, toDate: today };
+    if (rangeKey === "month") {
+      // Cả tháng (đầu → cuối tháng) để KHÔNG bỏ sót lịch hẹn sắp tới trong tháng.
+      const first = `${today.slice(0, 8)}01`;
+      const d = new Date(`${first}T00:00:00`);
+      d.setMonth(d.getMonth() + 1);
+      d.setDate(0); // ngày cuối tháng hiện tại
+      const last = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return { fromDate: first, toDate: last };
+    }
     return { fromDate: "", toDate: "" }; // Toàn bộ
   }, [rangeKey, customFrom, customTo]);
 
