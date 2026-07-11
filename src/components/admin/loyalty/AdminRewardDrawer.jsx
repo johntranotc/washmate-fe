@@ -22,7 +22,7 @@ export const REWARD_STATUS_TONES = {
 };
 
 /**
- * Drawer chi tiết ưu đãi đổi điểm — dữ liệu thật từ GET /v1/rewards.
+ * Drawer chi tiết ưu đãi đổi điểm — dữ liệu thật từ GET /v1/admin/promotion-rewards.
  * BE chưa có hạn sử dụng, số lượt đã đổi, lịch sử chỉnh sửa → empty state.
  * reward: đã enrich { ..., garageName }
  */
