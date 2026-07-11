@@ -135,16 +135,17 @@ export default function PromotionsPage() {
 
       {/* KPI */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiCard label="Ưu đãi khả dụng" value={loading ? "—" : kpi.total} icon={<Gift size={18} />} />
+        <KpiCard label="Ưu đãi khả dụng" value={loading ? "—" : kpi.total} iconSrc="/images/icons/promo-available.png" icon={<Gift size={18} />} />
         <KpiCard
           label="Sắp hết hạn"
           value={loading ? "—" : kpi.expiring}
+          iconSrc="/images/icons/promo-expiring.png"
           icon={<CalendarClock size={18} />}
           tone="bg-warning-container text-warning"
           highlight={!loading && kpi.expiring > 0}
         />
-        <KpiCard label="Giảm theo %" value={loading ? "—" : kpi.percent} icon={<BadgePercent size={18} />} tone="bg-primary-container text-primary" />
-        <KpiCard label="Giảm trực tiếp" value={loading ? "—" : kpi.fixed} icon={<Wallet size={18} />} tone="bg-success-container text-success" />
+        <KpiCard label="Giảm theo %" value={loading ? "—" : kpi.percent} iconSrc="/images/icons/promo-percent.png" icon={<BadgePercent size={18} />} tone="bg-primary-container text-primary" />
+        <KpiCard label="Giảm trực tiếp" value={loading ? "—" : kpi.fixed} iconSrc="/images/icons/promo-fixed.png" icon={<Wallet size={18} />} tone="bg-success-container text-success" />
       </div>
 
       {/* Banner sắp hết hạn */}

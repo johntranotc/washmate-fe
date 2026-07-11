@@ -200,12 +200,14 @@ export default function MyBookingsPage() {
         <KpiCard
           label="Sắp tới"
           value={loading ? "—" : kpi.upcoming}
+          iconSrc="/images/icons/booking-upcoming.png"
           icon={<CalendarClock size={18} />}
           tone="bg-primary-container text-primary"
         />
         <KpiCard
           label="Chờ thanh toán"
           value={loading ? "—" : kpi.unpaid}
+          iconSrc="/images/icons/booking-awaiting-pay.png"
           icon={<Wallet size={18} />}
           tone="bg-warning-container text-warning"
           highlight={!loading && kpi.unpaid > 0}
@@ -220,6 +222,7 @@ export default function MyBookingsPage() {
         <KpiCard
           label="Hoàn thành"
           value={loading ? "—" : kpi.completed}
+          iconSrc="/images/icons/booking-completed.png"
           icon={<CheckCircle2 size={18} />}
           tone="bg-success-container text-success"
         />
