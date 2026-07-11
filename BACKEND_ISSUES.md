@@ -60,6 +60,23 @@ trả full data qua `mapToResponse` (đã có sẵn model/status).
 
 ---
 
+## 🔴 10. `GET /api/v1/customer/loyalty` — 500 khi khách có nhiều tài khoản loyalty
+
+**File:** `service/CustomerLoyaltyServiceImpl.java` → `getMyLoyalty(userId)` +
+`repository/LoyaltyAccountRepository.java` → `Optional<LoyaltyAccount> findByUserId(Integer userId)`
+
+**Vấn đề:** khách có tài khoản tích điểm ở **nhiều gara** (mỗi gara 1 account, sinh khi hoàn tất
+rửa/đổi quà). `findByUserId` trả `Optional` (1 kết quả) → gặp ≥2 account ném
+`IncorrectResultSizeDataAccessException` → 500. Trang "Điểm thành viên" của khách hỏng ngay sau khi
+phát sinh account thứ 2.
+
+**Cách sửa:** trả về theo gara cụ thể (`findByUserIdAndGarageId`) hoặc danh sách như
+`LoyaltyService.getMyAccounts` (`findByUserIdOrderByGarageNameAsc`).
+
+**FE tạm thời:** `loyaltyApi.getMyLoyalty` dùng `/api/loyalty/me` (trả danh sách, chọn tài khoản chính).
+
+---
+
 ## 🟠 9. `RewardResponse` (ưu đãi đổi điểm) — thiếu mức giảm & tên gara
 
 **File:** `dto/response/Reward/RewardResponse.java`
