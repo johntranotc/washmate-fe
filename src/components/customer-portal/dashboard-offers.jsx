@@ -120,16 +120,19 @@ function OfferCard({ promo, onUse }) {
         <span className="text-xl font-black">{discountLabel(promo)}</span>
       </div>
       <div className="flex flex-1 flex-col p-4">
-        <p className="line-clamp-2 text-sm font-bold">{promotionTitle(promo)}</p>
-        {promo.code && (
-          <button
-            type="button"
-            onClick={copyCode}
-            className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-lg border border-dashed border-primary/40 bg-primary-container/30 px-2 py-1 font-mono text-xs font-bold text-primary transition hover:bg-primary-container/60"
-          >
-            {copied ? <Check size={12} /> : <Copy size={12} />} {promo.code}
-          </button>
-        )}
+        {/* Chừa 2 dòng cho tiêu đề để mã + hạn + nút giữa các thẻ luôn thẳng hàng */}
+        <p className="line-clamp-2 min-h-10 text-sm font-bold">{promotionTitle(promo)}</p>
+        <div className="min-h-8">
+          {promo.code && (
+            <button
+              type="button"
+              onClick={copyCode}
+              className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-lg border border-dashed border-primary/40 bg-primary-container/30 px-2 py-1 font-mono text-xs font-bold text-primary transition hover:bg-primary-container/60"
+            >
+              {copied ? <Check size={12} /> : <Copy size={12} />} {promo.code}
+            </button>
+          )}
+        </div>
         <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
           <CalendarClock size={12} />
           {d != null && d >= 0 && d <= 7 ? (
@@ -138,7 +141,7 @@ function OfferCard({ promo, onUse }) {
             <>Hạn: {promo.endDate ? formatBookingDate(promo.endDate) : "Theo chương trình"}</>
           )}
         </p>
-        <Button size="sm" className="mt-3 w-full" onClick={onUse}>
+        <Button size="sm" className="mt-auto w-full" onClick={onUse}>
           Dùng ngay
         </Button>
       </div>
