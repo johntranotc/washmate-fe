@@ -60,6 +60,23 @@ trả full data qua `mapToResponse` (đã có sẵn model/status).
 
 ---
 
+## 🔴 8. Lịch sử điểm (GET `/api/v1/customer/loyalty/transactions`) — lọc sai, bỏ sót giao dịch
+
+**File:** `service/CustomerLoyaltyServiceImpl.java` → `getTransactions(Integer userId)`
+
+**Vấn đề:** lấy `account = findByUserId(userId)` rồi gọi
+`findByAccountUserIdOrderByCreatedAtDesc(account.getId())` — truyền **id tài khoản** vào query
+đang lọc theo **id người dùng** (`account.user.id`). Kết quả trả về giao dịch của **sai người dùng**
+(hoặc rỗng), khách không thấy đủ lịch sử tích điểm của mình.
+
+**Cách sửa:** truyền `userId` (không phải `account.getId()`):
+`findByAccountUserIdOrderByCreatedAtDesc(userId)` — giống `LoyaltyService.getMyTransactions` (đang đúng).
+
+**FE tạm thời:** `loyaltyApi.getLoyaltyTransactions` dùng endpoint cũ `/api/loyalty/transactions`
+(lọc đúng theo userId) cho tới khi endpoint mới được sửa.
+
+---
+
 ## 🔴 4. Đổi quà (POST `/api/v1/rewards/{rewardId}/redeem`) — sai chữ ký, không gọi được
 
 **File:** `controller/RewardController.java` → `redeemReward(...)`
