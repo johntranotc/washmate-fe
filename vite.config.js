@@ -19,9 +19,17 @@ export default defineConfig({
       },
     },
     watch: {
-      // Bỏ qua file tạm khi copy-paste ảnh trong Windows (vd "icon - Copy.png")
-      // để trình theo dõi file của Vite không crash vì file đang bị khoá (EBUSY).
-      ignored: ["**/* - Copy*", "**/*- Copy*", "**/*.tmp", "**/*.crdownload"],
+      // Bỏ theo dõi thư mục ảnh tĩnh (public/images) + file tạm khi copy-paste.
+      // Ảnh trong public/ không cần HMR (đổi ảnh chỉ cần F5), và trên Windows nếu
+      // file đang mở/bị khoá thì trình theo dõi của Vite sẽ crash (EBUSY) — bỏ qua
+      // để dev server không bao giờ sập khi bạn thêm/sửa ảnh.
+      ignored: [
+        "**/public/images/**",
+        "**/* - Copy*",
+        "**/*- Copy*",
+        "**/*.tmp",
+        "**/*.crdownload",
+      ],
     },
   },
 });
