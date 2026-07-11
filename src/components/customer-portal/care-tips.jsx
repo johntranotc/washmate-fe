@@ -41,15 +41,15 @@ export function CareTips({ bookings = [], vehicles = [] }) {
   if (!tips.length) return null;
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5">
+    <section className="flex h-full flex-col rounded-2xl border border-border bg-card p-5">
       <h2 className="text-lg font-bold text-foreground">Gợi ý chăm sóc định kỳ</h2>
       <p className="mt-0.5 text-xs text-muted-foreground">
         Dựa trên lịch sử rửa xe thực tế của bạn tại WashMate.
       </p>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mt-4 grid flex-1 auto-rows-fr grid-cols-1 gap-3 sm:grid-cols-2">
         {tips.map((tip) => (
-          <div key={tip.key} className="flex flex-col rounded-xl border border-border bg-surface p-4">
+          <div key={tip.key} className="flex h-full flex-col rounded-xl border border-border bg-surface p-4">
             <div className="flex items-center gap-2.5">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-container text-primary">
                 {tip.days != null ? <Droplets size={16} /> : <Car size={16} />}

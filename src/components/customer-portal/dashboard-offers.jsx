@@ -92,7 +92,7 @@ export function DashboardOffers() {
           <p className="mt-1 text-xs text-muted-foreground">Ưu đãi mới sẽ xuất hiện tại đây khi có chương trình.</p>
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid flex-1 auto-rows-fr gap-3 sm:grid-cols-2">
           {promos.slice(0, MAX).map((promo) => (
             <OfferCard key={promo.id} promo={promo} onUse={() => navigate("/khach-hang/dat-lich-moi")} />
           ))}
