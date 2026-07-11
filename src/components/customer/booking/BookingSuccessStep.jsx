@@ -7,15 +7,15 @@ export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", 
   const promo = promotion || selection?.promotion || result?.promotion;
   const disc = Number(discountAmount ?? selection?.discountAmount ?? result?.discountAmount ?? result?.discount ?? 0);
   const basePrice = Number(selection.service?.price || 0);
-  const finalPrice = Math.max(0, basePrice - disc);
+  const finalPrice = result?.finalAmount != null ? Number(result.finalAmount) : Math.max(0, basePrice - disc);
 
   const summaryRows = [
     { icon: MapPin, label: "Gara", value: selection.garage?.name },
     { icon: Droplets, label: "Dịch vụ", value: `${selection.service?.name} — ${formatCurrency(basePrice)}` },
-    ...(promo || disc > 0 ? [
+    ...(disc > 0 ? [
       {
         icon: Tag,
-        label: "Mã giảm giá",
+        label: promo?.code ? "Mã giảm giá" : "Ưu đãi giảm giá",
         value: promo?.code ? `${promo.code} (-${formatCurrency(disc)})` : `Giảm giá (-${formatCurrency(disc)})`,
         highlight: true,
       }

@@ -315,7 +315,8 @@ export default function CustomerBookingFlowPage() {
         ...normalizedResult,
         bookingStatus: "PENDING",
         promotion,
-        discountAmount,
+        // Ưu tiên số giảm THẬT của BE (gồm giảm theo hạng); chỉ fallback số FE tự tính khi BE không trả.
+        discountAmount: normalizedResult.discountAmount != null ? normalizedResult.discountAmount : discountAmount,
       });
     } catch (error) {
       setSubmitError(bookingErrorMessage(error));

@@ -119,12 +119,17 @@ export function normalizeBookingResponse(response) {
   const root = response?.data || response || {};
   const booking = root.booking?.data || root.booking || root;
   const payment = root.payment?.data || root.payment || {};
+  const num = (v) => (v == null ? null : Number(v));
   return {
     bookingId: booking.id ?? booking.bookingId ?? root.bookingId,
     bookingCode: booking.code ?? booking.bookingCode ?? root.bookingCode,
     paymentId: payment.id ?? payment.paymentId ?? root.paymentId,
     bookingStatus: booking.status ?? booking.bookingStatus ?? root.bookingStatus ?? "PENDING",
     paymentStatus: payment.status ?? payment.paymentStatus ?? root.paymentStatus ?? "PENDING",
+    // Số tiền THẬT do BE tính (đã gồm giảm theo hạng thành viên + mã ưu đãi).
+    totalAmount: num(booking.totalAmount ?? root.totalAmount),
+    discountAmount: num(booking.discountAmount ?? root.discountAmount),
+    finalAmount: num(booking.finalAmount ?? root.finalAmount),
     raw: response,
   };
 }
