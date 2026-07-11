@@ -115,6 +115,7 @@ export default function NotificationsPage() {
     setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
     try {
       await notificationApi.markNotificationAsRead(id);
+      window.dispatchEvent(new Event("washmate-notifications-updated"));
     } catch {
       // Thất bại → khôi phục trạng thái thật, không giữ "đã đọc" giả.
       setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: false } : n)));
@@ -136,6 +137,7 @@ export default function NotificationsPage() {
     setMarking(true);
     try {
       await notificationApi.markAllRead();
+      window.dispatchEvent(new Event("washmate-notifications-updated"));
       toast.success("Đã đánh dấu tất cả là đã đọc.");
       await load({ silent: true });
     } catch (err) {
