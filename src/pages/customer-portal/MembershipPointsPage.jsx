@@ -566,14 +566,38 @@ function RewardCard({ reward, state, onRedeem }) {
   );
 }
 
+// Icon "tích điểm": dùng ảnh huy chương ở /images/loyalty/point-medal.png;
+// nếu chưa có file thì tự quay về icon Sparkles để không bị vỡ ảnh.
+function PointEarnIcon() {
+  const [ok, setOk] = useState(true);
+  if (!ok) {
+    return (
+      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-success-container text-success">
+        <Sparkles size={18} />
+      </span>
+    );
+  }
+  return (
+    <img
+      src="/images/loyalty/point-medal.png"
+      alt=""
+      className="size-10 shrink-0 object-contain"
+      onError={() => setOk(false)}
+    />
+  );
+}
+
 function HistoryRow({ tx }) {
   const positive = tx.sign > 0;
-  const TagIcon = positive ? Sparkles : Gift;
   return (
     <div className="flex items-center gap-3 p-4">
-      <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${positive ? "bg-success-container text-success" : "bg-warning-container text-warning"}`}>
-        <TagIcon size={18} />
-      </span>
+      {positive ? (
+        <PointEarnIcon />
+      ) : (
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-warning-container text-warning">
+          <Gift size={18} />
+        </span>
+      )}
       <div className="min-w-0 flex-1">
         <p className="font-semibold">{tx.description}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
