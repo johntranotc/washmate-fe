@@ -47,6 +47,10 @@ export default function MembershipPointsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  // Loyalty theo TỪNG chi nhánh (điểm/hạng mỗi gara khác nhau) + gara đang xem.
+  const [garagesData, setGaragesData] = useState([]);
+  const [selectedGarageId, setSelectedGarageId] = useState(null);
+
   const [historyFilter, setHistoryFilter] = useState("all");
   const [historySort, setHistorySort] = useState("newest");
   const [historyLimit, setHistoryLimit] = useState(HISTORY_STEP);
@@ -64,10 +68,10 @@ export default function MembershipPointsPage() {
       const raw = await loyaltyApi.getMyLoyalty();
       const accList = Array.isArray(raw) ? raw : (raw?.data ?? raw?.content ?? (raw ? [raw] : []));
       if (!accList.length) {
-        setAccount(null); setTiers([]); setRewards([]); setTransactions([]); setPolicy(null);
+        setGaragesData([]); setAccount(null); setTiers([]); setRewards([]); setTransactions([]); setPolicy(null);
         return;
       }
-      // Mọi gara khách có tài khoản điểm — kèm điểm khả dụng RIÊNG của từng gara.
+      // Mọi gara khách có tài khoản điểm — điểm/hạng RIÊNG của từng gara.
       const garages = accList
         .map((a) => ({
           garageId: a.garageId ?? null,
@@ -78,36 +82,43 @@ export default function MembershipPointsPage() {
         }))
         .filter((g) => g.garageId != null);
 
-      // Tải hạng của TẤT CẢ gara để chọn "gara chính" là gara có ladder hạng đầy đủ nhất
-      // (nhiều hạng nhất → có mốc lên hạng như tài khoản chuẩn), rồi mới xét điểm.
-      const tierResults = await Promise.allSettled(garages.map((g) => loyaltyApi.getCustomerTiers(g.garageId)));
-      const tiersByGarage = {};
-      garages.forEach((g, i) => {
-        tiersByGarage[g.garageId] = tierResults[i].status === "fulfilled" ? normalizeTiers(tierResults[i].value) : [];
-      });
-      const primary = [...garages].sort((a, b) => {
-        const ta = tiersByGarage[a.garageId].length;
-        const tb = tiersByGarage[b.garageId].length;
-        if (tb !== ta) return tb - ta;
-        return (b.totalPoints || 0) - (a.totalPoints || 0);
-      })[0];
-
-      const acc = normalizeLoyaltyAccount(primary.raw);
-      setAccount(acc);
-      setTiers(tiersByGarage[primary.garageId] || []);
-
-      const [txRes, pRes, ...rwRes] = await Promise.allSettled([
+      // Tải hạng + chính sách của TẤT CẢ gara song song (mỗi gara một cấu hình riêng).
+      const [txRes, ...rest] = await Promise.allSettled([
         loyaltyApi.getLoyaltyTransactions(),
-        loyaltyApi.getPolicy(primary.garageId),
+        ...garages.map((g) => loyaltyApi.getCustomerTiers(g.garageId)),
+        ...garages.map((g) => loyaltyApi.getPolicy(g.garageId)),
         ...garages.map((g) => rewardApi.getCustomerRewards(g.garageId)),
       ]);
+      const n = garages.length;
+      const tierResults = rest.slice(0, n);
+      const policyResults = rest.slice(n, 2 * n);
+      const rwResults = rest.slice(2 * n, 3 * n);
+
+      const built = garages.map((g, i) => ({
+        garageId: g.garageId,
+        garageName: g.garageName,
+        availablePoints: g.availablePoints,
+        account: normalizeLoyaltyAccount(g.raw),
+        tiers: tierResults[i].status === "fulfilled" ? normalizeTiers(tierResults[i].value) : [],
+        policy: policyResults[i].status === "fulfilled" ? normalizePolicy(policyResults[i].value) : null,
+      }));
+      setGaragesData(built);
+
+      // Gara xem mặc định: ladder hạng đầy đủ nhất (nhiều hạng), rồi tới điểm.
+      const primary = [...built].sort((a, b) => {
+        if (b.tiers.length !== a.tiers.length) return b.tiers.length - a.tiers.length;
+        return (b.account?.totalPoints || 0) - (a.account?.totalPoints || 0);
+      })[0];
+      setSelectedGarageId((prev) =>
+        prev != null && built.some((g) => String(g.garageId) === String(prev)) ? prev : primary.garageId,
+      );
+
       setTransactions(txRes.status === "fulfilled" ? normalizeLoyaltyTransactions(txRes.value) : []);
-      setPolicy(pRes.status === "fulfilled" ? normalizePolicy(pRes.value) : null);
 
       // Gộp ưu đãi đổi điểm của MỌI gara, gắn gara + điểm khả dụng của gara đó để xét đủ/thiếu điểm.
       const seen = new Set();
       const merged = [];
-      rwRes.forEach((r, i) => {
+      rwResults.forEach((r, i) => {
         if (r.status !== "fulfilled") return;
         const g = garages[i];
         normalizeRewards(r.value).forEach((rw) => {
@@ -127,6 +138,15 @@ export default function MembershipPointsPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Đổi gara đang xem → cập nhật hạng/điểm/chính sách của gara đó.
+  useEffect(() => {
+    if (!garagesData.length) return;
+    const current = garagesData.find((g) => String(g.garageId) === String(selectedGarageId)) || garagesData[0];
+    setAccount(current.account);
+    setTiers(current.tiers);
+    setPolicy(current.policy);
+  }, [garagesData, selectedGarageId]);
 
   const available = account?.availablePoints ?? 0;
   const progress = useMemo(() => computeTierProgress(account, tiers), [account, tiers]);
@@ -251,6 +271,27 @@ export default function MembershipPointsPage() {
           </div>
         }
       />
+
+      {/* Chọn chi nhánh — điểm & hạng tính riêng cho từng gara khách có tài khoản */}
+      {garagesData.length > 1 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3">
+          <span className="inline-flex items-center gap-1.5 text-sm font-bold text-foreground">
+            <Store size={15} /> Chi nhánh:
+          </span>
+          <select
+            value={String(selectedGarageId ?? "")}
+            onChange={(e) => setSelectedGarageId(e.target.value)}
+            className="h-9 rounded-xl border border-input bg-background px-3 text-sm font-semibold outline-none focus:border-ring"
+          >
+            {garagesData.map((g) => (
+              <option key={g.garageId} value={String(g.garageId)}>
+                {g.garageName || "Chi nhánh"} · {fmt(g.availablePoints)} điểm
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-muted-foreground">Điểm và hạng tính riêng cho từng chi nhánh.</span>
+        </div>
+      )}
 
       {/* Hero hạng thành viên — nền/viền/nhấn đổi theo bậc hạng */}
       <section className={`overflow-hidden rounded-3xl border p-6 sm:p-7 ${theme.card} ${theme.border}`}>
