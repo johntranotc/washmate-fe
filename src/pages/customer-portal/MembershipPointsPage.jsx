@@ -348,7 +348,7 @@ export default function MembershipPointsPage() {
         {rewards.length === 0 ? (
           <EmptyState className="mt-3" icon={Gift} title="Chưa có quà tặng khả dụng" description="Các ưu đãi đổi điểm sẽ được hiển thị tại đây." />
         ) : (
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-3 grid auto-rows-fr gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {rewards.map((reward) => (
               <RewardCard key={reward.id} reward={reward} state={rewardState(reward, reward.availablePoints)} onRedeem={() => setRedeemTarget(reward)} />
             ))}
@@ -460,20 +460,23 @@ function RewardCard({ reward, state, onRedeem }) {
           <Store size={12} /> {reward.garageName}
         </p>
       )}
-      <div className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary-container px-3 py-1 text-sm font-bold text-primary">
-        <Sparkles size={14} /> {fmt(reward.pointsRequired)} điểm
-      </div>
-      {state.key === "insufficient" && (
-        <p className="mt-2 text-xs font-semibold text-warning">Cần thêm {fmt(state.missing)} điểm</p>
-      )}
-      <div className="mt-4">
-        {state.canRedeem ? (
-          <Button size="sm" className="w-full" onClick={onRedeem}>Đổi ngay</Button>
-        ) : (
-          <Button size="sm" variant="outline" className="w-full" disabled>
-            {state.label}
-          </Button>
+      {/* Nhóm dưới đẩy xuống đáy → điểm, ghi chú và nút thẳng hàng giữa các thẻ */}
+      <div className="mt-auto pt-3">
+        <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary-container px-3 py-1 text-sm font-bold text-primary">
+          <Sparkles size={14} /> {fmt(reward.pointsRequired)} điểm
+        </div>
+        {state.key === "insufficient" && (
+          <p className="mt-2 text-xs font-semibold text-warning">Cần thêm {fmt(state.missing)} điểm</p>
         )}
+        <div className="mt-3">
+          {state.canRedeem ? (
+            <Button size="sm" className="w-full" onClick={onRedeem}>Đổi ngay</Button>
+          ) : (
+            <Button size="sm" variant="outline" className="w-full" disabled>
+              {state.label}
+            </Button>
+          )}
+        </div>
       </div>
     </article>
   );
