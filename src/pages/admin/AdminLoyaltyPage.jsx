@@ -21,6 +21,7 @@ import {
   REWARD_STATUS_TONES,
 } from "../../components/admin/loyalty/AdminRewardDrawer";
 import { AdminTierDrawer } from "../../components/admin/loyalty/AdminTierDrawer";
+import { TierManager } from "../../components/admin/loyalty/TierManager";
 
 // Mốc điểm & mức giảm giá là CẤU HÌNH NGHIỆP VỤ của hệ thống (product spec).
 // BE có endpoint /v1/admin/loyalty-tiers nhưng DTO đang rỗng — trang sẽ thăm dò
@@ -304,45 +305,7 @@ export default function AdminLoyaltyPage() {
 
           {tab === "tiers" && (
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-              <section className="rounded-2xl border border-border bg-card p-5">
-                <h2 className="text-lg font-bold text-foreground">Các hạng thành viên</h2>
-                {tiers.length === 0 ? (
-                  <p className="py-10 text-center text-sm text-neutral-muted">
-                    Đang chờ cấu hình hạng thành viên.
-                  </p>
-                ) : (
-                  <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
-                    {tiers.map((tier) => (
-                      <article key={tier.name} className="flex flex-col items-center rounded-2xl border border-border bg-surface p-4 text-center">
-                        {tier.image && (
-                          <img src={tier.image} alt={`Hạng ${tier.name}`} className="h-14 w-14 object-contain" />
-                        )}
-                        <h3 className="mt-2 text-sm font-bold text-foreground">{tier.name}</h3>
-                        <p className="mt-0.5 text-xs text-muted-foreground">Từ {formatNumber(tier.points)} điểm</p>
-                        <span className="mt-2 rounded-full bg-primary-container px-2.5 py-0.5 text-xs font-bold text-primary-strong">
-                          Giảm {tier.discount}%
-                        </span>
-                        <div className="mt-3 flex w-full flex-col gap-1.5">
-                          <Button size="sm" variant="outline" className="w-full" onClick={() => setTierDetail(tier)}>
-                            Chi tiết
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={handleEditTier}
-                            className="w-full text-muted-foreground"
-                          >
-                            Chỉnh sửa
-                          </Button>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                )}
-                <p className="mt-3 text-xs text-neutral-muted">
-                  Mốc điểm và mức giảm giá theo cấu hình nghiệp vụ của hệ thống.
-                </p>
-              </section>
+              <TierManager garages={garages} onChanged={load} />
 
               {/* Tổng quan tích điểm — số thật từ dữ liệu vận hành, kỳ = tháng này */}
               <section className="h-fit rounded-2xl border border-border bg-card p-5">
