@@ -181,7 +181,7 @@ export default function MembershipPointsPage() {
         <EmptyState
           icon={Trophy}
           title="Bạn chưa tham gia chương trình thành viên"
-          description="Điểm thưởng sẽ được kích hoạt khi bạn hoàn tất giao dịch hợp lệ đầu tiên."
+          description="Điểm thưởng được cộng sau khi lần rửa xe đầu tiên của bạn hoàn tất, không phải ngay khi thanh toán."
         />
       </PageContainer>
     );
@@ -255,7 +255,7 @@ export default function MembershipPointsPage() {
         </div>
 
         <p className="mt-5 border-t border-black/5 pt-4 text-xs text-muted-foreground">
-          Điểm được cập nhật tự động sau khi giao dịch hợp lệ được xác nhận.
+          Điểm được cộng tự động sau khi gara hoàn tất dịch vụ rửa xe của bạn.
         </p>
       </section>
 
@@ -342,7 +342,7 @@ export default function MembershipPointsPage() {
           text={
             policy?.pointExpiryMonths
               ? `Điểm có hạn sử dụng ${policy.pointExpiryMonths} tháng kể từ khi được cộng.`
-              : "Điểm được cập nhật sau khi giao dịch hợp lệ được xác nhận."
+              : "Điểm được cộng sau khi gara hoàn tất dịch vụ rửa xe."
           }
         />
       </section>
