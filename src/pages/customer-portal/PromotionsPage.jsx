@@ -259,33 +259,33 @@ function PromotionCard({ promo, onDetail, onUse }) {
 
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition hover:border-primary/40">
-      <div className="flex items-center justify-between bg-[linear-gradient(120deg,var(--primary),var(--primary-strong))] px-5 py-4 text-primary-foreground">
-        <BadgePercent size={24} />
-        <span className="text-2xl font-black">{discountLabel(promo)}</span>
+      <div className="flex items-center justify-between bg-[linear-gradient(120deg,var(--primary),var(--primary-strong))] px-4 py-2.5 text-primary-foreground">
+        <BadgePercent size={18} />
+        <span className="text-lg font-black">{discountLabel(promo)}</span>
       </div>
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-3.5">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-extrabold leading-snug">{promotionTitle(promo)}</h3>
-          <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${state.key === "expiring" ? "bg-warning-container text-warning" : "bg-success-container text-success"}`}>
+          <h3 className="text-sm font-extrabold leading-snug">{promotionTitle(promo)}</h3>
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${state.key === "expiring" ? "bg-warning-container text-warning" : "bg-success-container text-success"}`}>
             {state.label}
           </span>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">{promotionSubtitle(promo)}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{promotionSubtitle(promo)}</p>
 
-        <div className="mt-3 space-y-1.5 text-xs text-muted-foreground">
+        <div className="mt-2.5 space-y-1.5 text-xs text-muted-foreground">
           {promo.code && (
-            <button type="button" onClick={copyCode} className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-primary/40 bg-primary-container/30 px-2 py-1 font-mono font-bold text-primary transition hover:bg-primary-container/60">
-              {copied ? <Check size={13} /> : <Copy size={13} />} {promo.code}
+            <button type="button" onClick={copyCode} className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-primary/40 bg-primary-container/30 px-2 py-0.5 font-mono font-bold text-primary transition hover:bg-primary-container/60">
+              {copied ? <Check size={12} /> : <Copy size={12} />} {promo.code}
             </button>
           )}
           <p className="flex items-center gap-1.5">
-            <CalendarClock size={13} /> Hạn dùng: {promo.endDate ? formatBookingDate(promo.endDate) : "Theo chương trình"}
+            <CalendarClock size={12} /> Hạn dùng: {promo.endDate ? formatBookingDate(promo.endDate) : "Theo chương trình"}
           </p>
         </div>
 
-        <div className="mt-4 flex items-center gap-2">
-          <Button size="sm" className="flex-1" onClick={onUse}>Dùng ngay</Button>
-          <Button variant="outline" size="sm" onClick={onDetail}>Chi tiết</Button>
+        <div className="mt-3 flex items-center gap-2">
+          <Button size="sm" className="h-8 flex-1 px-3 text-xs" onClick={onUse}>Dùng ngay</Button>
+          <Button variant="outline" size="sm" className="h-8 px-3 text-xs" onClick={onDetail}>Chi tiết</Button>
         </div>
       </div>
     </article>
