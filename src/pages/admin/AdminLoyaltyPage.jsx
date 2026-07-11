@@ -36,6 +36,7 @@ const TIER_CONFIG = [
 const TABS = [
   { key: "tiers", label: "Hạng thành viên" },
   { key: "rewards", label: "Ưu đãi đổi điểm" },
+  { key: "policy", label: "Chính sách tích điểm" },
   { key: "transactions", label: "Giao dịch điểm" },
   { key: "redemptions", label: "Lượt đổi thưởng" },
 ];
@@ -459,6 +460,8 @@ export default function AdminLoyaltyPage() {
             </>
           )}
 
+          {tab === "policy" && <PolicyPanel garages={garages} />}
+
           {tab === "transactions" && (
             // BE chưa có API admin xem giao dịch điểm toàn hệ thống — không fake
             <div className="rounded-2xl border border-border bg-card px-6 py-14 text-center">
@@ -501,5 +504,174 @@ export default function AdminLoyaltyPage() {
         onOpenChange={(open) => { if (!open) setTierDetail(null); }}
       />
     </PageContainer>
+  );
+}
+
+/**
+ * Quản lý chính sách tích điểm theo chi nhánh — API thật:
+ *   GET/POST/PUT/DELETE /api/v1/admin/loyalty/policy?garageId
+ *   body: { amountPerPoint, pointExpiryMonths, autoEnroll }
+ */
+function PolicyPanel({ garages }) {
+  const [garageId, setGarageId] = useState("");
+  const [form, setForm] = useState({ amountPerPoint: "", pointExpiryMonths: "", autoEnroll: true });
+  const [exists, setExists] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!garageId && garages.length) setGarageId(String(garages[0]?.id ?? garages[0]?.garageId ?? ""));
+  }, [garages, garageId]);
+
+  const loadPolicy = useCallback(async (gid) => {
+    if (!gid) return;
+    setLoading(true);
+    try {
+      const res = await loyaltyApi.getAdminPolicy(gid);
+      const p = res?.data ?? res;
+      if (p && p.policyId != null) {
+        setExists(true);
+        setForm({
+          amountPerPoint: String(p.amountPerPoint ?? ""),
+          pointExpiryMonths: String(p.pointExpiryMonths ?? ""),
+          autoEnroll: Boolean(p.autoEnroll),
+        });
+      } else {
+        setExists(false);
+        setForm({ amountPerPoint: "", pointExpiryMonths: "", autoEnroll: true });
+      }
+    } catch {
+      setExists(false);
+      setForm({ amountPerPoint: "", pointExpiryMonths: "", autoEnroll: true });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadPolicy(garageId); }, [garageId, loadPolicy]);
+
+  async function handleSave() {
+    const amount = Number(form.amountPerPoint);
+    const months = Number(form.pointExpiryMonths);
+    if (!Number.isFinite(amount) || amount <= 0) { toast.error("Số tiền cho mỗi điểm phải là số > 0."); return; }
+    if (!Number.isFinite(months) || months <= 0) { toast.error("Số tháng hết hạn phải là số > 0."); return; }
+    setSaving(true);
+    try {
+      const payload = { amountPerPoint: amount, pointExpiryMonths: months, autoEnroll: Boolean(form.autoEnroll) };
+      if (exists) await loyaltyApi.updatePolicy(garageId, payload);
+      else await loyaltyApi.createPolicy(garageId, payload);
+      toast.success("Đã lưu chính sách tích điểm.");
+      await loadPolicy(garageId);
+    } catch (e) {
+      toast.error("Không thể lưu chính sách.", { description: e?.message || "Vui lòng thử lại." });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    const ok = await confirmDialog({
+      title: "Xóa chính sách tích điểm?",
+      description: "Chi nhánh này sẽ không còn chính sách riêng cho tới khi bạn tạo lại.",
+      confirmLabel: "Xóa",
+      destructive: true,
+    });
+    if (!ok) return;
+    setSaving(true);
+    try {
+      await loyaltyApi.deletePolicy(garageId);
+      toast.success("Đã xóa chính sách tích điểm.");
+      await loadPolicy(garageId);
+    } catch (e) {
+      toast.error("Không thể xóa chính sách.", { description: e?.message || "Vui lòng thử lại." });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const inputCls = "mt-1.5 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none focus:border-ring";
+
+  return (
+    <div className="max-w-xl rounded-2xl border border-border bg-card p-5">
+      <h2 className="text-lg font-bold text-foreground">Chính sách tích điểm</h2>
+      <p className="mt-0.5 text-xs text-muted-foreground">
+        Cấu hình cách khách tích điểm và thời hạn điểm cho từng chi nhánh.
+      </p>
+
+      <div className="mt-4 space-y-4">
+        <div>
+          <label className="text-xs font-bold text-foreground">Chi nhánh</label>
+          <select
+            value={garageId}
+            onChange={(e) => setGarageId(e.target.value)}
+            className={inputCls}
+          >
+            {garages.map((g) => (
+              <option key={g.id ?? g.garageId} value={g.id ?? g.garageId}>
+                {friendlyName(g.name ?? g.garageName, "Chi nhánh chưa cập nhật")}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {loading ? (
+          <Skeleton className="h-40 rounded-2xl" />
+        ) : (
+          <>
+            <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${exists ? "bg-success-container text-success" : "bg-muted text-muted-foreground"}`}>
+              {exists ? "Chi nhánh đã có chính sách" : "Chưa có chính sách — sẽ tạo mới khi lưu"}
+            </span>
+
+            <div>
+              <label className="text-xs font-bold text-foreground">Số tiền cho mỗi điểm (đ) <span className="text-critical">*</span></label>
+              <input
+                type="number"
+                min="1"
+                value={form.amountPerPoint}
+                onChange={(e) => setForm({ ...form, amountPerPoint: e.target.value })}
+                placeholder="VD: 10000 (10.000đ = 1 điểm)"
+                className={inputCls}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Khách chi tiêu đủ số tiền này được cộng 1 điểm.</p>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-foreground">Điểm hết hạn sau (tháng) <span className="text-critical">*</span></label>
+              <input
+                type="number"
+                min="1"
+                value={form.pointExpiryMonths}
+                onChange={(e) => setForm({ ...form, pointExpiryMonths: e.target.value })}
+                placeholder="VD: 12"
+                className={inputCls}
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-foreground">Tự động ghi danh thành viên</label>
+              <select
+                value={form.autoEnroll ? "yes" : "no"}
+                onChange={(e) => setForm({ ...form, autoEnroll: e.target.value === "yes" })}
+                className={inputCls}
+              >
+                <option value="yes">Có — tự tạo tài khoản điểm cho khách mới</option>
+                <option value="no">Không</option>
+              </select>
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button size="sm" onClick={handleSave} disabled={saving || !garageId}>
+                {saving ? "Đang lưu..." : exists ? "Lưu thay đổi" : "Tạo chính sách"}
+              </Button>
+              {exists && (
+                <Button size="sm" variant="destructive" onClick={handleDelete} disabled={saving}>
+                  Xóa chính sách
+                </Button>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
