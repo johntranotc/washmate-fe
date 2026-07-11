@@ -52,18 +52,25 @@ function useLoyaltyInfo() {
   useEffect(() => {
     async function fetchLoyalty() {
       try {
-        // Chuẩn hoá đúng như trang Điểm thành viên (không đọc list thô → tránh 0 điểm/hạng Đồng sai).
-        const account = normalizeLoyaltyAccount(await loyaltyApi.getMyLoyalty());
+        const raw = await loyaltyApi.getMyLoyalty();
+        const accList = Array.isArray(raw) ? raw : (raw?.data ?? raw?.content ?? (raw ? [raw] : []));
+        const garages = accList
+          .map((a) => ({ garageId: a.garageId ?? null, totalPoints: Number(a.totalPoints ?? a.availablePoints ?? 0), raw: a }))
+          .filter((g) => g.garageId != null);
+        if (!garages.length) return;
+        // Cùng cách chọn gara chính như trang Điểm thành viên: nhiều hạng nhất → rồi tới điểm.
+        const tierResults = await Promise.allSettled(garages.map((g) => loyaltyApi.getCustomerTiers(g.garageId)));
+        const built = garages.map((g, i) => ({
+          ...g,
+          tiers: tierResults[i].status === "fulfilled" ? normalizeTiers(tierResults[i].value) : [],
+        }));
+        const primary = [...built].sort((a, b) => {
+          if (b.tiers.length !== a.tiers.length) return b.tiers.length - a.tiers.length;
+          return (b.totalPoints || 0) - (a.totalPoints || 0);
+        })[0];
+        const account = normalizeLoyaltyAccount(primary.raw);
         if (!account) return;
-        let tiers = [];
-        if (account.garageId != null) {
-          try {
-            tiers = normalizeTiers(await loyaltyApi.getCustomerTiers(account.garageId));
-          } catch {
-            /* thiếu tiers → không có thanh tiến độ, vẫn hiện hạng + điểm */
-          }
-        }
-        setData({ account, tiers });
+        setData({ account, tiers: primary.tiers });
       } catch {
         /* API lỗi → giữ null, card hiện dạng mời tham gia */
       }
