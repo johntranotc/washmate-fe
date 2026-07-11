@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Megaphone, PlayCircle, CalendarClock, PauseCircle, Flag, Ticket, Search,
   RefreshCw, AlertTriangle, Plus, ChevronDown,
@@ -449,6 +450,14 @@ export default function AdminCampaignPage() {
                               {c.attention.length > 0 && (
                                 <p className="mt-2 text-xs font-bold text-warning">{c.attention[0]}</p>
                               )}
+
+                              <p className="mt-3 border-t border-border pt-2 text-xs text-muted-foreground">
+                                Tên hiển thị, điểm cần đổi và số lượng phát hành được quản lý tại{" "}
+                                <Link to="/quan-tri/loyalty" className="font-semibold text-primary hover:underline">
+                                  Tích điểm &amp; Thành viên → Ưu đãi đổi điểm
+                                </Link>
+                                .
+                              </p>
                             </div>
                           )}
                         </div>
