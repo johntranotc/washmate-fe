@@ -367,8 +367,9 @@ function PaymentRow({ booking, onPay, onInvoice }) {
     <div className="flex flex-wrap items-start justify-between gap-4 p-4 transition hover:bg-surface sm:p-5">
       {/* Thông tin — cột trái */}
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <strong className="text-base">{booking.serviceName}</strong>
+        <strong className="block text-base">{booking.serviceName}</strong>
+        {/* Nhãn trạng thái xuống dòng riêng → luôn bắt đầu từ mép trái, thẳng hàng giữa các dòng */}
+        <div className="mt-1 flex flex-wrap items-center gap-2">
           <StatusBadge status={booking.bookingStatus} size="sm" />
           {booking.paymentStatus && <StatusBadge status={booking.paymentStatus} type="payment" size="sm" />}
         </div>
