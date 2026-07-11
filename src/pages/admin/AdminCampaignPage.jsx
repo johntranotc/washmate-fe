@@ -499,6 +499,8 @@ export default function AdminCampaignPage() {
         open={showCreate}
         onOpenChange={setShowCreate}
         onDone={load}
+        createTitle="Tạo ưu đãi đổi điểm"
+        createSubtitle="Khách dùng điểm khả dụng để đổi lấy ưu đãi này. Đặt số điểm cần đổi và số lượng phát hành."
       />
     </PageContainer>
   );
