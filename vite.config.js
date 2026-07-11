@@ -18,5 +18,10 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    watch: {
+      // Bỏ qua file tạm khi copy-paste ảnh trong Windows (vd "icon - Copy.png")
+      // để trình theo dõi file của Vite không crash vì file đang bị khoá (EBUSY).
+      ignored: ["**/* - Copy*", "**/*- Copy*", "**/*.tmp", "**/*.crdownload"],
+    },
   },
 });
