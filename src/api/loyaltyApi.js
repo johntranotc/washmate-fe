@@ -9,8 +9,10 @@ import axiosClient from "./axiosClient";
 export const loyaltyApi = {
   // Tài khoản điểm của tôi (BE lấy theo token).
   getMyLoyalty: () => axiosClient.get("/v1/customer/loyalty"),
-  // Lịch sử tích/đổi điểm của tôi (BE lấy theo token).
-  getLoyaltyTransactions: () => axiosClient.get("/v1/customer/loyalty/transactions"),
+  // Lịch sử tích/đổi điểm của tôi — dùng /api/loyalty/transactions (lọc ĐÚNG theo user id,
+  // trả về TOÀN BỘ giao dịch). Endpoint /v1/customer/loyalty/transactions của BE đang lọc
+  // sai (truyền nhầm accountId vào chỗ userId) nên bỏ sót lịch sử.
+  getLoyaltyTransactions: () => axiosClient.get("/loyalty/transactions"),
   // Tổng quan hạng + tiến độ lên/giữ hạng do BE tính sẵn theo gara.
   getSummary: (garageId) =>
     axiosClient.get("/v1/customer/loyalty/summary", { params: { garageId } }),
