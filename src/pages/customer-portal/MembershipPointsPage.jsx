@@ -63,31 +63,44 @@ export default function MembershipPointsPage() {
     try {
       const raw = await loyaltyApi.getMyLoyalty();
       const accList = Array.isArray(raw) ? raw : (raw?.data ?? raw?.content ?? (raw ? [raw] : []));
-      const acc = normalizeLoyaltyAccount(raw); // tài khoản chính (điểm cao nhất) cho hạng/tiến độ
-      setAccount(acc);
-      if (!acc) {
-        setTiers([]); setRewards([]); setTransactions([]); setPolicy(null);
+      if (!accList.length) {
+        setAccount(null); setTiers([]); setRewards([]); setTransactions([]); setPolicy(null);
         return;
       }
       // Mọi gara khách có tài khoản điểm — kèm điểm khả dụng RIÊNG của từng gara.
-      const garageList = accList
+      const garages = accList
         .map((a) => ({
           garageId: a.garageId ?? null,
           garageName: a.garageName ?? "",
           availablePoints: Number(a.availablePoints ?? 0),
+          totalPoints: Number(a.totalPoints ?? a.availablePoints ?? 0),
+          raw: a,
         }))
         .filter((g) => g.garageId != null);
-      const garages = garageList.length
-        ? garageList
-        : [{ garageId: acc.garageId, garageName: acc.garageName, availablePoints: acc.availablePoints }];
 
-      const [tRes, txRes, pRes, ...rwRes] = await Promise.allSettled([
-        loyaltyApi.getCustomerTiers(acc.garageId),
+      // Tải hạng của TẤT CẢ gara để chọn "gara chính" là gara có ladder hạng đầy đủ nhất
+      // (nhiều hạng nhất → có mốc lên hạng như tài khoản chuẩn), rồi mới xét điểm.
+      const tierResults = await Promise.allSettled(garages.map((g) => loyaltyApi.getCustomerTiers(g.garageId)));
+      const tiersByGarage = {};
+      garages.forEach((g, i) => {
+        tiersByGarage[g.garageId] = tierResults[i].status === "fulfilled" ? normalizeTiers(tierResults[i].value) : [];
+      });
+      const primary = [...garages].sort((a, b) => {
+        const ta = tiersByGarage[a.garageId].length;
+        const tb = tiersByGarage[b.garageId].length;
+        if (tb !== ta) return tb - ta;
+        return (b.totalPoints || 0) - (a.totalPoints || 0);
+      })[0];
+
+      const acc = normalizeLoyaltyAccount(primary.raw);
+      setAccount(acc);
+      setTiers(tiersByGarage[primary.garageId] || []);
+
+      const [txRes, pRes, ...rwRes] = await Promise.allSettled([
         loyaltyApi.getLoyaltyTransactions(),
-        loyaltyApi.getPolicy(acc.garageId),
+        loyaltyApi.getPolicy(primary.garageId),
         ...garages.map((g) => rewardApi.getCustomerRewards(g.garageId)),
       ]);
-      setTiers(tRes.status === "fulfilled" ? normalizeTiers(tRes.value) : []);
       setTransactions(txRes.status === "fulfilled" ? normalizeLoyaltyTransactions(txRes.value) : []);
       setPolicy(pRes.status === "fulfilled" ? normalizePolicy(pRes.value) : null);
 
