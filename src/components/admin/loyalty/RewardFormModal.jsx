@@ -37,7 +37,7 @@ const EMPTY_FORM = {
  *   PUT  /v1/admin/promotion-rewards/{id}
  *     { name, description, pointsRequired, stock, status }
  */
-export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDone }) {
+export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDone, createTitle, createSubtitle }) {
   const editing = Boolean(reward?.rewardId);
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
@@ -156,9 +156,11 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
     <AlertDialog open={open} onOpenChange={(next) => { if (!submitting) onOpenChange(next); }}>
       <AlertDialogContent className="max-h-[85vh] overflow-y-auto">
         <AlertDialogHeader>
-          <AlertDialogTitle>{editing ? "Chỉnh sửa ưu đãi" : "Thêm ưu đãi mới"}</AlertDialogTitle>
+          <AlertDialogTitle>{editing ? "Chỉnh sửa ưu đãi" : (createTitle || "Thêm ưu đãi mới")}</AlertDialogTitle>
           <AlertDialogDescription>
-            {editing ? `Cập nhật ưu đãi "${reward.name}".` : "Tạo ưu đãi để khách dùng điểm đổi thưởng."}
+            {editing
+              ? `Cập nhật ưu đãi "${reward.name}".`
+              : (createSubtitle || "Tạo ưu đãi để khách dùng điểm khả dụng đổi lấy ưu đãi.")}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
