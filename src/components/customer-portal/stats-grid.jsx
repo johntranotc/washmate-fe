@@ -44,11 +44,15 @@ export function DashboardStatsGrid({ bookings = [], vehicles = [], loyalty = nul
     },
     {
       key: "vehicles", label: "Xe đã lưu", value: formatNumber(vehicles.length),
-      iconSrc: GARAGE_ICON,
+      iconSrc: "/images/icons/dash-vehicles.png",
+      // Chưa có file mới → quay về icon gara SVG hiện tại.
+      icon: <img src={GARAGE_ICON} width={40} height={40} alt="" className="rounded-xl" />,
+      tone: "bg-transparent",
       subtitle: <p className="text-xs text-neutral-muted">Phương tiện trong tài khoản</p>,
     },
     {
       key: "points", label: "Điểm hiện tại", value: points == null ? "—" : formatNumber(points),
+      iconSrc: "/images/icons/dash-points.png",
       icon: <Star size={18} />, tone: "bg-gold/20 text-gold-ink",
       subtitle: points == null ? noLoyalty : <p className="text-xs text-neutral-muted">Dùng để đổi ưu đãi</p>,
     },

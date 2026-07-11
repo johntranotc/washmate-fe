@@ -171,6 +171,7 @@ export default function PaymentInvoicePage() {
         <KpiCard
           label="Cần thanh toán"
           value={loading ? "—" : kpi.payableCount}
+          iconSrc="/images/icons/pay-due.png"
           icon={<Wallet size={18} />}
           tone="bg-warning-container text-warning"
           highlight={!loading && kpi.payableCount > 0}
@@ -183,18 +184,21 @@ export default function PaymentInvoicePage() {
         <KpiCard
           label="Đã thanh toán"
           value={loading ? "—" : kpi.paidCount}
+          iconSrc="/images/icons/pay-paid.png"
           icon={<CheckCircle2 size={18} />}
           tone="bg-success-container text-success"
         />
         <KpiCard
           label="Tổng chi tiêu"
           value={loading ? "—" : formatMoney(kpi.totalSpent)}
+          iconSrc="/images/icons/pay-spending.png"
           icon={<CreditCard size={18} />}
           tone="bg-primary-container text-primary"
         />
         <KpiCard
           label="Hóa đơn gần đây"
           value={loading ? "—" : kpi.latestPaidMs ? formatBookingDate(new Date(kpi.latestPaidMs).toISOString()) : "Chưa có"}
+          iconSrc="/images/icons/pay-invoice.png"
           icon={<Receipt size={18} />}
         />
       </div>
