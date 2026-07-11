@@ -351,10 +351,10 @@ export default function MembershipPointsPage() {
 
       {/* KPI */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiCard label="Điểm khả dụng" value={fmt(available)} icon={<Sparkles size={18} />} />
-        <KpiCard label="Tổng điểm đã tích" value={fmt(account.totalPoints)} icon={<Trophy size={18} />} tone="bg-success-container text-success" />
-        <KpiCard label="Điểm đã sử dụng" value={fmt(account.usedPoints)} icon={<Gift size={18} />} tone="bg-warning-container text-warning" />
-        <KpiCard label="Ưu đãi đủ điểm" value={eligibleRewards} icon={<BadgePercent size={18} />} tone="bg-primary-container text-primary" />
+        <KpiCard label="Điểm khả dụng" value={fmt(available)} iconSrc="/images/loyalty/icons/point-available.png" icon={<Sparkles size={18} />} />
+        <KpiCard label="Tổng điểm đã tích" value={fmt(account.totalPoints)} iconSrc="/images/loyalty/icons/point-total.png" icon={<Trophy size={18} />} tone="bg-success-container text-success" />
+        <KpiCard label="Điểm đã sử dụng" value={fmt(account.usedPoints)} iconSrc="/images/loyalty/icons/point-used.png" icon={<Gift size={18} />} tone="bg-warning-container text-warning" />
+        <KpiCard label="Ưu đãi đủ điểm" value={eligibleRewards} iconSrc="/images/loyalty/icons/reward-eligible.png" icon={<BadgePercent size={18} />} tone="bg-primary-container text-primary" />
       </div>
 
       {/* Chính sách tích điểm của chi nhánh đang chọn — đổi theo bộ chọn chi nhánh */}
@@ -366,16 +366,19 @@ export default function MembershipPointsPage() {
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <PolicyStat
+            iconSrc="/images/loyalty/icons/policy-rate.png"
             icon={Sparkles}
             label="Tỷ lệ tích điểm"
             value={policy?.amountPerPoint ? `Mỗi ${fmt(policy.amountPerPoint)}đ chi tiêu = 1 điểm` : "Theo chương trình của gara"}
           />
           <PolicyStat
+            iconSrc="/images/loyalty/icons/policy-expiry.png"
             icon={Clock}
             label="Hạn dùng điểm"
             value={policy?.pointExpiryMonths ? `${policy.pointExpiryMonths} tháng kể từ khi được cộng` : "Không giới hạn"}
           />
           <PolicyStat
+            iconSrc="/images/loyalty/icons/policy-tier.png"
             icon={BadgePercent}
             label="Ưu đãi hạng hiện tại"
             value={account.tierDiscountPercentage > 0 ? `Giảm ${Number(account.tierDiscountPercentage)}% mỗi lần rửa xe` : "Chưa có ưu đãi giảm giá"}
@@ -534,7 +537,11 @@ function RewardCard({ reward, state, onRedeem }) {
   return (
     <article className="flex flex-col rounded-2xl border border-border bg-card p-4">
       <div className="flex items-start justify-between gap-2">
-        <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><Gift size={18} /></span>
+        <IconSlot
+          src="/images/loyalty/icons/reward.png"
+          size={40}
+          fallback={<span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><Gift size={18} /></span>}
+        />
         <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${toneByKey[state.key]}`}>{state.label}</span>
       </div>
       <h3 className="mt-3 font-extrabold">{reward.name}</h3>
@@ -622,14 +629,35 @@ function HowToCard({ icon: Icon, title, text }) {
   );
 }
 
-function PolicyStat({ icon: Icon, label, value }) {
+function PolicyStat({ iconSrc, icon: Icon, label, value }) {
   return (
     <div className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4">
-      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Icon size={16} /></span>
+      <IconSlot
+        src={iconSrc}
+        size={36}
+        fallback={<span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Icon size={16} /></span>}
+      />
       <div className="min-w-0">
         <p className="text-xs font-semibold text-muted-foreground">{label}</p>
         <p className="mt-0.5 text-sm font-bold text-foreground">{value}</p>
       </div>
     </div>
   );
+}
+
+// Ô icon dùng ảnh của team; thiếu/lỗi file thì hiện lại icon mặc định (không vỡ ảnh).
+function IconSlot({ src, size = 40, fallback }) {
+  const [ok, setOk] = useState(Boolean(src));
+  if (src && ok) {
+    return (
+      <img
+        src={src}
+        alt=""
+        style={{ width: size, height: size }}
+        className="shrink-0 rounded-xl object-contain"
+        onError={() => setOk(false)}
+      />
+    );
+  }
+  return fallback;
 }
