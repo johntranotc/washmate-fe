@@ -140,8 +140,13 @@ export default function StaffBookingSearchPage() {
         if (!kw) return true;
         return `${b.code} ${b.customerName} ${b.phone} ${b.plate}`.toLowerCase().includes(kw);
       })
-      // Lịch mới tạo lên đầu: id lớn hơn = tạo sau (BE không trả createdAt).
-      .sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
+      // Lịch hẹn mới nhất lên đầu: sắp theo ngày + giờ hẹn giảm dần, cùng thời điểm thì id lớn (tạo sau) trước.
+      .sort((a, b) => {
+        const ka = `${a.bookingDate || ""}T${a.slotTime || "00:00"}`;
+        const kb = `${b.bookingDate || ""}T${b.slotTime || "00:00"}`;
+        if (ka !== kb) return kb.localeCompare(ka);
+        return (Number(b.id) || 0) - (Number(a.id) || 0);
+      });
   }, [bookings, keyword, statusFilter]);
 
   const summary = useMemo(() => {
