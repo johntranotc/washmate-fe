@@ -147,7 +147,9 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
           discountValue: Number(form.discountValue),
           maxDiscount: form.maxDiscount === "" ? null : Number(form.maxDiscount),
           minOrderValue: Number(form.minOrderValue),
-          usageLimit: form.usageLimit === "" ? null : Number(form.usageLimit),
+          // "Số lượng" = số lượt phát hành → dùng chung cho cả kho đổi (stock)
+          // và giới hạn lượt dùng của chiến dịch (usageLimit) để thẻ hiển thị khớp.
+          usageLimit: Number(form.stock),
           startDate: `${form.startDate}T00:00:00Z`,
           endDate: `${form.endDate}T23:59:59Z`,
         });
@@ -222,7 +224,7 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
               {errors.pointsRequired && <p className="mt-1 text-xs text-critical">{errors.pointsRequired}</p>}
             </div>
             <div>
-              <label className="text-xs font-bold text-foreground">Số lượng <span className="text-critical">*</span></label>
+              <label className="text-xs font-bold text-foreground">Số lượng phát hành <span className="text-critical">*</span></label>
               <input
                 type="number"
                 min="0"
@@ -295,7 +297,7 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className={`grid gap-3 ${form.discountType === "PERCENTAGE" ? "grid-cols-2" : "grid-cols-1"}`}>
                 <div>
                   <label className="text-xs font-bold text-foreground">Đơn tối thiểu (đ) <span className="text-critical">*</span></label>
                   <input
@@ -308,11 +310,9 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
                   />
                   {errors.minOrderValue && <p className="mt-1 text-xs text-critical">{errors.minOrderValue}</p>}
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-foreground">
-                    {form.discountType === "PERCENTAGE" ? "Giảm tối đa (đ)" : "Giới hạn lượt dùng"}
-                  </label>
-                  {form.discountType === "PERCENTAGE" ? (
+                {form.discountType === "PERCENTAGE" && (
+                  <div>
+                    <label className="text-xs font-bold text-foreground">Giảm tối đa (đ)</label>
                     <input
                       type="number"
                       min="0"
@@ -321,17 +321,8 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
                       placeholder="Không bắt buộc"
                       className={inputCls(false)}
                     />
-                  ) : (
-                    <input
-                      type="number"
-                      min="0"
-                      value={form.usageLimit}
-                      onChange={(e) => setForm({ ...form, usageLimit: e.target.value })}
-                      placeholder="Không bắt buộc"
-                      className={inputCls(false)}
-                    />
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
