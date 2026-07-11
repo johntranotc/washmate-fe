@@ -354,7 +354,7 @@ export default function MembershipPointsPage() {
         <KpiCard label="Điểm khả dụng" value={fmt(available)} iconSrc="/images/loyalty/icons/point-available.png" icon={<Sparkles size={18} />} />
         <KpiCard label="Tổng điểm đã tích" value={fmt(account.totalPoints)} iconSrc="/images/loyalty/icons/point-total.png" icon={<Trophy size={18} />} tone="bg-success-container text-success" />
         <KpiCard label="Điểm đã sử dụng" value={fmt(account.usedPoints)} iconSrc="/images/loyalty/icons/point-used.png" icon={<Gift size={18} />} tone="bg-warning-container text-warning" />
-        <KpiCard label="Ưu đãi đủ điểm" value={eligibleRewards} iconSrc="/images/loyalty/icons/reward-eligible.png" icon={<BadgePercent size={18} />} tone="bg-primary-container text-primary" />
+        <KpiCard label="Ưu đãi đủ điểm" value={eligibleRewards} iconSrc="/images/loyalty/icons/reward.png" icon={<BadgePercent size={18} />} tone="bg-primary-container text-primary" />
       </div>
 
       {/* Chính sách tích điểm của chi nhánh đang chọn — đổi theo bộ chọn chi nhánh */}
@@ -378,7 +378,7 @@ export default function MembershipPointsPage() {
             value={policy?.pointExpiryMonths ? `${policy.pointExpiryMonths} tháng kể từ khi được cộng` : "Không giới hạn"}
           />
           <PolicyStat
-            iconSrc="/images/loyalty/icons/policy-tier.png"
+            iconSrc="/images/loyalty/icons/policy-rate.png"
             icon={BadgePercent}
             label="Ưu đãi hạng hiện tại"
             value={account.tierDiscountPercentage > 0 ? `Giảm ${Number(account.tierDiscountPercentage)}% mỗi lần rửa xe` : "Chưa có ưu đãi giảm giá"}
@@ -586,7 +586,7 @@ function PointEarnIcon() {
   }
   return (
     <img
-      src="/images/loyalty/point-medal.png"
+      src="/images/loyalty/icons/point-available.png"
       alt=""
       className="size-10 shrink-0 object-contain"
       onError={() => setOk(false)}
