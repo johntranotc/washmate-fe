@@ -7,8 +7,10 @@ import axiosClient from "./axiosClient";
 //   GET /api/v1/customer/loyalty/tiers?garageId   -> List<LoyaltyTierResponse>
 //   GET /api/v1/customer/loyalty/policy?garageId   -> LoyaltyPolicyResponse
 export const loyaltyApi = {
-  // Tài khoản điểm của tôi (BE lấy theo token).
-  getMyLoyalty: () => axiosClient.get("/v1/customer/loyalty"),
+  // Tài khoản điểm của tôi — dùng /api/loyalty/me (trả DANH SÁCH tài khoản theo từng gara).
+  // KHÔNG dùng /v1/customer/loyalty vì endpoint đó lấy findByUserId (1 kết quả) → khách có
+  // nhiều tài khoản loyalty (nhiều gara) sẽ gây 500. normalizeLoyaltyAccount tự chọn tài khoản chính.
+  getMyLoyalty: () => axiosClient.get("/loyalty/me"),
   // Lịch sử tích/đổi điểm của tôi — dùng /api/loyalty/transactions (lọc ĐÚNG theo user id,
   // trả về TOÀN BỘ giao dịch). Endpoint /v1/customer/loyalty/transactions của BE đang lọc
   // sai (truyền nhầm accountId vào chỗ userId) nên bỏ sót lịch sử.
