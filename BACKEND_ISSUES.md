@@ -60,6 +60,23 @@ trả full data qua `mapToResponse` (đã có sẵn model/status).
 
 ---
 
+## 🟠 9. `RewardResponse` (ưu đãi đổi điểm) — thiếu mức giảm & tên gara
+
+**File:** `dto/response/Reward/RewardResponse.java`
+
+**Vấn đề:** chỉ trả `{ rewardId, garageId, name, description, pointsRequired, stock, status }`.
+Không có `discountType`/`discountValue`/`maxDiscount`/`minOrderValue` (đang nằm ở `Reward.promotion`)
+và không có `garageName`. → Khách không biết ưu đãi **giảm bao nhiêu %/tiền** khi đổi, trừ khi
+admin ghi vào `description`.
+
+**Cách sửa:** thêm các field lấy từ `reward.getPromotion()` (discountType, discountValue, maxDiscount,
+minOrderValue) và `reward.getGarage().getName()` vào `RewardResponse.from(...)`.
+
+**FE tạm thời:** form tạo tự sinh `description` nêu mức giảm khi admin bỏ trống; hộp đổi quà hiển thị
+tên gara của tài khoản (mọi ưu đãi đều thuộc gara của khách).
+
+---
+
 ## 🔴 8. Lịch sử điểm (GET `/api/v1/customer/loyalty/transactions`) — lọc sai, bỏ sót giao dịch
 
 **File:** `service/CustomerLoyaltyServiceImpl.java` → `getTransactions(Integer userId)`

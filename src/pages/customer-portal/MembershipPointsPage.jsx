@@ -407,7 +407,7 @@ export default function MembershipPointsPage() {
       </section>
 
       <TierDetailDrawer tier={tierView?.tier} account={account} isCurrent={tierView?.isCurrent} onClose={() => setTierView(null)} />
-      <RedeemRewardDialog reward={redeemTarget} availablePoints={available} submitting={redeeming} onClose={() => !redeeming && setRedeemTarget(null)} onConfirm={handleRedeem} />
+      <RedeemRewardDialog reward={redeemTarget} availablePoints={available} garageName={account?.garageName} submitting={redeeming} onClose={() => !redeeming && setRedeemTarget(null)} onConfirm={handleRedeem} />
     </PageContainer>
   );
 }

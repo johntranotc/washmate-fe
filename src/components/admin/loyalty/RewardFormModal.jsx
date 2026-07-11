@@ -122,10 +122,25 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
         });
         toast.success("Đã cập nhật ưu đãi", { description: form.name.trim() });
       } else {
+        // Mô tả gửi lên: giữ text admin nhập; nếu bỏ trống thì tự sinh câu mô tả
+        // nêu rõ mức giảm để khách thấy "giảm bao nhiêu" khi đổi (RewardResponse
+        // không trả kèm mức giảm nên phải đưa vào mô tả).
+        const vnd = (n) => Number(n).toLocaleString("vi-VN");
+        const dv = Number(form.discountValue);
+        let autoDesc =
+          form.discountType === "PERCENTAGE"
+            ? `Giảm ${dv}% phí dịch vụ`
+            : `Giảm trực tiếp ${vnd(dv)}đ`;
+        if (form.discountType === "PERCENTAGE" && form.maxDiscount !== "" && Number(form.maxDiscount) > 0) {
+          autoDesc += ` (tối đa ${vnd(form.maxDiscount)}đ)`;
+        }
+        if (Number(form.minOrderValue) > 0) {
+          autoDesc += `, áp dụng cho đơn từ ${vnd(form.minOrderValue)}đ`;
+        }
         await rewardApi.createReward({
           garageId: Number(form.garageId),
           name: form.name.trim(),
-          description: form.description.trim(),
+          description: form.description.trim() || autoDesc,
           pointsRequired: Number(form.pointsRequired),
           stock: Number(form.stock),
           discountType: form.discountType,
