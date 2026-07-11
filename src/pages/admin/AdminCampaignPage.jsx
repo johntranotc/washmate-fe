@@ -1,19 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Megaphone, PlayCircle, CalendarClock, PauseCircle, Flag, Ticket, Search,
-  RefreshCw, AlertTriangle, Plus,
+  RefreshCw, AlertTriangle, Plus, ChevronDown,
 } from "lucide-react";
 import PageContainer from "@/components/shared/PageContainer";
 import PageHeader from "@/components/shared/PageHeader";
 import Pagination from "../../components/common/Pagination";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/components/ui/toast";
 import { garageApi } from "../../api/garageApi";
 import { promotionApi } from "../../api/promotionApi";
 import { formatDate, formatMoney, formatNumber, friendlyName } from "../../lib/format";
 import { cn } from "@/lib/utils";
-import { AdminCampaignDrawer } from "../../components/admin/campaigns/AdminCampaignDrawer";
+import { RewardFormModal } from "../../components/admin/loyalty/RewardFormModal";
 
 const PAGE_SIZE = 9;
 
@@ -95,7 +94,8 @@ export default function AdminCampaignPage() {
   const [tab, setTab] = useState("ALL");
   const [page, setPage] = useState(1);
 
-  const [detailTarget, setDetailTarget] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
+  const [showCreate, setShowCreate] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -201,10 +201,6 @@ export default function AdminCampaignPage() {
     [scoped],
   );
 
-  // BE chưa có API tạo/sửa chiến dịch — không fake.
-  const notSupported = (label) =>
-    toast.info(`Chức năng ${label} chưa được hệ thống hỗ trợ.`);
-
   const hasFilter = keyword.trim() !== "" || statusFilter !== "ALL" || typeFilter !== "ALL" || fromDate || toDate || tab !== "ALL";
   const clearFilters = () => {
     setKeyword(""); setStatusFilter("ALL"); setTypeFilter("ALL");
@@ -239,7 +235,7 @@ export default function AdminCampaignPage() {
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={loading ? "animate-spin" : ""} /> Tải lại
             </Button>
-            <Button size="sm" onClick={() => notSupported("tạo chiến dịch")}>
+            <Button size="sm" onClick={() => setShowCreate(true)}>
               <Plus /> Tạo chiến dịch
             </Button>
             {updatedLabel && (
@@ -373,92 +369,89 @@ export default function AdminCampaignPage() {
                       Xóa bộ lọc
                     </Button>
                   ) : (
-                    <Button size="sm" className="mt-4" onClick={() => notSupported("tạo chiến dịch")}>
+                    <Button size="sm" className="mt-4" onClick={() => setShowCreate(true)}>
                       <Plus /> Tạo chiến dịch
                     </Button>
                   )}
                 </div>
               ) : (
                 <>
-                  <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+                  {/* Danh sách gọn: mỗi dòng nêu MÃ (id) + mức giảm + trạng thái. Bấm để bung nội dung chi tiết. */}
+                  <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
                     {paged.map((c) => {
                       const isPercent = c.discountType === "PERCENTAGE";
                       const pct = c.usageLimit > 0
                         ? Math.min(100, Math.round(((c.usedCount || 0) / c.usageLimit) * 100))
                         : null;
+                      const expanded = String(expandedId) === String(c.id);
                       return (
-                        <article key={c.id} className="flex flex-col rounded-2xl border border-border bg-card p-5">
-                          {/* Tiêu đề luôn chiếm 2 dòng + hàng mã luôn giữ chỗ → các hàng dưới thẳng nhau giữa các card */}
-                          <div className="flex items-start justify-between gap-2">
-                            <h3 className="min-h-10 text-sm font-bold leading-5 text-foreground">{c.title}</h3>
+                        <div key={c.id}>
+                          <button
+                            type="button"
+                            onClick={() => setExpandedId(expanded ? null : c.id)}
+                            className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-surface"
+                            aria-expanded={expanded}
+                          >
+                            <span className="shrink-0 rounded-lg border border-dashed border-primary/40 bg-primary-container px-2 py-1 font-mono text-xs font-bold tracking-wide text-primary-strong">
+                              {c.code || `#${c.id}`}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-bold text-foreground">{c.title}</span>
+                              <span className="text-xs font-semibold text-primary">
+                                {isPercent ? `Giảm ${c.discountValue}%` : `Giảm ${formatMoney(c.discountValue)}`}
+                              </span>
+                            </span>
+                            {c.attention.length > 0 && (
+                              <AlertTriangle size={14} className="shrink-0 text-warning" aria-label="Cần chú ý" />
+                            )}
                             <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${c.derived.tone}`}>
                               {c.derived.label}
                             </span>
-                          </div>
-                          <div className="mt-1 h-6">
-                            {c.code && (
-                              <span className="inline-block rounded-lg border border-dashed border-primary/40 bg-primary-container px-2 py-0.5 text-xs font-bold tracking-wide text-primary-strong">
-                                {c.code}
-                              </span>
-                            )}
-                          </div>
-                          <p className="mt-2 text-lg font-semibold text-primary">
-                            {isPercent ? `Giảm ${c.discountValue}%` : `Giảm ${formatMoney(c.discountValue)}`}
-                            {isPercent && c.maxDiscount > 0 && (
-                              <span className="ml-1.5 text-xs font-semibold text-muted-foreground">
-                                tối đa {formatMoney(c.maxDiscount)}
-                              </span>
-                            )}
-                          </p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {c.minOrderValue > 0
-                              ? `Đơn tối thiểu ${formatMoney(c.minOrderValue)}`
-                              : "Không yêu cầu đơn tối thiểu"}
-                          </p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {formatDate(c.startDate)} – {formatDate(c.endDate)}
-                          </p>
-                          <p className="mt-2 text-xs font-bold text-muted-foreground">
-                            {friendlyName(c.garageName, "Chi nhánh chưa cập nhật")}
-                          </p>
+                            <ChevronDown size={16} className={`shrink-0 text-muted-foreground transition ${expanded ? "rotate-180" : ""}`} />
+                          </button>
 
-                          <div className="mt-3 min-h-10 text-xs">
-                            {c.usageLimit > 0 ? (
-                              <>
-                                <div className="flex items-center justify-between text-muted-foreground">
-                                  <span>Lượt sử dụng</span>
-                                  <b className="text-foreground">
-                                    {formatNumber(c.usedCount || 0)} / {formatNumber(c.usageLimit)}
-                                  </b>
-                                </div>
-                                <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
-                                  <div
-                                    className={`h-full rounded-full ${pct >= 90 ? "bg-warning" : "bg-primary"}`}
-                                    style={{ width: `${pct}%` }}
-                                  />
-                                </div>
-                              </>
-                            ) : (
-                              <p className="text-muted-foreground">
-                                Đã dùng <b className="text-foreground">{formatNumber(c.usedCount || 0)}</b> lượt · Không giới hạn
-                              </p>
-                            )}
-                          </div>
+                          {expanded && (
+                            <div className="border-t border-border bg-surface/40 px-4 py-3">
+                              <div className="grid gap-x-6 gap-y-2 text-xs sm:grid-cols-2">
+                                <InfoRow label="Mức giảm" value={
+                                  isPercent
+                                    ? `Giảm ${c.discountValue}%${c.maxDiscount > 0 ? ` (tối đa ${formatMoney(c.maxDiscount)})` : ""}`
+                                    : `Giảm ${formatMoney(c.discountValue)}`
+                                } />
+                                <InfoRow label="Đơn tối thiểu" value={c.minOrderValue > 0 ? formatMoney(c.minOrderValue) : "Không yêu cầu"} />
+                                <InfoRow label="Thời gian" value={`${formatDate(c.startDate)} – ${formatDate(c.endDate)}`} />
+                                <InfoRow label="Chi nhánh" value={friendlyName(c.garageName, "Chưa cập nhật")} />
+                              </div>
 
-                          {c.attention.length > 0 && (
-                            <p className="mt-2 text-xs font-bold text-warning">{c.attention[0]}</p>
+                              <div className="mt-3 text-xs">
+                                {c.usageLimit > 0 ? (
+                                  <>
+                                    <div className="flex items-center justify-between text-muted-foreground">
+                                      <span>Lượt sử dụng</span>
+                                      <b className="text-foreground">
+                                        {formatNumber(c.usedCount || 0)} / {formatNumber(c.usageLimit)}
+                                      </b>
+                                    </div>
+                                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
+                                      <div
+                                        className={`h-full rounded-full ${pct >= 90 ? "bg-warning" : "bg-primary"}`}
+                                        style={{ width: `${pct}%` }}
+                                      />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <p className="text-muted-foreground">
+                                    Đã dùng <b className="text-foreground">{formatNumber(c.usedCount || 0)}</b> lượt · Không giới hạn
+                                  </p>
+                                )}
+                              </div>
+
+                              {c.attention.length > 0 && (
+                                <p className="mt-2 text-xs font-bold text-warning">{c.attention[0]}</p>
+                              )}
+                            </div>
                           )}
-
-                          {/* Spacer đẩy hàng nút xuống đáy — các card trong hàng luôn thẳng nút nhau */}
-                          <div className="flex-1 pt-3" aria-hidden="true" />
-                          <div className="flex flex-wrap gap-1.5 border-t border-border pt-3">
-                            <Button size="sm" variant="outline" onClick={() => setDetailTarget(c)}>Chi tiết</Button>
-                            {/* BE chưa có API sửa/tạm dừng chiến dịch */}
-                            <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => notSupported("chỉnh sửa chiến dịch")}>
-                              Chỉnh sửa
-                            </Button>
-                          </div>
-                        </article>
+                        </div>
                       );
                     })}
                   </div>
@@ -486,7 +479,7 @@ export default function AdminCampaignPage() {
                     <button
                       key={c.id}
                       type="button"
-                      onClick={() => { setTab("ATTENTION"); setDetailTarget(c); }}
+                      onClick={() => { setTab("ATTENTION"); setPage(1); setExpandedId(c.id); }}
                       className="block w-full rounded-xl border border-border bg-surface p-3 text-left transition hover:border-warning/40"
                     >
                       <p className="truncate text-xs font-bold text-foreground">{c.title}</p>
@@ -500,11 +493,22 @@ export default function AdminCampaignPage() {
         </>
       )}
 
-      <AdminCampaignDrawer
-        campaign={detailTarget}
-        open={Boolean(detailTarget)}
-        onOpenChange={(open) => { if (!open) setDetailTarget(null); }}
+      <RewardFormModal
+        reward={null}
+        garages={garages}
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        onDone={load}
       />
     </PageContainer>
+  );
+}
+
+function InfoRow({ label, value }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="text-right font-semibold text-foreground">{value}</span>
+    </div>
   );
 }
