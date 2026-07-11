@@ -364,52 +364,54 @@ function PaymentRow({ booking, onPay, onInvoice }) {
   const dateRaw = recordDateRaw(booking);
 
   return (
-    <div className="flex flex-col gap-3 p-4 transition hover:bg-surface sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <strong className="text-base">{booking.serviceName}</strong>
-            <StatusBadge status={booking.bookingStatus} size="sm" />
-            {booking.paymentStatus && <StatusBadge status={booking.paymentStatus} type="payment" size="sm" />}
-          </div>
-          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-            <span>Mã lịch: <b className="text-foreground">{booking.code}</b></span>
-            <span>Hóa đơn: <b className="text-foreground">{invoiceCode || "Chưa có"}</b></span>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              <CalendarClock size={15} /> {formatBookingDate(dateRaw)}{booking.slotTime ? ` · ${booking.slotTime}` : ""}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin size={15} /> {booking.garageName}
-            </span>
-            <span className="truncate">{booking.vehicle} · {booking.plate}</span>
-          </div>
+    <div className="flex flex-wrap items-start justify-between gap-4 p-4 transition hover:bg-surface sm:p-5">
+      {/* Thông tin — cột trái */}
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <strong className="text-base">{booking.serviceName}</strong>
+          <StatusBadge status={booking.bookingStatus} size="sm" />
+          {booking.paymentStatus && <StatusBadge status={booking.paymentStatus} type="payment" size="sm" />}
         </div>
+        <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+          <span>Mã lịch: <b className="text-foreground">{booking.code}</b></span>
+          <span>Hóa đơn: <b className="text-foreground">{invoiceCode || "Chưa có"}</b></span>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <CalendarClock size={15} /> {formatBookingDate(dateRaw)}{booking.slotTime ? ` · ${booking.slotTime}` : ""}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <MapPin size={15} /> {booking.garageName}
+          </span>
+          <span className="truncate">{booking.vehicle} · {booking.plate}</span>
+        </div>
+      </div>
+
+      {/* Số tiền + hành động — gom chung cột phải để mọi dòng thẳng hàng */}
+      <div className="flex shrink-0 flex-col items-end gap-2.5">
         <div className="text-right">
           <p className="text-xs font-semibold text-muted-foreground">Số tiền</p>
           <strong className="text-lg text-primary">{formatMoney(booking.finalAmount)}</strong>
         </div>
-      </div>
-
-      <div className="flex items-center justify-end gap-2">
-        {paid || invoiceCode ? (
-          <Button variant="outline" size="sm" onClick={onInvoice}>
-            <Receipt size={15} /> Xem hóa đơn
-          </Button>
-        ) : (
-          <Button variant="outline" size="sm" render={<Link to={`/khach-hang/lich-dat/${booking.id}`} />}>
-            Xem chi tiết
-          </Button>
-        )}
-        {payable && (
-          <Button size="sm" onClick={onPay}>
-            <CreditCard size={15} /> {booking.paymentStatus === "FAILED" ? "Thanh toán lại" : "Thanh toán ngay"}
-          </Button>
-        )}
-        {cancelled && !paid && !payable && !invoiceCode && (
-          <span className="text-xs font-semibold text-muted-foreground">Đã đóng</span>
-        )}
+        <div className="flex items-center gap-2">
+          {paid || invoiceCode ? (
+            <Button variant="outline" size="sm" onClick={onInvoice}>
+              <Receipt size={15} /> Xem hóa đơn
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" render={<Link to={`/khach-hang/lich-dat/${booking.id}`} />}>
+              Xem chi tiết
+            </Button>
+          )}
+          {payable && (
+            <Button size="sm" onClick={onPay}>
+              <CreditCard size={15} /> {booking.paymentStatus === "FAILED" ? "Thanh toán lại" : "Thanh toán ngay"}
+            </Button>
+          )}
+          {cancelled && !paid && !payable && !invoiceCode && (
+            <span className="text-xs font-semibold text-muted-foreground">Đã đóng</span>
+          )}
+        </div>
       </div>
     </div>
   );
