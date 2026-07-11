@@ -25,6 +25,7 @@ import { loyaltyApi } from "@/api/loyaltyApi";
 import { rewardApi } from "@/api/rewardApi";
 import { friendlyError } from "@/lib/api-error";
 import { formatBookingDate } from "@/lib/customer-booking-data";
+import { getStoredGarageId, storeGarageId } from "@/lib/loyalty-garage-selection";
 import {
   computeTierProgress,
   normalizeLoyaltyAccount,
@@ -104,14 +105,17 @@ export default function MembershipPointsPage() {
       }));
       setGaragesData(built);
 
-      // Gara xem mặc định: ladder hạng đầy đủ nhất (nhiều hạng), rồi tới điểm.
+      // Gara xem mặc định: ưu tiên lựa chọn đã lưu, nếu không thì ladder hạng đầy đủ nhất rồi tới điểm.
       const primary = [...built].sort((a, b) => {
         if (b.tiers.length !== a.tiers.length) return b.tiers.length - a.tiers.length;
         return (b.account?.totalPoints || 0) - (a.account?.totalPoints || 0);
       })[0];
-      setSelectedGarageId((prev) =>
-        prev != null && built.some((g) => String(g.garageId) === String(prev)) ? prev : primary.garageId,
-      );
+      const stored = getStoredGarageId();
+      const validStored = stored != null && built.some((g) => String(g.garageId) === String(stored));
+      setSelectedGarageId((prev) => {
+        if (prev != null && built.some((g) => String(g.garageId) === String(prev))) return prev;
+        return validStored ? stored : primary.garageId;
+      });
 
       setTransactions(txRes.status === "fulfilled" ? normalizeLoyaltyTransactions(txRes.value) : []);
 
@@ -280,7 +284,7 @@ export default function MembershipPointsPage() {
           </span>
           <select
             value={String(selectedGarageId ?? "")}
-            onChange={(e) => setSelectedGarageId(e.target.value)}
+            onChange={(e) => { setSelectedGarageId(e.target.value); storeGarageId(e.target.value); }}
             className="h-9 rounded-xl border border-input bg-background px-3 text-sm font-semibold outline-none focus:border-ring"
           >
             {garagesData.map((g) => (
