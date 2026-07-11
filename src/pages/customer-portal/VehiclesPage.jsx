@@ -237,16 +237,18 @@ export default function VehiclesPage() {
 
       {/* KPI */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiCard label="Tổng phương tiện" value={loading ? "—" : kpi.total} icon={<Car size={18} />} />
+        <KpiCard label="Tổng phương tiện" value={loading ? "—" : kpi.total} iconSrc="/images/icons/vehicle-total.png" icon={<Car size={18} />} />
         <KpiCard
           label="Đang sử dụng"
           value={loading ? "—" : kpi.active}
+          iconSrc="/images/icons/vehicle-active.png"
           icon={<CheckCircle2 size={18} />}
           tone="bg-success-container text-success"
         />
         <KpiCard
           label="Cần cập nhật"
           value={loading ? "—" : kpi.needsUpdate}
+          iconSrc="/images/icons/vehicle-needs-update.png"
           icon={<ClipboardCheck size={18} />}
           tone="bg-warning-container text-warning"
           highlight={!loading && kpi.needsUpdate > 0}
@@ -254,6 +256,7 @@ export default function VehiclesPage() {
         <KpiCard
           label="Chăm sóc gần nhất"
           value={loading ? "—" : kpi.lastCare}
+          iconSrc="/images/icons/vehicle-last-care.png"
           icon={<History size={18} />}
           tone="bg-primary-container text-primary"
         />
