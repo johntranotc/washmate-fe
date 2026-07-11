@@ -357,6 +357,32 @@ export default function MembershipPointsPage() {
         <KpiCard label="Ưu đãi đủ điểm" value={eligibleRewards} icon={<BadgePercent size={18} />} tone="bg-primary-container text-primary" />
       </div>
 
+      {/* Chính sách tích điểm của chi nhánh đang chọn — đổi theo bộ chọn chi nhánh */}
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <BadgePercent size={18} className="text-primary" />
+          <h2 className="text-lg font-extrabold">Chính sách tích điểm</h2>
+          {account.garageName && <span className="text-sm font-semibold text-muted-foreground">· {account.garageName}</span>}
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <PolicyStat
+            icon={Sparkles}
+            label="Tỷ lệ tích điểm"
+            value={policy?.amountPerPoint ? `Mỗi ${fmt(policy.amountPerPoint)}đ chi tiêu = 1 điểm` : "Theo chương trình của gara"}
+          />
+          <PolicyStat
+            icon={Clock}
+            label="Hạn dùng điểm"
+            value={policy?.pointExpiryMonths ? `${policy.pointExpiryMonths} tháng kể từ khi được cộng` : "Không giới hạn"}
+          />
+          <PolicyStat
+            icon={BadgePercent}
+            label="Ưu đãi hạng hiện tại"
+            value={account.tierDiscountPercentage > 0 ? `Giảm ${Number(account.tierDiscountPercentage)}% mỗi lần rửa xe` : "Chưa có ưu đãi giảm giá"}
+          />
+        </div>
+      </section>
+
       {/* Các hạng thành viên */}
       <section>
         <h2 className="text-lg font-extrabold">Các hạng thành viên</h2>
@@ -568,6 +594,18 @@ function HowToCard({ icon: Icon, title, text }) {
       <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><Icon size={18} /></span>
       <p className="mt-3 font-extrabold">{title}</p>
       <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+    </div>
+  );
+}
+
+function PolicyStat({ icon: Icon, label, value }) {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4">
+      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Icon size={16} /></span>
+      <div className="min-w-0">
+        <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+        <p className="mt-0.5 text-sm font-bold text-foreground">{value}</p>
+      </div>
     </div>
   );
 }
