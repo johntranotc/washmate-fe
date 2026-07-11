@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import PortalShell from "@/components/shared/PortalShell";
 import { loyaltyApi } from "@/api/loyaltyApi";
+import { notificationApi } from "@/api/notificationApi";
+import { normalizeNotificationList } from "@/lib/customer-notification-data";
 import { cn } from "@/lib/utils";
 import { getDisplayName } from "@/utils/authUtils";
 import { STAFF_ASSETS } from "@/lib/staff-assets";
@@ -98,6 +100,7 @@ function CustomerHeaderActions() {
   const navigate = useNavigate();
   const [customerName, setCustomerName] = useState(resolveDisplayName);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [unread, setUnread] = useState(0);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -106,6 +109,28 @@ function CustomerHeaderActions() {
     }
     window.addEventListener("washmate-profile-updated", handleProfileUpdate);
     return () => window.removeEventListener("washmate-profile-updated", handleProfileUpdate);
+  }, []);
+
+  // Số thông báo chưa đọc — tải khi vào trang + khi quay lại tab (sau khi đọc ở trang thông báo).
+  useEffect(() => {
+    let alive = true;
+    async function loadUnread() {
+      try {
+        const list = normalizeNotificationList(await notificationApi.getNotifications());
+        if (alive) setUnread(list.filter((n) => !n.read).length);
+      } catch {
+        /* lỗi API → không hiện badge */
+      }
+    }
+    loadUnread();
+    const onFocus = () => loadUnread();
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("washmate-notifications-updated", onFocus);
+    return () => {
+      alive = false;
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("washmate-notifications-updated", onFocus);
+    };
   }, []);
 
   useEffect(() => {
@@ -151,11 +176,16 @@ function CustomerHeaderActions() {
       <button
         type="button"
         onClick={() => navigate("/khach-hang/thong-bao")}
-        title="Thông báo"
-        aria-label="Thông báo"
-        className="grid h-10 w-10 place-items-center rounded-full border border-border text-muted-foreground transition hover:bg-surface hover:text-foreground"
+        title={unread > 0 ? `${unread} thông báo chưa đọc` : "Thông báo"}
+        aria-label={unread > 0 ? `Thông báo, ${unread} chưa đọc` : "Thông báo"}
+        className="relative grid h-10 w-10 place-items-center rounded-full border border-border text-muted-foreground transition hover:bg-surface hover:text-foreground"
       >
         <Bell size={18} />
+        {unread > 0 && (
+          <span className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-critical px-1 text-[10px] font-extrabold leading-none text-white">
+            {unread > 99 ? "99+" : unread}
+          </span>
+        )}
       </button>
       <button
         type="button"
