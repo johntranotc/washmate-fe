@@ -1,14 +1,14 @@
 import { useEffect } from "react";
-import { Gift, Sparkles, X } from "lucide-react";
+import { Gift, Sparkles, Store, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const fmt = (n) => new Intl.NumberFormat("vi-VN").format(Number(n || 0));
 
 /**
  * Modal xác nhận đổi quà. Gọi API redeem THẬT ở component cha qua onConfirm — không tự trừ điểm.
- * Props: reward (null = đóng), availablePoints, submitting, onClose, onConfirm.
+ * Props: reward (null = đóng), availablePoints, garageName, submitting, onClose, onConfirm.
  */
-export function RedeemRewardDialog({ reward, availablePoints, submitting = false, onClose, onConfirm }) {
+export function RedeemRewardDialog({ reward, availablePoints, garageName, submitting = false, onClose, onConfirm }) {
   const open = Boolean(reward);
 
   useEffect(() => {
@@ -49,6 +49,11 @@ export function RedeemRewardDialog({ reward, availablePoints, submitting = false
         <div className="rounded-2xl border border-border p-4">
           <strong className="text-base">{reward.name}</strong>
           {reward.description && <p className="mt-1 text-sm text-muted-foreground">{reward.description}</p>}
+          {garageName && (
+            <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+              <Store size={13} /> Áp dụng tại: {garageName}
+            </p>
+          )}
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-primary-container px-3 py-1 text-sm font-bold text-primary">
             <Sparkles size={14} /> {fmt(required)} điểm
           </div>
