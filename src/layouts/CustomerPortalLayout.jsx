@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -25,6 +25,7 @@ import {
   normalizeLoyaltyAccount,
   normalizeTiers,
 } from "@/lib/customer-loyalty-data";
+import { getStoredGarageId, onGarageChange } from "@/lib/loyalty-garage-selection";
 
 const fmtPts = (n) => new Intl.NumberFormat("vi-VN").format(Number(n || 0));
 
@@ -48,7 +49,9 @@ function resolveDisplayName() {
 }
 
 function useLoyaltyInfo() {
-  const [data, setData] = useState({ account: null, tiers: [] });
+  const [all, setAll] = useState([]); // [{ garageId, totalPoints, tiers, account }]
+  const [selectedId, setSelectedId] = useState(() => getStoredGarageId());
+
   useEffect(() => {
     async function fetchLoyalty() {
       try {
@@ -58,26 +61,37 @@ function useLoyaltyInfo() {
           .map((a) => ({ garageId: a.garageId ?? null, totalPoints: Number(a.totalPoints ?? a.availablePoints ?? 0), raw: a }))
           .filter((g) => g.garageId != null);
         if (!garages.length) return;
-        // Cùng cách chọn gara chính như trang Điểm thành viên: nhiều hạng nhất → rồi tới điểm.
         const tierResults = await Promise.allSettled(garages.map((g) => loyaltyApi.getCustomerTiers(g.garageId)));
-        const built = garages.map((g, i) => ({
-          ...g,
-          tiers: tierResults[i].status === "fulfilled" ? normalizeTiers(tierResults[i].value) : [],
-        }));
-        const primary = [...built].sort((a, b) => {
-          if (b.tiers.length !== a.tiers.length) return b.tiers.length - a.tiers.length;
-          return (b.totalPoints || 0) - (a.totalPoints || 0);
-        })[0];
-        const account = normalizeLoyaltyAccount(primary.raw);
-        if (!account) return;
-        setData({ account, tiers: primary.tiers });
+        const built = garages
+          .map((g, i) => ({
+            garageId: g.garageId,
+            totalPoints: g.totalPoints,
+            tiers: tierResults[i].status === "fulfilled" ? normalizeTiers(tierResults[i].value) : [],
+            account: normalizeLoyaltyAccount(g.raw),
+          }))
+          .filter((g) => g.account);
+        setAll(built);
       } catch {
-        /* API lỗi → giữ null, card hiện dạng mời tham gia */
+        /* API lỗi → giữ rỗng, card hiện dạng mời tham gia */
       }
     }
     fetchLoyalty();
   }, []);
-  return data;
+
+  // Đồng bộ với chi nhánh đang chọn ở trang Điểm thành viên.
+  useEffect(() => onGarageChange((id) => setSelectedId(id)), []);
+
+  return useMemo(() => {
+    if (!all.length) return { account: null, tiers: [] };
+    const bySel = selectedId != null && all.find((g) => String(g.garageId) === String(selectedId));
+    if (bySel) return { account: bySel.account, tiers: bySel.tiers };
+    // Mặc định: ladder hạng đầy đủ nhất → rồi tới điểm (khớp trang chính).
+    const primary = [...all].sort((a, b) => {
+      if (b.tiers.length !== a.tiers.length) return b.tiers.length - a.tiers.length;
+      return (b.totalPoints || 0) - (a.totalPoints || 0);
+    })[0];
+    return { account: primary.account, tiers: primary.tiers };
+  }, [all, selectedId]);
 }
 
 function CustomerHeaderActions() {
