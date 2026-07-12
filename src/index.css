@@ -487,11 +487,8 @@
   display: block;
   height: var(--car-h);
   width: auto;
-  /* Viền sáng xanh + đổ bóng để xe đen nổi rõ */
-  filter:
-    drop-shadow(0 0 26px rgba(59, 130, 246, 0.5))
-    drop-shadow(0 0 60px rgba(37, 99, 235, 0.32))
-    drop-shadow(0 24px 42px rgba(0, 0, 0, 0.55));
+  /* Chỉ đổ bóng tối cho xe (đã bỏ quầng sáng xanh) */
+  filter: drop-shadow(0 22px 40px rgba(0, 0, 0, 0.5));
 }
 /* Vòng nan hoa xoay đè lên bánh xe (bánh trong ảnh phẳng không tự xoay được) */
 .wm-login-wheel {
@@ -526,19 +523,19 @@
   position: absolute;
   top: 62%;
   left: 74%; /* bắt đầu ở đuôi xe */
-  height: clamp(60px, 13vh, 170px);
-  width: clamp(420px, 78vw, 1300px);
+  height: clamp(70px, 15vh, 200px);
+  width: clamp(520px, 92vw, 1600px);
   transform: translateY(-50%) scaleX(0.2);
   transform-origin: left center;
   border-radius: 9999px;
-  /* Đậm ở sát xe (trái) → nhạt dần về sau (phải) */
+  /* Khói xám đậm: đặc ở sát xe (trái) → nhạt dần về sau (phải) */
   background: linear-gradient(90deg,
-    rgba(190, 199, 214, 0.6) 0%,
-    rgba(172, 183, 200, 0.42) 30%,
-    rgba(156, 168, 186, 0.24) 58%,
-    rgba(150, 162, 182, 0.1) 82%,
+    rgba(74, 80, 92, 0.82) 0%,
+    rgba(88, 95, 108, 0.6) 28%,
+    rgba(104, 112, 126, 0.38) 56%,
+    rgba(120, 128, 142, 0.18) 82%,
     transparent 100%);
-  filter: blur(16px);
+  filter: blur(15px);
   opacity: 0;
   animation: wm-login-smoke-trail 1500ms ease-out 120ms both;
 }
@@ -550,7 +547,7 @@
   width: clamp(70px, 12vw, 190px);
   transform: translate(-50%, -50%) scale(0.2);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, rgba(205, 213, 225, 0.5) 0%, rgba(170, 181, 198, 0.24) 46%, transparent 72%);
+  background: radial-gradient(circle at 50% 50%, rgba(84, 90, 104, 0.66) 0%, rgba(104, 112, 126, 0.34) 46%, transparent 72%);
   filter: blur(11px);
   opacity: 0;
   animation: wm-login-smoke-puff 1150ms ease-out var(--d, 0ms) both;
