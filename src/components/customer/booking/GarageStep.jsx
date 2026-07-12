@@ -333,31 +333,51 @@ function MapPreviewPanel({
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       {/* Map area */}
-      <div className="relative h-72 overflow-hidden bg-primary-container">
-        {/* Grid texture */}
+      <div className="relative h-72 overflow-hidden bg-[#e9eef4]">
+        {/* Nền bản đồ minh họa kiểu thành phố: đất, công viên, sông, mạng lưới đường lớn–nhỏ */}
         <svg
-          className="absolute inset-0 h-full w-full opacity-25"
+          viewBox="0 0 400 288"
+          preserveAspectRatio="xMidYMid slice"
+          className="absolute inset-0 h-full w-full"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <defs>
-            <pattern id="mapgrid" width="36" height="36" patternUnits="userSpaceOnUse">
-              <path d="M 36 0 L 0 0 0 36" fill="none" className="stroke-primary" strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#mapgrid)" />
+          {/* Đất nền + vài mảng khối phố khác sắc nhẹ */}
+          <rect width="400" height="288" fill="#e9eef4" />
+          <rect x="14" y="14" width="130" height="70" fill="#eef2f8" />
+          <rect x="312" y="150" width="80" height="120" fill="#eef2f8" />
+          {/* Công viên */}
+          <rect x="250" y="24" width="120" height="82" rx="12" fill="#d8ecd0" />
+          <rect x="250" y="24" width="120" height="82" rx="12" fill="none" stroke="#c3ddb8" strokeWidth="1.5" />
+          {/* Sông uốn lượn phía dưới */}
+          <path d="M-20 214 C 70 196 120 252 214 236 S 360 214 430 252 L 430 300 L -20 300 Z" fill="#c3e2f6" />
+          <path d="M-20 214 C 70 196 120 252 214 236 S 360 214 430 252" fill="none" stroke="#a9d3ef" strokeWidth="2" />
+          {/* Casing (mép đường) xám nhạt */}
+          <g stroke="#cdd7e4" fill="none" strokeLinecap="round">
+            <line x1="-10" y1="100" x2="410" y2="100" strokeWidth="14" />
+            <line x1="-10" y1="196" x2="410" y2="196" strokeWidth="11" />
+            <line x1="164" y1="-10" x2="164" y2="298" strokeWidth="13" />
+            <line x1="300" y1="-10" x2="300" y2="298" strokeWidth="10" />
+            <line x1="-10" y1="18" x2="410" y2="182" strokeWidth="9" />
+          </g>
+          {/* Lòng đường trắng — trục chính dày, đường phụ mảnh */}
+          <g stroke="#ffffff" fill="none" strokeLinecap="round">
+            <line x1="-10" y1="100" x2="410" y2="100" strokeWidth="9" />
+            <line x1="-10" y1="196" x2="410" y2="196" strokeWidth="7" />
+            <line x1="164" y1="-10" x2="164" y2="298" strokeWidth="8" />
+            <line x1="300" y1="-10" x2="300" y2="298" strokeWidth="6" />
+            <line x1="-10" y1="18" x2="410" y2="182" strokeWidth="5.5" />
+          </g>
+          <g stroke="#ffffff" fill="none" strokeLinecap="round" opacity="0.9">
+            <line x1="72" y1="-10" x2="72" y2="298" strokeWidth="3" />
+            <line x1="234" y1="-10" x2="234" y2="298" strokeWidth="3" />
+            <line x1="-10" y1="150" x2="410" y2="150" strokeWidth="3" />
+            <line x1="-10" y1="248" x2="410" y2="248" strokeWidth="3" />
+          </g>
         </svg>
-
-        {/* Simulated roads */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[32%] left-0 right-0 h-2 rounded bg-card" />
-          <div className="absolute top-[62%] left-0 right-0 h-1.5 rounded bg-card" />
-          <div className="absolute top-0 bottom-0 left-[42%] w-2 rounded bg-card" />
-          <div className="absolute top-0 bottom-0 left-[68%] w-1.5 rounded bg-card" />
-        </div>
 
         {/* Radius circle (shows when location found) */}
         {userLocation && (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-28 rounded-full border-2 border-primary/50/50 bg-primary-container/20" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-28 rounded-full border-2 border-primary/50 bg-primary-container/20" />
         )}
 
         {/* Garage pins */}
@@ -387,7 +407,7 @@ function MapPreviewPanel({
               >
                 <span
                   className={cn(
-                    "mb-0.5 rounded-full px-2 py-0.5 text-xs font-extrabold whitespace-nowrap",
+                    "mb-1 rounded-full px-2 py-0.5 text-xs font-extrabold whitespace-nowrap shadow-card",
                     isSelected
                       ? "bg-primary text-white"
                       : "bg-card text-foreground border border-border",
@@ -397,7 +417,7 @@ function MapPreviewPanel({
                 </span>
                 <span
                   className={cn(
-                    "size-3.5 rounded-full border-2 border-white",
+                    "size-4 rounded-full border-2 border-white shadow-card",
                     isSelected
                       ? "bg-primary"
                       : !garage.isOpen
