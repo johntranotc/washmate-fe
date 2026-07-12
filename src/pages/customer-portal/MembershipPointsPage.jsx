@@ -266,7 +266,11 @@ export default function MembershipPointsPage() {
         description="Theo dõi hạng thành viên, điểm tích lũy và các quyền lợi dành cho bạn."
         actions={
           <div className="flex items-center gap-2">
-            <Button size="lg" className="shadow-cta" onClick={scrollToRewards}>
+            <Button
+              size="lg"
+              onClick={scrollToRewards}
+              className="border border-white/30 bg-primary/80 text-primary-foreground ring-1 ring-inset ring-white/30 shadow-cta backdrop-blur-md transition hover:bg-primary/90"
+            >
               <Gift size={18} /> Đổi điểm lấy quà
             </Button>
             <Button variant="ghost" size="icon" onClick={load} aria-label="Tải lại" title="Tải lại">
