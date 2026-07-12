@@ -325,7 +325,7 @@ export default function CustomerPortalLayout() {
       sidebarTop={
         <NavLink
           to="/khach-hang/dat-lich-moi"
-          className="mb-3 flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/15 px-3 py-3 text-sm font-bold text-white ring-1 ring-inset ring-white/20 backdrop-blur-md transition hover:bg-white/25"
+          className="mb-3 flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-[color-mix(in_srgb,var(--primary)_82%,transparent)] px-3 py-3 text-sm font-bold text-white backdrop-blur-md shadow-[0_10px_30px_-10px_color-mix(in_srgb,var(--primary)_60%,transparent),inset_0_1px_0_rgba(255,255,255,0.22)] transition hover:bg-[color-mix(in_srgb,var(--primary)_92%,transparent)]"
         >
           <Plus size={18} /> Đặt lịch rửa xe
         </NavLink>
