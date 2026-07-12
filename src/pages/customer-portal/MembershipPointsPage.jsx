@@ -269,7 +269,7 @@ export default function MembershipPointsPage() {
             <Button
               size="lg"
               onClick={scrollToRewards}
-              className="border border-white/30 bg-primary/80 text-primary-foreground ring-1 ring-inset ring-white/30 shadow-cta backdrop-blur-md transition hover:bg-primary/90"
+              className="border border-white/25 bg-primary-strong/90 text-primary-foreground ring-1 ring-inset ring-white/25 shadow-cta backdrop-blur-md transition hover:bg-primary-strong"
             >
               <Gift size={18} /> Đổi điểm lấy quà
             </Button>
