@@ -364,10 +364,25 @@
 
 /* ===== Nền sidebar khách hàng: navy chuyển sắc + 2 đốm sáng brand mờ (có chiều sâu) ===== */
 .wm-customer-sidebar {
+  /* Kính xanh (frosted): navy hơi trong + làm mờ nền sau + vệt sáng chéo + viền/highlight kính */
   background:
-    radial-gradient(120% 46% at 16% 0%, color-mix(in srgb, var(--primary) 40%, transparent), transparent 64%),
-    radial-gradient(100% 38% at 94% 100%, color-mix(in srgb, var(--accent-cyan) 30%, transparent), transparent 62%),
-    linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 100%);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 44%),
+    radial-gradient(120% 46% at 16% 0%, color-mix(in srgb, var(--primary) 44%, transparent), transparent 64%),
+    radial-gradient(100% 38% at 94% 100%, color-mix(in srgb, var(--accent-cyan) 34%, transparent), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--navy) 90%, transparent) 0%, color-mix(in srgb, var(--navy-deep) 90%, transparent) 100%);
+  -webkit-backdrop-filter: blur(16px) saturate(145%);
+  backdrop-filter: blur(16px) saturate(145%);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .wm-customer-sidebar {
+    background:
+      radial-gradient(120% 46% at 16% 0%, color-mix(in srgb, var(--primary) 40%, transparent), transparent 64%),
+      linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 100%);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 /* ===== Ô kính (frosted) cho card trong sidebar tối — dùng cùng quầng sáng phía sau ===== */
