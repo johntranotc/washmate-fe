@@ -523,19 +523,19 @@
   position: absolute;
   top: 62%;
   left: 74%; /* bắt đầu ở đuôi xe */
-  height: clamp(70px, 15vh, 200px);
-  width: clamp(520px, 92vw, 1600px);
+  height: clamp(80px, 17vh, 240px);
+  width: clamp(760px, 120vw, 2200px);
   transform: translateY(-50%) scaleX(0.2);
   transform-origin: left center;
   border-radius: 9999px;
-  /* Khói xám đậm: đặc ở sát xe (trái) → nhạt dần về sau (phải) */
+  /* Khói xám đen đậm: đặc ở sát xe (trái) → nhạt dần về sau (phải) */
   background: linear-gradient(90deg,
-    rgba(74, 80, 92, 0.82) 0%,
-    rgba(88, 95, 108, 0.6) 28%,
-    rgba(104, 112, 126, 0.38) 56%,
-    rgba(120, 128, 142, 0.18) 82%,
+    rgba(34, 38, 46, 0.92) 0%,
+    rgba(48, 53, 62, 0.72) 26%,
+    rgba(66, 72, 84, 0.5) 52%,
+    rgba(88, 95, 108, 0.28) 78%,
     transparent 100%);
-  filter: blur(15px);
+  filter: blur(16px);
   opacity: 0;
   animation: wm-login-smoke-trail 1500ms ease-out 120ms both;
 }
@@ -547,8 +547,8 @@
   width: clamp(70px, 12vw, 190px);
   transform: translate(-50%, -50%) scale(0.2);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, rgba(84, 90, 104, 0.66) 0%, rgba(104, 112, 126, 0.34) 46%, transparent 72%);
-  filter: blur(11px);
+  background: radial-gradient(circle at 50% 50%, rgba(44, 49, 58, 0.78) 0%, rgba(70, 76, 88, 0.4) 46%, transparent 72%);
+  filter: blur(12px);
   opacity: 0;
   animation: wm-login-smoke-puff 1150ms ease-out var(--d, 0ms) both;
 }
@@ -556,7 +556,7 @@
   0% { opacity: 0; transform: translateY(-50%) scaleX(0.2); }
   14% { opacity: 0.78; }
   66% { opacity: 0.62; }
-  100% { opacity: 0; transform: translateY(-50%) scaleX(1.9) translateX(10%); }
+  100% { opacity: 0; transform: translateY(-50%) scaleX(2.3) translateX(12%); }
 }
 @keyframes wm-login-smoke-puff {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
