@@ -31,11 +31,11 @@ import { getStoredGarageId, onGarageChange } from "@/lib/loyalty-garage-selectio
 
 const fmtPts = (n) => new Intl.NumberFormat("vi-VN").format(Number(n || 0));
 
-// Active state: KÍNH xanh trong mờ + viền/highlight + quầng sáng + thanh nhấn trái.
+// Active state: KÍNH trắng trong mờ + chữ primary + thanh nhấn trái primary.
 const CUSTOMER_NAV_ACTIVE =
-  "bg-[color-mix(in_srgb,var(--primary)_80%,transparent)] text-white backdrop-blur-md ring-1 ring-inset ring-white/20 shadow-[0_8px_24px_-8px_color-mix(in_srgb,var(--primary)_55%,transparent),inset_0_1px_0_rgba(255,255,255,0.22)] hover:translate-x-1 motion-reduce:hover:translate-x-0 before:absolute before:left-0 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-r-full before:bg-white/85";
+  "bg-white/80 text-primary backdrop-blur-md ring-1 ring-inset ring-black/5 shadow-card hover:translate-x-1 motion-reduce:hover:translate-x-0 before:absolute before:left-0 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-r-full before:bg-primary";
 const CUSTOMER_NAV_IDLE =
-  "text-neutral-muted hover:translate-x-1 hover:bg-white/5 hover:text-white motion-reduce:hover:translate-x-0";
+  "text-muted-foreground hover:translate-x-1 hover:bg-black/5 hover:text-foreground motion-reduce:hover:translate-x-0";
 
 const navLinks = [
   { icon: LayoutGrid, label: "Tổng quan", to: "/khach-hang", end: true },
@@ -325,7 +325,7 @@ export default function CustomerPortalLayout() {
       sidebarTop={
         <NavLink
           to="/khach-hang/dat-lich-moi"
-          className="mb-3 flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-[color-mix(in_srgb,var(--primary)_82%,transparent)] px-3 py-3 text-sm font-bold text-white backdrop-blur-md shadow-[0_10px_30px_-10px_color-mix(in_srgb,var(--primary)_60%,transparent),inset_0_1px_0_rgba(255,255,255,0.22)] transition hover:bg-[color-mix(in_srgb,var(--primary)_92%,transparent)]"
+          className="mb-3 flex items-center justify-center gap-2 rounded-xl bg-primary px-3 py-3 text-sm font-bold text-primary-foreground shadow-cta transition hover:bg-primary-strong"
         >
           <Plus size={18} /> Đặt lịch rửa xe
         </NavLink>
