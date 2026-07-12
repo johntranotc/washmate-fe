@@ -259,7 +259,7 @@ function PromotionCard({ promo, onDetail, onUse }) {
   const d = daysLeft(promo);
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition hover:border-primary/40">
+    <article className="flex flex-col overflow-hidden rounded-none border border-border bg-card shadow-card transition hover:border-primary/40">
       <div className="flex items-center justify-between bg-[linear-gradient(120deg,var(--primary),var(--primary-strong))] px-4 py-2.5 text-primary-foreground">
         <BadgePercent size={18} />
         <span className="text-lg font-black">{discountLabel(promo)}</span>
