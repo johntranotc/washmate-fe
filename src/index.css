@@ -364,18 +364,10 @@
 
 /* ===== Nền sidebar khách hàng: navy chuyển sắc + 2 đốm sáng brand mờ (có chiều sâu) ===== */
 .wm-customer-sidebar {
-  /* Nền kiểu galaxy: chàm-tím sâu + tinh vân tím/xanh/hồng + vài ngôi sao nhỏ */
   background:
-    radial-gradient(1.5px 1.5px at 22% 16%, rgba(255, 255, 255, 0.75), transparent),
-    radial-gradient(1.5px 1.5px at 68% 24%, rgba(255, 255, 255, 0.55), transparent),
-    radial-gradient(1px 1px at 42% 44%, rgba(255, 255, 255, 0.6), transparent),
-    radial-gradient(1.5px 1.5px at 82% 56%, rgba(255, 255, 255, 0.5), transparent),
-    radial-gradient(1px 1px at 30% 70%, rgba(255, 255, 255, 0.55), transparent),
-    radial-gradient(1.5px 1.5px at 60% 84%, rgba(255, 255, 255, 0.45), transparent),
-    radial-gradient(90% 42% at 18% 6%, rgba(139, 92, 246, 0.42), transparent 60%),
-    radial-gradient(85% 42% at 92% 32%, rgba(56, 132, 246, 0.34), transparent 60%),
-    radial-gradient(95% 46% at 72% 100%, rgba(192, 60, 211, 0.3), transparent 62%),
-    linear-gradient(165deg, #2a2450 0%, #1e1a3c 55%, #16122e 100%);
+    radial-gradient(120% 46% at 16% 0%, color-mix(in srgb, var(--primary) 40%, transparent), transparent 64%),
+    radial-gradient(100% 38% at 94% 100%, color-mix(in srgb, var(--accent-cyan) 30%, transparent), transparent 62%),
+    linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 100%);
 }
 
 /* ===== Ô kính (frosted) cho card trong sidebar tối — dùng cùng quầng sáng phía sau ===== */
