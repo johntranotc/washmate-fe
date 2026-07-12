@@ -213,7 +213,6 @@ function CustomerHeaderActions() {
             <p className="text-sm font-bold text-foreground">{renderCustomerName()}</p>
           </div>
           {[
-            [Bell, "Thông báo", "/khach-hang/thong-bao"],
             [User, "Tài khoản của tôi", "/khach-hang/tai-khoan"],
             [Shield, "Đổi mật khẩu", "/khach-hang/doi-mat-khau"],
           ].map(([Icon, label, to]) => (
