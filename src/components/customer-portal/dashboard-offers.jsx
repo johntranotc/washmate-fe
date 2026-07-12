@@ -114,7 +114,7 @@ function OfferCard({ promo, onUse }) {
   };
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+    <article className="flex flex-col overflow-hidden rounded-none border border-border bg-card shadow-card">
       <div className="flex items-center justify-between bg-[linear-gradient(120deg,var(--primary),var(--primary-strong))] px-4 py-3 text-primary-foreground">
         <BadgePercent size={18} />
         <span className="text-xl font-black">{discountLabel(promo)}</span>
