@@ -521,6 +521,51 @@
   animation: wm-login-dust-puff 760ms ease-out 400ms both;
 }
 
+/* ===== Khói kéo dài phía sau xe (đuôi bên phải, xe chạy sang trái) ===== */
+.wm-login-smoke {
+  position: absolute;
+  top: 62%;
+  left: 74%; /* bắt đầu ở đuôi xe */
+  height: clamp(60px, 13vh, 160px);
+  width: clamp(240px, 46vw, 720px);
+  transform: translateY(-50%) scaleX(0.2);
+  transform-origin: left center;
+  border-radius: 9999px;
+  /* Đậm ở sát xe (trái) → nhạt dần về sau (phải) */
+  background: linear-gradient(90deg,
+    rgba(190, 199, 214, 0.6) 0%,
+    rgba(168, 179, 196, 0.4) 34%,
+    rgba(150, 162, 182, 0.18) 68%,
+    transparent 100%);
+  filter: blur(16px);
+  opacity: 0;
+  animation: wm-login-smoke-trail 1500ms ease-out 120ms both;
+}
+.wm-login-smoke-puff {
+  position: absolute;
+  top: 60%;
+  left: 75%;
+  height: clamp(70px, 12vw, 190px);
+  width: clamp(70px, 12vw, 190px);
+  transform: translate(-50%, -50%) scale(0.2);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(205, 213, 225, 0.5) 0%, rgba(170, 181, 198, 0.24) 46%, transparent 72%);
+  filter: blur(11px);
+  opacity: 0;
+  animation: wm-login-smoke-puff 1150ms ease-out var(--d, 0ms) both;
+}
+@keyframes wm-login-smoke-trail {
+  0% { opacity: 0; transform: translateY(-50%) scaleX(0.2); }
+  16% { opacity: 0.75; }
+  62% { opacity: 0.6; }
+  100% { opacity: 0; transform: translateY(-50%) scaleX(1.5) translateX(7%); }
+}
+@keyframes wm-login-smoke-puff {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  22% { opacity: 0.62; }
+  100% { opacity: 0; transform: translate(64%, -60%) scale(2); }
+}
+
 @keyframes wm-login-wheel-spin {
   from { transform: translate(-50%, -50%) rotate(0); }
   to { transform: translate(-50%, -50%) rotate(360deg); }
@@ -531,7 +576,9 @@
   .wm-login-streak,
   .wm-login-car-rig,
   .wm-login-wheel,
-  .wm-login-dust {
+  .wm-login-dust,
+  .wm-login-smoke,
+  .wm-login-smoke-puff {
     animation: none;
   }
 }

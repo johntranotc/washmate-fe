@@ -39,6 +39,12 @@ export function LoginTransitionOverlay({ active, onComplete }) {
       <span className="wm-login-dust" />
       {/* rig mang animation chạy ngang; xe + 2 vòng nan hoa xoay bám theo */}
       <div className="wm-login-car-rig" onAnimationEnd={finish}>
+        {/* Khói kéo dài phía sau xe (đuôi bên phải) — 1 vệt dài + các cụm khói bung */}
+        <span className="wm-login-smoke" />
+        <span className="wm-login-smoke-puff" style={{ "--d": "0ms" }} />
+        <span className="wm-login-smoke-puff" style={{ "--d": "170ms" }} />
+        <span className="wm-login-smoke-puff" style={{ "--d": "340ms" }} />
+        <span className="wm-login-smoke-puff" style={{ "--d": "520ms" }} />
         <img src="/images/home/car-side.png" alt="" className="wm-login-car-img" />
         <span className="wm-login-wheel wm-login-wheel--front" />
         <span className="wm-login-wheel wm-login-wheel--rear" />
