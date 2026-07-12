@@ -302,7 +302,7 @@ export default function MembershipPointsPage() {
       )}
 
       {/* Hero hạng thành viên — nền/viền/nhấn đổi theo bậc hạng */}
-      <section className={`overflow-hidden rounded-3xl border p-6 sm:p-7 ${theme.card} ${theme.border}`}>
+      <section className={`overflow-hidden rounded-3xl border p-6 sm:p-7 ring-1 ring-inset ring-white/40 backdrop-blur-md ${theme.card} ${theme.border}`}>
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
             <TierBadge name={account.tierName} index={currentTierIndex} size="size-16" className="rounded-2xl shadow-card" iconSize={30} />

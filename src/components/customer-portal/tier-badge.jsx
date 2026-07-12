@@ -8,8 +8,8 @@ const COMBINING_MARKS = /[̀-ͯ]/g;
 // dùng bảng màu riêng, khu biệt cho huy hiệu hạng. Nền nhạt để huy hiệu nổi, sang.
 const TIER_STYLES = {
   bronze: {
-    bg: "bg-[#e7c6a1]", icon: "text-[#9a531f]", ring: "ring-[#c58f56]/50",
-    card: "bg-[linear-gradient(120deg,#e6c3a0,#f6e6d3)]", border: "border-[#cf9c68]/60", bar: "bg-[#9a531f]",
+    bg: "bg-[#e7c6a1]", icon: "text-[#7c3f13]", ring: "ring-[#c58f56]/50",
+    card: "bg-[linear-gradient(120deg,color-mix(in_srgb,#c07d43_84%,transparent),color-mix(in_srgb,#dda971_84%,transparent))]", border: "border-[#a5601f]/60", bar: "bg-[#7c3f13]",
   },
   silver: {
     bg: "bg-[#dfe4ea]", icon: "text-[#69788a]", ring: "ring-[#a9b4c1]/60",
