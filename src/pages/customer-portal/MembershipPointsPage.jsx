@@ -319,8 +319,8 @@ export default function MembershipPointsPage() {
 
           <div className="lg:text-right">
             <p className="text-xs font-semibold text-muted-foreground">Điểm khả dụng</p>
-            <p className={`inline-flex items-center gap-2 text-4xl font-extrabold ${theme.icon}`}>
-              <IconSlot src="/images/loyalty/icons/point-available.png" size={30} fallback={<Sparkles size={26} />} /> {fmt(available)}
+            <p className={`inline-flex items-center gap-2 text-3xl font-extrabold ${theme.icon}`}>
+              <IconSlot src="/images/loyalty/icons/point-available.png" size={26} className="rounded-full ring-2 ring-white" fallback={<Sparkles size={22} />} /> {fmt(available)}
             </p>
           </div>
         </div>
@@ -650,7 +650,7 @@ function PolicyStat({ iconSrc, icon: Icon, label, value }) {
 }
 
 // Ô icon dùng ảnh của team; thiếu/lỗi file thì hiện lại icon mặc định (không vỡ ảnh).
-function IconSlot({ src, size = 40, fallback }) {
+function IconSlot({ src, size = 40, fallback, className = "" }) {
   const [ok, setOk] = useState(Boolean(src));
   if (src && ok) {
     return (
@@ -658,7 +658,7 @@ function IconSlot({ src, size = 40, fallback }) {
         src={src}
         alt=""
         style={{ width: size, height: size }}
-        className="shrink-0 rounded-xl object-contain"
+        className={`shrink-0 rounded-xl object-contain ${className}`}
         onError={() => setOk(false)}
       />
     );
