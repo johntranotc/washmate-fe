@@ -189,8 +189,8 @@ export default function PromotionsPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-52 rounded-2xl" />)}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5">
+          {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-72 rounded-none" />)}
         </div>
       ) : error ? (
         <div className="rounded-2xl border border-critical/25 bg-critical-container p-10 text-center">
@@ -215,7 +215,7 @@ export default function PromotionsPage() {
         />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5">
             {filtered.slice(0, limit).map((promo) => (
               <PromotionCard key={promo.id} promo={promo} onDetail={() => setDetail(promo)} onUse={() => navigate("/khach-hang/dat-lich-moi")} />
             ))}
@@ -284,9 +284,9 @@ function PromotionCard({ promo, onDetail, onUse }) {
           </p>
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
-          <Button size="sm" className="h-8 flex-1 px-3 text-xs" onClick={onUse}>Dùng ngay</Button>
-          <Button variant="outline" size="sm" className="h-8 px-3 text-xs" onClick={onDetail}>Chi tiết</Button>
+        <div className="mt-auto flex flex-col gap-2 pt-3">
+          <Button size="sm" className="h-9 w-full text-xs" onClick={onUse}>Dùng ngay</Button>
+          <Button variant="outline" size="sm" className="h-9 w-full text-xs" onClick={onDetail}>Chi tiết</Button>
         </div>
       </div>
     </article>
