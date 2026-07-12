@@ -55,7 +55,6 @@ export function Hero() {
         <div className="relative mx-auto flex w-full max-w-7xl items-center px-4 pb-20 pt-24 sm:px-6 lg:px-8">
           <div ref={textRef} className="max-w-2xl">
             <span className={`wm-slide-in ${inClass} inline-flex items-center gap-2 rounded-full border border-white/20 bg-navy/50 px-4 py-2 text-sm font-bold text-primary-bright backdrop-blur`}>
-              <Sparkles className="size-4" />
               Chăm sóc xe cùng WashMate
             </span>
 
