@@ -166,9 +166,9 @@ export default function NotificationsPage() {
 
       {/* KPI */}
       <div className="grid grid-cols-3 gap-3">
-        <KpiCard label="Chưa đọc" value={loading ? "—" : unreadCount} icon={<BellRing size={18} />} tone="bg-primary-container text-primary" highlight={!loading && unreadCount > 0} />
-        <KpiCard label="Hôm nay" value={loading ? "—" : todayCount} icon={<Sparkles size={18} />} tone="bg-success-container text-success" />
-        <KpiCard label="Cần xử lý" value={loading ? "—" : actionCount} icon={<AlertTriangle size={18} />} tone="bg-warning-container text-warning" highlight={!loading && actionCount > 0} />
+        <KpiCard label="Chưa đọc" value={loading ? "—" : unreadCount} iconSrc="/images/icons/notif-unread.png" icon={<BellRing size={18} />} tone="bg-primary-container text-primary" highlight={!loading && unreadCount > 0} />
+        <KpiCard label="Hôm nay" value={loading ? "—" : todayCount} iconSrc="/images/icons/notif-today.png" icon={<Sparkles size={18} />} tone="bg-success-container text-success" />
+        <KpiCard label="Cần xử lý" value={loading ? "—" : actionCount} iconSrc="/images/icons/notif-action.png" icon={<AlertTriangle size={18} />} tone="bg-warning-container text-warning" highlight={!loading && actionCount > 0} />
       </div>
 
       {/* Toolbar */}
