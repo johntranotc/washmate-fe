@@ -158,7 +158,7 @@ export function VehicleDetailDrawer({ vehicle, stats, onClose, onBook, onEdit })
         {/* Footer actions */}
         <div className="flex flex-col gap-2 border-t border-border p-5">
           <Button size="lg" className="w-full shadow-cta" onClick={() => onBook(vehicle)}>
-            <Droplets size={18} /> Đặt lịch rửa xe
+            Đặt lịch rửa xe
           </Button>
           <Button variant="outline" size="lg" className="w-full" onClick={() => onEdit(vehicle)}>
             <Pencil size={17} /> Chỉnh sửa thông tin

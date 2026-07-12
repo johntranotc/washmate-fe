@@ -84,7 +84,7 @@ export function VehicleCard({ vehicle, stats, onBook, onDetail, onEdit, onToggle
       {/* Actions */}
       <div className="flex items-center gap-2 px-5 py-4">
         <Button size="sm" className="flex-1" onClick={() => onBook(vehicle)}>
-          <Droplets size={16} /> Đặt lịch rửa xe
+          Đặt lịch rửa xe
         </Button>
         <Button variant="outline" size="sm" onClick={() => onDetail(vehicle)}>
           Chi tiết
