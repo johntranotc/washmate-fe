@@ -11,7 +11,6 @@ import { DashboardHero } from "@/components/customer-portal/dashboard-hero";
 import { DashboardStatsGrid } from "@/components/customer-portal/stats-grid";
 import { DashboardOffers } from "@/components/customer-portal/dashboard-offers";
 import { MyVehicles } from "@/components/customer-portal/my-vehicles";
-import { MembershipSummary } from "@/components/customer-portal/membership-summary";
 import { CareTips } from "@/components/customer-portal/care-tips";
 import { RecentHistory } from "@/components/customer-portal/recent-history";
 
@@ -106,7 +105,6 @@ export default function DashboardPage() {
             <CareTips bookings={bookings} vehicles={vehicles} />
           </div>
           <MyVehicles vehicles={vehicles} />
-          <MembershipSummary account={loyalty} tiers={loyaltyTiers} />
           <RecentHistory bookings={bookings} />
         </>
       )}
