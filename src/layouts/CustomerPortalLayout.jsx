@@ -178,7 +178,7 @@ function CustomerHeaderActions() {
         onClick={() => navigate("/khach-hang/thong-bao")}
         title={unread > 0 ? `${unread} thông báo chưa đọc` : "Thông báo"}
         aria-label={unread > 0 ? `Thông báo, ${unread} chưa đọc` : "Thông báo"}
-        className="relative grid h-10 w-10 place-items-center rounded-full border border-border text-muted-foreground transition hover:bg-surface hover:text-foreground"
+        className="relative grid h-10 w-10 place-items-center rounded-full border border-border/70 bg-card/40 text-foreground shadow-card backdrop-blur-md backdrop-saturate-150 transition hover:bg-card/70"
       >
         <Bell size={18} />
         {unread > 0 && (
