@@ -179,7 +179,6 @@ export default function MyBookingsPage() {
   return (
     <PageContainer variant="customer" className="pb-32">
       <PageHeader
-        eyebrow="Lịch đặt của tôi"
         title="Lịch đặt rửa xe"
         description="Theo dõi trạng thái các lịch đặt và tiếp tục thanh toán khi gara đã xác nhận."
         actions={

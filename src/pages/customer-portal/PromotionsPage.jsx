@@ -128,7 +128,6 @@ export default function PromotionsPage() {
   return (
     <PageContainer variant="customer" className="pb-32">
       <PageHeader
-        eyebrow="Ưu đãi WashMate"
         title="Khám phá ưu đãi phù hợp"
         description="Xem các chương trình ưu đãi hiện có và những ưu đãi bạn đủ điều kiện sử dụng."
       />

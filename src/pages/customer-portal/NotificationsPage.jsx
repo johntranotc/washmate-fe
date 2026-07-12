@@ -150,7 +150,6 @@ export default function NotificationsPage() {
   return (
     <PageContainer variant="customer" className="pb-32">
       <PageHeader
-        eyebrow="Trung tâm cập nhật"
         title="Thông báo"
         description="Theo dõi các cập nhật về lịch đặt, thanh toán, điểm thưởng và ưu đãi của bạn."
         actions={

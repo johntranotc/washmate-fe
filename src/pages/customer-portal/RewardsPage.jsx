@@ -58,7 +58,6 @@ export default function RewardsPage() {
     <PageContainer variant="customer">
       <Link to="/khach-hang/diem-thanh-vien" className="inline-flex items-center gap-2 text-xs font-bold text-primary"><ArrowLeft size={14} /> Quay lại điểm thành viên</Link>
       <PageHeader
-        eyebrow="Kho quà thành viên"
         title="Đổi điểm lấy quà"
         description="Điểm chỉ thay đổi sau khi hệ thống xác nhận đổi thưởng thành công."
         actions={<div className="rounded-2xl bg-primary px-5 py-3 text-white"><p className="text-xs text-primary-container">Điểm khả dụng</p><b className="text-2xl">{points.toLocaleString("vi-VN")}</b></div>}

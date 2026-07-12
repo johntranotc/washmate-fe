@@ -219,7 +219,7 @@ export default function MembershipPointsPage() {
   if (loading) {
     return (
       <PageContainer variant="customer" className="pb-32">
-        <PageHeader eyebrow="Chương trình thành viên" title="Điểm thưởng của tôi" description="Theo dõi hạng thành viên, điểm tích lũy và các quyền lợi dành cho bạn." />
+        <PageHeader title="Điểm thưởng của tôi" description="Theo dõi hạng thành viên, điểm tích lũy và các quyền lợi dành cho bạn." />
         <Skeleton className="h-40 rounded-3xl" />
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}
@@ -232,7 +232,7 @@ export default function MembershipPointsPage() {
   if (error) {
     return (
       <PageContainer variant="customer" className="pb-32">
-        <PageHeader eyebrow="Chương trình thành viên" title="Điểm thưởng của tôi" description="Theo dõi hạng thành viên, điểm tích lũy và các quyền lợi dành cho bạn." />
+        <PageHeader title="Điểm thưởng của tôi" description="Theo dõi hạng thành viên, điểm tích lũy và các quyền lợi dành cho bạn." />
         <div className="rounded-2xl border border-critical/25 bg-critical-container p-10 text-center">
           <span className="mx-auto grid size-12 place-items-center rounded-full bg-critical/10 text-critical"><AlertTriangle size={22} /></span>
           <h2 className="mt-3 text-lg font-extrabold text-critical">Không thể tải dữ liệu điểm thành viên</h2>
@@ -246,7 +246,7 @@ export default function MembershipPointsPage() {
   if (!account) {
     return (
       <PageContainer variant="customer" className="pb-32">
-        <PageHeader eyebrow="Chương trình thành viên" title="Điểm thưởng của tôi" description="Theo dõi hạng thành viên, điểm tích lũy và các quyền lợi dành cho bạn." />
+        <PageHeader title="Điểm thưởng của tôi" description="Theo dõi hạng thành viên, điểm tích lũy và các quyền lợi dành cho bạn." />
         <EmptyState
           icon={Trophy}
           title="Bạn chưa tham gia chương trình thành viên"
@@ -261,7 +261,6 @@ export default function MembershipPointsPage() {
   return (
     <PageContainer variant="customer" className="pb-32">
       <PageHeader
-        eyebrow="Chương trình thành viên"
         title="Điểm thưởng của tôi"
         description="Theo dõi hạng thành viên, điểm tích lũy và các quyền lợi dành cho bạn."
         actions={
