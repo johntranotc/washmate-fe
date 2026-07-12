@@ -216,14 +216,7 @@ function GarageCard({ garage, selected, onSelect, onHover, onLeave }) {
     >
       {/* Header row */}
       <div className="flex items-start gap-3">
-        <span
-          className={cn(
-            "grid size-11 shrink-0 place-items-center rounded-2xl",
-            selected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary",
-          )}
-        >
-          <MapPin size={20} />
-        </span>
+        <GarageIcon selected={selected} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate font-extrabold text-foreground">{garage.name}</h3>
@@ -483,5 +476,30 @@ function MapPreviewPanel({
         )}
       </div>
     </div>
+  );
+}
+
+// Icon thẻ gara: dùng ảnh /images/icons/garage.png; thiếu file thì về icon MapPin cũ.
+function GarageIcon({ selected }) {
+  const [ok, setOk] = useState(true);
+  if (ok) {
+    return (
+      <img
+        src="/images/icons/garage.png"
+        alt=""
+        className="size-11 shrink-0 rounded-2xl object-contain"
+        onError={() => setOk(false)}
+      />
+    );
+  }
+  return (
+    <span
+      className={cn(
+        "grid size-11 shrink-0 place-items-center rounded-2xl",
+        selected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary",
+      )}
+    >
+      <MapPin size={20} />
+    </span>
   );
 }
