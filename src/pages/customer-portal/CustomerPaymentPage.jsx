@@ -296,7 +296,6 @@ export default function CustomerPaymentPage() {
   return (
     <PageContainer variant="customer">
       <PageHeader
-        eyebrow="Thanh toán an toàn"
         title="Thanh toán lịch đặt"
         description="Gara đã xác nhận lịch. Thanh toán để giữ khung giờ của bạn."
       />

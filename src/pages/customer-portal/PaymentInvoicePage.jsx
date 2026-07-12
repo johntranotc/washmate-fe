@@ -161,7 +161,6 @@ export default function PaymentInvoicePage() {
   return (
     <PageContainer variant="customer" className="pb-32">
       <PageHeader
-        eyebrow="Tài chính của tôi"
         title="Thanh toán & Hóa đơn"
         description="Theo dõi các khoản cần thanh toán, hóa đơn đã phát hành và lịch sử giao dịch của bạn."
       />

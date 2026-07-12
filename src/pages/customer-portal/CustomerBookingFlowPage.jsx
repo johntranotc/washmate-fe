@@ -406,7 +406,6 @@ export default function CustomerBookingFlowPage() {
   return (
     <PageContainer variant="customer" className="pb-32">
       <PageHeader
-        eyebrow="Đặt lịch thông minh"
         title="Đặt lịch rửa xe"
         description="Chọn gara, dịch vụ, xe và khung giờ phù hợp. Gara sẽ xác nhận lịch hẹn trong thời gian sớm nhất."
         actions={

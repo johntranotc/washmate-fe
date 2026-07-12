@@ -64,7 +64,6 @@ export default function ChangePasswordPage() {
   return (
     <PageContainer variant="narrow" className="animate-in fade-in-0 duration-300">
       <PageHeader
-        eyebrow="Bảo mật tài khoản"
         title="Đổi mật khẩu"
         description="Để bảo vệ an toàn cho tài khoản WashMate, vui lòng đặt mật khẩu mạnh với ít nhất 8 ký tự bao gồm chữ và số."
       />

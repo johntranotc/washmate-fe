@@ -342,7 +342,6 @@ export default function AccountPage() {
   return (
     <PageContainer variant="customer">
       <PageHeader
-        eyebrow="Tài khoản"
         title="Tài khoản của tôi"
         description="Quản lý thông tin cá nhân và phiên đăng nhập của bạn."
       />
