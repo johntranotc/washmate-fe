@@ -320,7 +320,7 @@ export default function MembershipPointsPage() {
           <div className="lg:text-right">
             <p className="text-xs font-semibold text-muted-foreground">Điểm khả dụng</p>
             <p className={`inline-flex items-center gap-2 text-4xl font-extrabold ${theme.icon}`}>
-              <Sparkles size={26} /> {fmt(available)}
+              <IconSlot src="/images/loyalty/icons/point-available.png" size={30} fallback={<Sparkles size={26} />} /> {fmt(available)}
             </p>
           </div>
         </div>
