@@ -523,40 +523,41 @@
   position: absolute;
   top: 62%;
   left: 74%; /* bắt đầu ở đuôi xe */
-  height: clamp(80px, 17vh, 240px);
-  width: clamp(760px, 120vw, 2200px);
+  height: clamp(140px, 30vh, 440px);
+  width: 220vw; /* trải dài full màn hình phía sau xe */
   transform: translateY(-50%) scaleX(0.2);
   transform-origin: left center;
   border-radius: 9999px;
-  /* Khói xám đen đậm: đặc ở sát xe (trái) → nhạt dần về sau (phải) */
+  /* Khói đen đậm: đặc ở sát xe (trái) → nhạt dần về cuối (phải) */
   background: linear-gradient(90deg,
-    rgba(34, 38, 46, 0.92) 0%,
-    rgba(48, 53, 62, 0.72) 26%,
-    rgba(66, 72, 84, 0.5) 52%,
-    rgba(88, 95, 108, 0.28) 78%,
+    rgba(10, 12, 16, 0.96) 0%,
+    rgba(20, 23, 29, 0.9) 18%,
+    rgba(34, 38, 46, 0.75) 40%,
+    rgba(54, 60, 70, 0.5) 66%,
+    rgba(78, 85, 98, 0.24) 88%,
     transparent 100%);
-  filter: blur(16px);
+  filter: blur(20px);
   opacity: 0;
-  animation: wm-login-smoke-trail 1500ms ease-out 120ms both;
+  animation: wm-login-smoke-trail 1600ms ease-out 90ms both;
 }
 .wm-login-smoke-puff {
   position: absolute;
   top: 60%;
   left: 75%;
-  height: clamp(70px, 12vw, 190px);
-  width: clamp(70px, 12vw, 190px);
+  height: clamp(110px, 18vw, 300px);
+  width: clamp(110px, 18vw, 300px);
   transform: translate(-50%, -50%) scale(0.2);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, rgba(44, 49, 58, 0.78) 0%, rgba(70, 76, 88, 0.4) 46%, transparent 72%);
-  filter: blur(12px);
+  background: radial-gradient(circle at 50% 50%, rgba(14, 16, 20, 0.9) 0%, rgba(40, 44, 52, 0.5) 46%, transparent 72%);
+  filter: blur(13px);
   opacity: 0;
   animation: wm-login-smoke-puff 1150ms ease-out var(--d, 0ms) both;
 }
 @keyframes wm-login-smoke-trail {
-  0% { opacity: 0; transform: translateY(-50%) scaleX(0.2); }
-  14% { opacity: 0.78; }
-  66% { opacity: 0.62; }
-  100% { opacity: 0; transform: translateY(-50%) scaleX(2.3) translateX(12%); }
+  0% { opacity: 0; transform: translateY(-50%) scaleX(0.15); }
+  12% { opacity: 0.95; }
+  75% { opacity: 0.9; transform: translateY(-50%) scaleX(1); }
+  100% { opacity: 0; transform: translateY(-50%) scaleX(1.15) translateX(4%); }
 }
 @keyframes wm-login-smoke-puff {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
