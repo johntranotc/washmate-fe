@@ -364,32 +364,10 @@
 
 /* ===== Nền sidebar khách hàng: navy chuyển sắc + 2 đốm sáng brand mờ (có chiều sâu) ===== */
 .wm-customer-sidebar {
-  /* Kính trắng mờ: nền sáng trong, làm mờ nội dung phía sau */
   background:
-    radial-gradient(120% 46% at 16% 0%, color-mix(in srgb, var(--primary) 10%, transparent), transparent 64%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.66));
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
-  backdrop-filter: blur(22px) saturate(160%);
-  border-right: 1px solid rgba(16, 32, 56, 0.08);
-}
-@media (prefers-reduced-transparency: reduce) {
-  .wm-customer-sidebar {
-    background: #f4f7fb;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-}
-/* Nền sáng → lật chữ trắng sang tối để đọc rõ (phạm vi chỉ trong sidebar khách) */
-.wm-customer-sidebar .text-white { color: var(--foreground); }
-.wm-customer-sidebar .text-white\/70,
-.wm-customer-sidebar .text-white\/85,
-.wm-customer-sidebar .text-primary-container { color: var(--muted-foreground); }
-.wm-customer-sidebar .border-ink-soft { border-color: rgba(16, 32, 56, 0.1); }
-/* Card kính trong sidebar: bản sáng, viền tối nhẹ */
-.wm-customer-sidebar .wm-sidebar-glass {
-  background: rgba(255, 255, 255, 0.55);
-  border-color: rgba(16, 32, 56, 0.1);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    radial-gradient(120% 46% at 16% 0%, color-mix(in srgb, var(--primary) 40%, transparent), transparent 64%),
+    radial-gradient(100% 38% at 94% 100%, color-mix(in srgb, var(--accent-cyan) 30%, transparent), transparent 62%),
+    linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 100%);
 }
 
 /* ===== Ô kính (frosted) cho card trong sidebar tối — dùng cùng quầng sáng phía sau ===== */
