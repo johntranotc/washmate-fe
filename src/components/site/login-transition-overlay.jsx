@@ -35,7 +35,6 @@ export function LoginTransitionOverlay({ active, onComplete }) {
 
   return (
     <div className="wm-login-overlay" role="presentation" aria-hidden="true">
-      <span className="wm-login-streak" />
       <span className="wm-login-dust" />
       {/* rig mang animation chạy ngang; xe + 2 vòng nan hoa xoay bám theo */}
       <div className="wm-login-car-rig" onAnimationEnd={finish}>

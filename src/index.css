@@ -526,16 +526,17 @@
   position: absolute;
   top: 62%;
   left: 74%; /* bắt đầu ở đuôi xe */
-  height: clamp(60px, 13vh, 160px);
-  width: clamp(240px, 46vw, 720px);
+  height: clamp(60px, 13vh, 170px);
+  width: clamp(420px, 78vw, 1300px);
   transform: translateY(-50%) scaleX(0.2);
   transform-origin: left center;
   border-radius: 9999px;
   /* Đậm ở sát xe (trái) → nhạt dần về sau (phải) */
   background: linear-gradient(90deg,
     rgba(190, 199, 214, 0.6) 0%,
-    rgba(168, 179, 196, 0.4) 34%,
-    rgba(150, 162, 182, 0.18) 68%,
+    rgba(172, 183, 200, 0.42) 30%,
+    rgba(156, 168, 186, 0.24) 58%,
+    rgba(150, 162, 182, 0.1) 82%,
     transparent 100%);
   filter: blur(16px);
   opacity: 0;
@@ -556,9 +557,9 @@
 }
 @keyframes wm-login-smoke-trail {
   0% { opacity: 0; transform: translateY(-50%) scaleX(0.2); }
-  16% { opacity: 0.75; }
-  62% { opacity: 0.6; }
-  100% { opacity: 0; transform: translateY(-50%) scaleX(1.5) translateX(7%); }
+  14% { opacity: 0.78; }
+  66% { opacity: 0.62; }
+  100% { opacity: 0; transform: translateY(-50%) scaleX(1.9) translateX(10%); }
 }
 @keyframes wm-login-smoke-puff {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
