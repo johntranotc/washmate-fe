@@ -92,7 +92,7 @@ export default function RegisterPage() {
             <Field id="password" label="Mật khẩu" type="password" placeholder="Tối thiểu 8 ký tự" icon="lock" autoComplete="new-password" minLength={8} value={form.password} onChange={update("password")} />
             <Field id="confirmPassword" label="Xác nhận mật khẩu" type="password" placeholder="Nhập lại mật khẩu" icon="lock" autoComplete="new-password" value={form.confirmPassword} onChange={update("confirmPassword")} />
             <div className="flex items-start gap-2.5">
-              <Checkbox id="terms" className="mt-0.5" checked={agreed} onCheckedChange={(checked) => setAgreed(Boolean(checked))} />
+              <Checkbox id="terms" className="mt-0.5 size-5 border-2 border-muted-foreground/60 bg-card" checked={agreed} onCheckedChange={(checked) => setAgreed(Boolean(checked))} />
               {/* label thường (không flex) để chữ + link chảy liền mạch, không vỡ cột */}
               <label htmlFor="terms" className="text-sm leading-relaxed text-muted-foreground select-none">
                 Tôi đồng ý với <a href="#" className="font-semibold text-primary">Điều khoản dịch vụ</a> và <a href="#" className="font-semibold text-primary">Chính sách bảo mật</a>.
