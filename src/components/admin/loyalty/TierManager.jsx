@@ -61,8 +61,11 @@ export function TierManager({ garages, onChanged }) {
   async function handleSave() {
     if (!form.tierName.trim()) { toast.error("Tên hạng là bắt buộc."); return; }
     const min = Number(form.minPoints);
+    const maintain = Number(form.maintainPoints) || 0;
     const disc = Number(form.discountPercentage);
     if (!Number.isFinite(min) || min < 0) { toast.error("Điểm tối thiểu phải là số ≥ 0."); return; }
+    if (!Number.isFinite(maintain) || maintain < 0) { toast.error("Điểm giữ hạng phải là số ≥ 0."); return; }
+    if (maintain > min) { toast.error("Điểm giữ hạng không được lớn hơn điểm tối thiểu.", { description: "Hạng gốc (điểm tối thiểu 0) thì điểm giữ hạng để 0." }); return; }
     if (!Number.isFinite(disc) || disc < 0 || disc > 100) { toast.error("Mức giảm phải từ 0–100%."); return; }
     setSaving(true);
     try {
@@ -73,7 +76,7 @@ export function TierManager({ garages, onChanged }) {
         discountPercentage: disc,
       };
       if (editing === "new") await loyaltyApi.createTier(garageId, payload);
-      else await loyaltyApi.updateTier(editing.tierId, payload);
+      else await loyaltyApi.updateTier(garageId, editing.tierId, payload);
       toast.success("Đã lưu hạng thành viên.");
       setEditing(null);
       await loadTiers(garageId);
@@ -95,7 +98,7 @@ export function TierManager({ garages, onChanged }) {
     if (!ok) return;
     setBusyId(t.tierId);
     try {
-      await loyaltyApi.deleteTier(t.tierId);
+      await loyaltyApi.deleteTier(garageId, t.tierId);
       toast.success("Đã xóa hạng.");
       await loadTiers(garageId);
       onChanged?.();
@@ -146,6 +149,7 @@ export function TierManager({ garages, onChanged }) {
             <div>
               <label className="text-xs font-bold text-foreground">Điểm giữ hạng</label>
               <input type="number" min="0" value={form.maintainPoints} onChange={(e) => setForm({ ...form, maintainPoints: e.target.value })} placeholder="VD: 0" className={inputCls} />
+              <p className="mt-1 text-xs text-muted-foreground">Phải ≤ điểm tối thiểu. Hạng gốc để 0.</p>
             </div>
             <div>
               <label className="text-xs font-bold text-foreground">Mức giảm (%) <span className="text-critical">*</span></label>

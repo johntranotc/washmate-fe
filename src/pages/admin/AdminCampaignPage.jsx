@@ -46,7 +46,7 @@ function deriveCampaign(promo) {
 
   let key = "RUNNING";
   if (["INACTIVE", "PAUSED", "SUSPENDED", "DISABLED"].includes(raw)) key = "PAUSED";
-  else if (["EXPIRED", "ENDED"].includes(raw) || (end && end < now)) key = "ENDED";
+  else if (["EXPIRED", "ENDED", "DELETED"].includes(raw) || (end && end < now)) key = "ENDED";
   else if (start && start > now) key = "UPCOMING";
 
   const attention = [];
@@ -120,9 +120,9 @@ export default function AdminCampaignPage() {
       setLoading(false);
       return;
     }
-    // Promotion của TẤT CẢ gara — endpoint thật theo từng gara, tải song song
+    // Promotion của TẤT CẢ gara — endpoint admin theo từng gara (đã loại mã đã xóa), tải song song
     const results = await Promise.allSettled(
-      garageList.map((g) => promotionApi.getAllPromotionsByGarage(g.id ?? g.garageId)),
+      garageList.map((g) => promotionApi.adminGetAll(g.id ?? g.garageId)),
     );
     const all = [];
     results.forEach((r, i) => {

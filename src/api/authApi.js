@@ -79,11 +79,20 @@ export const authApi = {
   changePassword: (payload) => axiosClient.put("/auth/password/change", payload),
 
   // API làm mới session token khi hết hạn
-  refresh: () => axiosClient.post("/auth/refresh"),
+  // BE yêu cầu body { refreshToken } (@NotBlank) cho refresh/logout.
+  refresh: () => {
+    const refreshToken = sessionStorage.getItem("refreshToken") || localStorage.getItem("refreshToken");
+    return axiosClient.post("/auth/refresh", { refreshToken });
+  },
 
-  // Luồng đăng xuất dọn dẹp sạch token cũ tránh lưu đè tên tài khoản cũ
-  logout: () => {
-    AUTH_KEYS.forEach(removeAuthValue);
-    return axiosClient.post("/auth/logout");
+  // Luồng đăng xuất: thu hồi refresh token trên máy chủ TRƯỚC rồi mới dọn storage
+  // (dọn trước sẽ mất token, máy chủ không thu hồi được).
+  logout: async () => {
+    const refreshToken = sessionStorage.getItem("refreshToken") || localStorage.getItem("refreshToken");
+    try {
+      if (refreshToken) await axiosClient.post("/auth/logout", { refreshToken });
+    } finally {
+      AUTH_KEYS.forEach(removeAuthValue);
+    }
   },
 };

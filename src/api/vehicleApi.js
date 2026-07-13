@@ -7,7 +7,6 @@ import axiosClient from "./axiosClient";
  *   GET    /api/v1/vehicles               (ADMIN/STAFF — toàn bộ xe)
  *   GET    /api/v1/vehicles/my-vehicles   (CUSTOMER — xe của tôi)
  *   POST   /api/v1/vehicles/my-vehicles   (CUSTOMER — tạo xe, user lấy từ token)
- *   GET    /api/v1/vehicles/{id}
  *   PUT    /api/v1/vehicles/{id}
  *   DELETE /api/v1/vehicles/{id}
  */
@@ -17,8 +16,6 @@ export const vehicleApi = {
 
   // Xe của khách hàng đang đăng nhập — trả nguyên dữ liệu BE, không chèn model giả
   getMyVehicles: () => axiosClient.get("/v1/vehicles/my-vehicles"),
-
-  getVehicleById: (id) => axiosClient.get(`/v1/vehicles/${id}`),
 
   // Khách tạo xe: dùng endpoint /my-vehicles — BE tự gắn user từ token,
   // KHÔNG gửi userId chế từ FE.

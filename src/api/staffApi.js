@@ -54,6 +54,4 @@ export const staffApi = {
   completeBooking: (bookingId) => axiosClient.post(`/bookings/${bookingId}/complete`),
   // POST /api/bookings/{id}/no-show
   markNoShow: (bookingId) => axiosClient.post(`/bookings/${bookingId}/no-show`),
-  // POST /api/bookings/{id}/cancel
-  cancelBooking: (bookingId) => axiosClient.post(`/bookings/${bookingId}/cancel`),
 };
