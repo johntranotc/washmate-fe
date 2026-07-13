@@ -1,8 +1,8 @@
 import axiosClient from "./axiosClient";
 
 export const servicePackageApi = {
-  getAll: (garageId) =>
-    garageId ? axiosClient.get(`/v1/services/garage/${garageId}`) : axiosClient.get(`/v1/services`),
+  // BE chỉ có GET /v1/services/garage/{garageId} — không có endpoint liệt kê toàn hệ thống.
+  getAll: (garageId) => axiosClient.get(`/v1/services/garage/${garageId}`),
   getById: (id) => axiosClient.get(`/v1/services/${id}`),
   create: (payload) => axiosClient.post("/v1/services", payload),
   update: (id, payload) =>

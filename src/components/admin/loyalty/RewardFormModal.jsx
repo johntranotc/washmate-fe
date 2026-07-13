@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { rewardApi } from "@/api/rewardApi";
-import { friendlyName, todayISO } from "@/lib/format";
+import { friendlyName } from "@/lib/format";
 
 const EMPTY_FORM = {
   name: "",
@@ -24,16 +24,14 @@ const EMPTY_FORM = {
   discountValue: "",
   maxDiscount: "",
   minOrderValue: "0",
-  usageLimit: "",
-  startDate: "",
-  endDate: "",
+  validDays: "30",
 };
 
 /**
  * Form Thêm/Chỉnh sửa ưu đãi đổi điểm — API thật:
  *   POST /v1/admin/promotion-rewards
  *     { garageId, name, description, pointsRequired, stock, discountType, discountValue,
- *       maxDiscount?, minOrderValue, usageLimit?, startDate, endDate }
+ *       maxDiscount?, minOrderValue, validDays }
  *   PUT  /v1/admin/promotion-rewards/{id}
  *     { name, description, pointsRequired, stock, status }
  */
@@ -59,15 +57,9 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
         status: reward.status === "OUT_OF_STOCK" ? "ACTIVE" : reward.status || "ACTIVE",
       });
     } else {
-      const start = todayISO();
-      const end = new Date(`${start}T00:00:00`);
-      end.setDate(end.getDate() + 30);
-      const endISO = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
       setForm({
         ...EMPTY_FORM,
         garageId: String(garages[0]?.id ?? garages[0]?.garageId ?? ""),
-        startDate: start,
-        endDate: endISO,
       });
     }
   }, [open, reward, garages]);
@@ -95,10 +87,9 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
       if (form.minOrderValue === "" || !Number.isFinite(minOrder) || minOrder < 0) {
         errs.minOrderValue = "Đơn tối thiểu phải là số ≥ 0.";
       }
-      if (!form.startDate) errs.startDate = "Vui lòng chọn ngày bắt đầu.";
-      if (!form.endDate) errs.endDate = "Vui lòng chọn ngày kết thúc.";
-      if (form.startDate && form.endDate && form.startDate > form.endDate) {
-        errs.endDate = "Ngày kết thúc phải sau ngày bắt đầu.";
+      const vd = Number(form.validDays);
+      if (form.validDays === "" || !Number.isFinite(vd) || vd < 1) {
+        errs.validDays = "Số ngày hiệu lực phải là số > 0.";
       }
     }
     return errs;
@@ -147,11 +138,8 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
           discountValue: Number(form.discountValue),
           maxDiscount: form.maxDiscount === "" ? null : Number(form.maxDiscount),
           minOrderValue: Number(form.minOrderValue),
-          // "Số lượng" = số lượt phát hành → dùng chung cho cả kho đổi (stock)
-          // và giới hạn lượt dùng của chiến dịch (usageLimit) để thẻ hiển thị khớp.
-          usageLimit: Number(form.stock),
-          startDate: `${form.startDate}T00:00:00Z`,
-          endDate: `${form.endDate}T23:59:59Z`,
+          // Số ngày mã còn hiệu lực sau khi khách đổi điểm (BE dựng endDate = now + validDays).
+          validDays: Number(form.validDays),
         });
         toast.success("Đã tạo ưu đãi mới", { description: form.name.trim() });
       }
@@ -325,27 +313,19 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-foreground">Ngày bắt đầu <span className="text-critical">*</span></label>
-                  <input
-                    type="date"
-                    value={form.startDate}
-                    onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                    className={inputCls(errors.startDate)}
-                  />
-                  {errors.startDate && <p className="mt-1 text-xs text-critical">{errors.startDate}</p>}
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-foreground">Ngày kết thúc <span className="text-critical">*</span></label>
-                  <input
-                    type="date"
-                    value={form.endDate}
-                    onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                    className={inputCls(errors.endDate)}
-                  />
-                  {errors.endDate && <p className="mt-1 text-xs text-critical">{errors.endDate}</p>}
-                </div>
+              <div>
+                <label className="text-xs font-bold text-foreground">Số ngày hiệu lực sau khi đổi <span className="text-critical">*</span></label>
+                <input
+                  type="number"
+                  min="1"
+                  value={form.validDays}
+                  onChange={(e) => setForm({ ...form, validDays: e.target.value })}
+                  placeholder="VD: 30"
+                  className={inputCls(errors.validDays)}
+                />
+                {errors.validDays
+                  ? <p className="mt-1 text-xs text-critical">{errors.validDays}</p>
+                  : <p className="mt-1 text-xs text-muted-foreground">Mã ưu đãi khách đổi sẽ còn dùng được trong số ngày này.</p>}
               </div>
             </>
           )}

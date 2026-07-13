@@ -36,50 +36,20 @@ export function normalizePromotion(item) {
 }
 
 export const promotionApi = {
+  // Ưu đãi khách có thể áp vào booking tại 1 gara — endpoint dành cho CUSTOMER,
+  // trả về các mã khách đã đổi điểm và còn hiệu lực (chưa dùng).
   getAvailablePromotions: async (garageId) => {
     try {
       const res = await axiosClient.get("/v1/promotion/AvailablePromotions", {
         params: { garageId: garageId || 1 },
       });
-      let list = Array.isArray(res) ? res : res?.data || res?.content || [];
-      if (list.length === 0) {
-        try {
-          const resAll = await axiosClient.get("/v1/promotion/manage/all", {
-            params: { garageId: garageId || 1 },
-          });
-          const listAll = Array.isArray(resAll) ? resAll : resAll?.data || resAll?.content || [];
-          list = listAll.filter((p) => !p.status || String(p.status).toUpperCase() === "ACTIVE");
-        } catch (e) {
-          // ignore
-        }
-      }
-      return list.map(normalizePromotion).filter(Boolean);
-    } catch (err) {
-      try {
-        const resOld = await axiosClient.get("/v1/promotion/AvailablePromotions", { params: { garageId: garageId || 1 } });
-        const listOld = Array.isArray(resOld) ? resOld : resOld?.data || [];
-        return listOld.map(normalizePromotion).filter(Boolean);
-      } catch {
-        return [];
-      }
-    }
-  },
-  getAllPromotionsByGarage: async (garageId) => {
-    try {
-      const res = await axiosClient.get("/v1/promotion/manage/all", {
-        params: { garageId: garageId || 1 },
-      });
       const list = Array.isArray(res) ? res : res?.data || res?.content || [];
-      return list.map(normalizePromotion);
+      return list.map(normalizePromotion).filter(Boolean);
     } catch {
       return [];
     }
   },
-  validate: (payload) => axiosClient.post("/v1/promotions/validate", payload),
   getPromotions: (params) => axiosClient.get("/v1/promotion/AvailablePromotions", { params }),
-  getActivePromotions: () =>
-    axiosClient.get("/v1/promotion/AvailablePromotions", { params: { garageId: 1 } }),
-  getAll: (params) => axiosClient.get("/v1/promotion/manage/all", { params }),
 
   // Ưu đãi theo mùa (không cần đổi điểm) — Admin CRUD /v1/admin/promotions
   adminGetAll: async (garageId) => {

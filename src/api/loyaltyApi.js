@@ -1,20 +1,18 @@
 import axiosClient from "./axiosClient";
 
-// Loyalty của KHÁCH dùng nhóm endpoint mới, principal lấy từ token:
+// Loyalty của KHÁCH — BE gom hết về nhóm /api/v1/customer/loyalty (principal lấy từ token):
 //   GET /api/v1/customer/loyalty              -> LoyaltyAccountResponse (1 tài khoản)
 //   GET /api/v1/customer/loyalty/transactions -> List<LoyaltyTransactionResponse>
 //   GET /api/v1/customer/loyalty/summary?garageId -> CustomerLoyaltySummaryResponse (tiến độ hạng do BE tính)
 //   GET /api/v1/customer/loyalty/tiers?garageId   -> List<LoyaltyTierResponse>
 //   GET /api/v1/customer/loyalty/policy?garageId   -> LoyaltyPolicyResponse
 export const loyaltyApi = {
-  // Tài khoản điểm của tôi — dùng /api/loyalty/me (trả DANH SÁCH tài khoản theo từng gara).
-  // KHÔNG dùng /v1/customer/loyalty vì endpoint đó lấy findByUserId (1 kết quả) → khách có
-  // nhiều tài khoản loyalty (nhiều gara) sẽ gây 500. normalizeLoyaltyAccount tự chọn tài khoản chính.
-  getMyLoyalty: () => axiosClient.get("/loyalty/me"),
-  // Lịch sử tích/đổi điểm của tôi — dùng /api/loyalty/transactions (lọc ĐÚNG theo user id,
-  // trả về TOÀN BỘ giao dịch). Endpoint /v1/customer/loyalty/transactions của BE đang lọc
-  // sai (truyền nhầm accountId vào chỗ userId) nên bỏ sót lịch sử.
-  getLoyaltyTransactions: () => axiosClient.get("/loyalty/transactions"),
+  // Tài khoản điểm của tôi. BE đã bỏ /api/loyalty/me — chuyển sang /v1/customer/loyalty
+  // (trả 1 tài khoản). Consumer tự bọc object đơn thành mảng nên vẫn hợp lệ.
+  getMyLoyalty: () => axiosClient.get("/v1/customer/loyalty"),
+  // Lịch sử tích/đổi điểm của tôi. BE đã bỏ /api/loyalty/transactions — endpoint mới
+  // /v1/customer/loyalty/transactions nay dùng đúng loyaltyService.getMyTransactions (lọc theo user).
+  getLoyaltyTransactions: () => axiosClient.get("/v1/customer/loyalty/transactions"),
   // Tổng quan hạng + tiến độ lên/giữ hạng do BE tính sẵn theo gara.
   getSummary: (garageId) =>
     axiosClient.get("/v1/customer/loyalty/summary", { params: { garageId } }),
@@ -31,8 +29,11 @@ export const loyaltyApi = {
   // body: LoyaltyTierRequest { tierName, minPoints, maintainPoints, discountPercentage } (+ garageId query)
   createTier: (garageId, payload) =>
     axiosClient.post("/v1/admin/loyalty-tiers", payload, { params: { garageId } }),
-  updateTier: (id, payload) => axiosClient.put(`/v1/admin/loyalty-tiers/${id}`, payload),
-  deleteTier: (id) => axiosClient.delete(`/v1/admin/loyalty-tiers/${id}`),
+  // BE bắt buộc garageId (query) để xác nhận hạng thuộc đúng chi nhánh — thiếu là lỗi 500.
+  updateTier: (garageId, id, payload) =>
+    axiosClient.put(`/v1/admin/loyalty-tiers/${id}`, payload, { params: { garageId } }),
+  deleteTier: (garageId, id) =>
+    axiosClient.delete(`/v1/admin/loyalty-tiers/${id}`, { params: { garageId } }),
 
   // ---- Admin: chính sách tích điểm (/api/v1/admin/loyalty/policy) ----
   getAdminPolicy: (garageId) =>

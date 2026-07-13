@@ -1,9 +1,11 @@
-import { ArrowLeft, CalendarDays, Car, Droplets, Gift, MapPin, NotebookText } from "lucide-react";
+import { ArrowLeft, CalendarDays, Car, Droplets, Gift, MapPin, NotebookText, XCircle } from "lucide-react";
 import PageContainer from "@/components/shared/PageContainer";
 import PageHeader from "@/components/shared/PageHeader";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
+import { confirmDialog } from "@/components/shared/ConfirmDialog";
 import { bookingApi } from "@/api/bookingApi";
 import { paymentApi } from "@/api/paymentApi";
 import { BookingTimeline } from "@/components/customer/BookingTimeline";
@@ -22,6 +24,7 @@ export default function CustomerBookingDetailPage() {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [cancelling, setCancelling] = useState(false);
 
   const loadDetail = useCallback(async () => {
     setLoading(true);
@@ -50,6 +53,32 @@ export default function CustomerBookingDetailPage() {
   useEffect(() => {
     loadDetail();
   }, [loadDetail]);
+
+  // BE chỉ cho hủy khi PENDING/CONFIRMED và chưa thanh toán (đã thanh toán phải hoàn tiền tại quầy).
+  const canCancel =
+    booking &&
+    ["PENDING", "CONFIRMED"].includes(String(booking.bookingStatus || "").toUpperCase()) &&
+    String(booking.paymentStatus || "").toUpperCase() !== "PAID";
+
+  async function handleCancel() {
+    const ok = await confirmDialog({
+      title: "Hủy lịch đặt này?",
+      description: `Lịch ${booking.code} sẽ bị hủy và khung giờ được trả lại cho gara. Thao tác này không thể hoàn tác.`,
+      confirmLabel: "Hủy lịch",
+      destructive: true,
+    });
+    if (!ok) return;
+    setCancelling(true);
+    try {
+      await bookingApi.cancelBooking(bookingId);
+      toast.success("Đã hủy lịch đặt", { description: booking.code });
+      await loadDetail();
+    } catch (e) {
+      toast.error("Không thể hủy lịch", { description: e?.message || "Vui lòng thử lại." });
+    } finally {
+      setCancelling(false);
+    }
+  }
 
   useEffect(() => {
     function refreshOnFocus() {
@@ -156,6 +185,17 @@ export default function CustomerBookingDetailPage() {
         <Button variant="outline" size="lg" render={<Link to="/khach-hang" />}>Quay về trang khách hàng</Button>
         <Button variant="outline" size="lg" render={<Link to="/khach-hang/lich-dat" />}>Xem lịch đặt</Button>
         <Button size="lg" render={<Link to="/khach-hang/dat-lich-moi" />}>Đặt lịch mới</Button>
+        {canCancel && (
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleCancel}
+            disabled={cancelling}
+            className="text-critical hover:bg-critical-container"
+          >
+            <XCircle size={18} /> {cancelling ? "Đang hủy..." : "Hủy lịch"}
+          </Button>
+        )}
       </div>
     </PageContainer>
   );
