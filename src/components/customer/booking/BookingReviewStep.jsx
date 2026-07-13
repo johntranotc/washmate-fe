@@ -4,31 +4,6 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate, getGarageId } from "@/lib/booking-flow";
 import { promotionApi } from "@/api/promotionApi";
 
-const VIETNAMESE_PROMOTIONS = [
-  {
-    code: "WASH10",
-    title: "Giảm 10% phí dịch vụ",
-    description: "Áp dụng cho mọi dịch vụ rửa xe tại WashMate (tối đa 30.000đ)",
-    discountType: "PERCENT",
-    discountValue: 10,
-    maxDiscount: 30000,
-  },
-  {
-    code: "VIP20K",
-    title: "Giảm trực tiếp 20.000đ",
-    description: "Ưu đãi đặc biệt cho gói Chăm Sóc & Phủ Bóng VIP",
-    discountType: "FIXED",
-    discountValue: 20000,
-  },
-  {
-    code: "BANMOI15K",
-    title: "Bạn mới giảm 15.000đ",
-    description: "Khuyến mãi chào mừng khách hàng lần đầu đặt lịch",
-    discountType: "FIXED",
-    discountValue: 15000,
-  },
-];
-
 export function BookingReviewStep({
   selection,
   note,
