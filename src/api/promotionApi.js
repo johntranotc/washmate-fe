@@ -80,7 +80,23 @@ export const promotionApi = {
   getActivePromotions: () =>
     axiosClient.get("/v1/promotion/AvailablePromotions", { params: { garageId: 1 } }),
   getAll: (params) => axiosClient.get("/v1/promotion/manage/all", { params }),
-  create: (payload) => axiosClient.post("/v1/promotions", payload),
-  update: (id, payload) => axiosClient.put(`/v1/promotions/${id}`, payload),
+
+  // Ưu đãi theo mùa (không cần đổi điểm) — Admin CRUD /v1/admin/promotions
+  adminGetAll: async (garageId) => {
+    try {
+      const res = await axiosClient.get("/v1/admin/promotions", {
+        params: { garageId: garageId || undefined, size: 200 },
+      });
+      const list = Array.isArray(res)
+        ? res
+        : res?.content || res?.data?.content || res?.data || [];
+      return list.map(normalizePromotion).filter(Boolean);
+    } catch {
+      return [];
+    }
+  },
+  adminCreate: (payload) => axiosClient.post("/v1/admin/promotions", payload),
+  adminUpdate: (id, payload) => axiosClient.put(`/v1/admin/promotions/${id}`, payload),
+  adminDelete: (id) => axiosClient.delete(`/v1/admin/promotions/${id}`),
 };
 

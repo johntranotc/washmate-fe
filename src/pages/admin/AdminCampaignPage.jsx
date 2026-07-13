@@ -2,18 +2,21 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Megaphone, PlayCircle, CalendarClock, PauseCircle, Flag, Ticket, Search,
-  RefreshCw, AlertTriangle, Plus, ChevronDown,
+  RefreshCw, AlertTriangle, Plus, ChevronDown, Pencil, Trash2, CalendarHeart, Gift,
 } from "lucide-react";
 import PageContainer from "@/components/shared/PageContainer";
 import PageHeader from "@/components/shared/PageHeader";
 import Pagination from "../../components/common/Pagination";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/components/ui/toast";
+import { confirmDialog } from "@/components/shared/ConfirmDialog";
 import { garageApi } from "../../api/garageApi";
 import { promotionApi } from "../../api/promotionApi";
 import { formatDate, formatMoney, formatNumber, friendlyName } from "../../lib/format";
 import { cn } from "@/lib/utils";
 import { RewardFormModal } from "../../components/admin/loyalty/RewardFormModal";
+import { SeasonalPromotionFormModal } from "../../components/admin/loyalty/SeasonalPromotionFormModal";
 
 const PAGE_SIZE = 9;
 
@@ -75,9 +78,10 @@ function CampaignsSkeleton() {
 
 /**
  * Trang Chiến dịch (Admin) — dữ liệu thật từ GET /v1/promotion/manage/all
- * (tải song song mọi gara). BE hiện CHƯA có API tạo/sửa/tạm dừng/kết thúc
- * chiến dịch và không có trạng thái Nháp → các action đó disabled/toast,
- * không fake; trạng thái vận hành suy từ status + ngày hiệu lực thật.
+ * (tải song song mọi gara). Hai loại ưu đãi:
+ *   1. Ưu đãi theo mùa (không cần đổi điểm) — CRUD qua /v1/admin/promotions.
+ *   2. Ưu đãi đổi điểm — tạo qua /v1/admin/promotion-rewards (RewardFormModal).
+ * Trạng thái vận hành suy từ status + ngày hiệu lực thật.
  */
 export default function AdminCampaignPage() {
   const [garages, setGarages] = useState([]);
@@ -96,7 +100,10 @@ export default function AdminCampaignPage() {
   const [page, setPage] = useState(1);
 
   const [expandedId, setExpandedId] = useState(null);
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreateReward, setShowCreateReward] = useState(false);
+  const [showSeasonal, setShowSeasonal] = useState(false);
+  const [editingPromo, setEditingPromo] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -208,6 +215,29 @@ export default function AdminCampaignPage() {
     setFromDate(""); setToDate(""); setTab("ALL");
   };
 
+  const openCreateSeasonal = () => { setEditingPromo(null); setShowSeasonal(true); };
+  const openEditSeasonal = (promo) => { setEditingPromo(promo); setShowSeasonal(true); };
+
+  const handleDeletePromo = async (promo) => {
+    const ok = await confirmDialog({
+      title: `Xóa ưu đãi "${promo.code || `#${promo.id}`}"?`,
+      description: "Ưu đãi sẽ ngừng áp dụng cho khách. Thao tác này không thể hoàn tác.",
+      confirmLabel: "Xóa",
+      destructive: true,
+    });
+    if (!ok) return;
+    setDeletingId(promo.id);
+    try {
+      await promotionApi.adminDelete(promo.promotionId ?? promo.id);
+      toast.success("Đã xóa ưu đãi", { description: promo.code || `#${promo.id}` });
+      await load();
+    } catch (err) {
+      toast.error("Không thể xóa ưu đãi", { description: err?.message || "Vui lòng thử lại." });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const updatedLabel = lastUpdated
     ? lastUpdated.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
     : null;
@@ -217,7 +247,7 @@ export default function AdminCampaignPage() {
       <PageHeader
         eyebrow="Quản trị hệ thống"
         title="Chiến dịch"
-        description="Quản lý chương trình khuyến mãi, mã ưu đãi và điều kiện áp dụng theo chi nhánh."
+        description="Quản lý ưu đãi theo mùa và ưu đãi đổi điểm, mã áp dụng và điều kiện theo chi nhánh."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <select
@@ -236,8 +266,11 @@ export default function AdminCampaignPage() {
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={loading ? "animate-spin" : ""} /> Tải lại
             </Button>
-            <Button size="sm" onClick={() => setShowCreate(true)}>
-              <Plus /> Tạo chiến dịch
+            <Button variant="outline" size="sm" onClick={() => setShowCreateReward(true)}>
+              <Gift /> Ưu đãi đổi điểm
+            </Button>
+            <Button size="sm" onClick={openCreateSeasonal}>
+              <CalendarHeart /> Ưu đãi theo mùa
             </Button>
             {updatedLabel && (
               <span className="text-xs font-medium text-muted-foreground">Cập nhật lúc {updatedLabel}</span>
@@ -370,8 +403,8 @@ export default function AdminCampaignPage() {
                       Xóa bộ lọc
                     </Button>
                   ) : (
-                    <Button size="sm" className="mt-4" onClick={() => setShowCreate(true)}>
-                      <Plus /> Tạo chiến dịch
+                    <Button size="sm" className="mt-4" onClick={openCreateSeasonal}>
+                      <Plus /> Tạo ưu đãi theo mùa
                     </Button>
                   )}
                 </div>
@@ -451,8 +484,23 @@ export default function AdminCampaignPage() {
                                 <p className="mt-2 text-xs font-bold text-warning">{c.attention[0]}</p>
                               )}
 
+                              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+                                <Button size="sm" variant="outline" onClick={() => openEditSeasonal(c)}>
+                                  <Pencil size={14} /> Chỉnh sửa
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-critical hover:bg-critical-container"
+                                  onClick={() => handleDeletePromo(c)}
+                                  disabled={deletingId === c.id}
+                                >
+                                  <Trash2 size={14} /> {deletingId === c.id ? "Đang xóa..." : "Xóa"}
+                                </Button>
+                              </div>
+
                               <p className="mt-3 border-t border-border pt-2 text-xs text-muted-foreground">
-                                Tên hiển thị, điểm cần đổi và số lượng phát hành được quản lý tại{" "}
+                                Ưu đãi <b className="text-foreground">đổi điểm</b> (tên hiển thị, điểm cần đổi, số lượng phát hành) được quản lý tại{" "}
                                 <Link to="/quan-tri/loyalty" className="font-semibold text-primary hover:underline">
                                   Tích điểm &amp; Thành viên → Ưu đãi đổi điểm
                                 </Link>
@@ -505,11 +553,19 @@ export default function AdminCampaignPage() {
       <RewardFormModal
         reward={null}
         garages={garages}
-        open={showCreate}
-        onOpenChange={setShowCreate}
+        open={showCreateReward}
+        onOpenChange={setShowCreateReward}
         onDone={load}
         createTitle="Tạo ưu đãi đổi điểm"
         createSubtitle="Khách dùng điểm khả dụng để đổi lấy ưu đãi này. Đặt số điểm cần đổi và số lượng phát hành."
+      />
+
+      <SeasonalPromotionFormModal
+        promotion={editingPromo}
+        garages={garages}
+        open={showSeasonal}
+        onOpenChange={(next) => { setShowSeasonal(next); if (!next) setEditingPromo(null); }}
+        onDone={load}
       />
     </PageContainer>
   );
