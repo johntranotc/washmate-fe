@@ -1,12 +1,22 @@
-import { ArrowLeft, CalendarDays, Car, Droplets, Gift, MapPin, NotebookText, XCircle } from "lucide-react";
+import { ArrowLeft, CalendarClock, CalendarDays, Car, Droplets, Gift, MapPin, NotebookText, XCircle } from "lucide-react";
 import PageContainer from "@/components/shared/PageContainer";
 import PageHeader from "@/components/shared/PageHeader";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { confirmDialog } from "@/components/shared/ConfirmDialog";
 import { bookingApi } from "@/api/bookingApi";
+import { bookingSlotApi } from "@/api/bookingSlotApi";
 import { paymentApi } from "@/api/paymentApi";
 import { BookingTimeline } from "@/components/customer/BookingTimeline";
 import { PaymentStatusCard } from "@/components/customer/PaymentStatusCard";
@@ -25,6 +35,7 @@ export default function CustomerBookingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  const [showReschedule, setShowReschedule] = useState(false);
 
   const loadDetail = useCallback(async () => {
     setLoading(true);
@@ -54,11 +65,13 @@ export default function CustomerBookingDetailPage() {
     loadDetail();
   }, [loadDetail]);
 
-  // BE chỉ cho hủy khi PENDING/CONFIRMED và chưa thanh toán (đã thanh toán phải hoàn tiền tại quầy).
+  // BE chỉ cho hủy/đổi lịch khi PENDING/CONFIRMED và chưa thanh toán (đã thanh toán phải hoàn tiền tại quầy).
   const canCancel =
     booking &&
     ["PENDING", "CONFIRMED"].includes(String(booking.bookingStatus || "").toUpperCase()) &&
     String(booking.paymentStatus || "").toUpperCase() !== "PAID";
+  const canReschedule =
+    canCancel && booking.garageId != null && booking.serviceId != null && booking.vehicleId != null;
 
   async function handleCancel() {
     const ok = await confirmDialog({
@@ -185,6 +198,11 @@ export default function CustomerBookingDetailPage() {
         <Button variant="outline" size="lg" render={<Link to="/khach-hang" />}>Quay về trang khách hàng</Button>
         <Button variant="outline" size="lg" render={<Link to="/khach-hang/lich-dat" />}>Xem lịch đặt</Button>
         <Button size="lg" render={<Link to="/khach-hang/dat-lich-moi" />}>Đặt lịch mới</Button>
+        {canReschedule && (
+          <Button variant="outline" size="lg" onClick={() => setShowReschedule(true)}>
+            <CalendarClock size={18} /> Đổi lịch hẹn
+          </Button>
+        )}
         {canCancel && (
           <Button
             variant="outline"
@@ -197,6 +215,159 @@ export default function CustomerBookingDetailPage() {
           </Button>
         )}
       </div>
+
+      <RescheduleDialog
+        booking={booking}
+        open={showReschedule}
+        onOpenChange={setShowReschedule}
+        onDone={loadDetail}
+      />
     </PageContainer>
+  );
+}
+
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/**
+ * Đổi ngày + khung giờ của lịch đặt — PUT /bookings/{id}.
+ * Giữ nguyên gara/dịch vụ/xe; BE kiểm tra lại slot trống, trùng lịch và trạng thái.
+ */
+function RescheduleDialog({ booking, open, onOpenChange, onDone }) {
+  const [date, setDate] = useState("");
+  const [slots, setSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotId, setSlotId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    const initial = String(booking?.bookingDate || "").slice(0, 10);
+    setDate(initial && initial >= todayISO() ? initial : todayISO());
+    setSlotId(null);
+    setError("");
+  }, [open, booking]);
+
+  useEffect(() => {
+    if (!open || !date || booking?.garageId == null) return;
+    let alive = true;
+    setLoadingSlots(true);
+    bookingSlotApi
+      .getAvailable({ garageId: booking.garageId, date })
+      .then((res) => {
+        if (!alive) return;
+        const list = Array.isArray(res) ? res : res?.content || res?.data || [];
+        setSlots(list);
+      })
+      .catch(() => alive && setSlots([]))
+      .finally(() => alive && setLoadingSlots(false));
+    return () => { alive = false; };
+  }, [open, date, booking?.garageId]);
+
+  async function handleSubmit() {
+    if (!slotId) { setError("Vui lòng chọn khung giờ mới."); return; }
+    setError("");
+    setSaving(true);
+    try {
+      await bookingApi.updateBooking(booking.id, {
+        garageId: booking.garageId,
+        slotId,
+        serviceId: booking.serviceId,
+        vehicleId: booking.vehicleId,
+        bookingDate: date,
+      });
+      toast.success("Đã đổi lịch hẹn", { description: booking.code });
+      onOpenChange(false);
+      onDone?.();
+    } catch (e) {
+      setError(e?.message || "Không thể đổi lịch. Vui lòng thử lại.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const isSameSlot = (s) =>
+    String(s.slotId ?? s.id) === String(booking?.slotId) &&
+    String(booking?.bookingDate || "").slice(0, 10) === date;
+
+  return (
+    <AlertDialog open={open} onOpenChange={(next) => { if (!saving) onOpenChange(next); }}>
+      <AlertDialogContent className="max-h-[85vh] overflow-y-auto">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Đổi lịch hẹn</AlertDialogTitle>
+          <AlertDialogDescription>
+            Chọn ngày và khung giờ mới cho lịch {booking?.code}. Gara, dịch vụ và xe giữ nguyên.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <div className="mt-4 space-y-4">
+          {error && (
+            <p className="rounded-xl border border-critical/25 bg-critical-container px-3 py-2 text-xs font-bold text-critical">
+              {error}
+            </p>
+          )}
+
+          <div>
+            <label className="text-xs font-bold text-foreground">Ngày hẹn mới</label>
+            <input
+              type="date"
+              value={date}
+              min={todayISO()}
+              onChange={(e) => { setDate(e.target.value); setSlotId(null); }}
+              className="mt-1.5 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none focus:border-ring"
+            />
+          </div>
+
+          <div>
+            <p className="text-xs font-bold text-foreground">Khung giờ</p>
+            {loadingSlots ? (
+              <p className="mt-2 py-4 text-center text-xs text-neutral-muted">Đang tải khung giờ...</p>
+            ) : slots.length === 0 ? (
+              <p className="mt-2 py-4 text-center text-xs text-neutral-muted">
+                Ngày này chưa có khung giờ hoạt động. Vui lòng chọn ngày khác.
+              </p>
+            ) : (
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {slots.map((s) => {
+                  const id = s.slotId ?? s.id;
+                  const full = s.available === false || (s.availableCapacity != null && Number(s.availableCapacity) <= 0);
+                  const current = isSameSlot(s);
+                  const selected = String(slotId) === String(id);
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      disabled={full || current}
+                      onClick={() => setSlotId(id)}
+                      className={`rounded-xl border px-2 py-2.5 text-xs font-bold transition ${
+                        selected
+                          ? "border-primary bg-primary text-white"
+                          : full || current
+                            ? "cursor-not-allowed border-border bg-muted text-neutral-muted"
+                            : "border-input bg-background text-foreground hover:border-primary"
+                      }`}
+                    >
+                      {String(s.startTime || "").slice(0, 5)} – {String(s.endTime || "").slice(0, 5)}
+                      {current && <span className="block text-[10px] font-semibold">Khung giờ hiện tại</span>}
+                      {full && !current && <span className="block text-[10px] font-semibold">Đã đầy</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={saving}>Đóng</AlertDialogCancel>
+          <Button size="lg" onClick={handleSubmit} disabled={saving || !slotId}>
+            {saving ? "Đang đổi lịch..." : "Xác nhận đổi lịch"}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
