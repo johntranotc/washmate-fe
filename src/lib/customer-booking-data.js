@@ -61,6 +61,11 @@ export function normalizeBooking(value) {
     code: item.bookingCode || item.code || `BK-${item.bookingId ?? item.id ?? "..."}`,
     bookingStatus,
     paymentStatus: payment.status,
+    // Id gốc để đổi lịch (PUT /bookings/{id} cần đủ garageId/slotId/serviceId/vehicleId).
+    garageId: item.garage?.id ?? item.garageId ?? null,
+    slotId: item.slot?.id ?? item.slotId ?? null,
+    serviceId: item.service?.id ?? item.serviceId ?? null,
+    vehicleId: item.vehicle?.id ?? item.vehicleId ?? null,
     payment,
     vehicle: formatSafeString(item.vehicle || item.vehicleName, "Xe của khách hàng"),
     plate: formatSafeString(item.vehicle?.licensePlate || item.licensePlate || item.plate, "Chưa cập nhật"),
