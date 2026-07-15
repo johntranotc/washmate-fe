@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import {
   RefreshCw, Settings2, AlertTriangle, Sparkles, Lightbulb, ArrowRight,
-  CircleDollarSign, CalendarDays, CheckCircle2, XCircle, Wrench, Users, Clock3,
+  CircleDollarSign, CalendarDays, CheckCircle2, XCircle, Wrench, Users, Clock3, Send,
 } from "lucide-react";
 import PageContainer from "@/components/shared/PageContainer";
 import PageHeader from "@/components/shared/PageHeader";
@@ -22,6 +22,7 @@ import {
 import { CHART } from "../../lib/chart-colors";
 import { cn } from "@/lib/utils";
 import { InsightRuleDrawer } from "../../components/admin/insights/InsightRuleDrawer";
+import { CampaignComposeDialog, ACTIONABLE_RULE_CODES } from "../../components/admin/insights/CampaignComposeDialog";
 
 const COMPLETED = "COMPLETED";
 const CLOSED_NEGATIVE = ["CANCELLED", "NO_SHOW"];
@@ -35,10 +36,10 @@ const TIME_CHIPS = [
 ];
 
 const SEVERITY_META = {
-  CRITICAL: { label: "Nghiêm trọng", tone: "bg-critical-container text-critical", dot: "bg-critical" },
-  WARNING: { label: "Cảnh báo", tone: "bg-warning-container text-warning", dot: "bg-warning" },
-  OPPORTUNITY: { label: "Cơ hội", tone: "bg-primary-container text-primary-strong", dot: "bg-primary" },
-  POSITIVE: { label: "Tích cực", tone: "bg-success-container text-success", dot: "bg-success" },
+  CRITICAL: { label: "Nghiêm trọng", tone: "bg-critical-container text-critical", dot: "bg-critical", bar: "border-l-critical" },
+  WARNING: { label: "Cảnh báo", tone: "bg-warning-container text-warning", dot: "bg-warning", bar: "border-l-warning" },
+  OPPORTUNITY: { label: "Cơ hội", tone: "bg-primary-container text-primary-strong", dot: "bg-primary", bar: "border-l-primary" },
+  POSITIVE: { label: "Tích cực", tone: "bg-success-container text-success", dot: "bg-success", bar: "border-l-success" },
 };
 
 const INSIGHT_FILTERS = [
@@ -140,6 +141,7 @@ export default function AdminInsightPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResults, setAiResults] = useState({}); // insightId -> enrichment
+  const [campaignOpen, setCampaignOpen] = useState(false);
 
   // Kỳ phân tích: "Tháng này/Tháng trước" là TRỌN THÁNG theo spec.
   const { start, end } = useMemo(() => {
@@ -533,11 +535,11 @@ export default function AdminInsightPage() {
             ))}
           </section>
 
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-            {/* Cột trái */}
-            <div className="min-w-0 space-y-6">
+          <div className="flex flex-col gap-6">
+            {/* Số liệu nền — chuyển xuống dưới, làm bối cảnh cho insight */}
+            <div className="order-2 min-w-0 grid gap-6 lg:grid-cols-2">
               {/* Xu hướng doanh thu & lịch hẹn */}
-              <section className="rounded-2xl border border-border bg-card p-5">
+              <section className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
                 <div className="flex items-center justify-between gap-3">
                   <h2 className="text-lg font-bold text-foreground">Xu hướng doanh thu & lịch hẹn</h2>
                   <span className="text-xs font-semibold text-neutral-muted">Theo ngày</span>
@@ -681,8 +683,8 @@ export default function AdminInsightPage() {
               </section>
             </div>
 
-            {/* Cột phải: Insight nổi bật + Chi tiết */}
-            <div className="min-w-0 space-y-6">
+            {/* Insight — khu trung tâm, đưa lên trên full-width */}
+            <div className="order-1 min-w-0 space-y-6">
               <section className="rounded-2xl border border-border bg-card p-5">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
                   <Lightbulb size={18} className="text-primary" /> Insight nổi bật
@@ -702,45 +704,57 @@ export default function AdminInsightPage() {
                     </button>
                   ))}
                 </div>
-                <div className="mt-3 space-y-2">
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
                   {insightsError ? (
-                    <div className="py-6 text-center">
+                    <div className="py-6 text-center sm:col-span-2 xl:col-span-3">
                       <p className="text-xs font-bold text-critical">Không thể tải insight vận hành. Vui lòng thử lại.</p>
                       <Button size="sm" variant="outline" className="mt-3" onClick={loadInsights}>Thử lại</Button>
                     </div>
                   ) : insightsRes === null ? (
-                    <p className="py-6 text-center text-xs text-neutral-muted">Đang tải insight...</p>
+                    <p className="py-6 text-center text-xs text-neutral-muted sm:col-span-2 xl:col-span-3">Đang tải insight...</p>
                   ) : insightList.length === 0 ? (
-                    <p className="py-6 text-center text-xs leading-5 text-neutral-muted">
+                    <p className="py-6 text-center text-xs leading-5 text-neutral-muted sm:col-span-2 xl:col-span-3">
                       Chưa đủ dữ liệu để tạo insight trong kỳ này. Hãy chọn khoảng thời gian dài hơn hoặc chi nhánh khác.
                     </p>
                   ) : (
                     insightList.map((it) => {
                       const meta = SEVERITY_META[it.severity] || SEVERITY_META.OPPORTUNITY;
                       const selected = selectedInsight?.id === it.id;
+                      const enriched = Boolean(aiResults[it.id] || it.aiEnrichment);
+                      const actionable = ACTIONABLE_RULE_CODES.has(it.ruleCode);
                       return (
                         <button
                           key={it.id}
                           type="button"
                           onClick={() => setSelectedId(it.id)}
                           className={cn(
-                            "block w-full rounded-xl border p-3 text-left transition",
+                            "flex h-full flex-col rounded-xl border border-l-4 p-3 text-left transition",
                             selected
                               ? "border-primary bg-primary-container/50"
-                              : "border-border bg-surface hover:border-primary/30",
+                              : cn("border-border bg-surface hover:border-primary/30", meta.bar),
                           )}
                         >
                           <div className="flex items-center gap-2">
                             <span className={`h-2 w-2 shrink-0 rounded-full ${meta.dot}`} />
                             <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${meta.tone}`}>{meta.label}</span>
-                            {selected && (
-                              <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white">Đang xem</span>
-                            )}
                           </div>
                           <p className="mt-1.5 text-sm font-bold leading-5 text-foreground">{it.title}</p>
                           {it.summary && (
                             <p className="mt-0.5 line-clamp-2 text-xs leading-4 text-muted-foreground">{it.summary}</p>
                           )}
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                            {enriched && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-accent-violet/10 px-2 py-0.5 text-[11px] font-bold text-accent-violet">
+                                <Sparkles size={10} /> AI
+                              </span>
+                            )}
+                            {actionable && (
+                              <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-bold text-muted-foreground">Có hành động</span>
+                            )}
+                            {selected && (
+                              <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold text-white">Đang xem</span>
+                            )}
+                          </div>
                         </button>
                       );
                     })
@@ -801,11 +815,26 @@ export default function AdminInsightPage() {
                       <AiSuggestButton onClick={handleAiSuggest} loading={aiLoading} className="w-full justify-center" />
                     </div>
 
+                    {ACTIONABLE_RULE_CODES.has(selectedInsight.ruleCode) && (
+                      <div className="mt-2">
+                        <Button onClick={() => setCampaignOpen(true)} className="w-full justify-center">
+                          <Send size={15} /> Soạn chiến dịch gửi khách
+                        </Button>
+                      </div>
+                    )}
+
                     {selectedAi && (
                       <div className="mt-3 rounded-xl border border-accent-violet/25 bg-accent-violet/5 p-4">
-                        <p className="flex items-center gap-1.5 text-xs font-bold text-accent-violet">
-                          <Sparkles size={14} /> Tóm tắt AI
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="flex items-center gap-1.5 text-xs font-bold text-accent-violet">
+                            <Sparkles size={14} /> Gợi ý bởi AI
+                          </p>
+                          {selectedAi.confidenceScore != null && (
+                            <span className="ml-auto text-[11px] font-bold text-accent-violet">
+                              độ tin cậy {Math.round(Number(selectedAi.confidenceScore) <= 1 ? Number(selectedAi.confidenceScore) * 100 : Number(selectedAi.confidenceScore))}%
+                            </span>
+                          )}
+                        </div>
                         {selectedAi.aiSummary && (
                           <p className="mt-1 text-xs leading-5 text-foreground">{selectedAi.aiSummary}</p>
                         )}
@@ -842,6 +871,13 @@ export default function AdminInsightPage() {
         open={ruleDrawerOpen}
         onOpenChange={setRuleDrawerOpen}
         onChanged={loadInsights}
+      />
+
+      <CampaignComposeDialog
+        insight={selectedInsight}
+        garages={garages}
+        open={campaignOpen}
+        onClose={() => setCampaignOpen(false)}
       />
     </PageContainer>
   );

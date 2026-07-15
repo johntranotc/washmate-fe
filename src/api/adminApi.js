@@ -30,4 +30,10 @@ export const adminApi = {
   aiEnrichInsight: (id) => axiosClient.post(`/owner/insights/${id}/ai-enrich`),
   // GET /api/owner/insights/ai-health → { configured, model, promptVersion, message }
   getAiHealth: () => axiosClient.get("/owner/insights/ai-health"),
+  // POST /api/owner/insights/{id}/campaign/preview — AI soạn nháp email + đề xuất voucher (read-only)
+  // → { targetCount, subject, body, suggestedDiscountType, suggestedDiscountValue }
+  previewInsightCampaign: (id) => axiosClient.post(`/owner/insights/${id}/campaign/preview`),
+  // POST /api/owner/insights/{id}/campaign/send — tạo voucher + gửi mail hàng loạt
+  // payload: { garageId, discountType, discountValue, voucherValidDays, subject, body } → { sentCount }
+  sendInsightCampaign: (id, payload) => axiosClient.post(`/owner/insights/${id}/campaign/send`, payload),
 };
