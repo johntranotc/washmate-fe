@@ -39,9 +39,10 @@ export const promotionApi = {
   // Ưu đãi khách có thể áp vào booking tại 1 gara — endpoint dành cho CUSTOMER,
   // trả về các mã khách đã đổi điểm và còn hiệu lực (chưa dùng).
   getAvailablePromotions: async (garageId) => {
+    if (garageId == null) return []; // KHÔNG mặc định gara 1 — mỗi gara ưu đãi riêng.
     try {
       const res = await axiosClient.get("/v1/promotion/AvailablePromotions", {
-        params: { garageId: garageId || 1 },
+        params: { garageId },
       });
       const list = Array.isArray(res) ? res : res?.data || res?.content || [];
       return list.map(normalizePromotion).filter(Boolean);

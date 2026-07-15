@@ -7,4 +7,7 @@ export const bookingApi = {
   getBookingById: (id) => axiosClient.get(`/bookings/${id}`),
   // BE chỉ cho hủy khi PENDING/CONFIRMED; booking đã thanh toán phải hoàn tiền.
   cancelBooking: (id) => axiosClient.post(`/bookings/${id}/cancel`),
+  // Đổi lịch — PUT /bookings/{id}, chỉ khi PENDING/CONFIRMED và thanh toán còn PENDING.
+  // body: { garageId, slotId, serviceId, vehicleId, bookingDate } (đủ 5 field, BE validate lại slot trống).
+  updateBooking: (id, payload) => axiosClient.put(`/bookings/${id}`, payload),
 };
