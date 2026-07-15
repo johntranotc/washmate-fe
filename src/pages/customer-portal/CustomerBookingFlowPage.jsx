@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PageContainer from "@/components/shared/PageContainer";
 import PageHeader from "@/components/shared/PageHeader";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { vehicleApi } from "@/api/vehicleApi";
 import { servicePackageApi } from "@/api/servicePackageApi";
@@ -151,6 +151,20 @@ export default function CustomerBookingFlowPage() {
   useEffect(() => {
     loadFoundationData();
   }, [loadFoundationData]);
+
+  // Đến từ trang Ưu đãi ("Dùng ngay"): tự chọn gara của ưu đãi rồi nhảy sang bước Dịch vụ.
+  const location = useLocation();
+  const preGarageApplied = useRef(false);
+  useEffect(() => {
+    if (preGarageApplied.current) return;
+    const preGarageId = location.state?.garageId;
+    if (preGarageId == null || !garages.length) return;
+    const match = garages.find((g) => String(getGarageId(g)) === String(preGarageId));
+    if (!match) return;
+    preGarageApplied.current = true;
+    setSelection((prev) => ({ ...prev, garage: match, service: null, slot: null }));
+    setSearchParams({ step: "2" });
+  }, [location.state, garages, setSearchParams]);
 
   // Load services when garage changes
   useEffect(() => {

@@ -24,15 +24,22 @@ export function discountLabel(promo) {
 
 /** Tên ưu đãi suy từ giá trị thật (entity không có field name). */
 export function promotionTitle(promo) {
+  // Tiêu đề đồng đều (không kèm "tối đa …") để mọi thẻ cùng độ cao — mức tối đa đưa xuống mô tả.
   if (promo.discountType === "PERCENTAGE") {
-    const cap = promo.maxDiscount ? ` (tối đa ${fmtMoney(promo.maxDiscount)})` : "";
-    return `Giảm ${Number(promo.discountValue)}% phí dịch vụ${cap}`;
+    return `Giảm ${Number(promo.discountValue)}% phí dịch vụ`;
   }
   return `Giảm trực tiếp ${fmtMoney(promo.discountValue)}`;
 }
 
 export function promotionSubtitle(promo) {
-  if (promo.minOrderValue > 0) return `Áp dụng cho đơn từ ${fmtMoney(promo.minOrderValue)}`;
+  const parts = [];
+  if (promo.discountType === "PERCENTAGE" && promo.maxDiscount > 0) {
+    parts.push(`giảm tối đa ${fmtMoney(promo.maxDiscount)}`);
+  }
+  if (promo.minOrderValue > 0) parts.push(`đơn từ ${fmtMoney(promo.minOrderValue)}`);
+  if (parts.length) {
+    return `Áp dụng: ${parts.join(", ")}`;
+  }
   return "Áp dụng cho dịch vụ tại WashMate";
 }
 

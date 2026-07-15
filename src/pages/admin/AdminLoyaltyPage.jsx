@@ -12,7 +12,7 @@ import { garageApi } from "../../api/garageApi";
 import { adminApi } from "../../api/adminApi";
 import { rewardApi } from "../../api/rewardApi";
 import { loyaltyApi } from "../../api/loyaltyApi";
-import { todayISO, formatNumber, friendlyName } from "../../lib/format";
+import { todayISO, formatNumber, friendlyName, formatDate } from "../../lib/format";
 import { cn } from "@/lib/utils";
 import { RewardFormModal } from "../../components/admin/loyalty/RewardFormModal";
 import {
@@ -42,6 +42,15 @@ const TABS = [
   { key: "redemptions", label: "Lượt đổi thưởng" },
 ];
 
+// Trạng thái lượt đổi thưởng (BE: PENDING/APPROVED/COMPLETED/REJECTED/CANCELLED).
+const REDEMPTION_STATUS = {
+  PENDING: { label: "Chờ duyệt", tone: "bg-warning-container text-warning" },
+  APPROVED: { label: "Đã duyệt", tone: "bg-primary-container text-primary-strong" },
+  COMPLETED: { label: "Hoàn tất", tone: "bg-success-container text-success" },
+  REJECTED: { label: "Từ chối", tone: "bg-critical-container text-critical" },
+  CANCELLED: { label: "Đã hủy", tone: "bg-muted text-muted-foreground" },
+};
+
 function LoyaltySkeleton() {
   return (
     <div className="space-y-6">
@@ -65,6 +74,7 @@ function LoyaltySkeleton() {
 export default function AdminLoyaltyPage() {
   const [garages, setGarages] = useState([]);
   const [rewards, setRewards] = useState([]);
+  const [redemptions, setRedemptions] = useState([]);
   const [pointsSummary, setPointsSummary] = useState(null); // { earned, redeemed } | null
   const [beTiers, setBeTiers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -141,6 +151,26 @@ export default function AdminLoyaltyPage() {
       }));
     });
     setRewards(all);
+
+    // Lượt đổi thưởng của TẤT CẢ gara — endpoint admin bắt buộc garageId nên tải theo từng gara rồi gộp.
+    const redemResults = await Promise.allSettled(
+      garageList.map((g) => rewardApi.getAdminRedemptions(g.id ?? g.garageId)),
+    );
+    const allRedem = [];
+    redemResults.forEach((r, i) => {
+      if (r.status !== "fulfilled") return;
+      const page = r.value;
+      const list = Array.isArray(page?.content) ? page.content : Array.isArray(page) ? page : [];
+      const garage = garageList[i];
+      list.forEach((rd) => allRedem.push({
+        ...rd,
+        garageId: garage.id ?? garage.garageId,
+        garageName: garage.name ?? garage.garageName,
+      }));
+    });
+    allRedem.sort((a, b) => String(b.redeemedAt || "").localeCompare(String(a.redeemedAt || "")));
+    setRedemptions(allRedem);
+
     setLastUpdated(new Date());
     setLoading(false);
   }, []);
@@ -171,6 +201,11 @@ export default function AdminLoyaltyPage() {
     });
   }, [rewards, garageFilter, rewardStatus, rewardKeyword]);
 
+  const filteredRedemptions = useMemo(
+    () => redemptions.filter((r) => garageFilter === "all" || String(r.garageId) === String(garageFilter)),
+    [redemptions, garageFilter],
+  );
+
   const remaining = pointsSummary ? Math.max(0, pointsSummary.earned - pointsSummary.redeemed) : null;
 
   const KPI_CARDS = [
@@ -178,7 +213,7 @@ export default function AdminLoyaltyPage() {
     { key: "earned", label: "Điểm phát sinh", Icon: Coins, tone: "text-primary bg-primary-container", value: pointsSummary?.earned, sub: "Tháng này" },
     { key: "redeemed", label: "Điểm đã sử dụng", Icon: ArrowRightLeft, tone: "text-success bg-success-container", value: pointsSummary?.redeemed, sub: "Tháng này" },
     { key: "remaining", label: "Điểm còn lại", Icon: Coins, tone: "text-accent-violet bg-accent-violet/10", value: remaining, sub: "Chênh lệch tháng này" },
-    { key: "redemptions", label: "Lượt đổi thưởng", Icon: Gift, tone: "text-accent-cyan bg-accent-cyan/10", pendingApi: true },
+    { key: "redemptions", label: "Lượt đổi thưởng", Icon: Gift, tone: "text-accent-cyan bg-accent-cyan/10", value: filteredRedemptions.length, sub: "Tổng lượt đổi" },
   ];
 
   // Tạm ẩn / kích hoạt ưu đãi — confirm rồi PUT /v1/admin/promotion-rewards/{id}.
@@ -437,14 +472,40 @@ export default function AdminLoyaltyPage() {
           )}
 
           {tab === "redemptions" && (
-            // BE chưa có API admin xem lượt đổi thưởng — không fake
-            <div className="rounded-2xl border border-border bg-card px-6 py-14 text-center">
-              <Gift size={40} className="mx-auto text-border" />
-              <p className="mt-3 text-sm font-semibold text-foreground">Chưa có lượt đổi thưởng.</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Dữ liệu đổi thưởng sẽ hiển thị khi hệ thống được cập nhật.
-              </p>
-            </div>
+            filteredRedemptions.length === 0 ? (
+              <div className="rounded-2xl border border-border bg-card px-6 py-14 text-center">
+                <Gift size={40} className="mx-auto text-border" />
+                <p className="mt-3 text-sm font-semibold text-foreground">Chưa có lượt đổi thưởng.</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Khi khách đổi điểm lấy ưu đãi, lượt đổi sẽ hiển thị tại đây.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-border bg-card">
+                <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 border-b border-border bg-surface px-4 py-2.5 text-xs font-bold text-muted-foreground">
+                  <span>Ưu đãi đổi</span>
+                  <span className="text-right">Điểm dùng</span>
+                  <span className="text-center">Trạng thái</span>
+                  <span className="text-right">Thời gian</span>
+                </div>
+                <div className="divide-y divide-border">
+                  {filteredRedemptions.map((r) => {
+                    const meta = REDEMPTION_STATUS[String(r.status || "").toUpperCase()] || REDEMPTION_STATUS.PENDING;
+                    return (
+                      <div key={r.redemptionId} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 px-4 py-3 text-sm">
+                        <div className="min-w-0">
+                          <p className="truncate font-bold text-foreground">{friendlyName(r.rewardName, "Ưu đãi")}</p>
+                          <p className="text-xs text-muted-foreground">{friendlyName(r.garageName, "Chi nhánh")}</p>
+                        </div>
+                        <span className="text-right font-bold text-primary">{formatNumber(r.pointsUsed || 0)} điểm</span>
+                        <span className={`justify-self-center rounded-full px-2.5 py-0.5 text-xs font-bold ${meta.tone}`}>{meta.label}</span>
+                        <span className="text-right text-xs text-muted-foreground">{r.redeemedAt ? formatDate(r.redeemedAt) : "—"}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )
           )}
         </>
       )}
