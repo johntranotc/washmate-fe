@@ -21,6 +21,7 @@ import { toast } from "@/components/ui/toast";
 import { RedeemRewardDialog } from "@/components/customer-portal/redeem-reward-dialog";
 import { TierDetailDrawer } from "@/components/customer-portal/tier-detail-drawer";
 import { TierBadge, tierLabel, tierTheme } from "@/components/customer-portal/tier-badge";
+import { garageApi } from "@/api/garageApi";
 import { loyaltyApi } from "@/api/loyaltyApi";
 import { rewardApi } from "@/api/rewardApi";
 import { friendlyError } from "@/lib/api-error";
@@ -28,7 +29,6 @@ import { formatBookingDate } from "@/lib/customer-booking-data";
 import { getStoredGarageId, storeGarageId } from "@/lib/loyalty-garage-selection";
 import {
   computeTierProgress,
-  normalizeLoyaltyAccount,
   normalizeLoyaltyTransactions,
   normalizePolicy,
   normalizeRewards,
@@ -66,22 +66,31 @@ export default function MembershipPointsPage() {
     setLoading(true);
     setError(false);
     try {
-      const raw = await loyaltyApi.getMyLoyalty();
-      const accList = Array.isArray(raw) ? raw : (raw?.data ?? raw?.content ?? (raw ? [raw] : []));
-      if (!accList.length) {
+      // BE bỏ endpoint trả danh sách tài khoản mọi gara → hỏi summary điểm ở TỪNG gara
+      // (gara khách chưa có tài khoản sẽ trả lỗi → bỏ qua). Điểm/hạng RIÊNG của từng gara.
+      const garageListRaw = await garageApi.getAll();
+      const allGarages = (Array.isArray(garageListRaw) ? garageListRaw : garageListRaw?.content || garageListRaw?.data || [])
+        .map((g) => ({ garageId: g.garageId ?? g.id ?? null, garageName: g.name ?? g.garageName ?? "" }))
+        .filter((g) => g.garageId != null);
+      const summaryResults = await Promise.allSettled(
+        allGarages.map((g) => loyaltyApi.getSummary(g.garageId)),
+      );
+      const garages = [];
+      summaryResults.forEach((r, i) => {
+        if (r.status !== "fulfilled") return;
+        const s = r.value?.data ?? r.value ?? {};
+        garages.push({
+          garageId: allGarages[i].garageId,
+          garageName: allGarages[i].garageName,
+          availablePoints: Number(s.availablePoints ?? 0),
+          totalPoints: Number(s.totalPoints ?? s.availablePoints ?? 0),
+          raw: s,
+        });
+      });
+      if (!garages.length) {
         setGaragesData([]); setAccount(null); setTiers([]); setRewards([]); setTransactions([]); setPolicy(null);
         return;
       }
-      // Mọi gara khách có tài khoản điểm — điểm/hạng RIÊNG của từng gara.
-      const garages = accList
-        .map((a) => ({
-          garageId: a.garageId ?? null,
-          garageName: a.garageName ?? "",
-          availablePoints: Number(a.availablePoints ?? 0),
-          totalPoints: Number(a.totalPoints ?? a.availablePoints ?? 0),
-          raw: a,
-        }))
-        .filter((g) => g.garageId != null);
 
       // Tải hạng + chính sách của TẤT CẢ gara song song (mỗi gara một cấu hình riêng).
       const [txRes, ...rest] = await Promise.allSettled([
@@ -95,14 +104,31 @@ export default function MembershipPointsPage() {
       const policyResults = rest.slice(n, 2 * n);
       const rwResults = rest.slice(2 * n, 3 * n);
 
-      const built = garages.map((g, i) => ({
-        garageId: g.garageId,
-        garageName: g.garageName,
-        availablePoints: g.availablePoints,
-        account: normalizeLoyaltyAccount(g.raw),
-        tiers: tierResults[i].status === "fulfilled" ? normalizeTiers(tierResults[i].value) : [],
-        policy: policyResults[i].status === "fulfilled" ? normalizePolicy(policyResults[i].value) : null,
-      }));
+      const built = garages.map((g, i) => {
+        const gTiers = tierResults[i].status === "fulfilled" ? normalizeTiers(tierResults[i].value) : [];
+        // Summary không kèm % giảm của hạng → tra trong danh sách hạng thật của gara theo tên.
+        const tierName = g.raw.currentTierName || g.raw.tierName || "";
+        const matched = gTiers.find((t) => t.name.toLowerCase() === tierName.toLowerCase()) || null;
+        return {
+          garageId: g.garageId,
+          garageName: g.garageName,
+          availablePoints: g.availablePoints,
+          account: {
+            id: g.raw.accountId ?? null,
+            garageId: g.garageId,
+            garageName: g.garageName,
+            tierId: matched?.id ?? null,
+            tierName,
+            tierMinPoints: matched?.minPoints ?? null,
+            tierDiscountPercentage: matched?.discountPercentage ?? null,
+            availablePoints: g.availablePoints,
+            totalPoints: g.totalPoints,
+            usedPoints: Math.max(0, g.totalPoints - g.availablePoints),
+          },
+          tiers: gTiers,
+          policy: policyResults[i].status === "fulfilled" ? normalizePolicy(policyResults[i].value) : null,
+        };
+      });
       setGaragesData(built);
 
       // Gara xem mặc định: ưu tiên lựa chọn đã lưu, nếu không thì ladder hạng đầy đủ nhất rồi tới điểm.

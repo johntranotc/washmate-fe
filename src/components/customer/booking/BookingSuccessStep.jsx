@@ -3,20 +3,34 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatCurrency } from "@/lib/booking-flow";
 
-export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", promotion, discountAmount }) {
+export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", promotion, discountAmount, tier }) {
   const promo = promotion || selection?.promotion || result?.promotion;
+  // Tổng giảm THẬT do BE tính khi tạo booking (gồm cả giảm theo hạng + mã ưu đãi).
   const disc = Number(discountAmount ?? selection?.discountAmount ?? result?.discountAmount ?? result?.discount ?? 0);
   const basePrice = Number(selection.service?.price || 0);
   const finalPrice = result?.finalAmount != null ? Number(result.finalAmount) : Math.max(0, basePrice - disc);
 
+  // Tách tổng giảm của BE thành 2 phần để khách thấy rõ: theo hạng thành viên và theo mã.
+  const tierPercent = Number(tier?.percent ?? 0);
+  const tierPart = tierPercent > 0 ? Math.min(Math.round((basePrice * tierPercent) / 100), disc) : 0;
+  const promoPart = Math.max(0, disc - tierPart);
+
   const summaryRows = [
     { icon: MapPin, label: "Gara", value: selection.garage?.name },
     { icon: Droplets, label: "Dịch vụ", value: `${selection.service?.name} — ${formatCurrency(basePrice)}` },
-    ...(disc > 0 ? [
+    ...(tierPart > 0 ? [
+      {
+        icon: Tag,
+        label: "Ưu đãi thành viên",
+        value: `Hạng ${tier.name} -${tierPercent}% (-${formatCurrency(tierPart)})`,
+        highlight: true,
+      }
+    ] : []),
+    ...(promoPart > 0 ? [
       {
         icon: Tag,
         label: promo?.code ? "Mã giảm giá" : "Ưu đãi giảm giá",
-        value: promo?.code ? `${promo.code} (-${formatCurrency(disc)})` : `Giảm giá (-${formatCurrency(disc)})`,
+        value: promo?.code ? `${promo.code} (-${formatCurrency(promoPart)})` : `Giảm giá (-${formatCurrency(promoPart)})`,
         highlight: true,
       }
     ] : []),
@@ -46,12 +60,6 @@ export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", 
           <span className="mx-auto grid size-20 place-items-center rounded-2xl bg-success-container text-success">
             <SendHorizonal size={36} />
           </span>
-
-          {result?.isDemo && (
-            <span className="mt-5 inline-flex rounded-full bg-secondary px-3 py-1 text-xs font-extrabold text-secondary-foreground">
-              Dữ liệu mẫu
-            </span>
-          )}
 
           <h2 className="mt-6 text-2xl font-extrabold text-foreground sm:text-3xl">
             Yêu cầu đặt lịch đã được gửi!
@@ -118,15 +126,6 @@ export function BookingSuccessStep({ result, selection, paymentMethod = "CASH", 
         </div>
       </div>
 
-      {result?.isDemo && (
-        <p className="mt-4 text-center text-xs text-muted-foreground">
-          Dữ liệu demo — booking đã được lưu vào{" "}
-          <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">
-            washmate_demo_bookings
-          </code>{" "}
-          (localStorage) để Staff xem.
-        </p>
-      )}
     </div>
   );
 }

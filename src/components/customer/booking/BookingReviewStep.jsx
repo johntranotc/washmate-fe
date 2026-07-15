@@ -12,6 +12,7 @@ export function BookingReviewStep({
   onPaymentMethodChange,
   promotion,
   onSelectPromotion,
+  tier,
 }) {
   const { vehicle, service, garage, date, slot } = selection;
   const [inputCode, setInputCode] = useState("");
@@ -19,7 +20,10 @@ export function BookingReviewStep({
   const [apiPromotions, setApiPromotions] = useState([]);
 
   useEffect(() => {
-    const garageId = getGarageId(selection?.garage) || selection?.service?.garageId || 1;
+    // KHÔNG fallback về gara 1: mỗi gara có ưu đãi riêng, lấy nhầm sẽ khiến mã bị BE
+    // từ chối "không áp dụng cho garage này". Không xác định được gara → không tải.
+    const garageId = getGarageId(selection?.garage) ?? selection?.service?.garageId ?? null;
+    if (garageId == null) { setApiPromotions([]); return; }
     promotionApi.getAvailablePromotions(garageId).then((list) => {
       setApiPromotions(Array.isArray(list) ? list : []);
     }).catch(() => {
@@ -40,7 +44,10 @@ export function BookingReviewStep({
   }
 
   const discountAmount = calculateDiscount(promotion);
-  const finalPrice = Math.max(0, basePrice - discountAmount);
+  // Giảm theo hạng thành viên (BE cũng tự tính lại khi tạo booking).
+  const tierPercent = Number(tier?.percent ?? 0);
+  const tierDiscount = tierPercent > 0 ? Math.round((basePrice * tierPercent) / 100) : 0;
+  const finalPrice = Math.max(0, basePrice - discountAmount - tierDiscount);
 
   function handleApplyCode() {
     setPromoError("");
@@ -194,9 +201,15 @@ export function BookingReviewStep({
             <span>Giá dịch vụ:</span>
             <span className="font-semibold text-foreground">{formatCurrency(basePrice)}</span>
           </div>
+          {tierDiscount > 0 && (
+            <div className="flex justify-between text-success font-semibold">
+              <span>Ưu đãi hạng {tier.name} (-{tierPercent}%):</span>
+              <span>-{formatCurrency(tierDiscount)}</span>
+            </div>
+          )}
           {promotion && (
             <div className="flex justify-between text-success font-semibold">
-              <span>Ưu đãi ({promotion.code}):</span>
+              <span>Mã ưu đãi ({promotion.code}):</span>
               <span>-{formatCurrency(discountAmount)}</span>
             </div>
           )}

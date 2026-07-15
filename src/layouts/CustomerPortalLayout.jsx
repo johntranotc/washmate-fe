@@ -15,6 +15,7 @@ import {
   User,
 } from "lucide-react";
 import PortalShell from "@/components/shared/PortalShell";
+import { garageApi } from "@/api/garageApi";
 import { loyaltyApi } from "@/api/loyaltyApi";
 import { notificationApi } from "@/api/notificationApi";
 import { normalizeNotificationList } from "@/lib/customer-notification-data";
@@ -24,8 +25,7 @@ import { STAFF_ASSETS } from "@/lib/staff-assets";
 import { TierBadge, tierLabel, tierTheme } from "@/components/customer-portal/tier-badge";
 import {
   computeTierProgress,
-  normalizeLoyaltyAccount,
-  normalizeTiers,
+  fetchLoyaltyByGarage,
 } from "@/lib/customer-loyalty-data";
 import { getStoredGarageId, onGarageChange } from "@/lib/loyalty-garage-selection";
 
@@ -57,21 +57,8 @@ function useLoyaltyInfo() {
   useEffect(() => {
     async function fetchLoyalty() {
       try {
-        const raw = await loyaltyApi.getMyLoyalty();
-        const accList = Array.isArray(raw) ? raw : (raw?.data ?? raw?.content ?? (raw ? [raw] : []));
-        const garages = accList
-          .map((a) => ({ garageId: a.garageId ?? null, totalPoints: Number(a.totalPoints ?? a.availablePoints ?? 0), raw: a }))
-          .filter((g) => g.garageId != null);
-        if (!garages.length) return;
-        const tierResults = await Promise.allSettled(garages.map((g) => loyaltyApi.getCustomerTiers(g.garageId)));
-        const built = garages
-          .map((g, i) => ({
-            garageId: g.garageId,
-            totalPoints: g.totalPoints,
-            tiers: tierResults[i].status === "fulfilled" ? normalizeTiers(tierResults[i].value) : [],
-            account: normalizeLoyaltyAccount(g.raw),
-          }))
-          .filter((g) => g.account);
+        // Cùng nguồn với trang Điểm thành viên → hạng ở sidebar luôn khớp gara đang chọn.
+        const built = await fetchLoyaltyByGarage(garageApi, loyaltyApi);
         setAll(built);
       } catch {
         /* API lỗi → giữ rỗng, card hiện dạng mời tham gia */

@@ -9,6 +9,8 @@ import { servicePackageApi } from "@/api/servicePackageApi";
 import { garageApi } from "@/api/garageApi";
 import { bookingSlotApi } from "@/api/bookingSlotApi";
 import { bookingApi } from "@/api/bookingApi";
+import { loyaltyApi } from "@/api/loyaltyApi";
+import { fetchLoyaltyByGarage } from "@/lib/customer-loyalty-data";
 import { BookingStepper } from "@/components/customer/booking/BookingStepper";
 import { StepError, StepLoading } from "@/components/customer/booking/BookingStates";
 import { VehicleStep } from "@/components/customer/booking/VehicleStep";
@@ -72,6 +74,23 @@ export default function CustomerBookingFlowPage() {
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+  // Hạng thành viên thật của khách tại gara ĐANG CHỌN (tên hạng + % giảm) — để hiển thị
+  // mức trừ theo hạng ở bước xác nhận và màn hoàn tất, KHỚP với BE và trang Điểm thành viên.
+  const [tier, setTier] = useState(null);
+
+  useEffect(() => {
+    const gid = getGarageId(selection.garage);
+    if (!gid) { setTier(null); return; }
+    let alive = true;
+    fetchLoyaltyByGarage(garageApi, loyaltyApi)
+      .then((list) => {
+        if (!alive) return;
+        const g = list.find((x) => String(x.garageId) === String(gid));
+        setTier(g && g.tierPercent > 0 ? { name: g.tierName || "Thành viên", percent: g.tierPercent } : null);
+      })
+      .catch(() => { if (alive) setTier(null); });
+    return () => { alive = false; };
+  }, [selection.garage]);
 
   // Step nằm trên URL (?step=N) để F5/back/forward giữ đúng vị trí,
   // clamp về bước đầu tiên còn thiếu dữ liệu để không nhảy cóc.
@@ -396,11 +415,12 @@ export default function CustomerBookingFlowPage() {
           onPaymentMethodChange={setPaymentMethod}
           promotion={promotion}
           onSelectPromotion={setPromotion}
+          tier={tier}
         />
       );
     }
     // Step 6: Hoàn tất
-    return <BookingSuccessStep result={result} selection={selection} paymentMethod={paymentMethod} promotion={result?.promotion || promotion} discountAmount={result?.discountAmount || 0} />;
+    return <BookingSuccessStep result={result} selection={selection} paymentMethod={paymentMethod} promotion={result?.promotion || promotion} discountAmount={result?.discountAmount || 0} tier={tier} />;
   }
 
   return (

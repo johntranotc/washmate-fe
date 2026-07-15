@@ -141,7 +141,8 @@ export default function AdminBookingPage() {
     if (garageId !== "all") params.garageId = garageId;
     if (fromDate) params.fromDate = fromDate;
     if (toDate) params.toDate = toDate;
-    adminApi.getBookings(params)
+    // Trả về promise để nơi gọi (thao tác booking) await được, tránh reload chồng chéo.
+    return adminApi.getBookings(params)
       .then((res) => {
         setBookings(normalizeBookingList(res).map(normalizeStaffBooking));
         setLastUpdated(new Date());
