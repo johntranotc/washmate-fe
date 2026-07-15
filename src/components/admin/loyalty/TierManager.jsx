@@ -20,7 +20,7 @@ export function TierManager({ garages, onChanged }) {
   const [tiers, setTiers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(null); // tier | "new" | null
-  const [form, setForm] = useState({ tierName: "", minPoints: "", maintainPoints: "0", discountPercentage: "" });
+  const [form, setForm] = useState({ tierName: "", minPoints: "", maintainPoints: "0", discountPercentage: "", advanceBookingDays: "7" });
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState(null);
 
@@ -45,7 +45,7 @@ export function TierManager({ garages, onChanged }) {
   useEffect(() => { loadTiers(garageId); }, [garageId, loadTiers]);
 
   function openNew() {
-    setForm({ tierName: "", minPoints: "", maintainPoints: "0", discountPercentage: "" });
+    setForm({ tierName: "", minPoints: "", maintainPoints: "0", discountPercentage: "", advanceBookingDays: "7" });
     setEditing("new");
   }
   function openEdit(t) {
@@ -54,6 +54,7 @@ export function TierManager({ garages, onChanged }) {
       minPoints: String(t.minPoints ?? ""),
       maintainPoints: String(t.maintainPoints ?? "0"),
       discountPercentage: String(t.discountPercentage ?? ""),
+      advanceBookingDays: String(t.advanceBookingDays ?? "7"),
     });
     setEditing(t);
   }
@@ -69,11 +70,13 @@ export function TierManager({ garages, onChanged }) {
     if (!Number.isFinite(disc) || disc < 0 || disc > 100) { toast.error("Mức giảm phải từ 0–100%."); return; }
     setSaving(true);
     try {
+      const win = Number(form.advanceBookingDays);
       const payload = {
         tierName: form.tierName.trim(),
         minPoints: min,
         maintainPoints: Number(form.maintainPoints) || 0,
         discountPercentage: disc,
+        advanceBookingDays: Number.isFinite(win) && win > 0 ? win : null,
       };
       if (editing === "new") await loyaltyApi.createTier(garageId, payload);
       else await loyaltyApi.updateTier(garageId, editing.tierId, payload);
@@ -155,6 +158,11 @@ export function TierManager({ garages, onChanged }) {
               <label className="text-xs font-bold text-foreground">Mức giảm (%) <span className="text-critical">*</span></label>
               <input type="number" min="0" max="100" value={form.discountPercentage} onChange={(e) => setForm({ ...form, discountPercentage: e.target.value })} placeholder="VD: 8" className={inputCls} />
             </div>
+            <div>
+              <label className="text-xs font-bold text-foreground">Đặt lịch trước (ngày)</label>
+              <input type="number" min="1" value={form.advanceBookingDays} onChange={(e) => setForm({ ...form, advanceBookingDays: e.target.value })} placeholder="VD: 10" className={inputCls} />
+              <p className="mt-1 text-xs text-muted-foreground">Hạng cao đặt trước xa hơn → ưu tiên vào slot sớm hơn.</p>
+            </div>
           </div>
           <div className="mt-3 flex gap-2">
             <Button size="sm" onClick={handleSave} disabled={saving}>{saving ? "Đang lưu..." : "Lưu"}</Button>
@@ -175,6 +183,7 @@ export function TierManager({ garages, onChanged }) {
                 <p className="text-sm font-bold text-foreground">{t.tierName}</p>
                 <p className="text-xs text-muted-foreground">
                   Từ {formatNumber(t.minPoints || 0)} điểm · Giảm {Number(t.discountPercentage || 0)}%
+                  {t.advanceBookingDays ? ` · Đặt trước ${t.advanceBookingDays} ngày` : ""}
                 </p>
               </div>
               <Button size="sm" variant="outline" onClick={() => openEdit(t)}>Sửa</Button>
