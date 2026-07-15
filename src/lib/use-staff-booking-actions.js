@@ -36,7 +36,10 @@ export function useStaffBookingActions(reload) {
     try {
       await fn();
       toast.success(successTitle, { description: `${booking.code} · ${booking.plate}` });
-      reload?.();
+      // PHẢI await: nếu chỉ bắn reload rồi nhả nút ngay, thao tác kế tiếp có thể
+      // khiến response reload cũ (chưa có thay đổi) về sau, ghi đè danh sách mới
+      // → trạng thái "nhảy" về như chưa bấm dù đã thành công.
+      await reload?.();
     } catch (e) {
       console.error("Staff action failed:", e);
       toast.error("Thao tác thất bại", { description: e?.message || "Lỗi không xác định" });

@@ -116,7 +116,7 @@ export default function StaffBookingListPage() {
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    staffApi
+    return staffApi
       .getAllBookings()
       .then((response) => {
         setBookings(normalizeBookingList(response).map(normalizeStaffBooking));

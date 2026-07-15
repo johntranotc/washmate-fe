@@ -179,3 +179,53 @@ export function normalizePolicy(payload) {
     autoEnroll: Boolean(p.autoEnroll),
   };
 }
+
+// ---- Nguồn loyalty THEO GARA dùng chung cho mọi nơi (sidebar, đặt lịch, trang điểm) ----
+// BE bỏ endpoint trả danh sách mọi gara → hỏi summary điểm ở TỪNG gara. Gara khách chưa
+// có tài khoản sẽ trả lỗi → bỏ qua. % giảm của hạng lấy từ danh sách hạng thật (summary
+// chỉ trả tên hạng). Trả về mảng đã dựng account + tiers để mọi màn hiển thị KHỚP nhau.
+export async function fetchLoyaltyByGarage(garageApi, loyaltyApi) {
+  const garageListRaw = await garageApi.getAll();
+  const allGarages = asArray(garageListRaw)
+    .map((g) => ({ garageId: g.garageId ?? g.id ?? null, garageName: g.name ?? g.garageName ?? "" }))
+    .filter((g) => g.garageId != null);
+  if (!allGarages.length) return [];
+
+  const summaryResults = await Promise.allSettled(allGarages.map((g) => loyaltyApi.getSummary(g.garageId)));
+  const present = [];
+  summaryResults.forEach((r, i) => {
+    if (r.status !== "fulfilled") return;
+    present.push({ ...allGarages[i], summary: unwrap(r.value) || {} });
+  });
+  if (!present.length) return [];
+
+  const tierResults = await Promise.allSettled(present.map((g) => loyaltyApi.getCustomerTiers(g.garageId)));
+  return present.map((g, i) => {
+    const tiers = tierResults[i].status === "fulfilled" ? normalizeTiers(tierResults[i].value) : [];
+    const tierName = g.summary.currentTierName || g.summary.tierName || "";
+    const matched = tiers.find((t) => t.name.toLowerCase() === tierName.toLowerCase()) || null;
+    const availablePoints = Number(g.summary.availablePoints ?? 0);
+    const totalPoints = Number(g.summary.totalPoints ?? availablePoints);
+    return {
+      garageId: g.garageId,
+      garageName: g.garageName,
+      availablePoints,
+      totalPoints,
+      tierName,
+      tierPercent: matched?.discountPercentage != null ? Number(matched.discountPercentage) : 0,
+      tiers,
+      account: {
+        id: g.summary.accountId ?? null,
+        garageId: g.garageId,
+        garageName: g.garageName,
+        tierId: matched?.id ?? null,
+        tierName,
+        tierMinPoints: matched?.minPoints ?? null,
+        tierDiscountPercentage: matched?.discountPercentage ?? null,
+        availablePoints,
+        totalPoints,
+        usedPoints: Math.max(0, totalPoints - availablePoints),
+      },
+    };
+  });
+}
