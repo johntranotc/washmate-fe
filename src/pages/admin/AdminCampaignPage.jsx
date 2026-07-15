@@ -15,7 +15,6 @@ import { garageApi } from "../../api/garageApi";
 import { promotionApi } from "../../api/promotionApi";
 import { formatDate, formatMoney, formatNumber, friendlyName } from "../../lib/format";
 import { cn } from "@/lib/utils";
-import { RewardFormModal } from "../../components/admin/loyalty/RewardFormModal";
 import { SeasonalPromotionFormModal } from "../../components/admin/loyalty/SeasonalPromotionFormModal";
 
 const PAGE_SIZE = 9;
@@ -100,7 +99,6 @@ export default function AdminCampaignPage() {
   const [page, setPage] = useState(1);
 
   const [expandedId, setExpandedId] = useState(null);
-  const [showCreateReward, setShowCreateReward] = useState(false);
   const [showSeasonal, setShowSeasonal] = useState(false);
   const [editingPromo, setEditingPromo] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
@@ -266,7 +264,9 @@ export default function AdminCampaignPage() {
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={loading ? "animate-spin" : ""} /> Tải lại
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowCreateReward(true)}>
+            {/* Ưu đãi đổi điểm (reward) quản lý ở trang Tích điểm & Thành viên — điều hướng
+                sang đó thay vì tạo tại đây, tránh tạo xong không thấy trong danh sách này. */}
+            <Button variant="outline" size="sm" render={<Link to="/quan-tri/loyalty" />}>
               <Gift /> Ưu đãi đổi điểm
             </Button>
             <Button size="sm" onClick={openCreateSeasonal}>
@@ -549,16 +549,6 @@ export default function AdminCampaignPage() {
           </div>
         </>
       )}
-
-      <RewardFormModal
-        reward={null}
-        garages={garages}
-        open={showCreateReward}
-        onOpenChange={setShowCreateReward}
-        onDone={load}
-        createTitle="Tạo ưu đãi đổi điểm"
-        createSubtitle="Khách dùng điểm khả dụng để đổi lấy ưu đãi này. Đặt số điểm cần đổi và số lượng phát hành."
-      />
 
       <SeasonalPromotionFormModal
         promotion={editingPromo}
