@@ -216,7 +216,17 @@ export default function PromotionsPage() {
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5">
             {filtered.slice(0, limit).map((promo) => (
-              <PromotionCard key={promo.id} promo={promo} onDetail={() => setDetail(promo)} onUse={() => navigate("/khach-hang/dat-lich-moi")} />
+              <PromotionCard
+                key={promo.id}
+                promo={promo}
+                onDetail={() => setDetail(promo)}
+                onUse={() =>
+                  // Chuyển sang đặt lịch, kèm gara của ưu đãi để tự chọn sẵn (nếu ưu đãi gắn gara).
+                  navigate("/khach-hang/dat-lich-moi", {
+                    state: promo.garageId != null ? { garageId: promo.garageId } : undefined,
+                  })
+                }
+              />
             ))}
           </div>
           <p className="text-center text-xs text-muted-foreground">
@@ -265,19 +275,23 @@ function PromotionCard({ promo, onDetail, onUse }) {
       </div>
       <div className="flex flex-1 flex-col p-3.5">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-extrabold leading-snug">{promotionTitle(promo)}</h3>
+          <h3 className="text-sm font-extrabold leading-snug line-clamp-2 min-h-10">{promotionTitle(promo)}</h3>
           <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${state.key === "expiring" ? "bg-warning-container text-warning" : "bg-success-container text-success"}`}>
             {state.label}
           </span>
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">{promotionSubtitle(promo)}</p>
+        {/* Cố định 2 dòng để mã + hạn dùng của mọi thẻ luôn thẳng hàng dù mô tả dài ngắn khác nhau. */}
+        <p className="mt-1 text-xs text-muted-foreground line-clamp-2 min-h-9">{promotionSubtitle(promo)}</p>
 
         <div className="mt-2.5 space-y-1.5 text-xs text-muted-foreground">
-          {promo.code && (
-            <button type="button" onClick={copyCode} className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-primary/40 bg-primary-container/30 px-2 py-0.5 font-mono font-bold text-primary transition hover:bg-primary-container/60">
-              {copied ? <Check size={12} /> : <Copy size={12} />} {promo.code}
-            </button>
-          )}
+          {/* Luôn chừa chỗ hàng mã (kể cả thẻ không có mã) để hạn dùng thẳng hàng. */}
+          <div className="min-h-6">
+            {promo.code && (
+              <button type="button" onClick={copyCode} className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-primary/40 bg-primary-container/30 px-2 py-0.5 font-mono font-bold text-primary transition hover:bg-primary-container/60">
+                {copied ? <Check size={12} /> : <Copy size={12} />} {promo.code}
+              </button>
+            )}
+          </div>
           <p className="flex items-center gap-1.5">
             <CalendarClock size={12} /> Hạn dùng: {promo.endDate ? formatBookingDate(promo.endDate) : "Theo chương trình"}
           </p>
