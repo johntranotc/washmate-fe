@@ -65,8 +65,11 @@ function AppRoutes() {
           <Route path="/" element={<HomePage />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/payment/vnpay-return" element={<VnpayReturnPage />} />
         </Route>
+
+        {/* Trang VNPAY trả về: đứng riêng, KHÔNG có header/footer public (khách vừa
+            thanh toán đã đăng nhập, hiện "Đăng nhập/Đăng ký" là vô lý). */}
+        <Route path="/payment/vnpay-return" element={<VnpayReturnPage />} />
 
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />

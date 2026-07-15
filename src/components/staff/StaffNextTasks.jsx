@@ -90,7 +90,7 @@ export function StaffNextTasks({ tasks = [], onCheckIn, onAction, onConfirmPayme
                             <img src={STAFF_ASSETS.action.phone} alt="" width={18} height={18} className="rounded" />
                           </a>
                         )}
-                        {unpaid && ["PENDING", "CONFIRMED"].includes(item.bookingStatus) && (
+                        {unpaid && ["PENDING", "CONFIRMED", "CHECKED_IN", "WASHING"].includes(item.bookingStatus) && (
                           <Button
                             size="sm"
                             variant="outline"

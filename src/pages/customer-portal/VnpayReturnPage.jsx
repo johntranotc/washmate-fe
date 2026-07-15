@@ -19,9 +19,9 @@ export default function VnpayReturnPage() {
       setIsLoading(true);
       paymentApi.getById(paymentId)
         .then((res) => {
-          if (res.data?.bookingId) {
-            setBookingId(res.data.bookingId);
-          }
+          // axiosClient đã unwrap → bookingId nằm ngay ở top-level của PaymentResponse.
+          const bId = res?.bookingId ?? res?.data?.bookingId ?? res?.booking?.id ?? null;
+          if (bId != null) setBookingId(bId);
         })
         .catch((err) => {
           console.error("Failed to fetch payment details:", err);
@@ -57,22 +57,17 @@ export default function VnpayReturnPage() {
               <Loader2 className="h-6 w-6 animate-spin text-neutral-muted" />
             </div>
           ) : bookingId ? (
-            <>
-              <Button size="lg" className="w-full" render={<Link to={`/khach-hang/lich-dat/${bookingId}`} />}>
-                Xem chi tiết lịch đặt
-              </Button>
-              <Button size="lg" className="w-full bg-success text-white hover:bg-success/90" render={<Link to={`/khach-hang/thanh-toan/${bookingId}/hoa-don`} />}>
-                Xem hóa đơn
-              </Button>
-            </>
+            <Button size="lg" className="w-full bg-success text-white hover:bg-success/90" render={<Link to={`/khach-hang/thanh-toan/${bookingId}/hoa-don`} />}>
+              Xem hóa đơn
+            </Button>
           ) : (
             <Button size="lg" className="w-full" render={<Link to="/khach-hang/lich-dat" />}>
               Quản lý lịch đặt của tôi
             </Button>
           )}
 
-          <Button variant="outline" size="lg" className="w-full text-muted-foreground" render={<Link to="/" />}>
-            Về trang chủ
+          <Button variant="outline" size="lg" className="w-full" render={<Link to="/khach-hang" />}>
+            Về trang tổng quan
           </Button>
         </div>
       </div>

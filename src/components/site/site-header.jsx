@@ -12,6 +12,7 @@ const navItems = [
   { label: "Dịch vụ", href: "/services" },
   { label: "Bảng giá", href: "/pricing" },
   { label: "Quy trình", href: "/#quy-trinh" },
+  { label: "Hạng thành viên", href: "/#hang-thanh-vien" },
   { label: "Liên hệ", href: "/#lien-he" },
 ];
 

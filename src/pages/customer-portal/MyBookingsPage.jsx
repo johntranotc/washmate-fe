@@ -156,8 +156,9 @@ export default function MyBookingsPage() {
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q));
     });
+    // "Mới nhất" = lịch vừa đặt gần đây nhất (id lớn hơn = tạo sau), không theo ngày hẹn.
     list.sort((a, b) =>
-      sort === "newest" ? bookingTimeValue(b) - bookingTimeValue(a) : bookingTimeValue(a) - bookingTimeValue(b),
+      sort === "newest" ? Number(b.id ?? 0) - Number(a.id ?? 0) : Number(a.id ?? 0) - Number(b.id ?? 0),
     );
     return list;
   }, [bookings, tab, timeRange, search, sort]);

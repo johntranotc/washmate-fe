@@ -17,8 +17,9 @@ import { STAFF_ASSETS } from "@/lib/staff-assets";
 
 /**
  * Modal "Xác nhận check-in" — toàn bộ dữ liệu từ booking thật.
- * Chỉ cho xác nhận khi status = CONFIRMED và payment = PAID;
- * submit gọi POST /bookings/{id}/check-in rồi báo onDone để refetch.
+ * BE chỉ yêu cầu status = CONFIRMED để check-in (KHÔNG cần đã thanh toán) —
+ * khách trả tiền mặt sau khi rửa, thanh toán chỉ bắt buộc ở bước Hoàn tất.
+ * Submit gọi POST /bookings/{id}/check-in rồi báo onDone để refetch.
  */
 export function StaffCheckInModal({ booking, open, onOpenChange, onDone }) {
   const [submitting, setSubmitting] = useState(false);
@@ -27,7 +28,7 @@ export function StaffCheckInModal({ booking, open, onOpenChange, onDone }) {
 
   const paid = booking.paymentStatus === "PAID";
   const confirmed = booking.bookingStatus === "CONFIRMED";
-  const canConfirm = paid && confirmed && !submitting;
+  const canConfirm = confirmed && !submitting;
 
   const rows = [
     ["Mã booking", booking.code],
@@ -82,9 +83,9 @@ export function StaffCheckInModal({ booking, open, onOpenChange, onDone }) {
           </div>
         </dl>
 
-        {!paid && (
-          <p className="mt-3 text-xs font-semibold text-warning">
-            Booking chưa thanh toán — chỉ check-in khi khách đã thanh toán.
+        {!paid && confirmed && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Khách chưa thanh toán — vẫn check-in được, sẽ thu tiền khi hoàn tất dịch vụ.
           </p>
         )}
         {!confirmed && (
