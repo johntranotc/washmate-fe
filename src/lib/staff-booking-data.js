@@ -103,28 +103,28 @@ export function getNextStaffAction(booking) {
       };
     }
     case "CONFIRMED": {
-      const paid = booking.paymentStatus === "PAID";
+      // BE check-in chỉ cần status CONFIRMED (không cần thanh toán) → cho check-in ngay.
+      // Khách trả tiền mặt SAU khi rửa xong, thanh toán chỉ bắt buộc ở bước Hoàn tất.
       return {
         api: "checkInBooking",
         next: "CHECKED_IN",
         label: "Check-in",
-        enabled: paid,
-        disabledHint: paid ? null : "Chờ khách thanh toán",
+        enabled: true,
+        disabledHint: null,
       };
     }
     case "CHECKED_IN": {
-      // Chưa thanh toán hợp lệ thì không cho tiếp tục workflow (nhắc thanh toán trước).
-      const paid = booking.paymentStatus === "PAID";
+      // BE bắt đầu rửa chỉ cần status CHECKED_IN (không cần thanh toán) → cho bắt đầu rửa ngay.
       return {
         api: "startWashing",
         next: "WASHING",
         label: "Bắt đầu rửa",
-        enabled: paid,
-        disabledHint: paid ? null : "Chờ thanh toán",
+        enabled: true,
+        disabledHint: null,
       };
     }
     case "WASHING": {
-      // BE từ chối (409) hoàn tất khi payment chưa PAID.
+      // BE từ chối (409) hoàn tất khi payment chưa PAID → chỉ chặn ở bước cuối này.
       const paid = booking.paymentStatus === "PAID";
       return {
         api: "completeBooking",
