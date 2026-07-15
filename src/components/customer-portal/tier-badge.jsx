@@ -58,13 +58,17 @@ export function tierSlug(name) {
   const s = String(name || "")
     .normalize("NFD")
     .replace(COMBINING_MARKS, "")
+    // "đ/Đ" KHÔNG tự tách dấu khi NFD → phải quy về "d" thủ công (nếu không "đồng" ≠ "dong").
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
     .toUpperCase()
     .trim();
-  if (s.includes("BRONZE") || s.includes("DONG")) return "bronze";
-  if (s.includes("SILVER") || s.includes("BAC")) return "silver";
-  if (s.includes("GOLD") || s.includes("VANG")) return "gold";
+  // BẠCH KIM phải xét TRƯỚC BẠC: "BACH" chứa "BAC" nên nếu xét bạc trước sẽ khớp nhầm.
   if (s.includes("PLATINUM") || s.includes("BACH KIM")) return "platinum";
   if (s.includes("DIAMOND") || s.includes("KIM CUONG")) return "diamond";
+  if (s.includes("GOLD") || s.includes("VANG")) return "gold";
+  if (s.includes("BRONZE") || s.includes("DONG")) return "bronze";
+  if (s.includes("SILVER") || s.includes("BAC")) return "silver";
   return null;
 }
 
