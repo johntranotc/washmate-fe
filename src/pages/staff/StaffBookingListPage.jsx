@@ -160,7 +160,7 @@ export default function StaffBookingListPage() {
     return {
       total: scoped.length,
       pending: by("PENDING"),
-      waitingCheckIn: scoped.filter((b) => b.bookingStatus === "CONFIRMED" && b.paymentStatus === "PAID").length,
+      waitingCheckIn: by("CONFIRMED"),
       washing: by("WASHING"),
       completed: by("COMPLETED"),
       needAction: scoped.filter((b) => isUrgent(b)).length,

@@ -180,9 +180,8 @@ export default function AdminBookingPage() {
   const filtered = useMemo(
     () => scoped
       .filter(matcher)
-      .sort((a, b) =>
-        (b.bookingDate || "").localeCompare(a.bookingDate || "") ||
-        (a.slotTime || "99:99").localeCompare(b.slotTime || "99:99")),
+      // Mới đặt lên đầu: id lớn hơn = tạo sau. Không dùng ngày hẹn (lịch tương lai không phải mới tạo).
+      .sort((a, b) => Number(b.id ?? 0) - Number(a.id ?? 0)),
     [scoped, matcher],
   );
   const paged = useMemo(

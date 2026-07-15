@@ -1,9 +1,10 @@
-import { CheckCircle2, CircleAlert, Clock3, Droplets, LogIn, UserX } from "lucide-react";
+import { CheckCircle2, CircleAlert, Clock3, Droplets, LogIn, UserX, Wallet } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import PageHeader from "@/components/shared/PageHeader";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { staffApi } from "../../api/staffApi";
+import { paymentApi } from "../../api/paymentApi";
 
 import { normalizeStaffBooking } from "../../lib/staff-booking-data";
 import { paymentStatusLabels } from "../../lib/status-tones";
@@ -50,6 +51,22 @@ export default function StaffWorkflowPage() {
     }
   };
 
+  // Thu tiền mặt trực tiếp — POST /payments/{id}/confirm. Cho phép trước bước Hoàn tất
+  // (BE nhận thanh toán ở PENDING/CONFIRMED/CHECKED_IN/WASHING, không lùi trạng thái).
+  const confirmPayment = async () => {
+    if (!booking?.paymentId || updating) return;
+    setUpdating(true);
+    try {
+      await paymentApi.confirmPayment(booking.paymentId, {});
+      setBooking((item) => ({ ...item, paymentStatus: "PAID" }));
+      toast.success("Đã ghi nhận thanh toán", { description: `${booking.code} · ${booking.plate}` });
+    } catch (err) {
+      toast.error("Không thể xác nhận thanh toán", { description: err?.message || "Vui lòng thử lại." });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   if (loading) return <div className="rounded-2xl bg-card p-10 text-center text-sm text-muted-foreground">Đang tải chi tiết lịch đặt...</div>;
   if (error) return <div className="rounded-2xl border border-critical/25 bg-critical-container p-10 text-center text-sm text-critical">{error}</div>;
   if (!booking) return <div className="rounded-2xl bg-card p-10 text-center text-sm text-muted-foreground">Không tìm thấy lịch đặt.</div>;
@@ -57,6 +74,12 @@ export default function StaffWorkflowPage() {
   const action = actionByStatus[booking.bookingStatus];
   const ActionIcon = action?.icon;
   const terminal = ["COMPLETED", "CANCELLED", "NO_SHOW"].includes(booking.bookingStatus);
+  const paid = booking.paymentStatus === "PAID";
+  const paymentPending =
+    !paid && booking.paymentId &&
+    ["CONFIRMED", "CHECKED_IN", "WASHING"].includes(booking.bookingStatus);
+  // Chỉ bước Hoàn tất mới bắt buộc đã thanh toán (khớp BE); check-in/rửa không cần.
+  const blockedByPayment = action?.api === "completeBooking" && !paid;
 
   return (
     <div className="space-y-6">
@@ -124,16 +147,31 @@ export default function StaffWorkflowPage() {
               ? `Bước hợp lệ tiếp theo: ${action.label}.`
               : "Booking chưa đủ điều kiện xử lý."}
           </p>
+          {paymentPending && (
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={updating}
+              onClick={confirmPayment}
+              className="mt-5 w-full"
+            >
+              <Wallet /> Xác nhận thanh toán (tiền mặt)
+            </Button>
+          )}
           {action && (
             <Button
               size="lg"
-              disabled={updating}
+              disabled={updating || blockedByPayment}
+              title={blockedByPayment ? "Cần thu tiền trước khi hoàn tất" : undefined}
               onClick={() => transition(action.next, action.api)}
-              className="mt-5 w-full"
+              className="mt-3 w-full"
             >
               <ActionIcon />
               {updating ? "Đang cập nhật..." : action.label}
             </Button>
+          )}
+          {blockedByPayment && (
+            <p className="mt-2 text-xs font-semibold text-warning">Cần xác nhận thanh toán trước khi hoàn tất.</p>
           )}
           {booking.bookingStatus === "CONFIRMED" && (
             <Button

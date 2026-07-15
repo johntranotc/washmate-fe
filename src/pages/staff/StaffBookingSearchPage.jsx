@@ -52,9 +52,8 @@ function workflowConditionOf(booking, inScope) {
   if (CLOSED_REASONS[booking.bookingStatus]) {
     return { eligible: false, reason: CLOSED_REASONS[booking.bookingStatus] };
   }
-  if (booking.paymentStatus !== "PAID") {
-    return { eligible: false, reason: "Thanh toán chưa hợp lệ" };
-  }
+  // Điều kiện xử lý bám THEO getNextStaffAction: check-in/bắt đầu rửa không cần thanh toán,
+  // chỉ bước Hoàn tất mới đòi PAID. Không chặn cứng theo payment nữa (khớp luồng admin).
   const action = getNextStaffAction(booking);
   if (action?.enabled) {
     return { eligible: true, reason: `Đủ điều kiện: ${action.label}` };

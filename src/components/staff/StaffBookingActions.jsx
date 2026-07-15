@@ -38,10 +38,12 @@ export function StaffBookingActions({
   const action = getNextStaffAction(booking);
   const busy = String(busyId) === String(booking.id);
   const hasPhone = booking.phone && booking.phone !== "Chưa cập nhật";
+  // BE cho thu tiền ở mọi trạng thái trước khi hoàn tất (PENDING→WASHING) và không lùi trạng thái
+  // → hiện nút "Xác nhận thanh toán" suốt luồng để thu tiền mặt trước khi Hoàn tất.
   const paymentPending =
     booking.paymentStatus === "PENDING" &&
     booking.paymentId &&
-    ["PENDING", "CONFIRMED"].includes(booking.bookingStatus);
+    ["PENDING", "CONFIRMED", "CHECKED_IN", "WASHING"].includes(booking.bookingStatus);
   // Nút bước kế tiếp: check-in bị chặn thanh toán → label rõ "Không thể check-in".
   const nextDisabled = action && !action.enabled;
   const nextLabel =

@@ -3,6 +3,7 @@ import { WhyWashMate } from "@/components/home/why-washmate";
 import { FeaturedServices } from "@/components/home/featured-services";
 import { ProcessSteps } from "@/components/home/process-steps";
 import { PricingSummary } from "@/components/home/pricing-summary";
+import { MembershipTiers } from "@/components/home/membership-tiers";
 import { SmartInsight } from "@/components/home/smart-insight";
 import { CtaBanner } from "@/components/home/cta-banner";
 import { Reveal } from "@/components/home/reveal";
@@ -18,6 +19,7 @@ export default function HomePage() {
       <Reveal><FeaturedServices /></Reveal>
       <Reveal><ProcessSteps /></Reveal>
       <Reveal><PricingSummary /></Reveal>
+      <Reveal><MembershipTiers /></Reveal>
       <Reveal><SmartInsight /></Reveal>
       <Reveal><CtaBanner /></Reveal>
     </>
