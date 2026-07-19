@@ -20,19 +20,7 @@ import {
   REWARD_STATUS_LABELS,
   REWARD_STATUS_TONES,
 } from "../../components/admin/loyalty/AdminRewardDrawer";
-import { AdminTierDrawer } from "../../components/admin/loyalty/AdminTierDrawer";
 import { TierManager } from "../../components/admin/loyalty/TierManager";
-
-// Mốc điểm & mức giảm giá là CẤU HÌNH NGHIỆP VỤ của hệ thống (product spec).
-// BE có endpoint /v1/admin/loyalty-tiers nhưng DTO đang rỗng — trang sẽ thăm dò
-// API trước, chỉ dùng cấu hình này khi API chưa trả được dữ liệu dùng được.
-const TIER_CONFIG = [
-  { name: "Đồng", points: 0, discount: 5, image: "/images/home/04_membership/medals/medal_dong.png" },
-  { name: "Bạc", points: 500, discount: 8, image: "/images/home/04_membership/medals/medal_bac.png" },
-  { name: "Vàng", points: 1500, discount: 12, image: "/images/home/04_membership/medals/medal_vang.png" },
-  { name: "Bạch Kim", points: 3500, discount: 15, image: "/images/home/04_membership/medals/medal_bach_kim.png" },
-  { name: "Kim Cương", points: 8000, discount: 20, image: "/images/home/04_membership/medals/medal_kim_cuong.png" },
-];
 
 const TABS = [
   { key: "tiers", label: "Hạng thành viên" },
@@ -68,7 +56,7 @@ function LoyaltySkeleton() {
  * Trang Tích điểm & Thành viên (Admin) — dữ liệu thật:
  *   ưu đãi: GET /v1/admin/promotion-rewards?garageId (song song mọi gara) + CRUD thật
  *   điểm phát sinh/đã dùng: GET /owner/insights (rule-based aggregate, kỳ = tháng này)
- *   hạng: thăm dò GET /v1/admin/loyalty-tiers (DTO đang rỗng) → cấu hình nghiệp vụ
+ *   hạng: GET /v1/admin/loyalty-tiers theo từng gara — CRUD thật trong TierManager
  * Giao dịch điểm & lượt đổi thưởng: BE chưa có API admin → empty state.
  */
 export default function AdminLoyaltyPage() {
@@ -76,7 +64,6 @@ export default function AdminLoyaltyPage() {
   const [rewards, setRewards] = useState([]);
   const [redemptions, setRedemptions] = useState([]);
   const [pointsSummary, setPointsSummary] = useState(null); // { earned, redeemed } | null
-  const [beTiers, setBeTiers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -88,7 +75,6 @@ export default function AdminLoyaltyPage() {
 
   const [formTarget, setFormTarget] = useState(null); // { reward | null }
   const [rewardDetail, setRewardDetail] = useState(null);
-  const [tierDetail, setTierDetail] = useState(null);
   const [busyId, setBusyId] = useState(null);
 
   const load = useCallback(async () => {
@@ -111,28 +97,9 @@ export default function AdminLoyaltyPage() {
     if (gRes.status === "rejected") {
       setError(gRes.reason?.message || "Không thể tải dữ liệu tích điểm. Vui lòng thử lại.");
       setRewards([]);
-      setBeTiers([]);
       setLoading(false);
       return;
     }
-
-    // Hạng thành viên thật theo từng gara — gộp, khử trùng theo tên hạng.
-    const tierResults = await Promise.allSettled(
-      garageList.map((g) => loyaltyApi.getAdminTiers(g.id ?? g.garageId)),
-    );
-    const tierSeen = new Set();
-    const mergedTiers = [];
-    tierResults.forEach((r) => {
-      if (r.status !== "fulfilled") return;
-      const list = Array.isArray(r.value?.content) ? r.value.content : Array.isArray(r.value) ? r.value : [];
-      list.forEach((t) => {
-        const key = String(t.tierName ?? t.name ?? "").toLowerCase();
-        if (!key || tierSeen.has(key)) return;
-        tierSeen.add(key);
-        mergedTiers.push(t);
-      });
-    });
-    setBeTiers(mergedTiers.sort((a, b) => Number(a.minPoints ?? 0) - Number(b.minPoints ?? 0)));
 
     // Ưu đãi của TẤT CẢ gara — endpoint admin theo từng gara, tải song song
     const results = await Promise.allSettled(
@@ -176,20 +143,6 @@ export default function AdminLoyaltyPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
-
-  // Hạng thành viên: dùng dữ liệu BE nếu API trả field dùng được, ngược lại cấu hình nghiệp vụ.
-  const tiers = useMemo(() => {
-    const usable = beTiers.filter((t) => t && (t.name || t.tierName));
-    if (usable.length > 0) {
-      return usable.map((t, i) => ({
-        name: friendlyName(t.name || t.tierName, "Hạng chưa cập nhật"),
-        points: Number(t.minPoints ?? t.tierMinPoints ?? 0),
-        discount: Number(t.discountPercentage ?? t.tierDiscountPercentage ?? 0),
-        image: TIER_CONFIG[i]?.image || null,
-      }));
-    }
-    return TIER_CONFIG;
-  }, [beTiers]);
 
   const filteredRewards = useMemo(() => {
     const kw = rewardKeyword.trim().toLowerCase();
@@ -244,13 +197,6 @@ export default function AdminLoyaltyPage() {
     } finally {
       setBusyId(null);
     }
-  }
-
-  // BE chưa có API cập nhật hạng (DTO rỗng) — không fake.
-  function handleEditTier() {
-    toast.info("Chức năng chưa được hệ thống hỗ trợ", {
-      description: "Chỉnh sửa hạng thành viên sẽ được kích hoạt khi hệ thống hỗ trợ cấu hình tương ứng.",
-    });
   }
 
   const updatedLabel = lastUpdated
@@ -521,11 +467,6 @@ export default function AdminLoyaltyPage() {
         reward={rewardDetail}
         open={Boolean(rewardDetail)}
         onOpenChange={(open) => { if (!open) setRewardDetail(null); }}
-      />
-      <AdminTierDrawer
-        tier={tierDetail}
-        open={Boolean(tierDetail)}
-        onOpenChange={(open) => { if (!open) setTierDetail(null); }}
       />
     </PageContainer>
   );

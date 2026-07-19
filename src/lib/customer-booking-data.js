@@ -78,9 +78,7 @@ export function normalizeBooking(value) {
     note: savedNote,
     amount: Number(item.amount ?? item.service?.price ?? item.price ?? 0),
     discount: Number(item.discount ?? item.discountAmount ?? 0),
-    finalAmount: Number(item.finalAmount ?? item.totalAmount ?? item.amount ?? item.price ?? 0),
-    isMock: Boolean(item.isMock),
-  };
+    finalAmount: Number(item.finalAmount ?? item.totalAmount ?? item.amount ?? item.price ?? 0),  };
 }
 
 export function normalizePayment(value) {
@@ -92,9 +90,7 @@ export function normalizePayment(value) {
     status: item.paymentStatus || item.status || "PENDING",
     method: item.paymentMethod || item.method || "",
     transactionCode: item.transactionCode || item.transactionId || "",
-    paidAt: item.paidAt || item.paymentDate || "",
-    isMock: Boolean(item.isMock),
-  };
+    paidAt: item.paidAt || item.paymentDate || "",  };
 }
 
 export function normalizeInvoice(value) {
@@ -105,9 +101,7 @@ export function normalizeInvoice(value) {
     id: item.invoiceId ?? item.id ?? null,
     code: item.invoiceCode || item.code || "",
     status: item.invoiceStatus || item.status || "ISSUED",
-    issuedAt: item.issuedAt || item.createdAt || new Date().toISOString(),
-    isMock: Boolean(item.isMock),
-  };
+    issuedAt: item.issuedAt || item.createdAt || new Date().toISOString(),  };
 }
 
 export function formatMoney(value) {
