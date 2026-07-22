@@ -60,9 +60,7 @@ export function normalizeService(item) {
     duration: Number(item.duration ?? item.durationMinutes ?? item.estimatedDuration ?? 0),
     status: item.status || "ACTIVE",
     garageId: item.garageId ?? item.garage?.id ?? null,
-    badge: item.badge || item.tag || "",
-    isMock: Boolean(item.isMock),
-  };
+    badge: item.badge || item.tag || "",  };
 }
 
 export function normalizeGarage(item) {
@@ -82,9 +80,7 @@ export function normalizeGarage(item) {
     district: item.district || "",
     badges: Array.isArray(item.badges) ? item.badges : [],
     lat: item.lat ?? null,
-    lng: item.lng ?? null,
-    isMock: Boolean(item.isMock),
-  };
+    lng: item.lng ?? null,  };
 }
 
 export function normalizeSlot(item) {
@@ -108,9 +104,7 @@ export function normalizeSlot(item) {
     endTime: item.endTime || item.finishTime || "",
     maxCapacity,
     bookedCount,
-    status,
-    isMock: Boolean(item.isMock),
-    disabled,
+    status,    disabled,
     almostFull,
   };
 }
