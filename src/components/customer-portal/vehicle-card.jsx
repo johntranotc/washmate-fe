@@ -6,7 +6,6 @@ import {
   Pencil,
   EyeOff,
   Eye,
-  Star,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,7 +44,7 @@ function InfoCell({ label, value, accent = false }) {
  * Card xe — gọn, hiện đại. Dữ liệu 100% thật; thiếu field hiển thị "Chưa cập nhật"/"Chưa có".
  * BE không có ảnh xe → dùng placeholder glyph tối giản (không gán ảnh theo hãng).
  */
-export function VehicleCard({ vehicle, stats, onBook, onDetail, onEdit, onToggleStatus, onDelete, onSetDefault }) {
+export function VehicleCard({ vehicle, stats, onBook, onDetail, onEdit, onToggleStatus, onDelete }) {
   const needsUpdate = vehicleNeedsUpdate(vehicle);
   const active = isActiveVehicle(vehicle);
   const last = stats?.lastService;
@@ -101,10 +100,6 @@ export function VehicleCard({ vehicle, stats, onBook, onDetail, onEdit, onToggle
             <Menu.Positioner sideOffset={6} align="end" className="z-[70]">
               <Menu.Popup className="min-w-52 rounded-xl border border-border bg-popover p-1.5 shadow-floating outline-none">
                 <MenuItem icon={Pencil} onClick={() => onEdit(vehicle)}>Chỉnh sửa</MenuItem>
-                <MenuItem icon={Star} onClick={() => onSetDefault(vehicle)}>
-                  Đặt làm xe mặc định
-                  <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">Sắp có</span>
-                </MenuItem>
                 <MenuItem icon={active ? EyeOff : Eye} onClick={() => onToggleStatus(vehicle)}>
                   {active ? "Tạm ẩn xe" : "Kích hoạt lại"}
                 </MenuItem>
