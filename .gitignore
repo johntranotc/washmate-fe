@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .codegraph/
+.claude/
+.fk-skills/
+WashMate-FE-BaoCao-DuAn.pdf
+WashMate-FE-TaiLieu-NghiepVu-LuongDuLieu.pdf
