@@ -9,6 +9,12 @@ export const adminApi = {
   getBookings: (params = {}) => axiosClient.get("/bookings", { params: { size: 1000, sort: 'id,desc', ...params } }),
   // PUT /api/admin/users/{userId}/status
   updateUserStatus: (userId, payload) => axiosClient.put(`/admin/users/${userId}/status`, payload),
+  // POST /api/admin/staff — tạo tài khoản STAFF/MANAGER và gán chi nhánh
+  // payload: { email, password, fullName, phone, role, garageIds } → MeResponse
+  createStaff: (payload) => axiosClient.post("/admin/staff", payload),
+  // PUT /api/admin/staff/{userId}/assignment — đổi vai trò + danh sách chi nhánh (thay thế toàn bộ)
+  // payload: { role, garageIds } → MeResponse
+  updateStaffAssignment: (userId, payload) => axiosClient.put(`/admin/staff/${userId}/assignment`, payload),
   // GET /api/v1/services/garage/{garageId}
   getServicesByGarage: (garageId) => axiosClient.get(`/v1/services/garage/${garageId}`),
   // GET /api/analytics/summary (ADMIN/OWNER) — số liệu tổng hợp thật từ BE

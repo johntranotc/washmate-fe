@@ -6,7 +6,6 @@ import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 import HomePage from "../pages/public/HomePage";
 import ServicesPage from "../pages/public/ServicesPage";
 import PricingPage from "../pages/public/PricingPage";
-import TiersPage from "../pages/public/TiersPage";
 
 import PublicLayout from "../layouts/PublicLayout";
 import AuthLayout from "../layouts/AuthLayout";
@@ -66,7 +65,6 @@ function AppRoutes() {
           <Route path="/" element={<HomePage />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/tiers" element={<TiersPage />} />
         </Route>
 
         {/* Trang VNPAY trả về: đứng riêng, KHÔNG có header/footer public (khách vừa

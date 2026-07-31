@@ -30,7 +30,21 @@ export default function RegisterPage() {
         setStatus({ error: "", success: "Đã tạo tài khoản. Vui lòng kiểm tra email để lấy mã OTP kích hoạt." });
         setStep(2);
       } catch (err) {
-        setStatus({ error: err?.message || "Đăng ký thất bại. Vui lòng thử lại.", success: "" });
+        // BE trả 409 khi email/SĐT đã tồn tại → hiện câu dễ hiểu thay vì thông báo kỹ thuật.
+        const raw = String(err?.message || "").toLowerCase();
+        const conflict =
+          err?.status === 409 ||
+          raw.includes("xung đột") ||
+          raw.includes("ràng buộc") ||
+          raw.includes("tồn tại") ||
+          raw.includes("conflict") ||
+          raw.includes("exist");
+        setStatus({
+          error: conflict
+            ? "Email hoặc số điện thoại này đã được đăng ký. Vui lòng dùng thông tin khác hoặc đăng nhập."
+            : err?.message || "Đăng ký thất bại. Vui lòng thử lại.",
+          success: "",
+        });
       } finally {
         setLoading(false);
       }

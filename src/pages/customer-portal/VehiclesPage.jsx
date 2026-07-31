@@ -219,10 +219,6 @@ export default function VehiclesPage() {
     [vehicleHasUpcoming],
   );
 
-  const handleSetDefault = useCallback(() => {
-    toast.info("Đặt xe mặc định sẽ sớm được hỗ trợ.");
-  }, []);
-
   return (
     <PageContainer variant="customer" className="pb-32">
       <PageHeader
@@ -354,7 +350,6 @@ export default function VehiclesPage() {
                 onEdit={(veh) => setForm({ open: true, mode: "edit", vehicle: veh })}
                 onToggleStatus={handleToggleStatus}
                 onDelete={handleDelete}
-                onSetDefault={handleSetDefault}
               />
             ))}
           </div>
