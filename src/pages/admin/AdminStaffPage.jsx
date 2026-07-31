@@ -24,6 +24,7 @@ import {
   roleLabel,
   statusLabel,
 } from "../../components/admin/staff/AdminStaffDrawer";
+import { StaffFormModal } from "../../components/admin/staff/StaffFormModal";
 
 // Vai trò vận hành hiển thị ở trang này (theo enum role thật của BE)
 const OPERATIONAL_ROLES = ["ADMIN", "OWNER", "MANAGER", "STAFF"];
@@ -67,10 +68,12 @@ function StaffSkeleton() {
 /**
  * Trang Nhân viên (Admin) — quản lý tài khoản vận hành, vai trò, trạng thái
  * và chi nhánh được gán. Dữ liệu thật: GET /admin/users (lọc role vận hành),
- * GET /v1/garages (tên chi nhánh). Action thật duy nhất BE hỗ trợ:
- * PUT /admin/users/{id}/status (tạm khóa / kích hoạt lại).
- * BE chưa có API: tạo/mời nhân viên, đổi vai trò, gán chi nhánh, đặt lại
- * mật khẩu bởi admin, lịch làm việc → disable/toast rõ ràng, không fake.
+ * GET /v1/garages (tên chi nhánh). Action thật BE hỗ trợ:
+ *   PUT  /admin/users/{id}/status        — tạm khóa / kích hoạt lại
+ *   POST /admin/staff                    — tạo tài khoản STAFF/MANAGER + gán chi nhánh
+ *   PUT  /admin/staff/{id}/assignment    — đổi vai trò + chi nhánh phụ trách
+ * BE vẫn chưa có: sửa hồ sơ nhân viên, đặt lại mật khẩu bởi admin, lịch làm
+ * việc → toast rõ ràng, không fake.
  */
 export default function AdminStaffPage() {
   const [users, setUsers] = useState([]);
@@ -91,6 +94,8 @@ export default function AdminStaffPage() {
   const [detailTarget, setDetailTarget] = useState(null);
   const [menu, setMenu] = useState(null); // { member, x, y }
   const [busyId, setBusyId] = useState(null);
+  // null = đóng; { member: null } = tạo mới; { member } = đổi phân công
+  const [formTarget, setFormTarget] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -267,8 +272,8 @@ export default function AdminStaffPage() {
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={loading ? "animate-spin" : ""} /> Tải lại
             </Button>
-            {/* BE chưa có API tạo/mời nhân viên — toast, không fake */}
-            <Button size="sm" onClick={notSupported("thêm nhân viên")}>
+            {/* POST /admin/staff — tạo tài khoản vận hành và gán chi nhánh */}
+            <Button size="sm" onClick={() => setFormTarget({ member: null })}>
               <UserPlus /> Thêm nhân viên
             </Button>
             {updatedLabel && (
@@ -524,9 +529,10 @@ export default function AdminStaffPage() {
           >
             {[
               ["Xem chi tiết", () => setDetailTarget(menu.member)],
+              // Vai trò và chi nhánh dùng chung 1 form vì BE nhận cả hai trong cùng payload.
+              ["Gán / đổi chi nhánh", () => setFormTarget({ member: menu.member })],
+              ["Đổi vai trò", () => setFormTarget({ member: menu.member })],
               ["Chỉnh sửa thông tin", notSupported("chỉnh sửa nhân viên")],
-              ["Gán / đổi chi nhánh", notSupported("gán chi nhánh")],
-              ["Đổi vai trò", notSupported("đổi vai trò")],
               ["Đặt lại mật khẩu", notSupported("đặt lại mật khẩu")],
             ].map(([label, fn]) => (
               <button
@@ -558,6 +564,14 @@ export default function AdminStaffPage() {
         member={detailTarget}
         open={Boolean(detailTarget)}
         onOpenChange={(open) => { if (!open) setDetailTarget(null); }}
+      />
+
+      <StaffFormModal
+        member={formTarget?.member ?? null}
+        garages={garages}
+        open={Boolean(formTarget)}
+        onOpenChange={(open) => { if (!open) setFormTarget(null); }}
+        onDone={load}
       />
     </PageContainer>
   );
