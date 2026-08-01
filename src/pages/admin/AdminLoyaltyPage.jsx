@@ -160,6 +160,7 @@ export default function AdminLoyaltyPage() {
     [redemptions, garageFilter],
   );
 
+  const isDeletedRewardView = rewardStatus === "DELETED";
   const remaining = pointsSummary ? Math.max(0, pointsSummary.earned - pointsSummary.redeemed) : null;
 
   const KPI_CARDS = [
@@ -339,13 +340,19 @@ export default function AdminLoyaltyPage() {
               {filteredRewards.length === 0 ? (
                 <div className="rounded-2xl border border-border bg-card px-6 py-14 text-center">
                   <Ticket size={40} className="mx-auto text-border" />
-                  <p className="mt-3 text-sm font-semibold text-foreground">Chưa có ưu đãi đổi điểm.</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Tạo ưu đãi để khách có thể dùng điểm đổi thưởng.
+                  <p className="mt-3 text-sm font-semibold text-foreground">
+                    {isDeletedRewardView ? "Chưa có ưu đãi đã xóa." : "Chưa có ưu đãi đổi điểm."}
                   </p>
-                  <Button size="sm" className="mt-4" onClick={() => setFormTarget({ reward: null })}>
-                    <Plus /> Thêm ưu đãi
-                  </Button>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {isDeletedRewardView
+                      ? "Các ưu đãi đã xóa sẽ hiển thị tại đây khi cần đối chiếu."
+                      : "Tạo ưu đãi để khách có thể dùng điểm đổi thưởng."}
+                  </p>
+                  {!isDeletedRewardView && (
+                    <Button size="sm" className="mt-4" onClick={() => setFormTarget({ reward: null })}>
+                      <Plus /> Thêm ưu đãi
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
@@ -357,9 +364,11 @@ export default function AdminLoyaltyPage() {
                           <h3 className="text-sm font-bold text-foreground">
                             {friendlyName(r.name, "Ưu đãi chưa cập nhật")}
                           </h3>
-                          <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${REWARD_STATUS_TONES[r.status] || "bg-muted text-muted-foreground"}`}>
-                            {REWARD_STATUS_LABELS[r.status] || r.status || "—"}
-                          </span>
+                          {rewardStatus === "ALL" && (
+                            <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${REWARD_STATUS_TONES[r.status] || "bg-muted text-muted-foreground"}`}>
+                              {REWARD_STATUS_LABELS[r.status] || r.status || "—"}
+                            </span>
+                          )}
                         </div>
                         <p className="mt-1 text-lg font-semibold text-primary">
                           {formatNumber(r.pointsRequired || 0)} điểm
@@ -375,15 +384,19 @@ export default function AdminLoyaltyPage() {
                         </span>
                         <div className="mt-4 flex flex-wrap gap-1.5 border-t border-border pt-3">
                           <Button size="sm" variant="outline" onClick={() => setRewardDetail(r)}>Chi tiết</Button>
-                          <Button size="sm" variant="outline" onClick={() => setFormTarget({ reward: r })}>Chỉnh sửa</Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            disabled={busy}
-                            onClick={() => handleDeleteReward(r)}
-                          >
-                            {busy ? "..." : "Xóa"}
-                          </Button>
+                          {!isDeletedRewardView && (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => setFormTarget({ reward: r })}>Chỉnh sửa</Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={busy}
+                                onClick={() => handleDeleteReward(r)}
+                              >
+                                {busy ? "..." : "Xóa"}
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </article>
                     );
