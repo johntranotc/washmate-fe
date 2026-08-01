@@ -11,14 +11,16 @@ import { formatNumber, friendlyName } from "@/lib/format";
 
 export const REWARD_STATUS_LABELS = {
   ACTIVE: "Đang hoạt động",
-  INACTIVE: "Tạm ẩn",
+  INACTIVE: "Không hoạt động",
   OUT_OF_STOCK: "Hết quà",
+  DELETED: "Đã xóa",
 };
 
 export const REWARD_STATUS_TONES = {
   ACTIVE: "bg-success-container text-success",
   INACTIVE: "bg-muted text-muted-foreground",
   OUT_OF_STOCK: "bg-warning-container text-warning",
+  DELETED: "bg-critical-container text-critical",
 };
 
 /**

@@ -54,7 +54,7 @@ function LoyaltySkeleton() {
 
 /**
  * Trang Tích điểm & Thành viên (Admin) — dữ liệu thật:
- *   ưu đãi: GET /v1/admin/promotion-rewards?garageId (song song mọi gara) + CRUD thật
+ *   ưu đãi: GET /v1/admin/promotion-rewards?garageId&status (song song mọi gara) + CRUD thật
  *   điểm phát sinh/đã dùng: GET /owner/insights (rule-based aggregate, kỳ = tháng này)
  *   hạng: GET /v1/admin/loyalty-tiers theo từng gara — CRUD thật trong TierManager
  * Giao dịch điểm & lượt đổi thưởng: BE chưa có API admin → empty state.
@@ -101,9 +101,11 @@ export default function AdminLoyaltyPage() {
       return;
     }
 
-    // Ưu đãi của TẤT CẢ gara — endpoint admin theo từng gara, tải song song
+    // Ưu đãi của TẤT CẢ gara — endpoint admin theo từng gara, tải song song.
+    // Khi chọn trạng thái, đẩy status xuống đúng GET /api/v1/admin/promotion-rewards.
+    const rewardParams = rewardStatus === "ALL" ? {} : { status: rewardStatus };
     const results = await Promise.allSettled(
-      garageList.map((g) => rewardApi.getAdminRewards(g.id ?? g.garageId)),
+      garageList.map((g) => rewardApi.getAdminRewards(g.id ?? g.garageId, rewardParams)),
     );
     const all = [];
     results.forEach((r, i) => {
@@ -140,7 +142,7 @@ export default function AdminLoyaltyPage() {
 
     setLastUpdated(new Date());
     setLoading(false);
-  }, []);
+  }, [rewardStatus]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -148,11 +150,10 @@ export default function AdminLoyaltyPage() {
     const kw = rewardKeyword.trim().toLowerCase();
     return rewards.filter((r) => {
       if (garageFilter !== "all" && String(r.garageId) !== String(garageFilter)) return false;
-      if (rewardStatus !== "ALL" && r.status !== rewardStatus) return false;
       if (kw && !`${r.name || ""} ${r.description || ""}`.toLowerCase().includes(kw)) return false;
       return true;
     });
-  }, [rewards, garageFilter, rewardStatus, rewardKeyword]);
+  }, [rewards, garageFilter, rewardKeyword]);
 
   const filteredRedemptions = useMemo(
     () => redemptions.filter((r) => garageFilter === "all" || String(r.garageId) === String(garageFilter)),
@@ -330,8 +331,8 @@ export default function AdminLoyaltyPage() {
                 >
                   <option value="ALL">Tất cả trạng thái</option>
                   <option value="ACTIVE">Đang hoạt động</option>
-                  <option value="INACTIVE">Tạm ẩn</option>
                   <option value="OUT_OF_STOCK">Hết quà</option>
+                  <option value="DELETED">Đã xóa</option>
                 </select>
               </section>
 

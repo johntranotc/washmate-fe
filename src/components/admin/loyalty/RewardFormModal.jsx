@@ -243,7 +243,7 @@ export function RewardFormModal({ reward, garages = [], open, onOpenChange, onDo
                 className="mt-1.5 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none focus:border-ring"
               >
                 <option value="ACTIVE">Đang hoạt động</option>
-                <option value="INACTIVE">Tạm ẩn</option>
+                <option value="INACTIVE">Không hoạt động</option>
               </select>
             </div>
           ) : (
