@@ -169,31 +169,22 @@ export default function AdminLoyaltyPage() {
     { key: "redemptions", label: "Lượt đổi thưởng", Icon: Gift, tone: "text-accent-cyan bg-accent-cyan/10", value: filteredRedemptions.length, sub: "Tổng lượt đổi" },
   ];
 
-  // Tạm ẩn / kích hoạt ưu đãi — confirm rồi PUT /v1/admin/promotion-rewards/{id}.
-  async function handleToggleReward(reward) {
-    const hiding = reward.status === "ACTIVE";
+  // Xóa ưu đãi đổi điểm — confirm rồi DELETE /v1/admin/promotion-rewards/{id}.
+  async function handleDeleteReward(reward) {
     const ok = await confirmDialog({
-      title: hiding ? "Tạm ẩn ưu đãi này?" : "Kích hoạt ưu đãi này?",
-      description: hiding
-        ? "Ưu đãi sẽ không còn hiển thị cho khách đổi điểm."
-        : "Ưu đãi sẽ hiển thị lại cho khách đổi điểm.",
-      confirmLabel: hiding ? "Xác nhận tạm ẩn" : "Kích hoạt",
-      destructive: hiding,
+      title: "Xóa ưu đãi này?",
+      description: `Ưu đãi "${friendlyName(reward.name, "chưa cập nhật")}" sẽ bị xóa khỏi danh sách đổi điểm.`,
+      confirmLabel: "Xóa ưu đãi",
+      destructive: true,
     });
     if (!ok) return;
     setBusyId(reward.rewardId);
     try {
-      await rewardApi.updateReward(reward.rewardId, {
-        name: reward.name,
-        description: reward.description,
-        pointsRequired: reward.pointsRequired,
-        stock: reward.stock,
-        status: hiding ? "INACTIVE" : "ACTIVE",
-      });
-      toast.success(hiding ? "Đã tạm ẩn ưu đãi" : "Đã kích hoạt ưu đãi", { description: reward.name });
+      await rewardApi.deleteReward(reward.rewardId);
+      toast.success("Đã xóa ưu đãi", { description: friendlyName(reward.name, "Ưu đãi") });
       load();
     } catch (e) {
-      toast.error("Thao tác thất bại", { description: e?.message || "Lỗi không xác định" });
+      toast.error("Không thể xóa ưu đãi", { description: e?.message || "Lỗi không xác định" });
     } finally {
       setBusyId(null);
     }
@@ -359,7 +350,6 @@ export default function AdminLoyaltyPage() {
                 <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
                   {filteredRewards.map((r) => {
                     const busy = busyId === r.rewardId;
-                    const active = r.status === "ACTIVE";
                     return (
                       <article key={r.rewardId} className="flex flex-col rounded-2xl border border-border bg-card p-5">
                         <div className="flex items-start justify-between gap-2">
@@ -385,16 +375,14 @@ export default function AdminLoyaltyPage() {
                         <div className="mt-4 flex flex-wrap gap-1.5 border-t border-border pt-3">
                           <Button size="sm" variant="outline" onClick={() => setRewardDetail(r)}>Chi tiết</Button>
                           <Button size="sm" variant="outline" onClick={() => setFormTarget({ reward: r })}>Chỉnh sửa</Button>
-                          {r.status !== "OUT_OF_STOCK" && (
-                            <Button
-                              size="sm"
-                              variant={active ? "destructive" : "default"}
-                              disabled={busy}
-                              onClick={() => handleToggleReward(r)}
-                            >
-                              {busy ? "..." : active ? "Tạm ẩn" : "Kích hoạt"}
-                            </Button>
-                          )}
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={busy}
+                            onClick={() => handleDeleteReward(r)}
+                          >
+                            {busy ? "..." : "Xóa"}
+                          </Button>
                         </div>
                       </article>
                     );

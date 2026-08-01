@@ -25,7 +25,9 @@ export const rewardApi = {
   //   { garageId, name, description, pointsRequired, stock, discountType, discountValue,
   //     maxDiscount?, minOrderValue, validDays }
   createReward: (payload) => axiosClient.post("/v1/admin/promotion-rewards", payload),
-  // PUT cập nhật. body: PromotionRewardUpdateRequest { name, description, pointsRequired, stock, status }
+  // PUT cập nhật. body: PromotionRewardUpdateRequest
+  //   { name, description, pointsRequired, stock, status, discountType, discountValue,
+  //     maxDiscount?, minOrderValue, validDays }
   updateReward: (rewardId, payload) => axiosClient.put(`/v1/admin/promotion-rewards/${rewardId}`, payload),
   // DELETE ưu đãi.
   deleteReward: (rewardId) => axiosClient.delete(`/v1/admin/promotion-rewards/${rewardId}`),
