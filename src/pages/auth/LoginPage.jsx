@@ -118,13 +118,13 @@ export default function LoginPage() {
       </div>
 
       {/* NÃºt hiá»ƒn thá»‹ lÃ  UI custom; GoogleLogin tháº­t náº±m phá»§ trong suá»‘t bÃªn trÃªn Ä‘á»ƒ giá»¯ nguyÃªn credential/idToken flow. */}
-      <div className="relative h-12 w-full overflow-hidden rounded-xl">
-        <span className="pointer-events-none flex h-full w-full items-center justify-center gap-3 rounded-xl border border-border bg-card text-sm font-bold text-foreground shadow-sm">
+      <div className="w-full">
+        <span className="hidden">
           <img src="/images/auth/icons/google.png" alt="" className="size-5" />
           Tiáº¿p tá»¥c vá»›i Google
         </span>
         {/* NÃºt Google tháº­t phá»§ trong suá»‘t KÃN toÃ n bá»™ nÃºt Ä‘á»ƒ báº¥m chá»— nÃ o cÅ©ng Äƒn */}
-        <div className="absolute inset-0 z-10 opacity-100 [&>div]:!h-full [&>div]:!w-full [&_iframe]:!h-full [&_iframe]:!w-full">
+        <div className="flex w-full justify-center">
           <GoogleLogin
           onSuccess={async (credentialResponse) => {
             setError("");
@@ -177,4 +177,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
 
