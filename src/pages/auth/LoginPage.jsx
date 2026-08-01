@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { Field } from "@/components/auth/field";
@@ -49,10 +49,10 @@ export default function LoginPage() {
       if (homePath) {
         navigate(homePath);
       } else {
-        setError("Vai trÃ² tÃ i khoáº£n chÆ°a Ä‘Æ°á»£c há»— trá»£. Vui lÃ²ng liÃªn há»‡ quáº£n trá»‹ viÃªn.");
+        setError("Vai trò tài khoản chưa được hỗ trợ. Vui lòng liên hệ quản trị viên.");
       }
     } catch (err) {
-      setError(friendlyError(err, "ÄÄƒng nháº­p tháº¥t báº¡i. Vui lÃ²ng kiá»ƒm tra email vÃ  máº­t kháº©u."));
+      setError(friendlyError(err, "Đăng nhập thất bại. Vui lòng kiểm tra email và mật khẩu."));
     } finally {
       setLoading(false);
     }
@@ -60,7 +60,7 @@ export default function LoginPage() {
 
   return (
     <div>
-      <AuthHeading title="ÄÄƒng nháº­p" description="ChÃ o má»«ng trá»Ÿ láº¡i! ÄÄƒng nháº­p Ä‘á»ƒ tiáº¿p tá»¥c chÄƒm sÃ³c xe cá»§a báº¡n." />
+      <AuthHeading title="Đăng nhập" description="Chào mừng trở lại! Đăng nhập để tiếp tục chăm sóc xe của bạn." />
 
       {error && (
         <div className="mb-5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
@@ -73,7 +73,7 @@ export default function LoginPage() {
           id="email"
           label="Email"
           type="email"
-          placeholder="Nháº­p email cá»§a báº¡n"
+          placeholder="Nhập email của bạn"
           icon="mail"
           autoComplete="email"
           value={email}
@@ -81,9 +81,9 @@ export default function LoginPage() {
         />
         <Field
           id="password"
-          label="Máº­t kháº©u"
+          label="Mật khẩu"
           type="password"
-          placeholder="Nháº­p máº­t kháº©u"
+          placeholder="Nhập mật khẩu"
           icon="lock"
           autoComplete="current-password"
           value={password}
@@ -98,33 +98,33 @@ export default function LoginPage() {
               onCheckedChange={(checked) => setRememberMe(!!checked)}
             />
             <Label htmlFor="remember" className="text-sm font-medium text-muted-foreground">
-              Ghi nhá»› Ä‘Äƒng nháº­p
+              Ghi nhớ đăng nhập
             </Label>
           </div>
           <Link to="/forgot-password" className="text-sm font-semibold text-primary hover:underline">
-            QuÃªn máº­t kháº©u?
+            Quên mật khẩu?
           </Link>
         </div>
 
         <Button type="submit" size="xl" disabled={loading} className="w-full shadow-cta">
-          {loading ? "Äang Ä‘Äƒng nháº­p..." : "ÄÄƒng nháº­p"}
+          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
         </Button>
       </form>
 
       <div className="my-5 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
-        <span className="text-sm font-medium text-muted-foreground">hoáº·c</span>
+        <span className="text-sm font-medium text-muted-foreground">hoặc</span>
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      {/* NÃºt hiá»ƒn thá»‹ lÃ  UI custom; GoogleLogin tháº­t náº±m phá»§ trong suá»‘t bÃªn trÃªn Ä‘á»ƒ giá»¯ nguyÃªn credential/idToken flow. */}
-      <div className="w-full">
-        <span className="hidden">
+      {/* Nút hiển thị là UI custom; GoogleLogin thật nằm phủ trong suốt bên trên để giữ nguyên credential/idToken flow. */}
+      <div className="relative h-12 w-full overflow-hidden rounded-xl">
+        <span className="pointer-events-none flex h-full w-full items-center justify-center gap-3 rounded-xl border border-border bg-card text-sm font-bold text-foreground shadow-sm">
           <img src="/images/auth/icons/google.png" alt="" className="size-5" />
-          Tiáº¿p tá»¥c vá»›i Google
+          Tiếp tục với Google
         </span>
-        {/* NÃºt Google tháº­t phá»§ trong suá»‘t KÃN toÃ n bá»™ nÃºt Ä‘á»ƒ báº¥m chá»— nÃ o cÅ©ng Äƒn */}
-        <div className="flex w-full justify-center">
+        {/* Nút Google thật phủ trong suốt KÍN toàn bộ nút để bấm chỗ nào cũng ăn */}
+        <div className="absolute inset-0 z-10 opacity-0 [&>div]:!h-full [&>div]:!w-full [&_iframe]:!h-full [&_iframe]:!w-full">
           <GoogleLogin
           onSuccess={async (credentialResponse) => {
             setError("");
@@ -142,17 +142,17 @@ export default function LoginPage() {
               if (homePath) {
                 navigate(homePath);
               } else {
-                setError("Vai trÃ² tÃ i khoáº£n chÆ°a Ä‘Æ°á»£c há»— trá»£. Vui lÃ²ng liÃªn há»‡ quáº£n trá»‹ viÃªn.");
+                setError("Vai trò tài khoản chưa được hỗ trợ. Vui lòng liên hệ quản trị viên.");
               }
             } catch {
-              // Lá»—i ká»¹ thuáº­t (vd. mÃ¡y chá»§ chÆ°a báº­t Ä‘Äƒng nháº­p Google) â†’ thÃ´ng bÃ¡o thÃ¢n thiá»‡n, KHÃ”NG cháº·n login email.
-              setGoogleError("ÄÄƒng nháº­p báº±ng Google hiá»‡n chÆ°a kháº£ dá»¥ng. Vui lÃ²ng Ä‘Äƒng nháº­p báº±ng email.");
+              // Lỗi kỹ thuật (vd. máy chủ chưa bật đăng nhập Google) → thông báo thân thiện, KHÔNG chặn login email.
+              setGoogleError("Đăng nhập bằng Google hiện chưa khả dụng. Vui lòng đăng nhập bằng email.");
             } finally {
               setLoading(false);
             }
           }}
           onError={() => {
-            setGoogleError("ÄÄƒng nháº­p báº±ng Google hiá»‡n chÆ°a kháº£ dá»¥ng. Vui lÃ²ng Ä‘Äƒng nháº­p báº±ng email.");
+            setGoogleError("Đăng nhập bằng Google hiện chưa khả dụng. Vui lòng đăng nhập bằng email.");
           }}
           theme="outline"
           size="large"
@@ -169,13 +169,11 @@ export default function LoginPage() {
       )}
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        ChÆ°a cÃ³ tÃ i khoáº£n?{" "}
+        Chưa có tài khoản?{" "}
         <Link to="/register" className="font-semibold text-primary hover:underline">
-          ÄÄƒng kÃ½ ngay
+          Đăng ký ngay
         </Link>
       </p>
     </div>
   );
 }
-
-
